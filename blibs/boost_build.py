@@ -22,7 +22,7 @@ def boost_version( boost_root ):
 	"""
 	version_hpp = os.path.join( boost_root, 'boost', 'version.hpp' )
 	f = open(version_hpp)
-	if f == None:
+	if f is None:
 		return None
 	version_lines = f.readlines()
 	f.close()

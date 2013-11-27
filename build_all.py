@@ -214,32 +214,58 @@ def config_and_make_salvia(proj):
 	config_and_make_cmake_project('SALVIA', defs, proj.source_root(), proj.salvia_build(), None, proj)
 
 def install_prebuild_binaries(proj):
-	print( "Installing dependencies ..." )
-	# Copy FreeImage
-	#fi_bin_root = os.path.join( proj.source_root(), "3rd_party", "FreeImage", "bin" )
-	#fi_dll = None
-	#fi_bin_dir = os.path.join( fi_bin_root, proj.target_modifier(['platform']) )
-	#fi_dll = os.path.join( fi_bin_dir, 'FreeImage.dll')
-	#copy_newer( fi_dll, proj.salvia_bin() )
+	report_info( "Installing dependencies ..." )
+	
+	dynamic_lib_ext = None
+	if proj.os() == systems.win32:
+		dynamic_lib_ext = ".dll"
+	elif proj.os() == systems.linux:
+		dynamic_lib_ext = ".so"
+	else:
+		report_error("Target OS cannot be supported.")
+		
+	# Copy mingw runtime
+	if proj.toolset().short_compiler_name() == "mgw":
+		mgw_dir = proj.customized_toolset_dir()
+		libs = ["stdc++", "sjlj"]
+		for f in mgw_dir:
+			if os.path.splitext("f")[1] != dynamic_lib_ext:
+				continue
+			for lib_name in libs:
+				if lib_name in f:
+					copy_newer(os.path.join(mgw_dir, f), proj.salvia_bin())
 
-	# Copy boost
+	# Copy FreeImage dlls
+	freeimage_dist_dir = os.path.join(proj.freeimage_install(), "Dist")
+	files = os.listdir(freeimage_dist_dir)
+	for f in files:
+		name, ext = os.path.splitext(f)
+		if ext != dynamic_lib_ext:
+			continue
+		src = os.path.join(proj.boost_lib_dir(), f)
+		copy_newer(src, proj.salvia_bin())
+
+	# Copy d3dcompile_xx.dll
+	if proj.dx_dlls_dirs():
+		for d in proj.dx_dlls_dirs():
+			for f in os.listdir(d):
+				copy_newer( os.path.join(d, f), proj.salvia_bin())
+	
+	# Copy boost dlls
 	files = os.listdir(proj.boost_lib_dir())
 	need_copy = []
-	if proj.os() == systems.win32:
-		for f in files:
-			f_basename = os.path.basename(f)
-			name, ext = os.path.splitext(f)
-			if not ext in ['.dll', '.so']:
-				continue
-			if ('-gd-' in name or '-d-' in name) != (proj.config_name() == "Debug"):
-				continue
-			if not proj.toolset().boost_lib_name() in name:
-				continue
-			need_copy.append(os.path.join(proj.boost_lib_dir(), f_basename))
+	for f in files:
+		name, ext = os.path.splitext(f)
+		if ext != dynamic_lib_ext:
+			continue
+		if ('-gd-' in name or '-d-' in name) != (proj.config_name() == "Debug"):
+			continue
+		if not proj.toolset().boost_lib_name() in name:
+			continue
+		need_copy.append(os.path.join(proj.boost_lib_dir(), f))
 
 	for f in need_copy:
 		copy_newer(f, proj.salvia_bin())
-
 
 def clean_all(proj):
 	print('clean Boost ...')

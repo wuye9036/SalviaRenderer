@@ -108,34 +108,39 @@ def detect_cmake(candidate_cmake_executable):
 		return None
 
 def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
-	gcc_toolset, detected_dir = detect_gcc_in_folder(gcc_dir, min_major_ver, min_minor_ver)
-	if gcc_toolset is None and systems.current() == systems.win32:
-		return detect_gcc_in_folder("C:/MinGW/bin", min_major_ver, min_minor_ver)
-	return gcc_toolset, detected_dir
+	gcc_executables = []
+	if gcc_dir is not None:
+		gcc_executables += os.path.join(gcc_dir, "g++")
+	if systems.current() == systems.win32:
+		try:
+			gcc_paths = subprocess.check_output(["where", "g++"])
+			gcc_executables = gcc_paths.split("\n")
+		except:
+			pass
+		os.path.join("C:/MinGW/bin", "g++")
 
+	for gcc_executable in gcc_executables:
+		try:
+			version_str = subprocess.check_output([gcc_executable, "-dumpversion"])
+			version_digits = [int(s) for s in version_str.split('.')]
+			while len(version_digits) < 3:
+				version_digits.append(None)
 
-def detect_gcc_in_folder(gcc_dir, min_major_ver, min_minor_ver):
-	gcc_executable = "g++" if gcc_dir is None else os.path.join(gcc_dir, "g++")
-	try:
-		version_str = subprocess.check_output([gcc_executable, "-dumpversion"])
-		version_digits = [int(s) for s in version_str.split('.')]
-		while len(version_digits) < 3:
-			version_digits.append(None)
+			if version_digits[0] < min_major_ver:
+				continue
+			elif version_digits[0] == min_major_ver:
+				if version_digits[1] < min_minor_ver:
+					continue
 
-		if version_digits[0] < min_major_ver:
-			return None, None
-		elif version_digits[0] == min_major_ver:
-			if version_digits[1] < min_minor_ver:
-				return None, None
-
-		gcc_toolset = toolset(
-			None,
-			"mingw" if systems.current() == systems.win32 else "gcc",
-			version_digits[0], version_digits[1], version_digits[2]
-		)
-		return gcc_toolset, gcc_dir
-	except:
-		return None, None
+			gcc_toolset = toolset(
+				None,
+				"mingw" if systems.current() == systems.win32 else "gcc",
+				version_digits[0], version_digits[1], version_digits[2]
+			)
+			return gcc_toolset, gcc_dir
+		except:
+			pass
+	return None, None
 
 def add_binpath(env, dirs):
 	seperator = ';' if systems.current() == systems.win32 else ':'
@@ -143,3 +148,30 @@ def add_binpath(env, dirs):
 	for dir in dirs:
 		new_env['PATH'] = env['PATH'] + seperator + dir
 	return new_env
+
+def windows_kit_dirs():
+	if systems.current() == systems.win32:
+		kits = None
+		close_key = None
+
+		try:
+			import _winreg
+			winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots")
+			if winkit_key is None:
+				return None
+			def CloseKey():
+				_winreg.CloseKey(winkit_key)
+			close_key = CloseKey
+			kit_names = ["KitsRoot", "KitsRoot81"]
+			kits = [kit
+					for kit in map(lambda key_name: _winreg.QueryValue(winkit_key, key_name), kit_names)
+					if kit is not None]
+
+		except ImportError:
+			return None
+
+		finally:
+			close_key()
+			return kits
+
+	return None

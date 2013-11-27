@@ -59,9 +59,26 @@ class project:
 		else:
 			report_error('Unsupported toolset name: %s' % default_toolset)
 
+		self.use_win_kit_ = self.toolset_.short_compiler_name() == "msvc" and\
+		                    self.toolset().major_ver >= 11
 		self.directx_ = \
 			(self.toolset_.short_compiler_name() == "msvc") and\
-			( "DXSDK_DIR" in env or self.toolset().major_ver >= 11 )
+			( "DXSDK_DIR" in env or self.use_win_kit_ )
+		self.dx_dlls_dir_ = None
+
+		if self.use_win_kit_:
+			wdk_dirs = windows_kit_dirs()
+			if wdk_dirs is None:
+				report_error("D3D is used but cannot find Windows Kits.")
+
+			arch_subdir = None
+			if self.arch_ == arch.x86:
+				arch_subdir = "x86"
+			elif self.arch_ == arch.x64:
+				arch_subdir = "x64"
+			else:
+				report_error("Unsupported arch when finding Windows Kits.")
+			self.dx_dlls_dirs_ = [ os.path.join(wdk_dir, "Redist", "D3D", arch_subdir) for wdk_dir in wdk_dirs]
 
 	def check(self):
 		if self.cmake_ is None:
@@ -165,7 +182,10 @@ class project:
 	
 	def directx(self):
 		return self.directx_
-	
+
+	def dx_dlls_dirs(self):
+		return self.dx_dlls_dirs_
+
 	def config_name(self):
 		return self.config_
 	

@@ -1,17 +1,18 @@
-import sys, os, shutil
+import sys, os, shutil, util
 
 def copy_diff( src, dst ):
 	pass
 	
 def copy_newer( src, dst ):
 	if not( os.path.isfile(src) ):
-		print('Error: src parameter of copy_newer is a file path.')
-		return
+		util.report_error('Error: src parameter of copy_newer is a file path.')
 	target = None
-	if ( os.path.isdir(dst) ):
+	
+	if os.path.isdir(dst):
 		target = os.path.join( dst, os.path.basename(src) )
 	else:
 		target = dst
+		
 	if os.path.exists(target):
 		if os.path.getmtime(target) < os.path.getmtime(src):
 			os.remove(target)
