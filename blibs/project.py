@@ -236,18 +236,18 @@ class project:
 	def boost_lib_dir(self):
 		return os.path.join( self.boost_stage(), "lib" )
 
-	def common_msvc_install_dir(self, prefix):
+	def common_msvc_install_dir(self, lib_name):
 		if self.toolset().compiler_name == 'msvc':
-			return os.path.join( self.install_lib(), prefix + "_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
+			return os.path.join( self.install_lib(), lib_name + "_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
 		report_error("Toolset is not set or not MSVC.")
 
-	def common_install_dir(self, prefix):
-		return os.path.join( self.install_lib(), prefix + "_" + self.target_modifier(['platform', 'tool', 'config']) )
+	def common_install_dir(self, lib_name):
+		return os.path.join( self.install_lib(), lib_name + "_" + self.target_modifier(['platform', 'tool', 'config']) )
 
-	def common_build_dir(self, prefix):
+	def common_build_dir(self, lib_name):
 		if self.toolset().compiler_name == "msvc":
-			return os.path.join( self.build_root(), prefix + "_" + self.target_modifier(['platform', 'tool']) )
-		return os.path.join( self.build_root(), prefix + "_" + self.target_modifier(['platform', 'tool', 'config']) )
+			return os.path.join( self.build_root(), lib_name + "_" + self.target_modifier(['platform', 'tool']) )
+		return os.path.join( self.build_root(), lib_name + "_" + self.target_modifier(['platform', 'tool', 'config']) )
 
 	def llvm_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "llvm" )
@@ -277,7 +277,7 @@ class project:
 		return self.common_msvc_install_dir('freetype')
 
 	def salvia_build(self):
-		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
+		return self.common_build_dir("salvia")
 	def salvia_lib(self):
 		return os.path.join( self.install_lib(), self.target_modifier(['platform', 'tool']), self.target_modifier(['config']) )
 	def salvia_bin(self):
