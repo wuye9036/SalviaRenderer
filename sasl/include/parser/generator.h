@@ -1,6 +1,10 @@
 #ifndef SASL_PARSER_GENERATOR_H
 #define SASL_PARSER_GENERATOR_H
 
+#include <eflib/include/platform/config.h>
+
+#include <sasl/include/parser/parser_forward.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
@@ -9,8 +13,6 @@
 
 #include <exception>
 #include <vector>
-
-#include <sasl/include/parser/parser_forward.h>
 
 namespace sasl{
 	namespace common{
@@ -29,11 +31,19 @@ class attribute_visitor{
 };
 
 class parser;
-class expectation_failure: public std::exception{
+class expectation_failure: public std::exception
+{
 public:
 	expectation_failure( token_iterator iter, parser const* p  );
 	parser const* get_parser();
 	virtual const char* what() const throw();
+
+#if defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+	virtual ~expectation_failure() _GLIBCXX_USE_NOEXCEPT
+	{
+	}
+#endif
+
 private:
 	token_iterator iter;
 	parser const* p;
