@@ -59,10 +59,10 @@ class project:
 		else:
 			report_error('Unsupported toolset name: %s' % default_toolset)
 
-		self.use_win_kit_ = self.toolset_.short_compiler_name() == "msvc" and\
+		self.use_win_kit_ = self.toolset_.short_compiler_name() == "vc" and\
 		                    self.toolset().major_ver >= 11
 		self.directx_ = \
-			(self.toolset_.short_compiler_name() == "msvc") and\
+			(self.toolset_.short_compiler_name() == "vc") and\
 			( "DXSDK_DIR" in env or self.use_win_kit_ )
 		self.dx_dlls_dirs_ = None
 
@@ -105,6 +105,8 @@ class project:
 		print( ' * CMake Executable ........ %s' % self.cmake_exe() )
 		print( ' * CMake Generator ......... %s' % self.generator() )
 		print( ' * Make tool ............... %s' % self.maker_name() )
+		print( ' * Use Windows Kits ........ %s' % self.use_win_kit_ )
+		print( ' * Use Direct3D ............ %s' % self.directx_ )
 		print('')
 		print( ' * Target .................. %s' % self.target_modifier(['platform', 'tool', 'config']) )
 		print( ' * Source .................. %s' % self.source_root() )

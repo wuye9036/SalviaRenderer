@@ -113,7 +113,7 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 		gcc_executables.append( os.path.join(gcc_dir, "g++") )
 	if systems.current() == systems.win32:
 		try:
-			gcc_paths = subprocess.check_output(["where", "g++"])
+			gcc_paths = subprocess.check_output(["@where", "g++"])
 			gcc_executables += gcc_paths.split("\n")
 		except:
 			pass
@@ -156,22 +156,23 @@ def windows_kit_dirs():
 
 		try:
 			import _winreg
-			winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots")
+			winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
 			if winkit_key is None:
 				return None
 			def CloseKey():
 				_winreg.CloseKey(winkit_key)
 			close_key = CloseKey
 			kit_names = ["KitsRoot", "KitsRoot81"]
-			kits = [kit
-					for kit in map(lambda key_name: _winreg.QueryValue(winkit_key, key_name), kit_names)
+			kits = [ str(kit)
+					for kit in map(lambda key_name: _winreg.QueryValueEx(winkit_key, key_name)[0], kit_names)
 					if kit is not None]
 
-		except ImportError:
+		except ImportError as e:
 			return None
-
+			
 		finally:
-			close_key()
+			if close_key:
+				close_key()
 			return kits
 
 	return None
