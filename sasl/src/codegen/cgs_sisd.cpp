@@ -141,7 +141,7 @@ void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 		src = rhs.load( lhs.abi() );
 		address = lhs.raw();
 	} else if ( kind == value_kinds::elements ){
-		char indexes[4] = {-1, -1, -1, -1};
+		elem_indexes indexes;
 		multi_value const* root = NULL;
 		bool is_swizzle = merge_swizzle(root, indexes, lhs);
 

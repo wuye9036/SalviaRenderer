@@ -61,7 +61,6 @@ multi_value::multi_value(size_t num_value)
 	: ty_(NULL), val_(num_value, NULL)
 	, cg_(NULL), kind_(value_kinds::unknown)
 	, builtin_ty_(builtin_types::none), abi_(abis::unknown)
-	, masks_(0)
 {
 }
 
@@ -71,7 +70,6 @@ multi_value::multi_value(
 	: ty_(ty), val_(val)
 	, cg_(cg), kind_(k)
 	, builtin_ty_(builtin_types::none), abi_(abi)
-	, masks_(0)
 {
 }
 
@@ -80,15 +78,14 @@ multi_value::multi_value(
 	value_kinds::id k, abis::id abi, cg_service* cg)
 	: ty_(NULL), val_(val)
 	, builtin_ty_(hint), abi_(abi)
-	, kind_(k), cg_(cg), masks_(0)
-	
+	, kind_(k), cg_(cg)
 {
 }
 
 multi_value::multi_value(multi_value const& rhs)
 	: ty_(rhs.ty_), builtin_ty_(rhs.builtin_ty_)
 	, abi_(rhs.abi_), val_( rhs.val_ )
-	, kind_(rhs.kind_), masks_(rhs.masks_), cg_(rhs.cg_)
+	, kind_(rhs.kind_), elem_indexes_(rhs.elem_indexes_), cg_(rhs.cg_)
 {
 	parent(rhs.parent_.get());
 	index(rhs.index_.get());
@@ -98,7 +95,7 @@ abis::id multi_value::abi() const{
 	return abi_;
 }
 
-multi_value multi_value::swizzle( size_t /*swz_code*/ ) const{
+multi_value multi_value::swizzle(elem_indexes const& /*swz_code*/) const{
 	assert( is_vector( hint() ) );
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
@@ -201,20 +198,20 @@ multi_value& multi_value::operator=( multi_value const& rhs )
 	builtin_ty_ = rhs.builtin_ty_;
 	abi_ = rhs.abi_;
 	cg_ = rhs.cg_;
-	masks_ = rhs.masks_;
+	elem_indexes_ = rhs.elem_indexes_;
 
 	parent(rhs.parent_.get());
 	index(rhs.index_.get());
 	return *this;
 }
 
-multi_value multi_value::slice(multi_value const& vec, uint32_t masks)
+multi_value multi_value::slice(multi_value const& vec, elem_indexes const& indexes)
 {
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
 	multi_value ret( scalar_of(hint), value_array(vec.value_count(), NULL), value_kinds::elements, vec.abi_, vec.cg_ );
-	ret.masks_ = masks;
+	ret.elem_indexes_ = indexes;
 	ret.parent(vec);
 
 	return ret;
@@ -255,8 +252,7 @@ void multi_value::store(multi_value const& v) const
 
 void multi_value::index(size_t index)
 {
-	char indexes[4] = { (char)index, -1, -1, -1 };
-	masks_ = indexes_to_mask( indexes );
+	elem_indexes_ = elem_indexes( static_cast<char>(index) );
 }
 
 cg_type*		multi_value::ty() const		{ return ty_; }
@@ -264,8 +260,8 @@ void			multi_value::ty(cg_type* v)	{ ty_ = v; }
 
 void			multi_value::hint( builtin_types bt ){ builtin_ty_ = bt; }
 void			multi_value::abi( abis::id abi ){ this->abi_ = abi; }
-uint32_t		multi_value::masks() const{ return masks_; }
-void			multi_value::masks( uint32_t v ){ masks_ = v; }
+elem_indexes	multi_value::indexes() const{ return elem_indexes_; }
+void			multi_value::indexes(elem_indexes const& v){ elem_indexes_ = v; }
 
 void			multi_value::kind( value_kinds::id vkind ) { kind_ = vkind; }
 void			multi_value::parent( multi_value const& v ){ parent_.reset( new multi_value(v) ); }

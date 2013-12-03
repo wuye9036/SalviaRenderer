@@ -453,9 +453,9 @@ Type* cg_service::type_(cg_type const* ty, abis::id abi)
 value_array cg_service::load(multi_value const& v)
 {
 	value_kinds::id kind = v.kind();
-	value_array raw = v.raw();
-	uint32_t masks = v.masks();
-	value_array ret = value_array(v.value_count(), NULL);
+	value_array		raw = v.raw();
+	elem_indexes	mem_indexes = v.indexes();
+	value_array		ret = value_array(v.value_count(), NULL);
 
 	assert( kind != value_kinds::unknown && kind != value_kinds::ty_only );
 
@@ -466,26 +466,16 @@ value_array cg_service::load(multi_value const& v)
 	}
 	else if( ( kind & (~value_kinds::reference) ) == value_kinds::elements )
 	{
-		if( masks > 0 )
+		if( mem_indexes.length() > 0 )
 		{
-			// Decompose indexes.
-			char indexes[4] = {-1, -1, -1, -1};
-			mask_to_indexes(indexes, masks);
-			vector<int> index_values;
-			index_values.reserve(4);
-			for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
-				index_values.push_back( indexes[i] );
-			}
-			assert( !index_values.empty() );
-
 			// Swizzle and write mask
-			if( index_values.size() == 1 && is_scalar(v.hint()) ){
+			if( mem_indexes.length() == 1 && is_scalar(v.hint()) ){
 				// Only one member we could extract reference.
-				ret = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
+				ret = emit_extract_val(v.parent()->to_rvalue(), mem_indexes[0]).load();
 			} else {
 				// Multi-members must be swizzle/writemask.
 				assert( (kind & value_kinds::reference) == 0 );
-				multi_value resolved = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
+				multi_value resolved = emit_extract_elem_mask(v.parent()->to_rvalue(), mem_indexes);
 				return resolved.load( v.abi() );
 			}
 		}
@@ -532,8 +522,8 @@ value_array cg_service::load_ref( multi_value const& v )
 		}
 	case static_cast<int>(value_kinds::elements):
 		{
-			assert( v.masks() );
-			return emit_extract_elem_mask( *v.parent(), v.masks() ).load_ref();
+			assert( !v.indexes().empty() );
+			return emit_extract_elem_mask( *v.parent(), v.indexes() ).load_ref();
 		}
 	}
 
@@ -831,8 +821,8 @@ multi_value cg_service::emit_cross( multi_value const& lhs, multi_value const& r
 	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
 	assert( rhs.hint() == lhs.hint() );
 
-	uint32_t swz_va = indexes_to_mask( 1, 2, 0, -1 );
-	uint32_t swz_vb = indexes_to_mask( 2, 0, 1, -1 );
+	elem_indexes swz_va(1, 2, 0, -1);
+	elem_indexes swz_vb(2, 0, 1, -1);
 
 	multi_value lvec_a = emit_extract_elem_mask( lhs, swz_va );
 	multi_value lvec_b = emit_extract_elem_mask( lhs, swz_vb );
@@ -851,9 +841,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, int idx )
 
 	if( is_vector(agg_hint) )
 	{
-		char indexes[4] = { (char)idx, -1, -1, -1 };
-		uint32_t mask = indexes_to_mask( indexes );
-		return multi_value::slice( lhs, mask );
+		return multi_value::slice( lhs, elem_indexes(static_cast<char>(idx)) );
 	}
 	else if( is_matrix(agg_hint) )
 	{
@@ -1062,14 +1050,13 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, multi_value co
 	return create_value( elem_tyi, elem_hint, elem_val, value_kinds::value, abi );
 }
 
-multi_value cg_service::emit_extract_elem_mask( multi_value const& vec, uint32_t mask )
+multi_value cg_service::emit_extract_elem_mask(multi_value const& vec, elem_indexes const& indexes)
 {
-	char indexes[4] = {-1, -1, -1, -1};
-	mask_to_indexes( indexes, mask );
-	uint32_t idx_len = indexes_length(indexes);
+	uint32_t idx_len = indexes.length();
 
 	assert( idx_len > 0 );
-	if( vec.hint() == builtin_types::none && idx_len == 1 ){
+	if( vec.hint() == builtin_types::none && idx_len == 1 )
+	{
 		// struct, array or not-package, return extract elem.
 		// Else do extract mask.
 		if(vec.hint() == builtin_types::none){
@@ -1091,7 +1078,7 @@ multi_value cg_service::emit_extract_elem_mask( multi_value const& vec, uint32_t
 	if( vec.storable() ){
 		multi_value swz_proxy = create_value( NULL, swz_hint, invalid_value_array(), value_kinds::elements, vec.abi() );
 		swz_proxy.parent(vec);
-		swz_proxy.masks(mask);
+		swz_proxy.indexes(indexes);
 		return swz_proxy;
 	} else {
 		if( is_scalar( vec.hint() ) ) {
@@ -1102,7 +1089,7 @@ multi_value cg_service::emit_extract_elem_mask( multi_value const& vec, uint32_t
 			case abis::c:
 			case abis::llvm:
 				{
-					Value* mask_mono = ext_->get_vector<int>( ArrayRef<char>(indexes, idx_len) );
+					Value* mask_mono = ext_->get_vector<int>( ArrayRef<char>(indexes.data, idx_len) );
 					value_array mask(parallel_factor_, mask_mono);
 					value_array v = ext_->shuffle_vector(vec_v, vec_v, mask);
 					return create_value(NULL, swz_hint, v, value_kinds::value, abis::llvm);
@@ -1372,7 +1359,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 
 				if( fn.multi_value_arg_as_ref() )
 				{
-					physical_args[physical_index] = restore( physical_args[physical_index] );
+					physical_args[physical_index] = restore(physical_args[physical_index]);
 				}
 			}
 			else
@@ -1382,7 +1369,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 		}
 	}
 
-	Value* ret_value = builder().CreateCall( fn.fn, physical_args );
+	Value* ret_value = builder().CreateCall(fn.fn, physical_args);
 
 	// Parse result.
 	if( fn.return_via_arg() )
@@ -1446,42 +1433,42 @@ void cg_service::jump_cond(multi_value const& cond_v, insert_point_t const & tru
 	builder().CreateCondBr(cond, true_ip.block, false_ip.block);
 }
 
-bool cg_service::merge_swizzle( multi_value const*& root, char indexes[], multi_value const& v )
+bool cg_service::merge_swizzle(multi_value const*& root, elem_indexes& indexes, multi_value const& v)
 {
 	bool is_swizzle = false;
 
 	// Find root of swizzle.
 	root = &v;
-	vector<uint32_t> masks;
-	while( root->masks() != 0 && root->parent()->hint() != builtin_types::none ){
+	vector<elem_indexes> swizzle_codes;
+	while( !root->indexes().empty() && root->parent()->hint() != builtin_types::none ){
 		is_swizzle = true;
-		masks.push_back(root->masks());
+		swizzle_codes.push_back(root->indexes());
 		root = root->parent();
 	}
 
 	if(!is_swizzle){ return false; }
 
 	// Merge swizzles
-	for( vector<uint32_t>::reverse_iterator it = masks.rbegin();
-		it != masks.rend(); ++it )
+	for(auto it = swizzle_codes.rbegin(); it != swizzle_codes.rend(); ++it)
 	{
-		if( it == masks.rbegin() ){
-			mask_to_indexes(indexes, *it);
+		if( it == swizzle_codes.rbegin() )
+		{
+			indexes = *it;
 			continue;
 		}
 
-		char current_indexes[]	= {-1, -1, -1, -1};
-		char tmp_indexes[]		= {-1, -1, -1, -1};
+		elem_indexes current_indexes;
+		elem_indexes tmp_indexes;
 
-		mask_to_indexes(current_indexes, *it);
-
+		current_indexes = *it;
+		
 		for(int i = 0; i < 4; ++i)
 		{
 			if( current_indexes[i] == -1 ) break;
-			tmp_indexes[i] = indexes[ current_indexes[i] ];
+			tmp_indexes.data[i] = indexes[ current_indexes[i] ];
 		}
 
-		std::copy(tmp_indexes, tmp_indexes+4, indexes);
+		indexes = tmp_indexes;
 	}
 
 	return true;

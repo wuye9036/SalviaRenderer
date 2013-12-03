@@ -557,34 +557,36 @@ SASL_VISIT_DEF( call_expression )
 	}
 }
 
-int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_code ){
-	swizzle_code = 0;
-
-	if( mask.length() > 4 ){
+int check_swizzle(builtin_types btc, std::string const& mask, elem_indexes& swizzle_indexes)
+{
+	if( mask.length() > 4 )
+	{
 		return 0;
 	}
 
 	size_t agg_size = 0;
-	if( is_scalar(btc) ){
+	if( is_scalar(btc) )
+	{
 		agg_size = 1;
-	} else if( is_vector(btc) ){
+	}
+	else if( is_vector(btc) )
+	{
 		agg_size = vector_size( btc );
-	} else if( is_matrix(btc) ){
+	}
+	else if( is_matrix(btc) )
+	{
 		agg_size = vector_count( btc );
 	}
 
 	if( agg_size == 0 ){ return 0; }
 
-	int min_src_size = 0;
-	int dest_size = 0;
-	swizzle_code = encode_swizzle( dest_size, min_src_size, mask.c_str() );
-	
-	if( min_src_size > static_cast<int>(agg_size) )
+	swizzle_indexes = elem_indexes(mask);
+	if(swizzle_indexes.max_element() >= static_cast<char>(agg_size))
 	{
 		return 0;
 	}
 
-	return dest_size;
+	return swizzle_indexes.length();
 }
 
 SASL_VISIT_DEF( member_expression ){
@@ -609,7 +611,7 @@ SASL_VISIT_DEF( member_expression ){
 	tynode* agg_type = agg_sem->ty_proto();
 	tid_t mem_typeid = -1;
 
-	int32_t swizzle_code = 0;
+	elem_indexes swizzle_code;
 	int32_t member_index = -1;
 
 	if( agg_type->is_struct() )

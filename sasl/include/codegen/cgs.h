@@ -105,7 +105,7 @@ public:
 	virtual multi_value emit_extract_val( multi_value const& lhs, multi_value const& idx );
 	virtual multi_value emit_extract_ref( multi_value const& lhs, int idx );
 	virtual multi_value emit_extract_ref( multi_value const& lhs, multi_value const& idx );
-	virtual multi_value emit_extract_elem_mask( multi_value const& vec, uint32_t mask );
+	virtual multi_value emit_extract_elem_mask(multi_value const& vec, elem_indexes const& indexes);
 	multi_value emit_extract_col( multi_value const& lhs, size_t index );
 
 	template <typename IndexT>
@@ -430,7 +430,7 @@ protected:
 		multi_value const& samp, multi_value const& coord,
 		externals::id ps_intrin );
 
-	bool merge_swizzle( multi_value const*& root, char indexes[], multi_value const& v );
+	bool merge_swizzle( multi_value const*& root, elem_indexes& indexes, multi_value const& v );
 
 	multi_value inf_from_value(multi_value const& v, bool negative);
 

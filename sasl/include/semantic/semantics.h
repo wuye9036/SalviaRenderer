@@ -3,11 +3,10 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
+#include <sasl/include/semantic/elem_indexes.h>
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
-
 #include <salviar/include/shader.h>
-
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/typedefs.h>
 
@@ -39,11 +38,6 @@ namespace sasl
 }
 
 BEGIN_NS_SASL_SEMANTIC();
-
-int32_t swizzle_field_name_to_id( char ch );
-int32_t encode_swizzle( char _1st, char _2nd = 0, char _3rd = 0, char _4th = 0 );
-int32_t encode_swizzle( int& dest_size, int& min_src_size, char const* masks );
-int32_t encode_sized_swizzle( int size );
 
 class node_semantic;
 class pety_t;
@@ -158,7 +152,8 @@ public:
 	salviar::semantic_value const&
 			semantic_value_ref() const;
 	int		member_index() const { return member_index_; }
-	int32_t	swizzle() const {return swizzle_code_; }
+	elem_indexes
+			swizzle() const {return swizzle_code_; }
 	bool	is_reference() const { return is_reference_; }
 	bool	is_function_pointer() const { return is_function_pointer_; }
 	lvalue_or_rvalue::id
@@ -209,7 +204,7 @@ public:
 	void semantic_value(salviar::semantic_value const& v);
 	void lr_value(lvalue_or_rvalue::id lrv) { lrv_ = lrv; }
 	void member_index(int v) { member_index_ = v; }
-	void swizzle(int32_t v) { swizzle_code_ = v; }
+	void swizzle(elem_indexes const& v) { swizzle_code_ = v; }
 	void is_reference(bool v) { is_reference_ = v; }
 	void is_function_pointer(bool v) { is_function_pointer_ = v; }
 	void modify_value() { modified_ = true; }
@@ -248,7 +243,7 @@ private:
 	sasl::syntax_tree::node*	referenced_declarator_;
 	salviar::semantic_value*	semantic_value_;
 	int							member_index_;
-	int32_t						swizzle_code_;
+	elem_indexes				swizzle_code_;
 	bool						is_reference_;
 	bool						is_function_pointer_;
 	bool						modified_;

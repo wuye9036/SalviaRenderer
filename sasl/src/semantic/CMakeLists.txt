@@ -2,6 +2,7 @@ SALVIA_CHECK_BUILD_WITH_UNICODE()
 	
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_forward.h
+	${SASL_HOME_DIR}/sasl/include/semantic/elem_indexes.h
 	${SASL_HOME_DIR}/sasl/include/semantic/pety.h
 	${SASL_HOME_DIR}/sasl/include/semantic/reflector.h
 	${SASL_HOME_DIR}/sasl/include/semantic/reflection_impl.h

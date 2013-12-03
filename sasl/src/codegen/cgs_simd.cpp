@@ -113,14 +113,13 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 		{
 			assert( lhs.parent()->storable() );
 
-			char indexes[4];
-			mask_to_indexes( indexes, lhs.masks() );
-			uint32_t idx_len = indexes_length( indexes );
+			elem_indexes indexes = lhs.indexes();
+			uint32_t	 indexes_length = indexes.length();
 
 			if(lhs.abi() == abis::c)
 			{
 				value_array parent_address = lhs.parent()->load_ref();
-				for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx )
+				for( size_t i_write_idx = 0; i_write_idx < indexes_length; ++i_write_idx )
 				{
 					value_array mem_ptr = ext_->struct_gep(parent_address, indexes[i_write_idx]);
 					value_array old_elem = ext_->load(mem_ptr);
@@ -135,7 +134,7 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 				multi_value old_parent = lhs.parent()->to_rvalue();
 				multi_value selected_parent = old_parent;
 
-				for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx )
+				for( size_t i_write_idx = 0; i_write_idx < indexes_length; ++i_write_idx )
 				{
 					multi_value new_elem_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
 					multi_value old_elem_val = emit_extract_val( old_parent, static_cast<int>(indexes[i_write_idx]) );

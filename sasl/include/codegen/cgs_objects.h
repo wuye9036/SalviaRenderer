@@ -3,6 +3,7 @@
 
 #include <sasl/include/codegen/forward.h>
 
+#include <sasl/include/semantic/elem_indexes.h>
 #include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -50,13 +51,15 @@ namespace sasl
 	}
 	namespace semantic
 	{
-		class module_semantic;
+		class  module_semantic;
+		struct elem_indexes;
 	}
 }
 
 BEGIN_NS_SASL_CODEGEN();
 
-class module_context;
+class  module_context;
+using  sasl::semantic::elem_indexes;
 
 namespace abis
 {
@@ -178,18 +181,18 @@ public:
 	multi_value*	index() const;
 	void			index( multi_value const& );
 	void			index( multi_value const* );
-	void			index( size_t v );			///< Set Index. It is only make sense if parent is available.
-	uint32_t		masks() const;				///< Get masks
-	void			masks( uint32_t v );		///< Set masks.
+	void			index( size_t v );					///< Set Index. It is only make sense if parent is available.
+	elem_indexes	indexes() const;					///< Get indexes (e.g. swizzle, write mask)
+	void			indexes(elem_indexes const& v);	///< Set indexes (e.g. swizzle, write mask)
 	/// @}
 
 	/// @name Operators
 	/// @{
-	multi_value		swizzle( size_t swz_code ) const;
+	multi_value		swizzle(elem_indexes const& swz_code) const;
 	multi_value		to_rvalue() const;
 	/// @}
 
-	static multi_value slice( multi_value const& vec, uint32_t masks );
+	static multi_value slice( multi_value const& vec, elem_indexes const& indexes);
 	static multi_value slice( multi_value const& vec, multi_value const& index );
 
 protected:
@@ -209,10 +212,10 @@ protected:
 	/// @name Members
 	/// @{
 
-	// Parent, Index and Masks.
+	// Parent, Index and Indexes for swizzle/write mask.
 	boost::scoped_ptr<multi_value>	parent_;
 	boost::scoped_ptr<multi_value>	index_;
-	uint32_t						masks_;
+	elem_indexes					elem_indexes_;
 
 	// Value
 	std::vector<llvm::Value*>		val_;

@@ -25,8 +25,6 @@ using llvm::Type;
 using llvm::Value;
 using llvm::VectorType;
 
-using sasl::semantic::encode_swizzle;
-using sasl::semantic::encode_sized_swizzle;
 using sasl::semantic::symbol;
 using sasl::semantic::caster_t;
 using sasl::semantic::tid_t;
@@ -169,11 +167,10 @@ public:
 		assert( source_size > dest_size );
 
 		multi_value vector_value = dest_ctxt->node_value.to_rvalue();
-		size_t swz_code = encode_sized_swizzle(dest_size);
-
+		
 		cgs->store(
 			dest_ctxt->node_value,
-			vector_value.swizzle(swz_code)
+			vector_value.swizzle(elem_indexes::from_length(dest_size))
 			);
 	}
 private:

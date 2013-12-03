@@ -86,9 +86,9 @@ SASL_VISIT_DEF( member_expression ){
 
 	if( tisi->ty_proto()->is_builtin() ){
 		// Swizzle or write mask
-		uint32_t masks = sem_->get_semantic(&v)->swizzle();
+		elem_indexes swz_indexes = sem_->get_semantic(&v)->swizzle();
 		multi_value agg_value = agg_ctxt->node_value;
-		ctxt->node_value = service()->emit_extract_elem_mask( agg_value, masks );
+		ctxt->node_value = service()->emit_extract_elem_mask(agg_value, swz_indexes);
 	} else {
 		// Member
 		symbol* struct_sym = sem_->get_symbol( tisi->ty_proto() );
