@@ -574,12 +574,11 @@ value_array cg_service::load_as_llvm_c(multi_value const& v, abis::id abi)
 		return v.load();
 	} else if( is_vector( hint ) ){
 		multi_value ret_value = undef_value( hint, abi );
-
-		size_t vec_size = vector_size( hint );
-		for( size_t i = 0; i < vec_size; ++i ){
-			ret_value = emit_insert_val( ret_value, (int)i, emit_extract_elem(v, i) );
+		int vec_size = static_cast<int>( vector_size(hint) );
+		for(int i = 0; i < vec_size; ++i)
+		{
+			ret_value = emit_insert_val( ret_value, i, emit_extract_elem(v, i) );
 		}
-
 		return ret_value.load();
 	} else if( is_matrix( hint ) ){
 		multi_value ret_value = null_value( hint, abi );

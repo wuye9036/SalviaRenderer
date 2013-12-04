@@ -1,21 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|@SALVIA_VS_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|@CMAKE_INFO_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|@SALVIA_VS_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|@CMAKE_INFO_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|@SALVIA_VS_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|@CMAKE_INFO_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|@SALVIA_VS_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|@CMAKE_INFO_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

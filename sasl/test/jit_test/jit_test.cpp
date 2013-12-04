@@ -79,6 +79,14 @@ void jit_fixture::init( string const& file_name, string const& options )
 	shared_ptr<diag_chat> results = drv->compile(true);
 	diag_chat::merge(diags.get(), results.get(), true);
 
+	if( !drv->get_root() || !drv->get_semantic() || !drv->get_vmcode() )
+	{
+		for(auto const& diag_item: diags->diag_items())
+		{
+			BOOST_ERROR( sasl::common::str(diag_item) );
+		}
+	}
+
 	BOOST_REQUIRE( drv->get_root() );
 	BOOST_REQUIRE( drv->get_semantic() );
 	BOOST_REQUIRE( drv->get_vmcode() );

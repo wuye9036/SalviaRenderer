@@ -111,9 +111,9 @@ public:
 	template <typename IndexT>
 	multi_value emit_extract_elem( multi_value const& vec, IndexT const& idx ){
 		if( vec.storable() ){
-			return emit_extract_ref( vec, idx );
+			return emit_extract_ref(vec, idx);
 		} else {
-			return emit_extract_val( vec, idx );
+			return emit_extract_val(vec, idx);
 		}
 	}
 	/// @}
