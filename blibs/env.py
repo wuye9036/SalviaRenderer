@@ -91,7 +91,7 @@ class toolset:
 	def short_compiler_name(self):
 		if self.compiler_name == "msvc":
 			return "vc"
-		elif self.compiler_name == "mingw":
+		elif self.compiler_name == "mingw" or self.compiler_name == "mingw64":
 			return "mgw"
 		elif self.compiler_name == "gcc":
 			return "gcc"
@@ -138,7 +138,7 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 					continue
 
 			compiler_name = None
-			machine_name = subprocess.check_output([gcc_executable, "-dumpmachine"])
+			machine_name = subprocess.check_output([gcc_executable, "-dumpmachine"]).strip()
 			if machine_name == "x86_64-w64-mingw32":
 				compiler_name = "mingw64"
 			elif machine_name == "mingw32":

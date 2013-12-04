@@ -7,15 +7,11 @@
 #	error "Unsupported platform!"
 #endif
 
-#if defined(EFLIB_MSVC)
+#if defined(EFLIB_MSVC) || defined(EFLIB_MINGW64)
 #	include <intrin.h>
-#elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
-#   ifdef __MINGW64_VERSION_MAJOR
-#	    include <intrin.h>
-#   else
-#	    include <cpuid.h>
-#	    include <x86intrin.h>
-#   endif
+#elif defined(EFLIB_MINGW32) || defined(EFLIB_GCC)
+#	include <cpuid.h>
+#	include <x86intrin.h>
 #else
 #	error "Unsupported compiler!"
 #endif

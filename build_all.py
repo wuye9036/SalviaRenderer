@@ -132,6 +132,7 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
 		conf_params = additional_params.copy()
 	if not proj.toolset().short_compiler_name() == "vc":
 		conf_params["CMAKE_BUILD_TYPE"] = ("STRING", proj.config_name())
+		conf_params["CMAKE_INFO_ARCH_NAME"] = ("STRING", str(proj.arch()))
 	if not install_dir is None:
 		conf_params["CMAKE_INSTALL_PREFIX"] = ("PATH", install_dir)
 	
@@ -158,21 +159,21 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
 		make_cmd.add_command('@set VisualStudioVersion=%s' % proj.toolset().vs_version_string())
 		make_cmd.add_command('@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s'
 			% (proj.maker_name(), proj.project_file_ext(), proj.config_name()))
-		make_cmd.add_command('@if ERRORLEVEL 1 exit /B 1')
+		make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
 		if not install_dir is None:
 			make_cmd.add_command(
 				'@%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()))
-			make_cmd.add_command('@if ERRORLEVEL 1 exit /B 1')
+			make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
 		if make_cmd.execute() != 0:
 			report_error("%s make failed." % project_name)
 	elif proj.toolset().short_compiler_name() == "mgw":
 		make_cmd = batch_command(build_dir)
 		make_cmd.add_command('@%s' % proj.env_setup_commands())
 		make_cmd.add_command('%s -j%d' % (proj.maker_name(), multiprocessing.cpu_count()))
-		make_cmd.add_command('@if ERRORLEVEL 1 exit /B 1')
+		make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
 		if not install_dir is None:
 			make_cmd.add_command('@%s install' % proj.maker_name())
-			make_cmd.add_command('@if ERRORLEVEL 1 exit /B 1')
+			make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
 		if make_cmd.execute() != 0:
 			report_error("%s make failed." % project_name)
 	else:

@@ -22,11 +22,15 @@
 #		define _SCL_SECURE_NO_DEPRECATE
 #		define _SCL_SECURE_NO_WARNINGS
 #	endif
-#elif defined(__MINGW32__) || defined(__MINGW64__)
+#elif defined(__MINGW32__)
 #	define EFLIB_MINGW
-
-// Fix the C++ linkage problem in GCC 4.8.2
-#   include <intrin.h>
+#	if defined(__MINGW64_VERSION_MAJOR)
+#		define EFLIB_MINGW64
+		// Fix the C++ linkage problem in GCC 4.8.2
+#   	include <intrin.h>
+#	else
+#		define EFLIB_MINGW32
+#	endif
 #elif defined( __GNUC__ )
 #   define EFLIB_GCC
 #endif
