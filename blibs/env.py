@@ -65,12 +65,17 @@ class toolset:
 		self.minor_ver = minor_version
 		self.patch_ver = patch_version
 
+	def support_x64(self):
+		if self.compiler_name == "mingw":
+			return False
+		return True
+
 	def boost_name(self):
 		if self.compiler_name == "msvc":
 			return "%s-%d.%d" % (self.compiler_name, self.major_ver, self.minor_ver)
-		elif self.compiler_name == "mingw" or self.compiler_name == "gcc":
+		elif self.compiler_name in ["mingw", "mingw64", "gcc"]:
 			return "gcc"
-		
+
 	def short_name(self):
 		ret = "%s%d" % ( self.compiler_name, self.major_ver )
 		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
@@ -132,9 +137,15 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 				if version_digits[1] < min_minor_ver:
 					continue
 
-			gcc_toolset = toolset(
-				None,
-				"mingw" if systems.current() == systems.win32 else "gcc",
+			compiler_name = None
+			machine_name = subprocess.check_output([gcc_executable, "-dumpmachine"])
+			if machine_name == "x86_64-w64-mingw32":
+				compiler_name = "mingw64"
+			elif machine_name == "mingw32":
+				compiler_name = "mingw"
+			else:
+				compiler_name = "gcc"
+			gcc_toolset = toolset( None, compiler_name,
 				version_digits[0], version_digits[1], version_digits[2]
 			)
 			return gcc_toolset, gcc_dir

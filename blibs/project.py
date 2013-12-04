@@ -86,7 +86,8 @@ class project:
 		if not self.boost_version():
 			report_error("Boost is not found. Please specify boost path in \'proj.py\'.")
 		if self.toolset().short_compiler_name() == "mgw" and self.arch() == arch.x64:
-			report_error('Salvia cannot build as 64-bit when MinGW is used.')
+			if not self.toolset().support_x64():
+				report_error('Salvia cannot build as 64-bit when MinGW32 is used.')
 		if systems.current() == systems.linux and self.arch() != arch.current():
 			report_error('Salvia cannot support cross compiling on Linux.Please specify correct arch in proj.py')
 		if self.toolset().short_compiler_name() in ['mgw', 'gcc'] \
@@ -162,14 +163,14 @@ class project:
 		
 	def env_setup_commands(self):
 		if self.os() == systems.win32:
-			if self.toolset().compiler_name == 'msvc':
+			if self.toolset().short_compiler_name() == 'vc':
 				base_dir = os.path.join( self.builder_root_, "vc", "bin" )
 				if arch.current() == arch.x86:
 					return os.path.join( base_dir, "vcvars32.bat" )
 				if arch.current() == arch.x64:
 					return os.path.join( base_dir, "x86_amd64", "vcvarsx86_amd64.bat" )
 			else:
-				if self.toolset().compiler_name == "mingw":
+				if self.toolset().short_compiler_name() == "mgw":
 					if not self.build_root_ is None:
 						return 'set PATH=%%PATH%%;"%s"' % self.builder_root_
 		if self.os() == systems.linux and not self.build_root_ is None:
@@ -177,7 +178,7 @@ class project:
 		report_error("Unrecognized OS or toolset.")
 		
 	def maker_name(self):
-		if self.toolset().compiler_name == 'msvc':
+		if self.toolset().short_compiler_name() == 'vc':
 			return 'MSBuild'
 		elif self.toolset().short_compiler_name() == "mgw":
 			return 'mingw32-make'
@@ -239,7 +240,7 @@ class project:
 		return os.path.join( self.boost_stage(), "lib" )
 
 	def common_msvc_install_dir(self, lib_name):
-		if self.toolset().compiler_name == 'msvc':
+		if self.toolset().short_compiler_name() == 'vc':
 			return os.path.join( self.install_lib(), lib_name + "_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
 		report_error("Toolset is not set or not MSVC.")
 
@@ -247,7 +248,7 @@ class project:
 		return os.path.join( self.install_lib(), lib_name + "_" + self.target_modifier(['platform', 'tool', 'config']) )
 
 	def common_build_dir(self, lib_name):
-		if self.toolset().compiler_name == "msvc":
+		if self.toolset().short_compiler_name() == "vc":
 			return os.path.join( self.build_root(), lib_name + "_" + self.target_modifier(['platform', 'tool']) )
 		return os.path.join( self.build_root(), lib_name + "_" + self.target_modifier(['platform', 'tool', 'config']) )
 
