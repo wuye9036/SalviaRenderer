@@ -10,8 +10,12 @@
 #if defined(EFLIB_MSVC)
 #	include <intrin.h>
 #elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
-#	include <cpuid.h>
-#	include <x86intrin.h>
+#   ifdef __MINGW64_VERSION_MAJOR
+#	    include <intrin.h>
+#   else
+#	    include <cpuid.h>
+#	    include <x86intrin.h>
+#   endif
 #else
 #	error "Unsupported compiler!"
 #endif

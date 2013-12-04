@@ -22,12 +22,12 @@ namespace eflib{
 
 			int cpu_infos[4];
 			int cpu_infos_ex[4];
-#if defined(EFLIB_MINGW) || defined(EFLIB_GCC)
-			__cpuid(1, cpu_infos[0], cpu_infos[1], cpu_infos[2], cpu_infos[3]);
-			__cpuid(0x80000001, cpu_infos_ex[0], cpu_infos_ex[1], cpu_infos_ex[2], cpu_infos_ex[3]);
-#elif defined(EFLIB_MSVC)
+#if defined(EFLIB_MSVC) || defined(__MINGW64_VERSION_MAJOR)
 			__cpuid(cpu_infos, 1);
 			__cpuid(cpu_infos_ex, 0x80000001);
+#elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+			__cpuid(1, cpu_infos[0], cpu_infos[1], cpu_infos[2], cpu_infos[3]);
+			__cpuid(0x80000001, cpu_infos_ex[0], cpu_infos_ex[1], cpu_infos_ex[2], cpu_infos_ex[3]);
 #endif
 			feats[cpu_sse2]		= ( cpu_infos[3] & (1 << 26) ) || false;
 			feats[cpu_sse3]		= ( cpu_infos[2] & 0x1 ) || false;

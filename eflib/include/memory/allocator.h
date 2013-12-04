@@ -33,7 +33,7 @@ namespace eflib
 	inline void* aligned_malloc(size_t size, uint32_t alignment)
 	{
 #if defined(EFLIB_MSVC) || defined(EFLIB_MINGW)
-		return _aligned_malloc(size, alignment);
+		return _mm_malloc(size, alignment);
 #else
 		return ::aligned_alloc(size, alignment);
 #endif
@@ -42,7 +42,7 @@ namespace eflib
 	inline void  aligned_free(void* p)
 	{
 #if defined(EFLIB_MSVC) || defined(EFLIB_MINGW)
-		::_aligned_free(p);
+		_mm_free(p);
 #else
 		::free(p);
 #endif
@@ -140,7 +140,7 @@ namespace eflib
 
 		void destroy(pointer p)
 		{
-            EFLIB_UNREF_DECLARATOR(p);
+			EFLIB_UNREF_DECLARATOR(p);
 			p->~T();
 		}
 
@@ -281,7 +281,7 @@ namespace eflib
 		}
 
 		void destroy(pointer p)
-        {
+		{
 			p->~T();
 		}
 
