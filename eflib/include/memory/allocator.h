@@ -12,13 +12,8 @@
 
 #include <stdlib.h>
 
-#if defined(__MINGW32__)
-#if defined(__MSVCRT_VERSION__) && __MSVCRT_VERSION__ < 0x0700
-#undef __MSVCRT_VERSION__
-#endif // defined
-#if !defined(__MSVCRT_VERSION__)
-#define __MSVCRT_VERSION__ 0x0700
-#endif
+#if defined(EFLIB_MINGW)
+#	include <mm_malloc.h>
 #endif
 
 #include <malloc.h>
@@ -32,7 +27,9 @@ namespace eflib
 {
 	inline void* aligned_malloc(size_t size, uint32_t alignment)
 	{
-#if defined(EFLIB_MSVC) || defined(EFLIB_MINGW)
+#if defined(EFLIB_MSVC)
+		return _aligned_malloc(size, alignment);
+#elif defined(EFLIB_MINGW)
 		return _mm_malloc(size, alignment);
 #else
 		return ::aligned_alloc(size, alignment);
@@ -41,7 +38,9 @@ namespace eflib
 
 	inline void  aligned_free(void* p)
 	{
-#if defined(EFLIB_MSVC) || defined(EFLIB_MINGW)
+#if defined(EFLIB_MSVC)
+		_aligned_free(p);
+#elif defined(EFLIB_MINGW)
 		_mm_free(p);
 #else
 		::free(p);
@@ -49,7 +48,7 @@ namespace eflib
 	}
 
 	/**
-	 * Aligned allocator£¬from KlayGE
+	 * Aligned allocator, from KlayGE
 	 */
 	template <typename T, int alignment>
 	class aligned_allocator
