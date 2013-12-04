@@ -24,6 +24,9 @@
 #	endif
 #elif defined(__MINGW32__) || defined(__MINGW64__)
 #	define EFLIB_MINGW
+
+// Fix the C++ linkage problem in GCC 4.8.2
+#   include <intrin.h>
 #elif defined( __GNUC__ )
 #   define EFLIB_GCC
 #endif

@@ -114,7 +114,7 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 	if systems.current() == systems.win32:
 		try:
 			gcc_paths = subprocess.check_output(["@where", "g++"])
-			gcc_executables += gcc_paths.split("\n")
+			gcc_executables += gcc_paths.split("\r\n")
 		except:
 			pass
 		gcc_executables.append(os.path.join("C:/MinGW/bin", "g++"))
