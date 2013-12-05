@@ -144,7 +144,7 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
 	if systems.current() == systems.win32:
 		conf_cmd = batch_command(build_dir)
 		if proj.customized_toolset_dir():
-			conf_cmd.add_command('@set PATH=%%PATH%%;"%s"' % proj.customized_toolset_dir())
+			conf_cmd.add_command('@set PATH=%s;%%PATH%%' % proj.customized_toolset_dir())
 		conf_cmd.add_command('"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), params_cmd, source_dir))
 		conf_cmd.add_command('@if ERRORLEVEL 1 exit /B 1')
 		if conf_cmd.execute() != 0:
