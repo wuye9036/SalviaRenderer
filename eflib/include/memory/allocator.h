@@ -10,12 +10,6 @@
 #include <limits>
 #include <vector>
 
-#include <stdlib.h>
-
-#if defined(EFLIB_MINGW)
-#	include <mm_malloc.h>
-#endif
-
 #include <malloc.h>
 
 #ifdef max
@@ -27,24 +21,18 @@ namespace eflib
 {
 	inline void* aligned_malloc(size_t size, uint32_t alignment)
 	{
-#if defined(EFLIB_MSVC)
-		return _aligned_malloc(size, alignment);
-#elif defined(EFLIB_MINGW)
-		return _mm_malloc(size, alignment);
-#else
-		return ::aligned_alloc(size, alignment);
-#endif
+		uint8_t* p = static_cast<uint8_t*>(malloc(size + 2 + (alignment - 1)));
+		uint8_t* new_p = reinterpret_cast<uint8_t*>((reinterpret_cast<size_t>(p) + 2 + (alignment - 1)) & (-static_cast<int32_t>(alignment)));
+		reinterpret_cast<uint16_t*>(new_p)[-1] = static_cast<uint16_t>(new_p - p);
+
+		return reinterpret_cast<void*>(new_p);
 	}
 
 	inline void  aligned_free(void* p)
 	{
-#if defined(EFLIB_MSVC)
-		_aligned_free(p);
-#elif defined(EFLIB_MINGW)
-		_mm_free(p);
-#else
-		::free(p);
-#endif
+		uint16_t* p16 = reinterpret_cast<uint16_t*>(p);
+		uint8_t* org_p = reinterpret_cast<uint8_t*>(p16) - p16[-1];
+		free(org_p);
 	}
 
 	/**

@@ -228,7 +228,7 @@ def install_prebuild_binaries(proj):
 	# Copy mingw runtime
 	if proj.toolset().short_compiler_name() == "mgw":
 		mgw_dir = proj.customized_toolset_dir()
-		libs = ["stdc++", "sjlj"]
+		libs = ["stdc++", "sjlj", "seh"]
 		for f in os.listdir(mgw_dir):
 			if os.path.splitext(f)[1] != dynamic_lib_ext:
 				continue

@@ -23,6 +23,7 @@
 #		define _SCL_SECURE_NO_WARNINGS
 #	endif
 #elif defined(__MINGW32__)
+#	include <_mingw.h>
 #	define EFLIB_MINGW
 #	if defined(__MINGW64_VERSION_MAJOR)
 #		define EFLIB_MINGW64
