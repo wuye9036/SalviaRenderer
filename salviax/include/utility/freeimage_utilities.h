@@ -1,9 +1,8 @@
 #ifndef SALVIAX_FREEIMAGE_UTILITIES_H
 #define SALVIAX_FREEIMAGE_UTILITIES_H
 
-#include <salviax/include/utility/user_config.h>
+#include <salviax/include/utility/utility_forward.h>
 
-#include "utility_forward.h"
 #include <salviar/include/colors.h>
 #include <eflib/include/string/string.h>
 #include <eflib/include/math/collision_detection.h>
@@ -94,35 +93,35 @@ private:
 // which is compatible with internal color format in FreeImage
 // but components order of it is RGBA.
 template<typename FIColorT>
-struct softart_rgba_color_type{
+struct salvia_rgba_color_type{
 	typedef salviar::color_max type;
 	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 template<>
-struct softart_rgba_color_type<RGBQUAD>{
+struct salvia_rgba_color_type<RGBQUAD>{
 	typedef salviar::color_rgba8 type;
 	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
 template<>
-struct softart_rgba_color_type<RGBTRIPLE>{
+struct salvia_rgba_color_type<RGBTRIPLE>{
 	typedef salviar::color_rgba8 type;
 	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
 template<>
-struct softart_rgba_color_type<FIRGBF>{
+struct salvia_rgba_color_type<FIRGBF>{
 	typedef salviar::color_rgba32f type;
 	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
 template<>
-struct softart_rgba_color_type<FIRGBAF>{
+struct salvia_rgba_color_type<FIRGBAF>{
 	typedef salviar::color_rgba32f type;
 	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
-static softart_rgba_color_type<FIRGBAF> x;
+static salvia_rgba_color_type<FIRGBAF> x;
 
 END_NS_SALVIAX_UTILITY();
 

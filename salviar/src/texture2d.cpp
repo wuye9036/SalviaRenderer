@@ -2,6 +2,7 @@
 
 #include <salviar/include/surface.h>
 #include <salviar/include/sampler.h>
+#include <salviar/include/internal_mapped_resource.h>
 
 #include <eflib/include/utility/unref_declarator.h>
 
@@ -9,9 +10,12 @@
 #include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-BEGIN_NS_SALVIAR()
+#include <vector>
+
+BEGIN_NS_SALVIAR();
 
 using namespace eflib;
+using std::vector;
 using boost::make_shared;
 
 texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
@@ -24,122 +28,66 @@ texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_fo
 
 void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 {
-	if( auto_gen )
+	if(auto_gen)
     {
 		max_lod_ = 0;
 		min_lod_ = calc_lod_limit(width_, height_) - 1;
 	}
 
-	size_t cur_sizex    = surfs_[max_lod_]->get_width();
-	size_t cur_sizey    = surfs_[max_lod_]->get_height();
+	size_t cur_width    = surfs_[max_lod_]->get_width();
+	size_t cur_height   = surfs_[max_lod_]->get_height();
 	size_t num_samples  = surfs_[max_lod_]->sample_count();
 
 	surfs_.resize(min_lod_ + 1);
 
-	int elem_size = color_infos[fmt_].size;
-	for(size_t iLevel = max_lod_ + 1; iLevel <= min_lod_; ++iLevel)
+	for(size_t lod_level = max_lod_ + 1; lod_level <= min_lod_; ++lod_level)
 	{
-		size_t last_sizex = cur_sizex;
+		cur_width =  (cur_width + 1) / 2;
+		cur_height = (cur_height + 1) / 2;
 
-		cur_sizex = (cur_sizex + 1) / 2;
-		cur_sizey = (cur_sizey + 1) / 2;
-
-		byte* dst_data = NULL;
-		byte* src_data = NULL;
-
-		surfs_[iLevel] = make_shared<surface>(cur_sizex, cur_sizey, num_samples, fmt_);
-
-		surfs_[iLevel]	->map((void**)&dst_data, map_write);
-		surfs_[iLevel-1]->map((void**)&src_data, map_read);
-
-#if TEST_CODE
-		float r = iLevel % 3 == 0 ? 1.0f : 0.0f;
-		float g = iLevel % 3 == 1 ? 1.0f : 0.0f;
-		float b = iLevel % 3 == 2 ? 1.0f : 0.0f;
-		color_rgba32f c(r, g, b, 1.0f);
-#endif
+		surfs_[lod_level] = make_shared<surface>(cur_width, cur_height, num_samples, fmt_);
 
 		switch (filter)
 		{
 		case filter_point:
-			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely)
+			for(size_t y = 0; y < cur_height; ++y)
             {
-				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx)
+				for(size_t x = 0; x < cur_width; ++x)
                 {
-					color_rgba32f c;
-					pixel_format_convertor::convert(
-						pixel_format_color_rgba32f, fmt_, 
-						(void*)&c, (const void*)(src_data + ((iPixelx * 2) + (iPixely * 2) * last_sizex) * elem_size)
-						);
-					pixel_format_convertor::convert(
-						fmt_, pixel_format_color_rgba32f, 
-						(void*)(dst_data + (iPixelx + iPixely * cur_sizex) * elem_size), (const void*)&c
-						);
+					for(size_t s = 0; s < num_samples; ++s)
+					{
+						color_rgba32f c = surfs_[lod_level-1]->get_texel(x*2, y*2, s);
+						surfs_[lod_level]->set_texel(x, y, s, c);
+					}
 				}
 			}
 			break;
 
 		case filter_linear:
-			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely)
+			for(size_t y = 0; y < cur_height; ++y)
             {
-				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx)
+				for(size_t x = 0; x < cur_width; ++x)
                 {
-					color_rgba32f c0, c1, c2, c3;
-					pixel_format_convertor::convert(
-						pixel_format_color_rgba32f, fmt_, 
-						(void*)&c0, (const void*)(src_data + ((iPixelx * 2 + 0) + (iPixely * 2 + 0) * last_sizex) * elem_size)
-						);
-					pixel_format_convertor::convert(
-						pixel_format_color_rgba32f, fmt_, 
-						(void*)&c1, (const void*)(src_data + ((iPixelx * 2 + 1) + (iPixely * 2 + 0) * last_sizex) * elem_size)
-						);
-					pixel_format_convertor::convert(
-						pixel_format_color_rgba32f, fmt_, 
-						(void*)&c2, (const void*)(src_data + ((iPixelx * 2 + 0) + (iPixely * 2 + 1) * last_sizex) * elem_size)
-						);
-					pixel_format_convertor::convert(
-						pixel_format_color_rgba32f, fmt_, 
-						(void*)&c3, (const void*)(src_data + ((iPixelx * 2 + 1) + (iPixely * 2 + 1) * last_sizex) * elem_size)
-						);
+					for(size_t s = 0; s < num_samples; ++s)
+					{
+						color_rgba32f c[4] =
+						{
+							surfs_[lod_level-1]->get_texel(x*2+0, y*2+0, s),
+							surfs_[lod_level-1]->get_texel(x*2+1, y*2+0, s),
+							surfs_[lod_level-1]->get_texel(x*2+0, y*2+1, s),
+							surfs_[lod_level-1]->get_texel(x*2+1, y*2+1, s)
+						};
 
-					color_rgba32f c((c0.get_vec4() + c1.get_vec4() + c2.get_vec4() + c3.get_vec4()) * 0.25f);
-
-					pixel_format_convertor::convert(
-						fmt_, pixel_format_color_rgba32f, 
-						(void*)(dst_data + (iPixelx + iPixely * cur_sizex) * elem_size), (const void*)&c
-						);
+						color_rgba32f dst_color(
+							(c[0].get_vec4() + c[1].get_vec4() + c[2].get_vec4() + c[3].get_vec4()) * 0.25f
+							);
+						surfs_[lod_level]->set_texel(x, y, s, dst_color);
+					}
 				}
 			}
 			break;
-
-		default:
-			break;
 		}
-
-		surfs_[iLevel-1]->unmap();
-		surfs_[iLevel  ]->unmap();
 	}
-}
-
-void  texture_2d::map(void** pdata, size_t subresource, map_mode mm)
-{
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-	assert(pdata);
-
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
-	*pdata = NULL;
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
-	get_surface(subresource)->map(pdata, mm);
-}
-
-void  texture_2d::unmap(size_t subresource)
-{
-	get_surface(subresource)->unmap();
 }
 
 surface_ptr const& texture_2d::get_surface(size_t subresource) const
@@ -186,4 +134,5 @@ void texture_2d::set_min_lod(size_t miplevel)
 	if(! (max_lod_ <= miplevel && miplevel < ml_limit)) return;
 	min_lod_ = miplevel;
 }
-END_NS_SALVIAR()
+
+END_NS_SALVIAR();

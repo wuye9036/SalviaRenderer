@@ -23,6 +23,7 @@ BEGIN_NS_SALVIAR();
 
 struct shader_profile;
 struct input_element_desc;
+struct mapped_resource;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
@@ -30,6 +31,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
 EFLIB_DECLARE_CLASS_SHARED_PTR(async_object);
 
 enum class async_status :uint32_t;
+
 struct renderer_parameters
 {
     size_t			backbuffer_width;
@@ -56,6 +58,10 @@ public:
     virtual input_layout_ptr create_input_layout(
         input_element_desc const* elem_descs, size_t elems_count,
         cpp_vertex_shader_ptr const& vs ) = 0;
+
+	virtual result map(mapped_resource&, buffer_ptr const& buf, map_mode mm) = 0;
+	virtual result map(mapped_resource&, surface_ptr const& buf, map_mode mm) = 0;
+	virtual result unmap() = 0;
 
     // State set
     virtual result set_vertex_buffers(

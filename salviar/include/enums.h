@@ -13,49 +13,12 @@
 
 BEGIN_NS_SALVIAR();
 
-struct result
+enum class result: uint32_t
 {
-	typedef int result_code_type;
-	typedef boost::shared_ptr<std::_tstring> desc_type;
-
-	static const result ok;
-	static const result failed;
-	static const result outofmemory;
-	static const result invalid_parameter;
-
-	result(result_code_type code, const std::_tstring& desc_str) : code_(code), desc_( new std::_tstring(desc_str) ){}
-	result(result_code_type code, const std::_tchar* desc_str) : code_(code), desc_( new std::_tstring(desc_str) ){}
-	result(result_code_type code, boost::shared_ptr<std::_tstring> pdesc = boost::shared_ptr<std::_tstring>())
-		: code_(code), desc_(pdesc){}
-
-	result(const result& rhs):code_(rhs.code_), desc_(rhs.desc_){}
-	result& operator = (const result& rhs){
-		code_ = rhs.code_;
-		desc_ = rhs.desc_;
-		return *this;
-	}
-
-	const std::_tstring& desc(){
-		return *desc_;
-	}
-
-	result_code_type code(){
-		return code_;
-	}
-
-	operator bool(){
-		return code_ == ok.code_;
-	}
-
-	bool operator !(){
-		return code_ != ok.code_;
-	}
-
-private:
-	result(){}
-
-	result_code_type code_;
-	desc_type desc_;
+	ok,
+	failed,
+	outofmemory,
+	invalid_parameter
 };
 
 enum map_mode

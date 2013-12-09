@@ -14,7 +14,7 @@
 #include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/tex_io.h>
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
 
@@ -278,7 +278,7 @@ protected:
 			desc.mip_filter = filter_anisotropic;
 			desc.max_anisotropy = 16;
 
-			plane_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+			plane_tex = load_texture(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
 			plane_sampler = renderer_->create_sampler(desc, plane_tex);

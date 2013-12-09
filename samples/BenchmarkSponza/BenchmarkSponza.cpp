@@ -14,7 +14,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/mesh/sa/material.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
@@ -266,7 +266,7 @@ public:
 		{
 			color_surface_->resolve(*resolved_color_surface_);
 		}
-		texture_io_fi::instance().save(*resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
+		save_surface(renderer_.get(), resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
 		prof.end("Saving");
 	}
 

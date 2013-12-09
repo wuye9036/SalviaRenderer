@@ -27,23 +27,11 @@ void texture_cube::gen_mipmap(filter_type filter, bool auto_gen)
 	}
 }
 
-void texture_cube::map(void** pData, size_t subresource, map_mode mm)
-{
-	*pData = NULL;
-	get_surface(subresource)->map(pData, mm);
-}
-
-void texture_cube::unmap(size_t subresource)
-{
-	get_surface(subresource)->unmap();
-}
-
 surface_ptr const& texture_cube::get_surface(size_t subresource) const
 {
     size_t min_lod = faces_[0]->get_min_lod();
 	return faces_[subresource / min_lod]->get_surface(subresource % min_lod);
 }
-
 
 texture_2d_ptr const& texture_cube::get_face(cubemap_faces face) const
 {

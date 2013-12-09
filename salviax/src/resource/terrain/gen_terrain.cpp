@@ -3,6 +3,7 @@
 
 #include <salviar/include/texture.h>
 #include <salviar/include/renderer.h>
+#include <salviar/include/mapped_resource.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/utility/addressof.hpp>
@@ -244,13 +245,21 @@ void make_terrain_fault(
 	normalize_terrain(field, size);
 }
 
-texture_ptr make_terrain_texture(renderer* render, std::vector<float>& normalized_field, int size )
+texture_ptr make_terrain_texture(renderer* rend, std::vector<float>& normalized_field, int size )
 {
-	texture_ptr ret = render->create_tex2d(size, size, 1, salviar::pixel_format_color_r32f);
-	float* data = NULL;
-	ret->map(reinterpret_cast<void**>(&data), 0, salviar::map_write);
-	memcpy( data, boost::addressof(normalized_field[0]), size*size*sizeof(float) );
-	ret->unmap(0);
+	texture_ptr ret = rend->create_tex2d(size, size, 1, salviar::pixel_format_color_r32f);
+	
+	salviar::mapped_resource mapped;
+
+	rend->map(mapped, ret->get_surface(0), salviar::map_write);
+	for(size_t y = 0; y < size; ++y)
+	{
+		uint8_t* dst_line = reinterpret_cast<uint8_t*>(mapped.data) + y * mapped.row_pitch;
+		float*	 src_line = normalized_field.data() + y * size;
+		memcpy(dst_line, src_line, size * sizeof(float) );
+	}
+	rend->unmap();
+	
 	return ret;
 }
 

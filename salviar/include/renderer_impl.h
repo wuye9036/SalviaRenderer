@@ -93,6 +93,11 @@ public:
 	virtual texture_ptr         	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	virtual sampler_ptr         	create_sampler(sampler_desc const& desc, texture_ptr const& tex);
     virtual async_object_ptr        create_query(async_object_ids id);
+
+	virtual result map(mapped_resource&, buffer_ptr const& buf, map_mode mm);
+	virtual result map(mapped_resource&, surface_ptr const& buf, map_mode mm);
+	virtual result unmap();
+	
 	renderer_impl();
 
 protected:

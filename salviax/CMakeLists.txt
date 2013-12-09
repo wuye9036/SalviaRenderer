@@ -19,8 +19,7 @@ set (HEADER_FILES
 	include/resource/mesh/sa/mesh_io_collada.h
 	
 	include/resource/resource_forward.h
-	include/resource/texture/sa/tex_io.h
-	include/resource/texture/freeimage/tex_io_freeimage.h
+	include/resource/texture/tex_io.h
 	include/resource/font/font.h
 	
 	include/resource/terrain/gen_terrain.h
@@ -42,7 +41,7 @@ set (SOURCE_FILES
 	src/resource/mesh/sa/mesh_io_collada.cpp
 	src/resource/mesh/sa/collada.cpp
 	
-	src/resource/texture/freeimage/tex_io_freeimage.cpp
+	src/resource/texture/tex_io.cpp
 	src/resource/font/font.cpp
 	src/resource/terrain/gen_terrain.cpp
 	

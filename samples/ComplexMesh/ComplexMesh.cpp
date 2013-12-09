@@ -1,6 +1,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/tex_io.h>
 #include <salviax/include/swap_chain/swap_chain.h>
 
 #include <salviau/include/common/timer.h>

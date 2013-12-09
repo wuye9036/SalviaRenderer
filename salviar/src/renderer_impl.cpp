@@ -334,7 +334,7 @@ async_object_ptr renderer_impl::create_query(async_object_ids id)
 
 renderer_impl::renderer_impl()
 {
-	resource_pool_	.reset( new resource_manager() );
+	resource_pool_	.reset( new resource_manager( [this](){this->flush();} ) );
 	state_			.reset( new render_state() );
 
 	state_->index_format = format_r16_uint;
@@ -485,6 +485,21 @@ result renderer_impl::end(async_object_ptr const& async_obj)
 async_status renderer_impl::get_data(async_object_ptr const& async_obj, void* data, bool do_not_wait)
 {
     return async_obj->get(data, do_not_wait);
+}
+
+result renderer_impl::map(mapped_resource& mapped, buffer_ptr const& buf, map_mode mm)
+{
+	return resource_pool_->map(mapped, buf, mm);
+}
+
+result renderer_impl::map(mapped_resource& mapped, surface_ptr const& surf, map_mode mm)
+{
+	return resource_pool_->map(mapped, surf, mm);
+}
+
+result renderer_impl::unmap()
+{
+	return resource_pool_->unmap();
 }
 
 END_NS_SALVIAR();

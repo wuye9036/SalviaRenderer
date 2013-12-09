@@ -656,7 +656,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		size_t low = fast_floori(miplevel+miplevel_af_bias);
 		size_t up = low + 1;
 
-		float frac = miplevel + miplevel_af_bias - low;
+		// float frac = miplevel + miplevel_af_bias - low;
 
 		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
 		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());

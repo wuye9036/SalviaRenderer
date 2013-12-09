@@ -1,70 +1,32 @@
-#ifndef SALVIAR_SURFACE_H
-#define SALVIAR_SURFACE_H
+#pragma once
 
-#include "colors.h"
-#include "colors_convertors.h"
-#include "enums.h"
-
+#include <salviar/include/salviar_forward.h>
+#include <salviar/include/colors.h>
+#include <salviar/include/colors_convertors.h>
+#include <salviar/include/enums.h>
 #include <eflib/include/math/collision_detection.h>
 
-#include <vector>
-#include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/function.hpp>
+#include <eflib/include/platform/boost_end.h>
 
-//#define TILE_BASED_STORAGE
+#include <vector>
+
+#define SALVIA_TILED_SURFACE 0
+
+BEGIN_NS_SALVIAR();
+
+struct internal_mapped_resource;
 
 class surface
-{	
-private:
-	//raw memories
-	std::vector<byte> datas_;
-
-	//surface raw format
-	size_t width_;
-	size_t height_;
-	size_t elem_size_;
-	pixel_format pxfmt_;
-	size_t num_samples_;
-
-#ifdef TILE_BASED_STORAGE
-	size_t tile_width_;
-	size_t tile_height_;
-
-	bool tile_mode_;
-#endif
-
-	//lock information
-	bool is_mapped_;
-	std::vector<byte> mapped_data_;
-	map_mode mm_;
-
-	// check lock mode
-	bool is_read_mode(map_mode lm){return (map_read == lm) || (map_read_write == lm);}
-	bool is_write_mode(map_mode lm){return (map_write == lm) || (map_read_write == lm) || (map_write_discard == lm) || (map_write_no_overwrite == lm);}
-
-	size_t texel_offset(size_t x, size_t y, size_t sample) const;
-
-	void tile(const std::vector<byte>& tile_data);
-	void untile(std::vector<byte>& untile_data);
-
-	pixel_format_convertor::pixel_convertor         to_rgba32_func_;
-	pixel_format_convertor::pixel_convertor         from_rgba32_func_;
-	pixel_format_convertor::pixel_array_convertor   to_rgba32_array_func_;
-	pixel_format_convertor::pixel_array_convertor   from_rgba32_array_func_;
-	pixel_format_convertor::pixel_lerp_1d           lerp_1d_func_;
-	pixel_format_convertor::pixel_lerp_2d           lerp_2d_func_;
-
+{
 public:
 	surface();
 	surface(size_t width, size_t height, size_t num_samples, pixel_format pxfmt);
 	~surface();
 
-	void release();
-
-	void map(void** pdata, map_mode mm) const;
-	void map(void** pdata, map_mode mm);
-	void unmap() const;
-	void unmap();
+	result map(internal_mapped_resource& mapped, map_mode mm);
+	result unmap(internal_mapped_resource& mapped, map_mode mm);
 
 	void resolve(surface& target);
 
@@ -96,25 +58,47 @@ public:
 		return pxfmt_;
 	}
 
-	bool is_mapped() const
-    {
-		return is_mapped_;
-	}
-
     void*         texel_address(size_t x, size_t y, size_t sample);
+	void const*   texel_address(size_t x, size_t y, size_t sample) const;
 
 	color_rgba32f get_texel(size_t x, size_t y, size_t sample) const;
     color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty, size_t sample) const;
-    
+	void		  get_texel(void* color, size_t x, size_t y, size_t sample) const;
 
-	void get_texel(void* color, size_t x, size_t y, size_t sample) const;
-	void set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color);
-	void set_texel(size_t x, size_t y, size_t sample, const void* color);
+	void		  set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color);
+	void		  set_texel(size_t x, size_t y, size_t sample, const void* color);
 
-	void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);
-    void fill_texels(color_rgba32f const& color);
+	void		  fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);
+    void		  fill_texels(color_rgba32f const& color);
+
+private:
+	std::vector<byte, eflib::aligned_allocator<byte, 16>>
+					datas_;
+	size_t			width_;
+	size_t			height_;
+	size_t			elem_size_;
+	pixel_format	pxfmt_;
+	size_t			num_samples_;
+
+#if SALVIA_TILED_SURFACE
+	size_t			tile_width_;
+	size_t			tile_height_;
+	bool			tile_mode_;
+#endif
+
+	size_t texel_offset(size_t x, size_t y, size_t sample) const;
+
+#if SALVIA_TILED_SURFACE
+	void tile	(internal_mapped_resource const& mapped);
+	void untile	(internal_mapped_resource& mapped);
+#endif
+
+	pixel_format_convertor::pixel_convertor         to_rgba32_func_;
+	pixel_format_convertor::pixel_convertor         from_rgba32_func_;
+	pixel_format_convertor::pixel_array_convertor   to_rgba32_array_func_;
+	pixel_format_convertor::pixel_array_convertor   from_rgba32_array_func_;
+	pixel_format_convertor::pixel_lerp_1d           lerp_1d_func_;
+	pixel_format_convertor::pixel_lerp_2d           lerp_2d_func_;
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

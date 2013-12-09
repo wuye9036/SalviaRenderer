@@ -4,6 +4,7 @@
 
 #include <salviar/include/surface.h>
 #include <salviar/include/renderer.h>
+#include <salviar/include/mapped_resource.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
@@ -89,8 +90,9 @@ public:
 
 	void present_impl()
 	{
-		size_t surface_width  = resolved_surface_->get_width();
-		size_t surface_height = resolved_surface_->get_height();
+		size_t		 surface_width  = resolved_surface_->get_width();
+		size_t		 surface_height = resolved_surface_->get_height();
+		pixel_format surf_format = resolved_surface_->get_pixel_format();
 
 		glViewport(
 			0, 0,
@@ -98,23 +100,18 @@ public:
 			static_cast<uint32_t>(surface_height)
 			);
 
-		byte* src_addr = NULL;
-		resolved_surface_->map((void**)(&src_addr), map_read);
-		if(src_addr == NULL) return;
-
-		std::vector<byte> dest(resolved_surface_->get_width() * resolved_surface_->get_height() * 4);
-		for(size_t irow = 0; irow < resolved_surface_->get_height(); ++irow)
+		mapped_resource mapped;
+		renderer_->map(mapped, resolved_surface_, map_read);
+		std::vector<byte> dest(surface_width * surface_height * 4);
+		for(size_t y = 0; y < surface_height; ++y)
 		{
-			byte* dest_addr = &dest[irow * resolved_surface_->get_width() * 4];
+			byte* dst_line = dest.data() + y * surface_width * 4;
+			byte* src_line = static_cast<byte*>(mapped.data) + y * mapped.row_pitch;
 			pixel_format_convertor::convert_array(
-				pixel_format_color_rgba8, resolved_surface_->get_pixel_format(),
-				dest_addr, src_addr,
-				int(resolved_surface_->get_width())
-				);
-			src_addr += resolved_surface_->get_pitch();
+				pixel_format_color_rgba8, surf_format,
+				dst_line, src_line, int(surface_width) );
 		}
-
-		resolved_surface_->unmap();
+		renderer_->unmap();
 
 		glBindTexture(GL_TEXTURE_2D, tex_);
 		if ((width_ < surface_width) || (height_ < surface_height))
@@ -130,7 +127,7 @@ public:
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 				static_cast<GLsizei>(surface_width),
 				static_cast<GLsizei>(surface_height),
-				GL_RGBA, GL_UNSIGNED_BYTE, &dest[0]
+				GL_RGBA, GL_UNSIGNED_BYTE, dest.data()
 			);
 		}
 

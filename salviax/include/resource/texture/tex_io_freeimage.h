@@ -1,19 +1,20 @@
-#ifndef SALVIAX_TEX_IO_FREEIMAGE_H
-#define SALVIAX_TEX_IO_FREEIMAGE_H
+#pragma once
 
 #include <salviax/include/utility/user_config.h>
-
 #include <salviax/include/resource/texture/sa/tex_io.h>
 #include <salviar/include/colors.h>
 #include <salviar/include/decl.h>
+
 #include <eflib/include/math/math.h>
+
 #include <vector>
 
 struct FIBITMAP;
 
-BEGIN_NS_SALVIAX_RESOURCE()
-#ifdef SALVIAX_FREEIMAGE_ENABLED
-class texture_io_fi: public texture_io{
+BEGIN_NS_SALVIAX_RESOURCE();
+
+class texture_io_fi: public texture_io
+{
 public:
 	virtual salviar::texture_ptr load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
 	virtual salviar::texture_ptr load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& filenames, salviar::pixel_format fmt);
@@ -30,7 +31,5 @@ private:
 
 	texture_io_fi(){}
 };
-#endif
-END_NS_SALVIAX_RESOURCE()
 
-#endif //SALVIAX_TEX_IO_FREEIMAGE_H
+END_NS_SALVIAX_RESOURCE();

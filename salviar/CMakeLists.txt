@@ -89,9 +89,9 @@ set (HEADER_FILES
 set(FOUNDATION_SOURCES
 	src/thread_pool.cpp
 	src/color_convertors.cpp
-	src/result.cpp
 	src/binary_modules.cpp
 	src/resource_data.cpp
+	src/buffer.cpp
 )
 
 set(BUFFER_SOURCES

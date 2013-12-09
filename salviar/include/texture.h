@@ -31,7 +31,8 @@ protected:
 		assert(x > 0 && y > 0 && z > 0);
 
 		int rv = 0;
-		while (x > 0 || y > 0 || z > 0){
+		while (x > 0 || y > 0 || z > 0)
+		{
 			x >>= 1;
 			y >>= 1;
 			z >>= 1;
@@ -48,9 +49,6 @@ public:
 	size_t          get_min_lod() const{return min_lod_;}
 	size_t          get_max_lod() const{return max_lod_;}
 	pixel_format    get_pixel_format() const{return fmt_;}
-
-	virtual void map(void** pData, size_t subresource, map_mode mm) = 0;
-	virtual void unmap(size_t subresource) = 0;
 
 	virtual surface_ptr const& get_surface(size_t subresource) const = 0;
 	
@@ -82,9 +80,6 @@ public:
 
 	virtual void gen_mipmap(filter_type filter, bool auto_gen);
 
-	virtual void map(void** pData, size_t subresource, map_mode mm);
-	virtual void unmap(size_t subresource);
-
 	virtual surface_ptr const& get_surface(size_t subresource) const;
 
 	virtual size_t get_width(size_t subresource) const;
@@ -111,9 +106,6 @@ public:
 		return texture_type_cube;
 	};
 	virtual void gen_mipmap(filter_type filter, bool auto_gen);
-
-	virtual void map(void** pData, size_t subresource, map_mode mm);
-	virtual void unmap(size_t subresource);
 
 	virtual surface_ptr     const& get_surface(size_t subresource) const;
 	virtual texture_2d_ptr  const& get_face(cubemap_faces face) const;

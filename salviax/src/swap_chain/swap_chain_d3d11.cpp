@@ -4,6 +4,7 @@
 
 #include <salviar/include/surface.h>
 #include <salviar/include/renderer.h>
+#include <salviar/include/mapped_resource.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
@@ -369,29 +370,24 @@ public:
 			d3d_imm_ctx_->PSSetShaderResources(0, 1, &buftex_srv_);
 		}
 
-		D3D11_MAPPED_SUBRESOURCE mapped;
-		byte* src_addr = NULL;
+		D3D11_MAPPED_SUBRESOURCE d3d_mapped;
+		d3d_imm_ctx_->Map(buftex_, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3d_mapped);
 
-		d3d_imm_ctx_->Map(buftex_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+		mapped_resource mapped;
+		renderer_->map(mapped, resolved_surface_, map_read);
 
-		resolved_surface_->map((void**)(&src_addr), map_read);
-		if( src_addr == NULL ){
-			d3d_imm_ctx_->Unmap(buftex_, 0);
-			return;
-		}
-
-		for(size_t irow = 0; irow < resolved_surface_->get_height(); ++irow)
+		for(size_t y = 0; y < resolved_surface_->get_height(); ++y)
 		{
-			byte* dest_addr = ((byte*)(mapped.pData)) + mapped.RowPitch * irow;
+			byte* dst_line = static_cast<byte*>(d3d_mapped.pData) + d3d_mapped.RowPitch * y;
+			byte* src_line = static_cast<byte*>(mapped.data) + mapped.row_pitch * y;
 			pixel_format_convertor::convert_array(
 				pixel_format_color_bgra8, resolved_surface_->get_pixel_format(),
-				dest_addr, src_addr,
+				dst_line, src_line,
 				static_cast<int>(resolved_surface_->get_width())
 				);
-			src_addr += resolved_surface_->get_pitch();
 		}
 
-		resolved_surface_->unmap();
+		renderer_->unmap();
 		d3d_imm_ctx_->Unmap(buftex_, 0);
 
 		d3d_imm_ctx_->Draw(4, 0);

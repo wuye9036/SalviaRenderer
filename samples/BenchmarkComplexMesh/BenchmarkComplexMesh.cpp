@@ -1,6 +1,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
@@ -365,7 +365,7 @@ public:
 		{
 			color_surface_->resolve(*resolved_color_surface_);
 		}
-		texture_io_fi::instance().save(*resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
+		save_surface(renderer_.get(), resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
 		prof.end("Saving");
 	}
 

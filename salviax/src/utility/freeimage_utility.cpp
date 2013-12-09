@@ -1,22 +1,22 @@
 #include <salviax/include/utility/freeimage_utilities.h>
 
-#ifdef SALVIAX_FREEIMAGE_ENABLED
-
 using namespace std;
 using namespace eflib;
 using namespace salviar;
 
-BEGIN_NS_SALVIAX_UTILITY()
+BEGIN_NS_SALVIAX_UTILITY();
 
 FIBITMAP* load_image(const std::_tstring& filename, int flag)
 {
 	string ansi_filename = to_ansi_string(filename);
 
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(ansi_filename.c_str(), 0);
-	if(fif == FIF_UNKNOWN){
+	if(fif == FIF_UNKNOWN)
+	{
 		fif = FreeImage_GetFIFFromFilename(ansi_filename.c_str());
 	}
-	if( fif != FIF_UNKNOWN && FreeImage_FIFSupportsReading(fif) ){
+	if( fif != FIF_UNKNOWN && FreeImage_FIFSupportsReading(fif) )
+	{
 		return FreeImage_Load(fif, ansi_filename.c_str(), flag);
 	}
 
@@ -65,23 +65,25 @@ FIBITMAP* make_bitmap_copy(
 	if(image == NULL || ! check_image_type_support(image) ) {
 		return NULL;
 	}
-
-	//FREE_IMAGE_TYPE img_type = FreeImage_GetImageType(image);
+	
 	size_t img_w = FreeImage_GetWidth(image);
 	size_t img_h = FreeImage_GetHeight(image);
 
 	// If the dest is same size with source, just return the source image and region.
-	if ( dest_width == src_region.w && dest_height == src_region.h ){
+	if ( dest_width == src_region.w && dest_height == src_region.h )
+	{
 		out_region = src_region;
 		return image;
 	}
 
-	// If it is not that the whole image is wanted to copy,
-	// region should be copied to a new image.
+	// If only part of image is copied, region should be copied to a new image.
 	FIBITMAP* sub_image = NULL;
-	if(src_region.x == 0 && src_region.y == 0 && src_region.w == img_w && src_region.h == img_h){
+	if(src_region.x == 0 && src_region.y == 0 && src_region.w == img_w && src_region.h == img_h)
+	{
 		sub_image = image;
-	} else {
+	}
+	else
+	{
 		sub_image = FreeImage_Copy(
 			image, (int)src_region.x, (int)src_region.y, (int)(src_region.x+src_region.w), int(src_region.y+src_region.h)
 			);
@@ -99,6 +101,4 @@ FIBITMAP* make_bitmap_copy(
 	return scaled_image;
 }
 
-END_NS_SALVIAX_UTILITY()
-
-#endif //SALVIAX_FREEIMAGE_ENABLED
+END_NS_SALVIAX_UTILITY();

@@ -2,7 +2,8 @@
 
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/tex_io.h>
+#include <salviar/include/texture.h>
 #include <salviar/include/buffer.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/renderer.h>
@@ -131,11 +132,12 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 		} else if ( cmd == "map_Kd" ){
 			mtlf >> pmtl->tex_name;
 			std::_tstring tex_fullpath = eflib::to_tstring( ( base_path / pmtl->tex_name ).string() );
-			pmtl->tex = texture_io_fi::instance().load(
+			pmtl->tex = load_texture(
 				r, tex_fullpath,
 				salviar::pixel_format_color_rgba8
 				);
-			if( pmtl->tex ){
+			if( pmtl->tex )
+			{
 				pmtl->tex->gen_mipmap(filter_linear, true);
 			}
 		} else {

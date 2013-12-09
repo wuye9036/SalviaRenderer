@@ -15,7 +15,7 @@
 #include <salviax/include/resource/font/font.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
@@ -303,7 +303,7 @@ protected:
 			desc.addr_mode_v = address_clamp;
 			desc.addr_mode_w = address_clamp;
 
-			box_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
+			box_tex = load_texture(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			box_tex->gen_mipmap(filter_linear, true);
 
 			box_sampler = renderer_->create_sampler(desc, box_tex);
