@@ -118,7 +118,7 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 		gcc_executables.append( os.path.join(gcc_dir, "g++") )
 	if systems.current() == systems.win32:
 		try:
-			gcc_paths = subprocess.check_output(["@where", "g++"])
+			gcc_paths = subprocess.check_output(["where", "g++"])
 			gcc_executables += gcc_paths.split("\r\n")
 		except:
 			pass
