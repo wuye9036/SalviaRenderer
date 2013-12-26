@@ -18,6 +18,7 @@ if( SALVIA_ENABLE_SAMPLES )
 		ADD_SUBDIRECTORY( Font )
 		ADD_SUBDIRECTORY( PipelineStat )
 		ADD_SUBDIRECTORY( StandardShadowMap )
+		ADD_SUBDIRECTORY( StencilMirror )
 	endif(MSVC)
 	
 	ADD_SUBDIRECTORY( BenchmarkPartOfSponza )

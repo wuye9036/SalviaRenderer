@@ -25,7 +25,6 @@ set (HEADER_FILES
 	include/resource/terrain/gen_terrain.h
 	
 	include/utility/freeimage_utilities.h
-	include/utility/user_config.h
 	include/utility/utility_forward.h
 	
 	include/swap_chain/swap_chain.h
