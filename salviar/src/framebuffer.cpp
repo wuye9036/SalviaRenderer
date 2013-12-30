@@ -412,7 +412,7 @@ void framebuffer::initialize(render_stages const* /*stages*/)
 
 void framebuffer::update(render_state* state)
 {
-    bool ds_state_changed = (ds_state_ == state->ds_state.get());
+    bool ds_state_changed = (ds_state_ != state->ds_state.get());
     bool ds_format_changed = true;
     if( ds_target_ != nullptr
         && state->depth_stencil_target.get() != nullptr
