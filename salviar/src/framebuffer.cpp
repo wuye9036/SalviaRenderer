@@ -435,7 +435,7 @@ void framebuffer::update(render_state* state)
     }
 
     ds_target_ = state->depth_stencil_target.get();
-    sample_count_ = state->target_sample_count;
+    sample_count_ = static_cast<uint32_t>(state->target_sample_count);
 
     bool output_depth_enabled = false;
     if(!state->vx_shader || !state->vs_proto)
@@ -611,5 +611,50 @@ bool framebuffer::early_z_test(size_t x, size_t y, float depth, float const* aa_
 
     return false;
 }
+
+void framebuffer::clear_depth_stencil(surface* tar, uint32_t flag, float depth, uint32_t stencil)
+{
+	auto clear_op = write_depth_0_stencil_0;
+
+	switch(tar->get_pixel_format())
+    {
+    case pixel_format_color_rg32f:
+		{
+			switch(flag)
+			{
+			case (clear_depth | clear_stencil):
+				clear_op = write_depth_1_stencil_1<pixel_format_color_rg32f>;
+				break;
+			case clear_depth:
+				clear_op = write_depth_1_stencil_0<pixel_format_color_rg32f>;
+				break;
+			case clear_stencil:
+				clear_op = write_depth_0_stencil_1<pixel_format_color_rg32f>;
+				break;
+			default:
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+			break;
+		}
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	for(size_t y = 0; y < tar->get_height(); ++y)
+	{
+		for(size_t x = 0; x < tar->get_width(); ++x)
+		{
+			pixel_accessor target_pixel(nullptr, tar);
+			target_pixel.set_pos(x, y);
+			for(size_t sample = 0; sample < tar->sample_count(); ++sample)
+			{
+				void* addr = target_pixel.depth_stencil_address(sample);
+				clear_op(addr, depth, stencil, 0xFFFFFFFFU);
+			}
+		}
+	}
+}
+
+
 
 END_NS_SALVIAR();

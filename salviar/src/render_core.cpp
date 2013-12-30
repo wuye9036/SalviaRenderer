@@ -137,10 +137,20 @@ result render_core::clear_color()
 
 result render_core::clear_depth_stencil()
 {
-    auto ds_color = color_rgba32f(
-            state_->clear_z, *reinterpret_cast<float*>(&state_->clear_stencil), 0.0f, 0.0f
-            );
-    state_->clear_ds_target->fill_texels(ds_color);
+	if( state_->clear_f == (salviar::clear_depth | salviar::clear_stencil) )
+	{
+		auto ds_color = color_rgba32f(
+			    state_->clear_z, *reinterpret_cast<float*>(&state_->clear_stencil), 0.0f, 0.0f
+				);
+		state_->clear_ds_target->fill_texels(ds_color);
+	}
+	else
+	{
+		framebuffer::clear_depth_stencil(
+			state_->clear_ds_target.get(),
+			state_->clear_f, state_->clear_z, state_->clear_stencil
+			);
+	}
     return result::ok;
 }
 

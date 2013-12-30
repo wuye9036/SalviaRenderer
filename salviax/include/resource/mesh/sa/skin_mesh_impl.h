@@ -78,7 +78,7 @@ private:
 	{
 		// Find segment
 		std::vector<float>::iterator it = lower_bound(aninfo->X.begin(), aninfo->X.end(), time);
-		int i_segment = distance(aninfo->X.begin(), it) - 1;
+		size_t i_segment = distance(aninfo->X.begin(), it) - 1;
 
 		if( it == aninfo->X.begin() )
 		{

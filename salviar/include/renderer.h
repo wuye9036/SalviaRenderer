@@ -118,7 +118,7 @@ public:
     virtual result draw_index(size_t startpos, size_t primcnt, int basevert) = 0;
 
     virtual result clear_color(surface_ptr const& color_target, color_rgba32f const& c) = 0;
-    virtual result clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s) = 0;
+    virtual result clear_depth_stencil(surface_ptr const& depth_stencil_target, uint32_t f, float d, uint32_t s) = 0;
 
     virtual result flush() = 0;
 };

@@ -196,6 +196,12 @@ enum stencil_op
     stencil_op_decr_wrap = 8,
 };
 
+enum clear_flag
+{
+	clear_depth = 0x1,
+	clear_stencil = 0x2
+};
+
 enum class async_object_ids: uint32_t
 {
     none,

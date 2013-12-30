@@ -318,7 +318,7 @@ protected:
 		timer.restart();
 
         renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
+		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
 
 		vec4 camera_pos = vec4( 0.0f, 10.0f, 14.0f, 1.0f );
 

@@ -455,7 +455,25 @@ namespace eflib{
 		return out;
 	}
 
-	mat44& mat_reflect(mat44& out, const vec4& plane);
+	mat44& mat_reflect(mat44& out, const vec4& plane)
+	{
+		vec3 normalized_xyz = normalize3(plane.xyz());
+		float normalized_w = plane.w() / plane.xyz().length();
+
+		float x = normalized_xyz.x();
+		float y = normalized_xyz.y();
+		float z = normalized_xyz.z();
+		float w = normalized_w;
+
+		out = mat44(
+			-2*x*x+1,	-2*y*x,		-2*z*x,		0,
+			-2*x*y,		-2*y*y+1,	-2*z*y,		0,
+			-2*x*z,		-2*y*z,		-2*z*z+1,	0,
+			-2*x*w,		-2*y*w,		-2*z*w,		1
+			);
+
+		return out;
+	}
 
 	mat44& mat_projection(mat44& out, float l, float r, float b, float t, float n, float f)
 	{

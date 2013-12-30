@@ -79,7 +79,7 @@ public:
     virtual result                  draw(size_t startpos, size_t primcnt);
 	virtual result                  draw_index(size_t startpos, size_t primcnt, int basevert);
     virtual result                  clear_color(surface_ptr const& color_target, color_rgba32f const& c);
-	virtual result                  clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s);
+	virtual result                  clear_depth_stencil(surface_ptr const& depth_stencil_target, uint32_t f, float d, uint32_t s);
     virtual result                  begin(async_object_ptr const& async_obj);
     virtual result                  end(async_object_ptr const& async_obj);
     virtual async_status            get_data(async_object_ptr const& async_obj, void* data, bool do_not_wait);

@@ -264,7 +264,7 @@ protected:
 	void gen_sm()
 	{
 		renderer_->set_render_targets(0, nullptr, sm_texture_->get_surface(0));
-        renderer_->clear_depth_stencil(sm_texture_->get_surface(0), 1.0f, 0);
+        renderer_->clear_depth_stencil(sm_texture_->get_surface(0), clear_depth | clear_stencil, 1.0f, 0);
 
         renderer_->set_vertex_shader_code(gen_sm_vs_);
 		renderer_->set_pixel_shader(gen_sm_ps_);
@@ -287,7 +287,7 @@ protected:
 		renderer_->set_render_targets(1, &color_surface_, draw_ds_surface_);
 
 		renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(draw_ds_surface_, 1.0f, 0);
+		renderer_->clear_depth_stencil(draw_ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
 
 		renderer_->set_vertex_shader_code(draw_vs_);
 		renderer_->set_pixel_shader(draw_ps_);

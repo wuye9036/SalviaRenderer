@@ -178,7 +178,6 @@ public:
 
 private:
 	reflection_impl_ptr do_reflect()
-
 	{
 		if( ! (sem_ && current_entry_) )
 		{

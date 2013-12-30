@@ -105,6 +105,8 @@ public:
 
 	void render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
     bool early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset);
+
+	static void clear_depth_stencil(surface* tar, uint32_t flag, float depth, uint32_t stencil);
 };
 
 END_NS_SALVIAR();

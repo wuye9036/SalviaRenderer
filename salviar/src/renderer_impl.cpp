@@ -436,8 +436,9 @@ result renderer_impl::clear_color(surface_ptr const& color_target, color_rgba32f
     return commit_state_and_command();
 }
 
-result renderer_impl::clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s)
+result renderer_impl::clear_depth_stencil(surface_ptr const& depth_stencil_target, uint32_t flag, float d, uint32_t s)
 {
+	state_->clear_f = flag;
     state_->clear_z = d;
     state_->clear_stencil = s;
     state_->clear_ds_target = depth_stencil_target;

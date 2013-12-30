@@ -36,12 +36,23 @@ BEGIN_NS_SALVIAX_RESOURCE();
 mesh_ptr create_box(salviar::renderer* psr);
 mesh_ptr create_cylinder(salviar::renderer* psr);
 mesh_ptr create_planar(
-					 salviar::renderer* psr,
-					 const eflib::vec3& start_pos,
-					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
-					 size_t repeat_x, size_t repeat_y,
-					 bool positive_normal
-					 );
+	salviar::renderer* rend,
+	const eflib::vec3& start_pos,
+	const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
+	size_t repeat_x, size_t repeat_y,
+	bool positive_normal
+	);
+mesh_ptr create_planar(
+	salviar::renderer* rend,
+	eflib::vec3 const& norm,
+	eflib::vec3 const& start_pos,
+	eflib::vec3 const& major_dir,
+	eflib::vec2 const& length,
+	size_t			   repeat_x,
+	size_t			   repeat_y,
+	bool			   positive_normal
+	);
+
 mesh_ptr create_cone(
 	salviar::renderer* psr,
 	eflib::vec3 const& bottom_center,

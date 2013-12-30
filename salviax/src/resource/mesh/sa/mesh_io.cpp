@@ -154,14 +154,14 @@ mesh_ptr create_box(salviar::renderer* psr)
 }
 
 mesh_ptr create_planar(
-					 salviar::renderer* psr,
+					 salviar::renderer* rend,
 					 const eflib::vec3& start_pos,
 					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
 					 size_t repeat_x, size_t repeat_y,
 					 bool positive_normal
 					 )
 {
-	mesh_impl* pmesh = new mesh_impl(psr);
+	mesh_impl* pmesh = new mesh_impl(rend);
 
 	size_t nverts = (repeat_x + 1) * (repeat_y + 1);
 
@@ -171,12 +171,12 @@ mesh_ptr create_planar(
 
 	salviar::buffer_ptr indices	= pmesh->create_buffer( repeat_x * repeat_y * 6 * sizeof(uint16_t) );
 
-	salviar::buffer_ptr verts		= pmesh->create_buffer( nverts * sizeof(vec4) );
+	salviar::buffer_ptr verts	= pmesh->create_buffer( nverts * sizeof(vec4) );
 	salviar::buffer_ptr normals	= pmesh->create_buffer( nverts * sizeof(vec4) );
 	salviar::buffer_ptr uvs		= pmesh->create_buffer( nverts * sizeof(vec4) );
 
 	//Generate data
- 	vec4 normal(cross_prod3(x_dir, y_dir), 0.0f);
+ 	vec4 normal(normalize3(cross_prod3(x_dir, y_dir)), 0.0f);
 	if(!positive_normal) normal = -normal;
 	vec4 line_spos(start_pos, 1.0f);
 	vec4 x(x_dir, 0.0f);
@@ -238,6 +238,47 @@ mesh_ptr create_planar(
 	pmesh->set_primitive_count(repeat_x * repeat_y * 2);
 
 	return mesh_ptr(pmesh);
+}
+
+mesh_ptr create_planar(
+	salviar::renderer* rend,
+	eflib::vec3 const& norm,
+	eflib::vec3 const& start_pos,
+	eflib::vec3 const& major_dir,
+	eflib::vec2 const& length,
+	size_t			   repeat_x,
+	size_t			   repeat_y,
+	bool			   positive_normal
+	)
+{
+	eflib::vec3 n = norm;
+	if(norm.length_sqr() < eflib::epsilon)
+	{
+		return mesh_ptr();
+	}
+
+	if(major_dir.length_sqr() < eflib::epsilon)
+	{
+		return mesh_ptr();
+	}
+
+	vec3 binorm = cross_prod3(major_dir, norm);
+	if(binorm.length_sqr() < eflib::epsilon)
+	{
+		return mesh_ptr();
+	}
+
+	vec3 tangent = cross_prod3(norm, binorm);
+	if(tangent.length_sqr() < eflib::epsilon)
+	{
+		return mesh_ptr();
+	}
+
+	n = normalize3(norm);
+	binorm = normalize3(binorm) * length.x();
+	tangent = normalize3(tangent) * length.y();
+
+	return create_planar(rend, start_pos, binorm, tangent, repeat_x, repeat_y, positive_normal);
 }
 
 mesh_ptr create_cone(

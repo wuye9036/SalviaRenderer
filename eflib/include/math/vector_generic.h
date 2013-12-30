@@ -263,7 +263,7 @@ namespace eflib
 		// Special vectors
 		static vector_<ScalarT,4> zero(){
 			ScalarT o = 0;
-			vector_<float, 4> r;
+			vector_<float, 4> r(o, o, o, o);
 			return r;
 		}
 

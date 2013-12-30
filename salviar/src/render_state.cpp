@@ -29,7 +29,8 @@ void copy_using_state(render_state* dest, render_state const* src)
         dest->cmd                = src->cmd;
         dest->clear_color_target = src->clear_color_target;
         dest->clear_ds_target    = src->clear_ds_target   ;
-                                 
+               
+		dest->clear_f			 = src->clear_f			  ;
 	    dest->clear_z            = src->clear_z           ;
 	    dest->clear_stencil      = src->clear_stencil     ;
         dest->clear_color        = src->clear_color       ;

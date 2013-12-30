@@ -93,6 +93,7 @@ struct render_state
 
 	surface_ptr					clear_color_target;
     surface_ptr                 clear_ds_target;
+	uint32_t					clear_f;
 	float						clear_z;
 	uint32_t					clear_stencil;
     color_rgba32f				clear_color;

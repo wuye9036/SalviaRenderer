@@ -350,7 +350,7 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 			}
 			input_descs.back().semantic_index	= static_cast<uint32_t>(input->set);
 			input_descs.back().data_format		= fmts[input_source];
-			input_descs.back().input_slot		= buffers.size();
+			input_descs.back().input_slot		= static_cast<uint32_t>(buffers.size());
 			input_descs.back().slot_class		= input_per_vertex; 
 			input_descs.back().aligned_byte_offset = 0;
 
@@ -369,7 +369,7 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 			input_descs.back().semantic_name	= "BLEND_INDICES";
 			input_descs.back().semantic_index	= 0;
 			input_descs.back().data_format		= salviar::format_r32g32b32a32_sint;
-			input_descs.back().input_slot		= buffers.size();
+			input_descs.back().input_slot		= static_cast<uint32_t>(buffers.size());
 			input_descs.back().slot_class		= input_per_vertex; 
 			input_descs.back().aligned_byte_offset = 0;
 
@@ -385,7 +385,7 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 			input_descs.back().semantic_name	= "BLEND_WEIGHTS";
 			input_descs.back().semantic_index	= 0;
 			input_descs.back().data_format		= salviar::format_r32g32b32a32_float;
-			input_descs.back().input_slot		= buffers.size();
+			input_descs.back().input_slot		= static_cast<uint32_t>(buffers.size());
 			input_descs.back().slot_class		= input_per_vertex; 
 			input_descs.back().aligned_byte_offset = 0;
 
@@ -477,12 +477,12 @@ skin_info_ptr build_skin_info( dae_skin_ptr skin )
 	assert( weight_index_stride == 2 );
 
 	size_t vertex_skin_info_cursor = 0;
-	for( size_t i_vert = 0; i_vert < skin->weights->count; ++i_vert )
+	for(uint32_t i_vert = 0; i_vert < skin->weights->count; ++i_vert)
 	{
-		size_t vcount = skin->weights->vcount[i_vert];
+		uint32_t vcount = skin->weights->vcount[i_vert];
 		ret->vertex_skin_info_start_pos.push_back(vertex_skin_info_cursor);
 		ret->vertex_skin_info_count.push_back(vcount);
-		for( size_t i_joint = 0; i_joint < vcount; ++i_joint )
+		for(uint32_t i_joint = 0; i_joint < vcount; ++i_joint)
 		{
 			size_t pos_of_vert_skin_info = (vertex_skin_info_cursor+i_joint)*weight_index_stride;
 			size_t pos_of_joint_id = pos_of_vert_skin_info + joint_offset;
