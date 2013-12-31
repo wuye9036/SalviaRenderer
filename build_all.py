@@ -80,52 +80,55 @@ def clean_boost(proj):
 def make_boost(proj):
 	src = proj.boost_root()
 	stage = proj.boost_stage()
-
-	os.chdir(src)
+	
 	#Get boost build command
+	# Add configs
+	libs = ["atomic", "chrono", "thread", "system", "filesystem", "date_time", "test", "wave", "program_options",
+			"serialization", "locale"]
+	address_model = 'address-model=%d' % proj.arch().bits()
+	options = ["--build-dir=./", "link=shared", "runtime-link=shared", "threading=multi", "stage"]
+	toolset = proj.toolset()
+	defs = []
+	cxxflags = []
+	if toolset.short_compiler_name() == 'vc':
+		defs = ["_CRT_SECURE_NO_DEPRECATE", "_SCL_SECURE_NO_DEPRECATE"]
+		cxxflags = ["-wd4819", "-wd4910"]
+
+	#configs to cmd
+	libs_cmd = ["--with-%s" % lib for lib in libs]
+	defs_cmd = []
+	if len(defs) > 0:
+		defs_cmd = ["define=%s" % dfn for dfn in defs]
+	cxxflags_cmd = []
+	if len(cxxflags) > 0:
+		cxxflags_cmd = ["cxxflags=%s" % flag for flag in cxxflags]
+
+	toolset_cmd = "--toolset=%s" % toolset.boost_name()
+	stage_cmd = '--stagedir="%s"' % stage
+
+	#bjam toolset stagedir address-model defs cxxflags libs options
+	bjam_executable = None
 	if systems.current() == systems.win32:
-		# Add configs
-		libs = ["atomic", "chrono", "thread", "system", "filesystem", "date_time", "test", "wave", "program_options",
-				"serialization", "locale"]
-		address_model = 'address-model=%d' % proj.arch().bits()
-		options = "--build-dir=./ link=shared runtime-link=shared threading=multi stage"
-		toolset = proj.toolset()
-		defs = []
-		cxxflags = []
-		if toolset.short_compiler_name() == 'vc':
-			defs = ["_CRT_SECURE_NO_DEPRECATE", "_SCL_SECURE_NO_DEPRECATE"]
-			cxxflags = ["-wd4819", "-wd4910"]
-
-		#configs to cmd
-		libs_cmd = reduce(lambda cmd, lib: cmd + lib, ["--with-%s " % lib for lib in libs])
-		defs_cmd = ""
-		if len(defs) > 0:
-			defs_cmd = reduce(lambda cmd, dfn: cmd + dfn, ["define=%s " % dfn for dfn in defs])
-		cxxflags_cmd = ""
-		if len(cxxflags) > 0:
-			cxxflags_cmd = reduce(lambda cmd, flag: cmd + flag, ["cxxflags=%s " % flag for flag in cxxflags])
-
-		toolset_cmd = "--toolset=%s" % toolset.boost_name()
-		stage_cmd = "--stagedir=\"%s\"" % stage
-
-		#bjam toolset stagedir address-model defs cxxflags libs options
-		boost_cmd = "bjam %s %s %s %s %s %s %s" % (
-			toolset_cmd, stage_cmd, address_model, defs_cmd, cxxflags_cmd, libs_cmd, options)
-		report_info( 'Executing: %s' % boost_cmd )
-
-		env = os.environ
-		if not proj.customized_toolset_dir() is None:
-			env = add_binpath(os.environ, [proj.customized_toolset_dir()])
-		if subprocess.call(boost_cmd, env=env, stdout = sys.stdout) != 0:
-			report_error("Boost build failed.")
-
-		os.chdir(proj.source_root())
-		report_info("Boost build done.")
-		return True
+		bjam_executable = 'bjam'
+	elif systems.current() == systems.linux:
+		bjam_executable = './bjam'
 	else:
-		os.chdir(proj.source_root())
 		report_error("Unsupported OS.")
+		
+	boost_cmd = [bjam_executable, toolset_cmd, stage_cmd, address_model] + defs_cmd + cxxflags_cmd + libs_cmd + options
+	report_info( 'Executing: %s' % boost_cmd )
 
+	env = os.environ
+	if not proj.customized_toolset_dir() is None:
+		env = add_binpath(os.environ, [proj.customized_toolset_dir()])
+		
+	os.chdir(src)
+	if subprocess.call(boost_cmd, env=env, stdout = sys.stdout) != 0:
+		report_error("Boost build failed.")
+	os.chdir(proj.source_root())
+	report_info("Boost build done.")
+	return True
+	
 def clean_llvm(proj):
 	guarded_rmtree(proj.llvm_build())
 	guarded_rmtree(proj.llvm_install())
