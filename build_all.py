@@ -104,7 +104,7 @@ def make_boost(proj):
 		cxxflags_cmd = ["cxxflags=%s" % flag for flag in cxxflags]
 
 	toolset_cmd = "--toolset=%s" % toolset.boost_name()
-	stage_cmd = '--stagedir="%s"' % stage
+	stage_cmd = '--stagedir=%s' % stage
 
 	#bjam toolset stagedir address-model defs cxxflags libs options
 	bjam_executable = None
