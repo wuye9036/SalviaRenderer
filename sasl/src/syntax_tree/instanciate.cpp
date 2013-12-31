@@ -14,6 +14,8 @@ void instantiate(){
 	create_node<parameter_full>( token_t::null(), token_t::null() );
 	create_node<expression_list>( token_t::null(), token_t::null() );
 	create_node<labeled_statement>( token_t::null(), token_t::null() );
+	create_node<function_def>( token_t::null(), token_t::null() );
+	create_node<parameter>( token_t::null(), token_t::null() );
 }
 
 END_NS_SASL_SYNTAX_TREE();

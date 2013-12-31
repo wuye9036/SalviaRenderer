@@ -2,6 +2,8 @@
 
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node.h>
+#include <sasl/include/syntax_tree/node_creation.h>
+
 #include <sasl/include/syntax_tree/utility.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
