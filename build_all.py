@@ -36,18 +36,24 @@ def make_bjam(prj):
 		return True
 
 	customized_toolset_dir = prj.customized_toolset_dir()
+	env = os.environ.copy()
+	envvar_separator = None
+	bootstrap_script = None
+	if systems.current() == systems.win32:
+		envvar_separator = ';'
+		bootstrap_script = "bootstrap.bat"
+	else:
+		envvar_separator = ':'
+		bootstrap_script = "./bootstrap.sh"
+		
 	if customized_toolset_dir:
-		env = os.environ.copy()
-		try:
-			if systems.current() == systems.win32:
-				env['PATH'] = "%s;%s" % (env['PATH'], customized_toolset_dir)
-				subprocess.call("bootstrap.bat", env=env)
-			else:
-				env['PATH'] = "%s:%s" % (env['PATH'], customized_toolset_dir)
-				subprocess.call("./bootstrap.sh", env=env)
-		except:
-			os.chdir(old_dir)
-			report_error("Unknown error occurred when building bjam.")
+		env['PATH'] = "%s%s%s" % (env['PATH'], envvar_separator, customized_toolset_dir)
+		
+	try:
+		subprocess.call(bootstrap_script, env=env)
+	except:
+		os.chdir(old_dir)
+		report_error("Unknown error occurred when building bjam.")
 
 	if not os.path.exists(bjam_file_name):
 		os.chdir(old_dir)
