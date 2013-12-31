@@ -136,7 +136,7 @@ public:
 
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
-		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
+		color_rgba32f tex_color(0.3f, 0.3f, 0.1f, 1.0f);
 		out.color[0] = tex_color.get_vec4();
 		return true;
 	}
@@ -313,13 +313,13 @@ protected:
 		{
 			renderer_->set_depth_stencil_state(dss_draw_with_stencil, 1);
 			renderer_->set_blend_shader(translucent_bs_);
-			renderer_->set_vs_variable("wvpMatrix", &reflect_wvp_matrix);
+			renderer_->set_vs_variable("wvpMatrix", &reflect_cup_wvp_matrix);
 		}
 		else
 		{
 			renderer_->set_depth_stencil_state(dss_normal, 1);	
 			renderer_->set_blend_shader(opaque_bs_);
-			renderer_->set_vs_variable("wvpMatrix", &wvp_matrix);
+			renderer_->set_vs_variable("wvpMatrix", &cup_wvp_matrix);
 		}
 
 		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
@@ -360,7 +360,7 @@ protected:
 		renderer_->set_rasterizer_state(rs_none);
 		renderer_->set_vertex_shader_code(mirror_vs);
 		renderer_->set_pixel_shader(mirror_ps_);
-		renderer_->set_vs_variable("wvpMatrix", &wvp_matrix); 
+		renderer_->set_vs_variable("wvpMatrix", &mirror_wvp_matrix); 
 		renderer_->set_blend_shader(opaque_bs_);
 		
 		mirror_mesh->render();
@@ -387,21 +387,30 @@ protected:
 
 		timer.restart();
 
-		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
+		static float angle0 = 60.0f;
+		static float angle1 = 0;
+		// angle0 -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
+		angle1 += elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.25f;
 
-		camera_pos = vec3(cos(s_angle) * 2.0f, 1.5f, sin(s_angle) * 2.0f);
-		mat44 world(mat44::identity()), view, proj, mirror_mat;
-		mat_translate(world, 0.5f, 0.0f, 0.0f);
+		camera_pos = vec3(cos(angle0)*5.0f, 2.5f, sin(angle0)*5.0f);
+		
+		mat44 world(mat44::identity()), world_reflect, view, proj, viewproj, mirror_mat;
+
+		mat_translate(world, 0.0f, 0.0f, 0.0f);
 		mat_lookat(view, camera_pos, vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
-		mat_mul(wvp_matrix, world, mat_mul(wvp_matrix, view, proj));
-		
+		mat_mul(viewproj, view, proj);
+		mat_mul(mirror_wvp_matrix, world, viewproj);
+
+		mat_translate(world, cos(angle1)*3.0f, 0.0f, sin(angle1)*3.0f);
+		mat_mul(cup_wvp_matrix, world, viewproj);
+
 		vec4 mirror_plane(mirror_norm, -dot_prod3(mirror_norm, mirror_start_pos));
 		mat_reflect(mirror_mat, mirror_plane);
-		mat_mul(reflect_wvp_matrix, mirror_mat, wvp_matrix);
+		mat_mul(world_reflect, world, mirror_mat);
+		mat_mul(reflect_cup_wvp_matrix, world_reflect, viewproj);
 
-		light_pos = vec4( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
+		light_pos = vec4(sin(-angle0*1.5f)*2.2f, 0.15f, cos(angle0*0.9f)*1.8f, 0.0f);
 
         renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
@@ -430,8 +439,9 @@ protected:
 
 	vec4					light_pos;
 	vec3					camera_pos;
-	mat44					wvp_matrix;
-	mat44					reflect_wvp_matrix;
+	mat44					mirror_wvp_matrix;
+	mat44					cup_wvp_matrix;
+	mat44					reflect_cup_wvp_matrix;
 
 
 	shader_object_ptr       mirror_vs;
