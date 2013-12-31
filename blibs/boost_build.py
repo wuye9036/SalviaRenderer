@@ -1,4 +1,4 @@
-import os, re
+import os, re, util
 
 class version_object:
 	def __init__(self, version_int):
@@ -21,7 +21,10 @@ def boost_version( boost_root ):
 	it will return None.
 	"""
 	version_hpp = os.path.join( boost_root, 'boost', 'version.hpp' )
-	f = open(version_hpp)
+	try:
+		f = open(version_hpp)
+	except:
+		util.report_error('Cannot find boost/version.hpp. Please specify correct boost directory.')
 	if f is None:
 		return None
 	version_lines = f.readlines()
