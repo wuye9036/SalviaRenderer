@@ -116,12 +116,24 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 	gcc_executables = []
 	if gcc_dir is not None:
 		gcc_executables.append( os.path.join(gcc_dir, "g++") )
+	
+	line_separator = None
 	if systems.current() == systems.win32:
-		try:
+		line_separator = '\r\n'
+	elif systems.current() == systems.linux:
+		line_separator = '\n'
+		
+	try:
+		gcc_paths = None
+		if systems.current() == systems.win32:
 			gcc_paths = subprocess.check_output(["where", "g++"])
-			gcc_executables += gcc_paths.split("\r\n")
-		except:
-			pass
+		elif systems.current() == systems.linux:
+			gcc_paths = subprocess.check_output(["which", "g++"])
+		gcc_executables += gcc_paths.split(line_separator)
+	except:
+		pass
+	
+	if systems.current() == systems.win32:
 		gcc_executables.append(os.path.join("C:/MinGW/bin", "g++"))
 
 	for gcc_executable in gcc_executables:

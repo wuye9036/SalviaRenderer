@@ -88,8 +88,6 @@ class project:
 		if self.toolset().short_compiler_name() == "mgw" and self.arch() == arch.x64:
 			if not self.toolset().support_x64():
 				report_error('Salvia cannot build as 64-bit when MinGW32 is used.')
-		if systems.current() == systems.linux and self.arch() != arch.current():
-			report_error('Salvia cannot support cross compiling on Linux.Please specify correct arch in proj.py')
 		if self.toolset().short_compiler_name() in ['mgw', 'gcc'] \
 			and 'toolset_dir' in self.props_.__dict__ \
 			and self.customized_toolset_dir() != self.props_.toolset_dir:

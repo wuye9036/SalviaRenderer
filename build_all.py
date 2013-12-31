@@ -44,7 +44,7 @@ def make_bjam(prj):
 				subprocess.call("bootstrap.bat", env=env)
 			else:
 				env['PATH'] = "%s:%s" % (env['PATH'], customized_toolset_dir)
-				subprocess.call("bootstrap.sh", env=env)
+				subprocess.call("./bootstrap.sh", env=env)
 		except:
 			os.chdir(old_dir)
 			report_error("Unknown error occurred when building bjam.")
@@ -119,7 +119,6 @@ def make_boost(proj):
 	else:
 		os.chdir(proj.source_root())
 		report_error("Unsupported OS.")
-
 
 def clean_llvm(proj):
 	guarded_rmtree(proj.llvm_build())
