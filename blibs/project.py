@@ -182,6 +182,10 @@ class project:
 			return 'MSBuild'
 		elif self.toolset().short_compiler_name() == "mgw":
 			return 'mingw32-make'
+		elif self.toolset().short_compiler_name() == "gcc":
+			return 'make'
+		else:
+			report_error('Cannot find valid make/build program.')
 	
 	def directx(self):
 		return self.directx_

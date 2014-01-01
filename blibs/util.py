@@ -1,50 +1,49 @@
 import sys, os, hashlib, datetime, env
 
 class batch_command:
-	def __init__(self, working_dir):
+	def __init__( self, working_dir, target_sys = env.systems.current() ):
 		self.dir_ = working_dir
 		self.commands_ = []
 		
-	def add_command(self, cmd):
+		# Environ setup
+		if target_sys == env.systems.win32:
+			self.execute_template_ = "%s"
+			self.file_suffix_ = ".bat"
+			self.error_exit_template_ = \
+				"@%s\n" + \
+				"@if %%ERRORLEVEL%% neq 0 exit /B 1"
+		elif target_sys == env.systems.linux:
+			self.execute_template_ = "sh %s"
+			self.file_suffix_ = ".sh"
+			self.error_exit_template_ = \
+				"%s || exit $?"
+		else:
+			report_error("OS is unsupported by batch_command.")
+		
+	def add_native_command(self, cmd):
+		self.commands_ += [cmd]
+	
+	def add_execmd(self, cmd):
 		self.commands_ += [cmd]
 		
+	def add_execmd_with_error_exit(self, cmd):
+		self.commands_ += [self.error_exit_template_ % cmd]
+	
 	def execute(self, keep_bat = False):
 		tmp_gen = hashlib.md5()
 		dt = datetime.datetime.now()
 		tmp_gen.update( str(dt).encode('utf-8') )
-		batch_file = tmp_gen.hexdigest() + ".bat"
+		batch_fname = tmp_gen.hexdigest() + self.file_suffix_
 		curdir = os.path.abspath(os.curdir)
 		os.chdir(self.dir_)
-		batch_f = open( batch_file, "w" )
+		batch_f = open(batch_fname, "w")
 		batch_f.writelines( [cmd_line + "\n" for cmd_line in self.commands_] )
 		batch_f.close()
-		ret_code = os.system(batch_file)
+		ret_code = os.system(self.execute_template_ % batch_fname)
 		if not keep_bat:
-			os.remove(batch_file)
+			os.remove(batch_fname)
 		os.chdir(curdir)
 		return ret_code
-
-class bash_command:
-	def __init__(self, working_dir):
-		self.dir_ = working_dir
-		self.commands_ = []
-
-	def add_command(self, cmd):
-		self.commands_ += [cmd]
-
-	def execute(self):
-		tmp_gen = hashlib.md5()
-		dt = datetime.datetime.now()
-		tmp_gen.update( str(dt).encode('utf-8') )
-		batch_file = tmp_gen.hexdigest() + ".sh"
-		curdir = os.path.abspath(os.curdir)
-		os.chdir(self.dir_)
-		batch_f = open( batch_file, "w" )
-		batch_f.writelines( [cmd_line + "\n" for cmd_line in self.commands_] )
-		batch_f.close()
-		os.system(batch_file)
-		os.remove(batch_file)
-		os.chdir(curdir)
 
 def executable_file_name(base_name, target_sys):
 	if target_sys == env.systems.win32:

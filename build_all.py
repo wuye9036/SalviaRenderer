@@ -149,39 +149,40 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
 	report_info("Configuring %s ..." % project_name)
 	if not os.path.exists(build_dir):
 		os.makedirs(build_dir)
-	if systems.current() == systems.win32:
-		conf_cmd = batch_command(build_dir)
-		if proj.customized_toolset_dir():
-			conf_cmd.add_command('@set PATH=%s;%%PATH%%' % proj.customized_toolset_dir())
-		conf_cmd.add_command('"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), params_cmd, source_dir))
-		conf_cmd.add_command('@if ERRORLEVEL 1 exit /B 1')
-		if conf_cmd.execute() != 0:
-			report_error("%s configure failed." % project_name)
-	else:
-		report_error("Unsupported OS.")
+	
+	conf_cmd = batch_command(build_dir)
+	
+	if proj.customized_toolset_dir():
+		if systems.current() == systems.win32:
+			conf_cmd.add_native_command('@set PATH=%s;%%PATH%%' % proj.customized_toolset_dir())
+		elif systems.current() == systems.linux:
+			conf_cmd.add_native_command('PATH=%s:%%PATH%%' % proj.customized_toolset_dir())
+		else:
+			report_error("Unsupported OS.")
+	conf_cmd.add_execmd_with_error_exit('"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), params_cmd, source_dir))
+	
+	if conf_cmd.execute() != 0:
+		report_error("%s configure failed." % project_name)
 		
 	report_info("Making %s on %s ..." % (project_name, proj.config_name()))
 	if proj.toolset().short_compiler_name() == "vc":
 		make_cmd = batch_command(build_dir)
-		make_cmd.add_command('@call "%s"' % proj.env_setup_commands())
-		make_cmd.add_command('@set VisualStudioVersion=%s' % proj.toolset().vs_version_string())
-		make_cmd.add_command('@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s'
+		make_cmd.add_native_command('@call "%s"' % proj.env_setup_commands())
+		make_cmd.add_native_command('@set VisualStudioVersion=%s' % proj.toolset().vs_version_string())
+		make_cmd.add_execmd_with_error_exit('%s ALL_BUILD.%s /m /v:m /p:Configuration=%s'
 			% (proj.maker_name(), proj.project_file_ext(), proj.config_name()))
-		make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
+		
 		if not install_dir is None:
-			make_cmd.add_command(
-				'@%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()))
-			make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
+			make_cmd.add_execmd_with_error_exit(
+				'%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()))
 		if make_cmd.execute() != 0:
 			report_error("%s make failed." % project_name)
-	elif proj.toolset().short_compiler_name() == "mgw":
+	elif proj.toolset().short_compiler_name() in ["mgw", "gcc"]:
 		make_cmd = batch_command(build_dir)
-		make_cmd.add_command('@%s' % proj.env_setup_commands())
-		make_cmd.add_command('%s -j%d' % (proj.maker_name(), multiprocessing.cpu_count()))
-		make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
+		make_cmd.add_execmd_with_error_exit('%s' % proj.env_setup_commands())
+		make_cmd.add_execmd_with_error_exit('%s -j%d' % (proj.maker_name(), multiprocessing.cpu_count()))
 		if not install_dir is None:
-			make_cmd.add_command('@%s install' % proj.maker_name())
-			make_cmd.add_command('@if %ERRORLEVEL% neq 0 exit /B 1')
+			make_cmd.add_execmd_with_error_exit('%s install' % proj.maker_name())
 		if make_cmd.execute() != 0:
 			report_error("%s make failed." % project_name)
 	else:

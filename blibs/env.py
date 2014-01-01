@@ -160,7 +160,7 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 			gcc_toolset = toolset( None, compiler_name,
 				version_digits[0], version_digits[1], version_digits[2]
 			)
-			return gcc_toolset, gcc_dir
+			return gcc_toolset, os.path.dirname(gcc_executable)
 		except:
 			pass
 	return None, None
