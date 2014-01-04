@@ -156,10 +156,10 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
 		if systems.current() == systems.win32:
 			conf_cmd.add_native_command('@set PATH=%s;%%PATH%%' % proj.customized_toolset_dir())
 		elif systems.current() == systems.linux:
-			conf_cmd.add_native_command('PATH=%s:%%PATH%%' % proj.customized_toolset_dir())
+			conf_cmd.add_native_command('PATH=%s:$PATH' % proj.customized_toolset_dir())
 		else:
 			report_error("Unsupported OS.")
-	conf_cmd.add_execmd_with_error_exit('"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), params_cmd, source_dir))
+	conf_cmd.add_execmd_with_error_exit('"%s" -G "%s" %s %s' % (proj.cmake_exe(), proj.generator(), params_cmd, source_dir))
 	
 	if conf_cmd.execute() != 0:
 		report_error("%s configure failed." % project_name)
@@ -294,16 +294,16 @@ def build(proj_props, cleanBuild):
 	proj.print_props()
 	proj.check()
 
-	make_bjam(proj)
-	if cleanBuild: clean_all(proj)
-	make_boost(proj)
+	#make_bjam(proj)
+	#if cleanBuild: clean_all(proj)
+	#make_boost(proj)
 
-	config_and_make_freetype(proj)
+	#config_and_make_freetype(proj)
 	config_and_make_freeimage(proj)
-	config_and_make_llvm(proj)
-	config_and_make_salvia(proj)
+	#config_and_make_llvm(proj)
+	#config_and_make_salvia(proj)
 
-	install_prebuild_binaries(proj)
+	#install_prebuild_binaries(proj)
 
 if __name__ == "__main__":
 	try:

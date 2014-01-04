@@ -172,9 +172,9 @@ class project:
 			else:
 				if self.toolset().short_compiler_name() == "mgw":
 					if not self.build_root_ is None:
-						return 'set PATH=%%PATH%%;"%s"' % self.builder_root_
+						return 'set PATH=%s;%%PATH%%' % self.builder_root_
 		if self.os() == systems.linux and not self.build_root_ is None:
-			return 'export PATH=%%PATH%%:"%s"' % self.builder_root_
+			return 'PATH=%s:$PATH' % self.builder_root_
 		report_error("Unrecognized OS or toolset.")
 		
 	def maker_name(self):
