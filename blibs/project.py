@@ -239,9 +239,22 @@ class project:
 	def boost_version(self):
 		return self.boost_ver_
 	def boost_stage(self):
-		return os.path.join( self.install_lib(), 'boost_%s' % self.target_modifier(['platform']) )
+		return self.common_install_dir('boost')
+	def boost_configs(self):
+		if self.config_ == "Debug":
+			return ["optimization=off", "debug-symbols=on", "inlining=off", "runtime-debugging=on"]
+		elif self.config_ == "RelWithDebInfo":
+			return ["optimization=speed", "debug-symbols=on", "inlining=full", "runtime-debugging=off"]
+		elif self.config_ == "Release":
+			return ["optimization=speed", "debug-symbols=off", "inlining=full", "runtime-debugging=off"]
+		elif self.config_ == "MinSizeRel":
+			return ["optimization=space", "debug-symbols=off", "inlining=on", "runtime-debugging=off"]
+		else:
+			report_error("Configuration <%s> cannot be recognized." % self.config_)
 	def boost_lib_dir(self):
-		return os.path.join( self.boost_stage(), "lib" )
+		return os.path.join(self.boost_stage(), "lib")
+	def boost_lib_dir_in_msvc(self):
+		return os.path.join(self.common_msvc_install_dir('boost'), 'lib')
 
 	def common_msvc_install_dir(self, lib_name):
 		if self.toolset().short_compiler_name() == 'vc':
