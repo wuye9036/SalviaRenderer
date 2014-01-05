@@ -2,7 +2,7 @@
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/IR/Intrinsics.h>
-#include <llvm/adt/StringRef.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <eflib/include/platform/enable_warnings.h>
@@ -21,7 +21,7 @@ BEGIN_NS_SASL_CODEGEN();
 
 llvm::Intrinsic::ID get_intrinsic_id( char const* Name ){
 	unsigned Len = strlen(Name);
-	
+
 	if (Len < 5 || Name[4] != '.' || Name[0] != 'l' || Name[1] != 'l'
 		|| Name[2] != 'v' || Name[3] != 'm')
 		return llvm::Intrinsic::ID(0);  // All intrinsics start with 'llvm.'

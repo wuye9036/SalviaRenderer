@@ -40,6 +40,10 @@
 #	define EFLIB_WINDOWS
 #endif
 
+#if defined(__linux__)
+#	define EFLIB_LINUX
+#endif
+
 #ifdef EFLIB_WINDOWS
 #	ifndef BOOST_ALL_DYN_LINK
 #		define BOOST_ALL_DYN_LINK

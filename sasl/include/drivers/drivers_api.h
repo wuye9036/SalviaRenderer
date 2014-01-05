@@ -6,6 +6,7 @@
 #include <sasl/include/drivers/compiler.h>
 
 #include <eflib/include/utility/shared_declaration.h>
+#include <eflib/include/platform/dl_sym_vis.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -14,11 +15,11 @@
 #include <string>
 
 #if defined(sasl_drivers_EXPORTS)
-#	define SASL_DRIVERS_API __declspec(dllexport)
+#	define SASL_DRIVERS_API EFLIB_SYM_EXPORT
 #elif defined(SASL_STATIC_DRIVERS)
 #	define SASL_DRIVERS_API
 #else
-#	define SASL_DRIVERS_API __declspec(dllimport)
+#	define SASL_DRIVERS_API EFLIB_SYM_IMPORT
 #endif
 
 namespace sasl

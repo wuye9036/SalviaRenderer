@@ -11,6 +11,7 @@
 #endif
 
 #include <algorithm>
+#include <string.h>
 
 namespace eflib{
 #if defined(EFLIB_CPU_X64) || defined(EFLIB_CPU_X86)

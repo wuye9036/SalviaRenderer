@@ -5,6 +5,10 @@
 #include <iostream>
 #include <algorithm>
 
+#if !defined(EFLIB_WINDOWS)
+#	define _snprintf snprintf
+#endif
+
 using std::string;
 using std::vector;
 using std::cout;

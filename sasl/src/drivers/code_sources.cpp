@@ -116,7 +116,7 @@ void compiler_code_source::report_wave_pp_exception(
 		break;
 	}
 
-	
+
 	if( committer )
 	{
 		fixed_string file_name;
@@ -187,12 +187,12 @@ void compiler_code_source::set_diag_chat( sasl::common::diag_chat* diags )
 compiler_code_source::compiler_code_source()
 	: diags(NULL)
 {
-	
+
 }
 
 compiler_code_source::~compiler_code_source()
 {
-	
+
 }
 
 code_span compiler_code_source::current_span() const
@@ -334,7 +334,7 @@ void load_virtual_file(
 
 	if( !is_system ) { return; }
 
-	compiler_code_source::virtual_file_dict::iterator it 
+	compiler_code_source::virtual_file_dict::iterator it
 		= code_src->virtual_files.find(name);
 	if ( it == code_src->virtual_files.end() )
 	{
@@ -363,7 +363,7 @@ void check_file( bool& is_succeed, bool& is_exclusive, string& native_name,
 	compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
 	assert( code_src );
 
-	// If inc handler is enabled, it is exclusive. 
+	// If inc handler is enabled, it is exclusive.
 	if( code_src->inc_handler )
 	{
 		std::string content;
@@ -372,7 +372,7 @@ void check_file( bool& is_succeed, bool& is_exclusive, string& native_name,
 		return;
 	}
 
-	compiler_code_source::virtual_file_dict::iterator it 
+	compiler_code_source::virtual_file_dict::iterator it
 		= code_src->virtual_files.find(name);
 	if ( it == code_src->virtual_files.end() )
 	{
@@ -429,7 +429,7 @@ void fixes_file_end_with_newline( std::string& content )
 #elif defined(EFLIB_OSX)
 	content.append( "\r" );
 #elif defined(EFLIB_UNIX) || defined(EFLIB_LINUX)
-	content.append( '\n' );
+	content.append( "\n" );
 #endif
 }
 
