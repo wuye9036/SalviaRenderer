@@ -51,7 +51,11 @@ set (SOURCE_FILES
 )
 
 # Platform-specified files
-ADD_DEFINITIONS(-DSALVIAX_GL_ENABLED)
+if(UNIX)
+	MESSAGE(STATUS "GL is disabled on Linux. It will be supported later.")
+else(UNIX)
+	ADD_DEFINITIONS(-DSALVIAX_GL_ENABLED)
+endif(UNIX)
 
 if( WIN32 )
 	set (HEADER_FILES

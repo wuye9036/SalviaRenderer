@@ -19,10 +19,12 @@
 #include <fstream>
 #include <string>
 
-#define NOMINMAX
-#include <Windows.h>
-#undef NOMINMAX
-#include <tchar.h>
+#if defined(EFLIB_WINDOWS)
+#	define NOMINMAX
+#	include <Windows.h>
+#	undef NOMINMAX
+#	include <tchar.h>
+#endif
 
 using namespace eflib;
 using namespace boost;
@@ -196,10 +198,10 @@ class vs_mesh : public cpp_vertex_shader
 public:
 	vs_mesh():wv(mat44::identity()), proj(mat44::identity())
 	{
-		declare_constant(_T("WorldViewMat"), wv);
-		declare_constant(_T("ProjMat"), proj);
-		declare_constant(_T("LightPos"), light_pos);
-		declare_constant(_T("EyePos"), eye_pos);
+		declare_constant(_EFLIB_T("WorldViewMat"), wv);
+		declare_constant(_EFLIB_T("ProjMat"), proj);
+		declare_constant(_EFLIB_T("LightPos"), light_pos);
+		declare_constant(_EFLIB_T("EyePos"), eye_pos);
 
 		bind_semantic( "POSITION", 0, 0 );
 		bind_semantic( "NORMAL", 0, 1 );
@@ -239,7 +241,7 @@ public:
 			return salviar::vs_output::am_linear;
 		}
 	}
-    
+
     virtual cpp_shader_ptr clone()
 	{
         typedef std::remove_pointer<decltype(this)>::type this_type;
@@ -283,7 +285,7 @@ public:
 		inout.color(0, sample, color_rgba32f(in.color[0]));
 		return true;
 	}
-    
+
     virtual cpp_shader_ptr clone()
 	{
         typedef std::remove_pointer<decltype(this)>::type this_type;
@@ -337,7 +339,7 @@ public:
         vp.minz = 0.0f;
         vp.maxz = 1.0f;
         renderer_->set_viewport(vp);
-		
+
         // Rasterizer state
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -380,7 +382,7 @@ public:
 
 		{
 			prof.start("Set rendering parameters", 0);
-			
+
 			mat44 world(mat44::identity()), view, proj, wv;
 			static float s_angle = -1;
 			vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
@@ -388,7 +390,7 @@ public:
 			mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
 			mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 			mat_mul(wv, world, view);
-			
+
 			vec3 light_pos(vec3(-4, 2, 0));
 
 			renderer_->set_vertex_shader(cpp_vs);
@@ -397,14 +399,14 @@ public:
 
 			renderer_->set_rasterizer_state(rs_back);
 
-			cpp_vs->set_constant(_T("WorldViewMat"), &wv);
-			cpp_vs->set_constant(_T("ProjMat"), &proj);
-			cpp_vs->set_constant(_T("LightPos"), &light_pos);
-			cpp_vs->set_constant(_T("EyePos"), &eye);
-			
+			cpp_vs->set_constant(_EFLIB_T("WorldViewMat"), &wv);
+			cpp_vs->set_constant(_EFLIB_T("ProjMat"), &proj);
+			cpp_vs->set_constant(_EFLIB_T("LightPos"), &light_pos);
+			cpp_vs->set_constant(_EFLIB_T("EyePos"), &eye);
+
 			prof.end("Set rendering parameters");
 		}
-		
+
 		{
 			prof.start("Rendering", 0);
 			complex_mesh->render();
@@ -416,7 +418,7 @@ protected:
 	/** Properties @{ */
 	renderer_ptr			renderer_;
 	mesh_ptr				complex_mesh;
-    
+
     pixel_format            color_format_;
     size_t                  width_;
     size_t                  height_;
@@ -439,7 +441,7 @@ static size_t const RENDER_FRAME_COUNT = 5;
 static size_t const RENDER_FRAME_COUNT = 300;
 #endif
 
-int main( int /*argc*/, TCHAR* /*argv*/[] )
+int main( int /*argc*/, std::_tchar* /*argv*/[] )
 {
 #if defined(EFLIB_WINDOWS)
 	HANDLE process_handle = GetCurrentProcess();

@@ -12,10 +12,12 @@
 
 #include <vector>
 
-#include <windows.h>
-#include <GL/GL.h>
+#if defined(EFLIB_WINDOWS)
+#	include <windows.h>
+#	pragma comment(lib, "opengl32.lib")
+#endif
 
-#pragma comment(lib, "opengl32.lib")
+#include <GL/gl.h>
 
 using namespace salviar;
 

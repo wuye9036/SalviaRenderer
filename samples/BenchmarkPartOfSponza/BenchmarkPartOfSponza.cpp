@@ -1,7 +1,3 @@
-#include <tchar.h>
-
-#include <salviau/include/wtl/wtl_application.h>
-
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shader_object.h>
@@ -77,9 +73,9 @@ class benchmark_vs : public cpp_vertex_shader
 	vec4 light_pos, eye_pos;
 public:
 	benchmark_vs():wvp(mat44::identity()){
-		declare_constant(_T("wvpMatrix"), wvp);
-		declare_constant(_T("lightPos"), light_pos);
-		declare_constant(_T("eyePos"), eye_pos );
+		declare_constant(_EFLIB_T("wvpMatrix"), wvp);
+		declare_constant(_EFLIB_T("lightPos"), light_pos);
+		declare_constant(_EFLIB_T("eyePos"), eye_pos );
 
 		bind_semantic( "POSITION", 0, 0 );
 		bind_semantic( "TEXCOORD", 0, 1 );
@@ -125,11 +121,11 @@ class benchmark_ps : public cpp_pixel_shader
 public:
 	benchmark_ps()
 	{
-		declare_constant(_T("Ambient"),   ambient);
-		declare_constant(_T("Diffuse"),   diffuse);
-		declare_constant(_T("Specular"),  specular);
-		declare_constant(_T("Shininess"), shininess);
-        declare_sampler (_T("Sampler"),   sampler_);
+		declare_constant(_EFLIB_T("Ambient"),   ambient);
+		declare_constant(_EFLIB_T("Diffuse"),   diffuse);
+		declare_constant(_EFLIB_T("Specular"),  specular);
+		declare_constant(_EFLIB_T("Shininess"), shininess);
+        declare_sampler (_EFLIB_T("Sampler"),   sampler_);
 	}
 
 	bool shader_prog(const vs_output& in, ps_output& out)
@@ -172,7 +168,7 @@ public:
 		inout.color( 0, sample, color_rgba32f(in.color[0]) );
 		return true;
 	}
-    
+
     virtual cpp_shader_ptr clone()
 	{
         typedef std::remove_pointer<decltype(this)>::type this_type;
@@ -216,7 +212,7 @@ public:
             resolved_color_surface_ = renderer_->create_tex2d(width_, height_, 1, color_format_)->get_surface(0);
         }
         renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-        
+
         viewport vp;
         vp.w = static_cast<float>(width_);
         vp.h = static_cast<float>(height_);
@@ -225,7 +221,7 @@ public:
         vp.minz = 0.0f;
         vp.maxz = 1.0f;
         renderer_->set_viewport(vp);
-		
+
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
@@ -274,11 +270,11 @@ public:
 
 		vec3 camera(-36.0f, 8.0f, 0.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
-		
+
 		mat44 world(mat44::identity()), view, proj, wvp;
 		mat_lookat(view, camera, vec3(40.0f, 15.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
-		
+
 		vec4 lightPos( 0.0f, 40.0f, 0.0f, 1.0f );
 
 		renderer_->set_pixel_shader(cpp_ps);
@@ -299,10 +295,10 @@ public:
 		renderer_->set_vertex_shader(cpp_vs);
 #endif
 		renderer_->set_vs_variable( "wvpMatrix", &wvp );
-		
+
 		renderer_->set_vs_variable( "eyePos", &camera_pos );
 		renderer_->set_vs_variable( "lightPos", &lightPos );
-		
+
 		prof.end("Set rendering parameters");
 
 		cout << "Rendering ..." << endl;
@@ -314,10 +310,10 @@ public:
 			shared_ptr<obj_material> mtl
 				= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
 
-			cpp_ps->set_constant( _T("Ambient"),  &mtl->ambient );
-			cpp_ps->set_constant( _T("Diffuse"),  &mtl->diffuse );
-			cpp_ps->set_constant( _T("Specular"), &mtl->specular );
-            cpp_ps->set_constant( _T("Shininess"),&mtl->ambient );
+			cpp_ps->set_constant( _EFLIB_T("Ambient"),  &mtl->ambient );
+			cpp_ps->set_constant( _EFLIB_T("Diffuse"),  &mtl->diffuse );
+			cpp_ps->set_constant( _EFLIB_T("Specular"), &mtl->specular );
+            cpp_ps->set_constant( _EFLIB_T("Shininess"),&mtl->ambient );
 
             sampler_desc desc;
             desc.min_filter = filter_linear;
@@ -327,8 +323,8 @@ public:
             desc.addr_mode_v = address_wrap;
             desc.addr_mode_w = address_wrap;
 
-            cpp_ps->set_sampler(_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
-			
+            cpp_ps->set_sampler(_EFLIB_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
+
 			cur_mesh->render();
 		}
 		prof.end("Rendering");
@@ -357,7 +353,7 @@ protected:
 	profiler			    prof;
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] )
+int main( int /*argc*/, std::_tchar* /*argv*/[] )
 {
 #if defined(EFLIB_WINDOWS)
 	HANDLE process_handle = GetCurrentProcess();

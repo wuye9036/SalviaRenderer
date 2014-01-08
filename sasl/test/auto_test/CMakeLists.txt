@@ -18,9 +18,11 @@ endif()
 
 ADD_CUSTOM_COMMAND(
 		OUTPUT	auto_repo.deps
-		COMMAND "${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
+		COMMAND "${PYTHON_EXECUTABLE}"
 		ARGS
-			"${SASL_HOME_DIR}/sasl/test/auto_test/repo" ${SALVIA_TEST_REPOSITORY_PATH}
+			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
+			"${SASL_HOME_DIR}/sasl/test/auto_test/repo"
+			${SALVIA_TEST_REPOSITORY_PATH}
 		COMMAND echo "AUTO_REPO.DEPS" > auto_repo.deps
 		DEPENDS
 			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py" ${V1A1_TESTS}

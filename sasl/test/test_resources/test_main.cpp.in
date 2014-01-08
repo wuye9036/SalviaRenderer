@@ -1,6 +1,14 @@
 #define BOOST_TEST_MODULE @SASL_TEST_PROJECT_NAME@
 #define BOOST_TEST_NO_MAIN
 
+#include <eflib/include/platform/config.h>
+
+#if defined(EFLIB_LINUX)
+//	We need alternative init API. It is default in Windows because DYN_LINK is enabled.
+//  But on Linux, we need to force open it.
+#	define BOOST_TEST_ALTERNATIVE_INIT_API
+#endif
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/chrono.hpp>
@@ -74,13 +82,13 @@ int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
 {
 	set_highest_priority(argc, argv);
-	
+
 	normal_exit = false;
 	atexit(&check_on_exit);
 
 	setvbuf( stdout, NULL, _IONBF, 0 );
 	setvbuf( stderr, NULL, _IONBF, 0 );
-	
+
 	int ret = 0;
 	{
 		eflib::lifetime_manager lfmgr;
@@ -88,7 +96,7 @@ main( int argc, char* argv[] )
 		chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
 		ret = ::boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 		chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
-		
+
 		if( display_time(argc, argv) )
 		{
 			chrono::milliseconds elapsed_ms
@@ -96,12 +104,12 @@ main( int argc, char* argv[] )
 			printf("Total elapsed time: %6dms\n", static_cast<int32_t>( elapsed_ms.count() ) );
 		}
 	}
-	
+
 	if( enable_pause(argc, argv) )
 	{
 		system("pause");
 	}
-	
+
 	normal_exit = true;
 	return ret;
 }

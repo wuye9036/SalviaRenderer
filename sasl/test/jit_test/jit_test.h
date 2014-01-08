@@ -80,9 +80,10 @@ using boost::disable_if;
 using std::string;
 
 #if defined(EFLIB_WINDOWS)
-#pragma warning(push)
-#pragma warning(disable: 4701) // C4701: potentially uninitialized local variable 'X' used
-#pragma warning(disable: 4244) // C4244: conversion from 'X' to 'Y', possible loss of data
+#	pragma warning(push)
+#	pragma warning(disable: 4701) // C4701: potentially uninitialized local variable 'X' used
+#	pragma warning(disable: 4244) // C4244: conversion from 'X' to 'Y', possible loss of data
+#endif
 
 template <typename Fn>
 class jit_function_forward_base{
@@ -231,7 +232,8 @@ public:
 	}
 };
 
-#pragma warning(pop)
+#if defined(EFLIB_WINDOWS)
+#	pragma warning(pop)
 #endif
 
 template <typename Fn>

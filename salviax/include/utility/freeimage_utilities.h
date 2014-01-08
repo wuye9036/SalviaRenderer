@@ -6,10 +6,13 @@
 #include <salviar/include/colors.h>
 #include <eflib/include/string/string.h>
 #include <eflib/include/math/collision_detection.h>
+
+#include <eflib/include/platform/disable_warnings.h>
 #include <FreeImage.h>
 #include <boost/static_assert.hpp>
+#include <eflib/include/platform/enable_warnings.h>
+
 #include <algorithm>
-#include <tchar.h>
 
 BEGIN_NS_SALVIAX_UTILITY();
 

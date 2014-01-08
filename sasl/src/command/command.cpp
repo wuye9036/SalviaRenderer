@@ -15,10 +15,10 @@ using boost::shared_ptr;
 using std::cout;
 using std::endl;
 
-#ifdef EFLIB_WINDOWS
+#if defined(EFLIB_WINDOWS)
 #	define DRIVER_EXT ".dll"
-#else
-#	error "Unknown OS."
+#elif defined(EFLIB_LINUX)
+#	define DRIVER_EXT ".so"
 #endif
 
 #ifdef EFLIB_DEBUG

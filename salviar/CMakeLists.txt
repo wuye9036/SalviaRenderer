@@ -160,6 +160,10 @@ ADD_LIBRARY( salviar STATIC
 )
 
 TARGET_LINK_LIBRARIES(salviar EFLIB)
+if(UNIX)
+	# On linux, it will depend on pthread.
+	TARGET_LINK_LIBRARIES(salviar pthread)
+endif()
 SET_TARGET_PROPERTIES( salviar PROPERTIES FOLDER "SALVIA Renderer" )
 
 SALVIA_CONFIG_OUTPUT_PATHS(salviar)

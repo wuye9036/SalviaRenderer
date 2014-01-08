@@ -1,12 +1,12 @@
-#ifndef SALVIAU_SALVIAU_FORWARD_H
-#define SALVIAU_SALVIAU_FORWARD_H
+#pragma once
+
+#include <eflib/include/platform/dl_sym_vis.h>
 
 #define BEGIN_NS_SALVIAU()	namespace salviau{
 #define END_NS_SALVIAU()	}
 
 #if defined(salviau_EXPORTS)
-#	define SALVIAU_API __declspec(dllexport)
+#	define SALVIAU_API EFLIB_SYM_EXPORT
 #else
-#	define SALVIAU_API __declspec(dllimport)
-#endif
+#	define SALVIAU_API EFLIB_SYM_IMPORT
 #endif

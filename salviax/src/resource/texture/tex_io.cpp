@@ -6,7 +6,6 @@
 #include <salviar/include/texture.h>
 #include <salviar/include/mapped_resource.h>
 #include <FreeImage.h>
-#include <tchar.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/static_assert.hpp>
@@ -14,8 +13,6 @@
 
 #include <algorithm>
 #include <memory>
-
-#pragma comment(lib, "freeimage.lib")
 
 using namespace eflib;
 using namespace std;
@@ -92,7 +89,7 @@ texture_ptr load_texture(renderer* rend, const std::_tstring& filename, pixel_fo
 {
 	FIBITMAP* img = load_image(filename);
 	texture_ptr ret;
-	
+
 	size_t src_w = FreeImage_GetWidth(img);
 	size_t src_h = FreeImage_GetHeight(img);
 
@@ -124,13 +121,13 @@ texture_ptr load_cube(renderer* rend, const vector<_tstring>& filenames, pixel_f
 	{
 		std::unique_ptr<FIBITMAP, decltype(image_deleter)>
 			cube_img(load_image(filenames[i_cubeface]), image_deleter);
-			
+
 		if (cube_img.get() == nullptr)
 		{
 			ret.reset();
 			return ret;
 		}
-		
+
 		size_t img_w = FreeImage_GetWidth (cube_img.get());
 		size_t img_h = FreeImage_GetHeight(cube_img.get());
 
@@ -184,13 +181,13 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 		EFLIB_ASSERT(false, "Unsupport format was used£¡");
 		return;
 	}
-	
+
 	mapped_resource mapped;
 	rend->map(mapped, surf, map_read);
-	
+
 	byte* 		 surf_data = reinterpret_cast<byte*>(mapped.data);
 	byte*		 img_data = FreeImage_GetBits(image);
-	pixel_format surf_format = surf->get_pixel_format(); 
+	pixel_format surf_format = surf->get_pixel_format();
 	size_t		 height = surf->get_height();
 	size_t		 width = surf->get_width();
 

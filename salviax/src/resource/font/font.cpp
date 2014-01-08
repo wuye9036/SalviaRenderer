@@ -158,7 +158,7 @@ public:
 		unit_ = un;
 
 		static int const dpi = 96;
-		
+
 		switch(un)
 		{
 		case pixels:
@@ -259,15 +259,15 @@ font_ptr font::create_in_system_path( std::string const& font_file_name, size_t 
 	char system_directory[1024];
 #if defined(EFLIB_WINDOWS)
 	GetWindowsDirectoryA(system_directory, 1024);
+	boost::filesystem::path font_path(system_directory);
+	font_path /= "Fonts";
 #else
-#	error "Unsupport platform."
+	boost::filesystem::path font_path("usr/share/fonts/truetype");
 #endif
 
-	boost::filesystem::path font_path( system_directory );
-	font_path /= "Fonts";
 	font_path /= font_file_name;
 
-	return create( font_path.string(), face_index, size, unit );
+	return create(font_path.string(), face_index, size, unit);
 }
 
 END_NS_SALVIAX_RESOURCE();
