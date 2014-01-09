@@ -15,6 +15,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
@@ -131,7 +132,8 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 			pmtl->is_specular = ( illumination == 2 );
 		} else if ( cmd == "map_Kd" ){
 			mtlf >> pmtl->tex_name;
-			std::_tstring tex_fullpath = eflib::to_tstring( ( base_path / pmtl->tex_name ).string() );
+			boost::algorithm::replace_all(pmtl->tex_name, "\\", "/");
+			std::_tstring tex_fullpath = eflib::to_tstring( (base_path/pmtl->tex_name).generic_string() );
 			pmtl->tex = load_texture(
 				r, tex_fullpath,
 				salviar::pixel_format_color_rgba8

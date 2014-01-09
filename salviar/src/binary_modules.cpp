@@ -40,7 +40,13 @@ namespace modules
 #ifdef EFLIB_DEBUG
 		dll_name += "_d";
 #endif
+#if defined(EFLIB_WINDOWS)
 		dll_name += ".dll";
+#elif defined(EFLIB_LINUX)
+		dll_name += ".so";
+#else
+#	error "Unknown system."
+#endif
 
 		host_lib = dynamic_lib::load(dll_name);
 		host_lib->get_function(compile_func, 			"salvia_compile_shader");

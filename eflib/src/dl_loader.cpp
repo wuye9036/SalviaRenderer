@@ -62,7 +62,7 @@ namespace eflib{
 	public:
 		linux_dl(std::string const& name)
 		{
-			mod = ::dlopen(name.c_str(), 0);
+			mod = ::dlopen(name.c_str(), RTLD_NOW);
 			void (*loaded_hook)() = NULL;
 			dynamic_lib::get_function(loaded_hook, "_eflib_dynlib_loaded");
 			if(loaded_hook)
