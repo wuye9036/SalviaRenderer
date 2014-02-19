@@ -1,3 +1,4 @@
+import os
 from mercurial import util
 try:
     from mercurial.error import RepoError
@@ -11,6 +12,10 @@ except ImportError:
 
 from git_handler import GitHandler
 
+from overlay import overlayrepo
+
+from mercurial.node import bin
+
 class gitrepo(peerrepository):
     capabilities = ['lookup']
 
@@ -22,6 +27,13 @@ class gitrepo(peerrepository):
             raise util.Abort('Cannot create a git repository.')
         self.ui = ui
         self.path = path
+        self.localrepo = None
+        self.handler = None
+
+    def _initializehandler(self):
+        if self.handler is None and self.localrepo is not None:
+            self.handler = GitHandler(self.localrepo, self.localrepo.ui)
+        return self.handler
 
     def url(self):
         return self.path
@@ -38,6 +50,22 @@ class gitrepo(peerrepository):
         return []
 
     def listkeys(self, namespace):
+        if namespace == 'namespaces':
+            return {'bookmarks':''}
+        elif namespace == 'bookmarks':
+            handler = self._initializehandler()
+            if handler:
+                handler.export_commits()
+                refs = handler.fetch_pack(self.path)
+                reqrefs = refs
+                convertlist, commits = handler.getnewgitcommits(reqrefs)
+                newcommits = [bin(c) for c in commits]
+                b = overlayrepo(handler, newcommits, refs)
+                stripped_refs = dict([
+                    (ref[11:], b.node(refs[ref]))
+                        for ref in refs.keys()
+                            if ref.startswith('refs/heads/')])
+                return stripped_refs
         return {}
 
     def pushkey(self, namespace, key, old, new):

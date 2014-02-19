@@ -24,8 +24,8 @@ Dependencies
 This plugin is implemented entirely in Python - there are no Git
 binary dependencies, you do not need to have Git installed on your
 system.  The only dependencies are Mercurial and Dulwich.  The plugin
-is known to work on Hg versions 1.3 through 1.5 and requires at least
-Dulwich 0.6.0.
+is known to work on Hg versions 1.9.3 through 2.3.1 and requires at least
+Dulwich 0.8.6.
 
 Usage
 =====
@@ -74,15 +74,15 @@ repository, you can fetch updates with `hg pull`.
 That will pull down any commits that have been pushed to the server in
 the meantime and give you a new head that you can merge in.
 
-Hg-Git can also be used to convert a Mercurial repository to Git.  As
-Dulwich doesn't support local repositories yet, the easiest way is to
-setup up a local SSH server.  Then use the following commands to
-convert the repository (it assumes your running this in $HOME).
+Hg-Git can also be used to convert a Mercurial repository to Git.  You can use
+a local repository or a remote repository accessed via SSH, HTTP or HTTPS.  Use
+the following commands to convert the repository (it assumes your running this
+in $HOME).
 
     $ mkdir git-repo; cd git-repo; git init; cd ..
     $ cd hg-repo
     $ hg bookmarks hg
-    $ hg push git+ssh://localhost:git-repo
+    $ hg push ../git-repo
 
 The hg bookmark is necessary to prevent problems as otherwise hg-git
 pushes to the currently checked out branch confusing Git. This will
@@ -123,8 +123,7 @@ TODO
 Hg Bookmarks Integration
 ========================
 
-If you have the bookmarks extension enabled, Hg-Git will use it. It
-will push your bookmarks up to the Git server as branches and will
+Hg-Git pushes your bookmarks up to the Git server as branches and will
 pull Git branches down and set them up as bookmarks.
 
 Installing
@@ -134,21 +133,16 @@ Clone this repository somewhere and make the 'extensions' section in
 your `~/.hgrc` file look something like this:
 
     [extensions]
-    hgext.bookmarks =
     hggit = [path-to]/hg-git/hggit
 
-That will enable the Hg-Git extension for you.  The bookmarks section
-is not compulsory, but it makes some things a bit nicer for you.
+That will enable the Hg-Git extension for you.
 
 This plugin is currently tested against the following Mercurial versions:
- * 1.6.4
- * 1.7.5
- * 1.8.4
  * 1.9.3
  * 2.0.2
  * 2.1.2
  * 2.2.3
- * 2.3
+ * 2.3.1
 
 Configuration
 =============
