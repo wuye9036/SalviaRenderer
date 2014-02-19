@@ -18,3 +18,4 @@ proj.py
 build.log
 bin_release
 .idea
+*.pyo
