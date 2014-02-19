@@ -258,7 +258,7 @@ class project:
 
 	def common_msvc_install_dir(self, lib_name):
 		if self.toolset().short_compiler_name() == 'vc':
-			return os.path.join( self.install_lib(), lib_name + "_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
+			return os.path.join( self.install_lib(), lib_name + "_" + self.target_modifier(['platform', 'tool']) + '_' + self.config_ )
 		report_error("Toolset is not set or not MSVC.")
 
 	def common_install_dir(self, lib_name):

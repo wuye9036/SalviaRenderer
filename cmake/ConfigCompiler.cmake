@@ -5,4 +5,4 @@ endif(MSVC)
 
 if(MINGW OR UNIX)
 	include(${CMAKE_CURRENT_LIST_DIR}/GCC.cmake)
-endif(MINGW)
+endif(MINGW OR UNIX)

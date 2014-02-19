@@ -35,7 +35,7 @@ function(SALVIA_CREATE_VCPROJ_USERFILE TARGETNAME)
   if(MSVC)
     set(SYSTEM_NAME $ENV{USERDOMAIN})
     set(USER_NAME $ENV{USERNAME})
-    if(MSVC_VERSION EQUAL 1700)
+    if(MSVC_VERSION GREATER 1600)
       configure_file(
 	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2012UserFile.vcxproj.user.in
 	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
