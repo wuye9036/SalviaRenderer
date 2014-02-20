@@ -23,3 +23,7 @@ ADD_SUBDIRECTORY( salviar )
 ADD_SUBDIRECTORY( salviax )
 ADD_SUBDIRECTORY( salviau )
 ADD_SUBDIRECTORY( samples )
+if( SALVIA_BUILD_SW_DRIVER )
+	ADD_SUBDIRECTORY( salvia_d3d_sw_driver )
+endif()
+
