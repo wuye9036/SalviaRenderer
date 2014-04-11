@@ -1,2 +1,2 @@
-hg push ../salvia-git
+hg push ..\salvia-git
 pause

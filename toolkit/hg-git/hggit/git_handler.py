@@ -1,11 +1,12 @@
-import os, math, urllib, re
+import os, math, urllib, urllib2, re
+import stat, posixpath, StringIO
 
-from dulwich.errors import HangupException, GitProtocolError
-from dulwich.index import commit_tree
-from dulwich.objects import Blob, Commit, Tag, Tree, parse_timezone
+from dulwich.errors import HangupException, GitProtocolError, UpdateRefsError
+from dulwich.objects import Blob, Commit, Tag, Tree, parse_timezone, S_IFGITLINK
 from dulwich.pack import create_delta, apply_delta
-from dulwich.repo import Repo
+from dulwich.repo import Repo, check_ref_format
 from dulwich import client
+from dulwich import config as dul_config
 
 try:
     from mercurial import bookmarks
@@ -24,8 +25,28 @@ from mercurial import context, util as hgutil
 from mercurial import error
 
 import _ssh
+import hg2git
 import util
 from overlay import overlayrepo
+
+
+RE_GIT_AUTHOR = re.compile('^(.*?) ?\<(.*?)(?:\>(.*))?$')
+
+RE_GIT_SANITIZE_AUTHOR = re.compile('[<>\n]')
+
+RE_GIT_AUTHOR_EXTRA = re.compile('^(.*?)\ ext:\((.*)\) <(.*)\>$')
+
+# Test for git:// and git+ssh:// URI.
+# Support several URL forms, including separating the
+# host and path with either a / or : (sepr)
+RE_GIT_URI = re.compile(
+    r'^(?P<scheme>git([+]ssh)?://)(?P<host>.*?)(:(?P<port>\d+))?'
+    r'(?P<sepr>[:/])(?P<path>.*)$')
+
+RE_NEWLINES = re.compile('[\r\n]')
+RE_GIT_PROGRESS = re.compile('\((\d+)/(\d+)\)')
+
+RE_AUTHOR_FILE = re.compile('\s*=\s*')
 
 class GitProgress(object):
     """convert git server progress strings into mercurial progress"""
@@ -38,7 +59,7 @@ class GitProgress(object):
     def progress(self, msg):
         # 'Counting objects: 33640, done.\n'
         # 'Compressing objects:   0% (1/9955)   \r
-        msgs = re.split('[\r\n]', self.msgbuf + msg)
+        msgs = RE_NEWLINES.split(self.msgbuf + msg)
         self.msgbuf = msgs.pop()
 
         for msg in msgs:
@@ -49,7 +70,7 @@ class GitProgress(object):
                 continue
             topic = td[0]
 
-            m = re.search('\((\d+)/(\d+)\)', data)
+            m = RE_GIT_PROGRESS.search(data)
             if m:
                 if self.lasttopic and self.lasttopic != topic:
                     self.flush()
@@ -113,15 +134,17 @@ class GitHandler(object):
     def init_author_file(self):
         self.author_map = {}
         if self.ui.config('git', 'authors'):
-            with open(self.repo.wjoin(
-                self.ui.config('git', 'authors')
-            )) as f:
+            f = open(self.repo.wjoin(
+                self.ui.config('git', 'authors')))
+            try:
                 for line in f:
                     line = line.strip()
                     if not line or line.startswith('#'):
                         continue
-                    from_, to = re.split(r'\s*=\s*', line, 2)
+                    from_, to = RE_AUTHOR_FILE.split(line, 2)
                     self.author_map[from_] = to
+            finally:
+                f.close()
 
     ## FILE LOAD AND SAVE METHODS
 
@@ -231,8 +254,7 @@ class GitHandler(object):
             old_refs.update(refs)
             to_push = set(self.local_heads().values() + self.tags.values())
             new_refs.update(self.get_changed_refs(refs, to_push, True))
-            # don't push anything
-            return {}
+            return refs # always return the same refs to make the send a no-op
 
         try:
             client.send_pack(path, changed, lambda have, want: [])
@@ -256,9 +278,22 @@ class GitHandler(object):
         remote_name = self.remote_name(remote)
 
         if remote_name and new_refs:
-            for ref, new_sha in new_refs.iteritems():
-                if new_sha != old_refs.get(ref):
-                    self.ui.status("    %s::%s => GIT:%s\n" %
+            for ref, new_sha in sorted(new_refs.iteritems()):
+                old_sha = old_refs.get(ref)
+                if old_sha is None:
+                    if self.ui.verbose:
+                        self.ui.note("adding reference %s::%s => GIT:%s\n" %
+                                   (remote_name, ref, new_sha[0:8]))
+                    else:
+                        self.ui.status("adding reference %s\n" % ref)
+                elif new_sha != old_sha:
+                    if self.ui.verbose:
+                        self.ui.note("updating reference %s::%s => GIT:%s\n" %
+                                   (remote_name, ref, new_sha[0:8]))
+                    else:
+                        self.ui.status("updating reference %s\n" % ref)
+                else:
+                    self.ui.debug("unchanged reference %s::%s => GIT:%s\n" %
                                    (remote_name, ref, new_sha[0:8]))
 
             self.update_remote_branches(remote_name, new_refs)
@@ -315,7 +350,13 @@ class GitHandler(object):
         export = [node for node in nodes if not hex(node) in self._map_hg]
         total = len(export)
         if total:
-            self.ui.status(_("exporting hg objects to git\n"))
+            self.ui.note(_("exporting hg objects to git\n"))
+
+        # By only exporting deltas, the assertion is that all previous objects
+        # for all other changesets are already present in the Git repository.
+        # This assertion is necessary to prevent redundant work.
+        exporter = hg2git.IncrementalChangesetExporter(self.repo)
+
         for i, rev in enumerate(export):
             util.progress(self.ui, 'exporting', i, total=total)
             ctx = self.repo.changectx(rev)
@@ -324,14 +365,14 @@ class GitHandler(object):
                 self.ui.debug("revision %d is a part "
                               "of octopus explosion\n" % ctx.rev())
                 continue
-            self.export_hg_commit(rev)
+            self.export_hg_commit(rev, exporter)
         util.progress(self.ui, 'importing', None, total=total)
 
 
     # convert this commit into git objects
     # go through the manifest, convert all blobs/trees we don't have
     # write the commit object (with metadata info)
-    def export_hg_commit(self, rev):
+    def export_hg_commit(self, rev, exporter):
         self.ui.note(_("converting revision %s\n") % hex(rev))
 
         oldenc = self.swap_out_encoding()
@@ -342,6 +383,12 @@ class GitHandler(object):
         commit = Commit()
 
         (time, timezone) = ctx.date()
+        # work around to bad timezone offets - dulwich does not handle
+        # sub minute based timezones. In the one known case, it was a
+        # manual edit that led to the unusual value. Based on that,
+        # there is no reason to round one way or the other, so do the
+        # simplest and round down.
+        timezone -= (timezone % 60)
         commit.author = self.get_git_author(ctx)
         commit.author_time = int(time)
         commit.author_timezone = -timezone
@@ -372,6 +419,10 @@ class GitHandler(object):
             hgsha = hex(parent.node())
             git_sha = self.map_git_get(hgsha)
             if git_sha:
+                if git_sha not in self.git.object_store:
+                    raise hgutil.Abort(_('Parent SHA-1 not present in Git'
+                                         'repo: %s' % git_sha))
+
                 commit.parents.append(git_sha)
 
         commit.message = self.get_git_message(ctx)
@@ -379,7 +430,15 @@ class GitHandler(object):
         if 'encoding' in extra:
             commit.encoding = extra['encoding']
 
-        tree_sha = commit_tree(self.git.object_store, self.iterblobs(ctx))
+        for obj, nodeid in exporter.update_changeset(ctx):
+            self.git.object_store.add_object(obj)
+
+        tree_sha = exporter.root_tree_sha
+
+        if tree_sha not in self.git.object_store:
+            raise hgutil.Abort(_('Tree SHA-1 not present in Git repo: %s' %
+                tree_sha))
+
         commit.tree = tree_sha
 
         self.git.object_store.add_object(commit)
@@ -432,19 +491,17 @@ class GitHandler(object):
         >>> g('Typo in hgrc >but.hg-git@handles.it.gracefully>')
         'Typo in hgrc ?but.hg-git@handles.it.gracefully'
         """
-        return re.sub('[<>\n]', '?', name.lstrip('< ').rstrip('> '))
+        return RE_GIT_SANITIZE_AUTHOR.sub('?', name.lstrip('< ').rstrip('> '))
 
     def get_git_author(self, ctx):
         # hg authors might not have emails
         author = ctx.user()
 
         # see if a translation exists
-        if author in self.author_map:
-            author = self.author_map[author]
+        author = self.author_map.get(author, author)
 
         # check for git author pattern compliance
-        regex = re.compile('^(.*?) ?\<(.*?)(?:\>(.*))?$')
-        a = regex.match(author)
+        a = RE_GIT_AUTHOR.match(author)
 
         if a:
             name = self.get_valid_git_username_email(a.group(1))
@@ -472,7 +529,7 @@ class GitHandler(object):
             part = ctx
             while is_octopus_part(part):
                 (p1, p2) = part.parents()
-                assert not is_octopus_part(p1)
+                assert ctx.extra().get('hg-git', None) != 'octopus'
                 parents.append(p1)
                 part = p2
             parents.append(p2)
@@ -519,26 +576,6 @@ class GitHandler(object):
             message += "\n--HG--\n" + extra_message
 
         return message
-
-    def iterblobs(self, ctx):
-        for f in ctx:
-            fctx = ctx[f]
-            blobid = self.map_git_get(hex(fctx.filenode()))
-
-            if not blobid:
-                blob = Blob.from_string(fctx.data())
-                self.git.object_store.add_object(blob)
-                self.map_set(blob.id, hex(fctx.filenode()))
-                blobid = blob.id
-
-            if 'l' in ctx.flags(f):
-                mode = 0120000
-            elif 'x' in ctx.flags(f):
-                mode = 0100755
-            else:
-                mode = 0100644
-
-            yield f, blobid, mode
 
     def getnewgitcommits(self, refs=None):
         self.init_if_missing()
@@ -638,8 +675,58 @@ class GitHandler(object):
         (strip_message, hg_renames,
          hg_branch, extra) = self.extract_hg_metadata(commit.message)
 
-        # get a list of the changed, added, removed files
-        files = self.get_files_changed(commit)
+        gparents = map(self.map_hg_get, commit.parents)
+
+        for parent in gparents:
+            if parent not in self.repo:
+                raise hgutil.Abort(_('you appear to have run strip - '
+                                     'please run hg git-cleanup'))
+
+        # get a list of the changed, added, removed files and gitlinks
+        files, gitlinks = self.get_files_changed(commit)
+
+        git_commit_tree = self.git[commit.tree]
+
+        # Analyze hgsubstate and build an updated version using SHAs from
+        # gitlinks. Order of application:
+        # - preexisting .hgsubstate in git tree
+        # - .hgsubstate from hg parent
+        # - changes in gitlinks
+        hgsubstate = util.parse_hgsubstate(
+            self.git_file_readlines(git_commit_tree, '.hgsubstate'))
+        parentsubdata = ''
+        if gparents:
+            p1ctx = self.repo.changectx(gparents[0])
+            if '.hgsubstate' in p1ctx:
+                parentsubdata = p1ctx.filectx('.hgsubstate').data().splitlines()
+                parentsubstate = util.parse_hgsubstate(parentsubdata)
+                for path, sha in parentsubstate.iteritems():
+                    hgsubstate[path] = sha
+        for path, sha in gitlinks.iteritems():
+            if sha is None:
+                hgsubstate.pop(path, None)
+            else:
+                hgsubstate[path] = sha
+        # in case .hgsubstate wasn't among changed files
+        # force its inclusion
+        if not hgsubstate and parentsubdata:
+            files['.hgsubstate'] = True, None, None
+        elif util.serialize_hgsubstate(hgsubstate) != parentsubdata:
+            files['.hgsubstate'] = False, 0100644, None
+
+        # Analyze .hgsub and merge with .gitmodules
+        hgsub = None
+        gitmodules = self.parse_gitmodules(git_commit_tree)
+        if gitmodules:
+            hgsub = util.parse_hgsub(self.git_file_readlines(git_commit_tree, '.hgsub'))
+            for (sm_path, sm_url, sm_name) in gitmodules:
+                hgsub[sm_path] = '[git]' + sm_url
+            files['.hgsub'] = (False, 0100644, None)
+        elif commit.parents and '.gitmodules' in self.git[self.git[commit.parents[0]].tree]:
+            # no .gitmodules in this commit, however present in the parent
+            # mark its hg counterpart as deleted (assuming .hgsub is there
+            # due to the same import_git_commit process
+            files['.hgsub'] = (True, 0100644, None)
 
         date = (commit.author_time, -commit.author_timezone)
         text = strip_message
@@ -658,8 +745,7 @@ class GitHandler(object):
 
         # convert extra data back to the end
         if ' ext:' in commit.author:
-            regex = re.compile('^(.*?)\ ext:\((.*)\) <(.*)\>$')
-            m = regex.match(commit.author)
+            m = RE_GIT_AUTHOR_EXTRA.match(commit.author)
             if m:
                 name = m.group(1)
                 ex = urllib.unquote(m.group(2))
@@ -701,9 +787,17 @@ class GitHandler(object):
                 if delete:
                     raise IOError
 
-                data = self.git[sha].data
-                copied_path = hg_renames.get(f)
-                e = self.convert_git_int_mode(mode)
+                if not sha: # indicates there's no git counterpart
+                    e = ''
+                    copied_path = None
+                    if '.hgsubstate' == f:
+                        data = util.serialize_hgsubstate(hgsubstate)
+                    elif '.hgsub' == f:
+                        data = util.serialize_hgsub(hgsub)
+                else:
+                    data = self.git[sha].data
+                    copied_path = hg_renames.get(f)
+                    e = self.convert_git_int_mode(mode)
             else:
                 # it's a converged file
                 fc = context.filectx(self.repo, f, changeid=memctx.p1().rev())
@@ -713,7 +807,6 @@ class GitHandler(object):
 
             return context.memfilectx(f, data, 'l' in e, 'x' in e, copied_path)
 
-        gparents = map(self.map_hg_get, commit.parents)
         p1, p2 = (nullid, nullid)
         octopus = False
 
@@ -761,16 +854,6 @@ class GitHandler(object):
         if octopus:
             extra['hg-git'] ='octopus-done'
 
-        # TODO use 'n in self.repo' when we require hg 1.5
-        def repo_contains(n):
-            try:
-                return bool(self.repo.lookup(n))
-            except error.RepoLookupError:
-                return False
-
-        if not (repo_contains(p1) and repo_contains(p2)):
-            raise hgutil.Abort(_('you appear to have run strip - '
-                                 'please run hg git-cleanup'))
         ctx = context.memctx(self.repo, (p1, p2), text,
                              list(files) + findconvergedfiles(p1, p2),
                              getfilectx, author, date, extra)
@@ -788,15 +871,40 @@ class GitHandler(object):
     def upload_pack(self, remote, revs, force):
         client, path = self.get_transport_and_path(remote)
         old_refs = {}
+        change_totals = {}
+
         def changed(refs):
+            self.ui.status(_("searching for changes\n"))
             old_refs.update(refs)
             to_push = revs or set(self.local_heads().values() + self.tags.values())
             return self.get_changed_refs(refs, to_push, force)
 
-        genpack = self.git.object_store.generate_pack_contents
+        def genpack(have, want):
+            commits = []
+            for mo in self.git.object_store.find_missing_objects(have, want):
+                (sha, name) = mo
+                o = self.git.object_store[sha]
+                t = type(o)
+                change_totals[t] = change_totals.get(t, 0) + 1
+                if isinstance(o, Commit):
+                    commits.append(sha)
+            commit_count = len(commits)
+            self.ui.note(_("%d commits found\n") % commit_count)
+            if commit_count > 0:
+                self.ui.debug(_("list of commits:\n"))
+                for commit in commits:
+                    self.ui.debug("%s\n" % commit)
+                self.ui.status(_("adding objects\n"))
+            return self.git.object_store.generate_pack_contents(have, want)
+
         try:
-            self.ui.status(_("creating and sending data\n"))
             new_refs = client.send_pack(path, changed, genpack)
+            if len(change_totals) > 0:
+                self.ui.status(_("added %d commits with %d trees"
+                                 " and %d blobs\n") %
+                               (change_totals.get(Commit, 0),
+                                change_totals.get(Tree, 0),
+                                change_totals.get(Blob, 0)))
             return old_refs, new_refs
         except (HangupException, GitProtocolError), e:
             raise hgutil.Abort(_("git remote error: ") + str(e))
@@ -806,15 +914,17 @@ class GitHandler(object):
 
         #The remote repo is empty and the local one doesn't have bookmarks/tags
         if refs.keys()[0] == 'capabilities^{}':
-            del new_refs['capabilities^{}']
             if not self.local_heads():
-                tip = hex(self.repo.lookup('tip'))
-                try:
-                    commands.bookmark(self.ui, self.repo, 'master', tip, force=True)
-                except NameError:
-                    bookmarks.bookmark(self.ui, self.repo, 'master', tip, force=True)
-                bookmarks.setcurrent(self.repo, 'master')
-                new_refs['refs/heads/master'] = self.map_git_get(tip)
+                tip = self.repo.lookup('tip')
+                if tip != nullid:
+                    del new_refs['capabilities^{}']
+                    tip = hex(tip)
+                    try:
+                        commands.bookmark(self.ui, self.repo, 'master', tip, force=True)
+                    except NameError:
+                        bookmarks.bookmark(self.ui, self.repo, 'master', tip, force=True)
+                    bookmarks.setcurrent(self.repo, 'master')
+                    new_refs['refs/heads/master'] = self.map_git_get(tip)
 
         for rev in revs:
             ctx = self.repo[rev]
@@ -877,13 +987,14 @@ class GitHandler(object):
                     # we already have the annotated tag.
                     pass
                 else:
-                    raise hgutil.Abort("%s changed on the server, please pull "
-                                       "and merge before pushing" % ref)
+                    raise hgutil.Abort(
+                        "branch '%s' changed on the server, "
+                        "please pull and merge before pushing" % ref)
 
         return new_refs
 
 
-    def fetch_pack(self, remote_name, heads):
+    def fetch_pack(self, remote_name, heads=None):
         client, path = self.get_transport_and_path(remote_name)
         graphwalker = self.git.get_graph_walker()
         def determine_wants(refs):
@@ -907,19 +1018,23 @@ class GitHandler(object):
                         if not ref.endswith('^{}')
                         and ( ref.startswith('refs/heads/') or ref.startswith('refs/tags/') ) ]
             want = [x for x in want if x not in self.git]
+
             return want
-        f, commit = self.git.object_store.add_pack()
         try:
-            try:
-                progress = GitProgress(self.ui)
-                ret = client.fetch_pack(path, determine_wants, graphwalker,
-                                        f.write, progress.progress)
-                progress.flush()
-                return ret
-            except (HangupException, GitProtocolError), e:
-                raise hgutil.Abort(_("git remote error: ") + str(e))
-        finally:
-            commit()
+            progress = GitProgress(self.ui)
+            f = StringIO.StringIO()
+            ret = client.fetch_pack(path, determine_wants, graphwalker, f.write, progress.progress)
+            if(f.pos != 0):
+                f.seek(0)
+                po =  self.git.object_store.add_thin_pack(f.read, None)
+            progress.flush()
+
+            # For empty repos dulwich gives us None, but since later
+            # we want to iterate over this, we really want an empty
+            # iterable
+            return ret if ret else {}
+        except (HangupException, GitProtocolError), e:
+            raise hgutil.Abort(_("git remote error: ") + str(e))
 
     ## REFERENCES HANDLING
 
@@ -937,8 +1052,20 @@ class GitHandler(object):
         for tag, sha in self.repo.tags().iteritems():
             if self.repo.tagtype(tag) in ('global', 'git'):
                 tag = tag.replace(' ', '_')
-                self.git.refs['refs/tags/' + tag] = self.map_git_get(hex(sha))
-                self.tags[tag] = hex(sha)
+                target = self.map_git_get(hex(sha))
+                if target is not None:
+                    tag_refname = 'refs/tags/' + tag
+                    if(check_ref_format(tag_refname)):
+                      self.git.refs[tag_refname] = target
+                      self.tags[tag] = hex(sha)
+                    else:
+                      self.repo.ui.warn(
+                        'Skipping export of tag %s because it '
+                        'has invalid name as a git refname.\n' % tag)
+                else:
+                    self.repo.ui.warn(
+                        'Skipping export of tag %s because it '
+                        'has no matching git revision.\n' % tag)
 
     def _filter_for_bookmarks(self, bms):
         if not self.branch_bookmark_suffix:
@@ -1003,6 +1130,7 @@ class GitHandler(object):
             heads = dict([(ref[11:],refs[ref]) for ref in refs
                           if ref.startswith('refs/heads/')])
 
+            suffix = self.branch_bookmark_suffix or ''
             for head, sha in heads.iteritems():
                 # refs contains all the refs in the server, not just
                 # the ones we are pulling
@@ -1011,34 +1139,22 @@ class GitHandler(object):
                 hgsha = bin(self.map_hg_get(sha))
                 if not head in bms:
                     # new branch
-                    bms[head] = hgsha
+                    bms[head + suffix] = hgsha
                 else:
                     bm = self.repo[bms[head]]
                     if bm.ancestor(self.repo[hgsha]) == bm:
                         # fast forward
-                        bms[head] = hgsha
+                        bms[head + suffix] = hgsha
 
-            # if there's a branch bookmark suffix,
-            # then add it on to all bookmark names
-            # that would otherwise conflict with a branch
-            # name
-            if self.branch_bookmark_suffix:
-                real_branch_names = self.repo.branchmap()
-                bms = dict(
-                    (
-                        bm_name + self.branch_bookmark_suffix
-                            if bm_name in real_branch_names
-                        else bm_name,
-                        bms[bm_name]
-                    )
-                    for bm_name in bms
-                )
             if heads:
                 if oldbm:
                     bookmarks.write(self.repo, bms)
                 else:
                     self.repo._bookmarks = bms
-                    bookmarks.write(self.repo)
+                    if getattr(bms, 'write', None): # hg >= 2.5
+                        bms.write()
+                    else: # hg < 2.5
+                        bookmarks.write(self.repo)
 
         except AttributeError:
             self.ui.warn(_('creating bookmarks failed, do you have'
@@ -1133,32 +1249,72 @@ class GitHandler(object):
 
         changes = self.git.object_store.tree_changes(btree, tree)
         files = {}
+        gitlinks = {}
         for (oldfile, newfile), (oldmode, newmode), (oldsha, newsha) in changes:
-            # don't create new submodules
+            # actions are described by the following table ('no' means 'does not
+            # exist'):
+            #    old        new     |    action
+            #     no        file    |  record file
+            #     no      gitlink   |  record gitlink
+            #    file        no     |  delete file
+            #    file       file    |  record file
+            #    file     gitlink   |  delete file and record gitlink
+            #  gitlink       no     |  delete gitlink
+            #  gitlink      file    |  delete gitlink and record file
+            #  gitlink    gitlink   |  record gitlink
             if newmode == 0160000:
-                if oldfile:
-                    # become a regular delete
-                    newfile, newmode = None, None
-                else:
-                    continue
-            # so old submodules shoudn't exist
-            if oldmode == 0160000:
-                if newfile:
-                    # become a regular add
-                    oldfile, oldmode = None, None
-                else:
-                    continue
-
-            if newfile is None:
-                file = oldfile
-                delete = True
+                # new = gitlink
+                gitlinks[newfile] = newsha
+                if oldmode is not None and oldmode != 0160000:
+                    # file -> gitlink
+                    files[oldfile] = True, None, None
+                continue
+            if oldmode == 0160000 and newmode != 0160000:
+                # gitlink -> no/file (gitlink -> gitlink is covered above)
+                gitlinks[oldfile] = None
+                continue
+            if newfile is not None:
+                # new = file
+                files[newfile] = False, newmode, newsha
             else:
-                file = newfile
-                delete = False
+                # old = file
+                files[oldfile] = True, None, None
 
-            files[file] = (delete, newmode, newsha)
+        return files, gitlinks
 
-        return files
+    def parse_gitmodules(self, tree_obj):
+        """Parse .gitmodules from a git tree specified by tree_obj
+
+           :return: list of tuples (submodule path, url, name),
+           where name is quoted part of the section's name, or
+           empty list if nothing found
+        """
+        rv = []
+        try:
+            unused_mode,gitmodules_sha = tree_obj['.gitmodules']
+        except KeyError:
+            return rv
+        gitmodules_content = self.git[gitmodules_sha].data
+        fo = StringIO.StringIO(gitmodules_content)
+        tt = dul_config.ConfigFile.from_file(fo)
+        for section in tt.keys():
+            section_kind, section_name = section
+            if section_kind == 'submodule':
+                sm_path = tt.get(section, 'path')
+                sm_url  = tt.get(section, 'url')
+                rv.append((sm_path, sm_url, section_name))
+        return rv
+
+    def git_file_readlines(self, tree_obj, fname):
+        """Read content of a named entry from the git commit tree
+
+           :return: list of lines
+        """
+        if fname in tree_obj:
+            unused_mode, sha = tree_obj[fname]
+            content = self.git[sha].data
+            return content.splitlines()
+        return []
 
     def remote_name(self, remote):
         names = [name for name, path in self.paths if path == remote]
@@ -1194,19 +1350,12 @@ class GitHandler(object):
         if not issubclass(client.get_ssh_vendor, _ssh.SSHVendor):
             client.get_ssh_vendor = _ssh.generate_ssh_vendor(self.ui)
 
-        # Test for git:// and git+ssh:// URI.
-        #  Support several URL forms, including separating the
-        #  host and path with either a / or : (sepr)
-        git_pattern = re.compile(
-            r'^(?P<scheme>git([+]ssh)?://)(?P<host>.*?)(:(?P<port>\d+))?'
-            r'(?P<sepr>[:/])(?P<path>.*)$'
-        )
-        git_match = git_pattern.match(uri)
+        git_match = RE_GIT_URI.match(uri)
         if git_match:
             res = git_match.groupdict()
             transport = client.SSHGitClient if 'ssh' in res['scheme'] else client.TCPGitClient
             host, port, sepr, path = res['host'], res['port'], res['sepr'], res['path']
-            if sepr == '/':
+            if sepr == '/' and not path.startswith('~'):
                 path = '/' + path
             # strip trailing slash for heroku-style URLs
             # ssh+git://git@heroku.com:project.git/
@@ -1226,7 +1375,45 @@ class GitHandler(object):
             if not httpclient:
                 raise RepoError('git via HTTP requires dulwich 0.8.1 or later')
             else:
-                return client.HttpGitClient(uri, thin_packs=False), uri
+                auth_handler = urllib2.HTTPBasicAuthHandler(AuthManager(self.ui))
+                opener = urllib2.build_opener(auth_handler)
+                try:
+                    return client.HttpGitClient(uri, opener=opener, thin_packs=False), uri
+                except TypeError as e:
+                    if e.message.find("unexpected keyword argument 'opener'") >= 0:
+                        # using a version of dulwich that doesn't support
+                        # http(s) authentication -- try without authentication
+                        return client.HttpGitClient(uri, thin_packs=False), uri
+                    else:
+                        raise
 
         # if its not git or git+ssh, try a local url..
         return client.SubprocessGitClient(thin_packs=False), uri
+
+class AuthManager(object):
+    def __init__(self, ui):
+        self.ui = ui
+
+    def add_password(self, realm, uri, user, passwd):
+        raise NotImplementedError(
+            'AuthManager currently gets passwords from hg repo config')
+
+    def find_user_password(self, realm, authuri):
+
+        # find a stanza in the auth section which matches this uri
+        for item in self.ui.configitems('auth'):
+            if len(item) < 2:
+                continue
+            if item[0].endswith('.prefix') and authuri.startswith(item[1]):
+                prefix = item[0][:-len('.prefix')]
+                break
+        else:
+            # no matching stanza found!
+            return (None,None)
+
+        self.ui.note(_('using "%s" auth credentials\n') % (prefix,))
+        username = self.ui.config('auth', '%s.username' % prefix)
+        password = self.ui.config('auth', '%s.password' % prefix)
+
+        return (username,password)
+

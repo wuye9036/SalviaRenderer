@@ -24,9 +24,12 @@ import os
 from mercurial import bundlerepo
 from mercurial import commands
 from mercurial import demandimport
+from mercurial import dirstate
+from mercurial import discovery
 from mercurial import extensions
 from mercurial import help
 from mercurial import hg
+from mercurial import ignore
 from mercurial import localrepo
 from mercurial import revset
 from mercurial import templatekw
@@ -40,6 +43,9 @@ demandimport.ignore.extend([
 
 import gitrepo, hgrepo
 from git_handler import GitHandler
+
+testedwith = '1.9.3 2.0.2 2.1.2 2.2.3 2.8.1'
+buglink = 'https://bitbucket.org/durin42/hg-git/issues'
 
 # support for `hg clone git://github.com/defunkt/facebox.git`
 # also hg clone git+ssh://git@github.com/schacon/simplegit.git
@@ -125,6 +131,15 @@ def gclear(ui, repo):
     git = GitHandler(repo, ui)
     git.clear()
 
+from mercurial import dirstate
+from mercurial import ignore
+if (getattr(dirstate, 'rootcache', False) and
+    getattr(ignore, 'readpats', False)):
+    # only install our dirstate wrapper if it has a hope of working
+    import gitdirstate
+    extensions.wrapfunction(ignore, 'ignore', gitdirstate.gignore)
+    dirstate.dirstate = gitdirstate.gitdirstate
+
 def git_cleanup(ui, repo):
     new_map = []
     for line in repo.opener(GitHandler.mapfile):
@@ -142,25 +157,24 @@ def sortednodetags(orig, *args, **kwargs):
     return ret
 extensions.wrapfunction(localrepo.localrepository, 'nodetags', sortednodetags)
 
-try:
-    from mercurial import discovery
-    kwname = 'heads'
-    if hg.util.version() >= '1.7':
-        kwname = 'remoteheads'
-    if getattr(discovery, 'findcommonoutgoing', None):
-        kwname = 'onlyheads'
-    def findoutgoing(orig, local, remote, *args, **kwargs):
-        if isinstance(remote, gitrepo.gitrepo):
-            raise hgutil.Abort(
-                'hg-git outgoing support is broken')
-        return orig(local, remote, *args, **kwargs)
-    if getattr(discovery, 'findoutgoing', None):
-        extensions.wrapfunction(discovery, 'findoutgoing', findoutgoing)
-    else:
-        extensions.wrapfunction(discovery, 'findcommonoutgoing',
-                                findoutgoing)
-except ImportError:
-    pass
+def findcommonoutgoing(orig, repo, other, *args, **kwargs):
+    if isinstance(other, gitrepo.gitrepo):
+        git = GitHandler(repo, repo.ui)
+        heads = git.get_refs(other.path)[0]
+        kw = {}
+        kw.update(kwargs)
+        for val, k in zip(args,
+                ('onlyheads', 'force', 'commoninc', 'portable')):
+            kw[k] = val
+        force = kw.get('force', False)
+        commoninc = kw.get('commoninc', None)
+        if commoninc is None:
+            commoninc = discovery.findcommonincoming(repo, other,
+                heads=heads, force=force)
+            kw['commoninc'] = commoninc
+        return orig(repo, other, **kw)
+    return orig(repo, other, *args, **kwargs)
+extensions.wrapfunction(discovery, 'findcommonoutgoing', findcommonoutgoing)
 
 def getremotechanges(orig, ui, repo, other, *args, **opts):
     if isinstance(other, gitrepo.gitrepo):
@@ -180,6 +194,14 @@ try:
 except AttributeError:
     # 1.7+
     pass
+
+def peer(orig, uiorrepo, *args, **opts):
+    newpeer = orig(uiorrepo, *args, **opts)
+    if isinstance(newpeer, gitrepo.gitrepo):
+        if isinstance(uiorrepo, localrepo.localrepository):
+            newpeer.localrepo = uiorrepo
+    return newpeer
+extensions.wrapfunction(hg, 'peer', peer)
 
 def revset_fromgit(repo, subset, x):
     '''``fromgit()``
