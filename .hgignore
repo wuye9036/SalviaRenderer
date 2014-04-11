@@ -1,5 +1,4 @@
 syntax: glob
-3rd_party
 build
 sasl/enums/compiler_infos.cmake.rule
 sasl/enums/enums.cmake.rule
