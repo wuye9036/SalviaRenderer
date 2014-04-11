@@ -15,8 +15,8 @@ else ( Boost_FOUND )
 	MESSAGE( FATAL_ERROR "Cannot find boost 1.53 or later. Please specify a path with 'SALVIA_BOOST_DIR' or run './build_all.py'." )
 endif()
 
-if( NOT EXISTS ${SALVIA_BOOST_LIB_DIR} )
-	MESSAGE( FATAL_ERROR "Cannot find libraries in ${SALVIA_BOOST_LIB_DIR}. Please compile libraries and copy lib files into directory or run './build_all.py'.")
+if( NOT SALVIA_BOOST_LIB_DIR )
+	MESSAGE( FATAL_ERROR "Cannot find variable SALVIA_BOOST_LIB_DIR. Please compile libraries and copy lib files into directory or run './build_all.py'.")
 endif()
 
 set( SALVIA_BOOST_VERSION_STRING "${Boost_MAJOR_VERSION}_${Boost_MINOR_VERSION}" )
