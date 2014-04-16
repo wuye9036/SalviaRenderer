@@ -792,7 +792,7 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 	vs_output const&	v1				= *clipped_verts_[prim_id*3+1];
 	vs_output const&	v2				= *clipped_verts_[prim_id*3+2];
 
-	triangle_info const* tri_info     = tri_infos_.data() + ctx->prim_id;
+	triangle_info const* tri_info     = tri_infos_.data() + prim_id;
 	eflib::vec4 const*	 edge_factors = tri_info->edge_factors;
 	bool const mark_x[3] = 
 	{
