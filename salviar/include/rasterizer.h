@@ -33,6 +33,7 @@ class  shader_reflection;
 
 struct pixel_statistic;
 struct drawing_triangle_context;
+
 struct drawing_shader_context
 {
     cpp_pixel_shader*	cpp_ps;
@@ -79,7 +80,6 @@ private:
     bool                            has_centroid_;
     uint32_t                        prim_count_;
 
-
     async_object*                   pipeline_stat_;
     async_object*                   internal_stat_;
     accumulate_fn<uint64_t>::type   acc_ia_primitives_;
@@ -95,7 +95,7 @@ private:
 
 	std::vector<std::vector<std::vector<uint32_t>>>
 									threaded_tiled_prims_;		// vector<prim> prims = thread_tiled_prims[ThreadID][TileID]
-	std::vector<eflib::vec3>		edge_factors_;
+	std::vector<triangle_info>		tri_infos_;
 
 	vs_output**						clipped_verts_;
 	size_t							clipped_verts_count_;
@@ -145,6 +145,7 @@ private:
         );
 
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);
+	void compute_triangle_info(uint32_t prim_id);
 
 public:
 	//inherited
