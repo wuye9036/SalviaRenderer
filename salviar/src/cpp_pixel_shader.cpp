@@ -7,68 +7,22 @@ BEGIN_NS_SALVIAR();
 using namespace boost;
 using namespace eflib;
 
-const eflib::vec4& triangle_info::base_vert() const
-{
-	assert(pbase_vert);
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
-	return *pbase_vert;
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
-}
-
-const vs_output& triangle_info::ddx() const
-{
-	assert(pddx);
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
-	return *pddx;
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
-}
-
-const vs_output& triangle_info::ddy() const
-{
-	assert(pddy);
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
-	return *pddy;
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
-}
-
-void triangle_info::set(const eflib::vec4& base_vert, const vs_output& ddx, const vs_output& ddy)
-{
-	pddx = &ddx;
-	pddy = &ddy;
-	pbase_vert = &base_vert;
-}
-
 // ------------------------------------------
 //  Get Partial Derivation
 const eflib::vec4& cpp_pixel_shader::get_pos_ddx() const{
-	return tri_info_->ddx().position();
+	return tri_info_->ddx.position();
 }
 
 const eflib::vec4& cpp_pixel_shader::get_pos_ddy() const{
-	return tri_info_->ddy().position();
+	return tri_info_->ddy.position();
 }
 
 const eflib::vec4& cpp_pixel_shader::unproj_ddx(size_t iReg) const{
-	return tri_info_->ddx().attribute(iReg);
+	return tri_info_->ddx.attribute(iReg);
 }
 
 const eflib::vec4& cpp_pixel_shader::unproj_ddy(size_t iReg) const{
-	return tri_info_->ddy().attribute(iReg);
+	return tri_info_->ddy.attribute(iReg);
 }
 
 const eflib::vec4 cpp_pixel_shader::ddx(size_t iReg) const
@@ -80,7 +34,7 @@ const eflib::vec4 cpp_pixel_shader::ddx(size_t iReg) const
 
 	unproj_attr += attr_org_ddx;
 
-	float new_pos_w = ppxin_->position().w() + tri_info_->ddx().position().w();
+	float new_pos_w = ppxin_->position().w() + tri_info_->ddx.position().w();
 	vec4 new_proj_attr = unproj_attr / new_pos_w;
 
 	return new_proj_attr - attr;
@@ -95,7 +49,7 @@ const eflib::vec4 cpp_pixel_shader::ddy(size_t iReg) const
 
 	unproj_attr += attr_org_ddy;
 
-	float new_pos_w = ppxin_->position().w() + tri_info_->ddy().position().w();
+	float new_pos_w = ppxin_->position().w() + tri_info_->ddy.position().w();
 	vec4 new_proj_attr = unproj_attr / new_pos_w;
 
 	return new_proj_attr - attr;

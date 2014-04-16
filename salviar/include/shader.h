@@ -26,7 +26,7 @@ BEGIN_NS_SALVIAR();
 struct viewport;
 struct scanline_info;
 struct pixel_accessor;
-class  triangle_info;
+struct triangle_info;
 class  vs_input;
 class  vs_output;
 struct ps_output;

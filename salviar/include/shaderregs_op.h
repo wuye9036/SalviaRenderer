@@ -11,20 +11,22 @@ BEGIN_NS_SALVIAR();
 struct viewport;
 class  vs_output;
 
-class triangle_info
+struct triangle_info
 {
-	friend class cpp_pixel_shader;
+	vs_output const*			v0;
+	EFLIB_ALIGN(16)	eflib::vec4	bounding_box;
+	EFLIB_ALIGN(16)	eflib::vec4	edge_factors[3];
+	vs_output					ddx;
+	vs_output					ddy;
 
-	const eflib::vec4* pbase_vert;
-	const vs_output* pddx;
-	const vs_output* pddy;
-
-	const eflib::vec4& base_vert() const;
-	const vs_output& ddx() const;
-	const vs_output& ddy() const;
-
-public:
-	void set(const eflib::vec4& base_vert, const vs_output& ddx, const vs_output& ddy);
+	triangle_info() {}
+	triangle_info(triangle_info const& /*rhs*/)
+	{
+	}
+	triangle_info& operator = (triangle_info const& /*rhs*/)
+	{
+		return *this;
+	}
 };
 
 END_NS_SALVIAR();

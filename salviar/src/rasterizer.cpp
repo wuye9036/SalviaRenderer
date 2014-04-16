@@ -49,11 +49,9 @@ struct pixel_statistic
 
 struct drawing_triangle_context
 {
-    float const*		aa_z_offset;
-    vs_output const*	v0;
-	vs_output const*	ddx;
-	vs_output const*	ddy;
-    pixel_statistic*    pixel_stat;
+    float const*			aa_z_offset;
+	triangle_info const*	tri_info;
+    pixel_statistic*		pixel_stat;
 };
 
 /*************************************************
@@ -110,8 +108,9 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 			end = &v1;
 		}
 
+		EFLIB_ASSERT_UNIMPLEMENTED();
 		triangle_info info;
-		info.set(start->position(), ddx, ddy);
+		// info.set(start->position(), ddx, ddy);
 		cpp_ps->tri_info_ = &info;
 
 		float fsx = fast_floor(start->position().x() + 0.5f);
@@ -169,8 +168,9 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 			end = &v1;
 		}
 
+		EFLIB_ASSERT_UNIMPLEMENTED();
 		triangle_info info;
-		info.set(start->position(), ddx, ddy);
+		// info.set(start->position(), ddx, ddy);
 		cpp_ps->tri_info_ = &info;
 
 		float fsy = fast_floor(start->position().y() + 0.5f);
@@ -292,7 +292,7 @@ void rasterizer::draw_full_tile(
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
-    auto& v0 = *triangle_ctx->v0;
+	auto& v0 = *triangle_ctx->tri_info->v0;
 
 	float v0x = v0.position().x();
 	float v0y = v0.position().y();
@@ -323,8 +323,8 @@ void rasterizer::draw_full_tile(
                     auto interpolated_pixel = unprojed + iy * 4 + ix;
                     vso_ops_->step_2d_unproj_pos(
                         *interpolated_pixel, v0,
-                        dx, *triangle_ctx->ddx,
-                        dy, *triangle_ctx->ddy
+                        dx, triangle_ctx->tri_info->ddx,
+                        dy, triangle_ctx->tri_info->ddy
                         );
 
                     if( frame_buffer_->early_z_test(left+ix, top+iy, interpolated_pixel->position().z(), triangle_ctx->aa_z_offset) )
@@ -361,8 +361,8 @@ void rasterizer::draw_full_tile(
 
                     vso_ops_->step_2d_unproj_attr(
                         unprojed[iy*4+ix], v0,
-                        dx, *triangle_ctx->ddx,
-                        dy, *triangle_ctx->ddy
+                        dx, triangle_ctx->tri_info->ddx,
+                        dy, triangle_ctx->tri_info->ddy
                         );
 		        }
 	        }
@@ -380,7 +380,7 @@ void rasterizer::draw_partial_tile(
 	drawing_shader_context const* shaders,
     drawing_triangle_context const* triangle_ctx)
 {
-    auto& v0 = *triangle_ctx->v0;
+    auto& v0 = *triangle_ctx->tri_info->v0;
 
 	size_t sx = left - left0;
 	size_t sy = top - top0;
@@ -532,8 +532,8 @@ void rasterizer::draw_partial_tile(
             auto interpolated_pixel = unprojed + iy * 4 + ix;
             vso_ops_->step_2d_unproj_pos(
                 *interpolated_pixel, v0,
-                dx, *triangle_ctx->ddx,
-                dy, *triangle_ctx->ddy
+                dx, triangle_ctx->tri_info->ddx,
+                dy, triangle_ctx->tri_info->ddy
                 );
 
             if( mask != 0 && frame_buffer_->early_z_test(left+ix, top+iy, interpolated_pixel->position().z(), triangle_ctx->aa_z_offset) )
@@ -606,8 +606,8 @@ void rasterizer::draw_partial_tile(
 
             vso_ops_->step_2d_unproj_attr(
                 unprojed[iy*4+ix], v0,
-                dx, *triangle_ctx->ddx,
-                dy, *triangle_ctx->ddy
+                dx, triangle_ctx->tri_info->ddx,
+                dy, triangle_ctx->tri_info->ddy
                 );
 		}
 	}
@@ -792,108 +792,31 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 	vs_output const&	v1				= *clipped_verts_[prim_id*3+1];
 	vs_output const&	v2				= *clipped_verts_[prim_id*3+2];
 
-	// Pick the vertex which is nearby center of viewport
-	// It will get more precision in interpolation.
-	vs_output const* verts[3] = { &v0, &v1, &v2 };
-	double dist_sqr[3] =
+	triangle_info const* tri_info     = tri_infos_.data() + ctx->prim_id;
+	eflib::vec4 const*	 edge_factors = tri_info->edge_factors;
+	bool const mark_x[3] = 
 	{
-		fabs( v0.position().x() ) + fabs( v0.position().y() ),
-		fabs( v1.position().x() ) + fabs( v1.position().y() ),
-		fabs( v2.position().x() ) + fabs( v2.position().y() )
-	};
-
-	int reordered_index[3];
-	if(dist_sqr[0] < dist_sqr[1])
-	{
-		if(dist_sqr[0] < dist_sqr[2])
-		{
-			reordered_index[0] = 0;
-		}
-		else
-		{
-			reordered_index[0] = 2;
-		}
-	}
-	else
-	{
-		if(dist_sqr[1] < dist_sqr[2])
-		{
-			reordered_index[0] = 1;
-		}
-		else
-		{
-			reordered_index[0] = 2;
-		}
-	}
-	reordered_index[1] = ( reordered_index[0] + 1 ) % 3;
-	reordered_index[2] = ( reordered_index[1] + 1 ) % 3;
-
-	vs_output const* reordered_verts[3] = { verts[reordered_index[0]], verts[reordered_index[1]], verts[reordered_index[2]] };
-
-	// Compute edge factor.
-	const EFLIB_ALIGN(16) vec4 edge_factors[3] =
-	{
-		vec4(edge_factors_[prim_id * 3 + 0], 0),
-		vec4(edge_factors_[prim_id * 3 + 1], 0),
-		vec4(edge_factors_[prim_id * 3 + 2], 0)
-	};
-
-	const bool mark_x[3] = {
 		edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0
 	};
-	const bool mark_y[3] = {
+	bool const mark_y[3] = 
+	{
 		edge_factors[0].y() > 0, edge_factors[1].y() > 0, edge_factors[2].y() > 0
 	};
 
-	enum TRI_VS_TILE {
+	enum TRI_VS_TILE 
+	{
 		TVT_FULL,
 		TVT_PARTIAL,
 		TVT_EMPTY,
 		TVT_PIXEL
 	};
 
-	// Compute difference along edge.
-	vs_output e01, e02;
-	vso_ops_->sub(e01, *reordered_verts[1], *reordered_verts[0]);
-	vso_ops_->sub(e02, *reordered_verts[2], *reordered_verts[0]);
+	if( !psu ){ cpp_ps->tri_info_ = tri_info; }
 
-	// Compute area of triangle.
-	float area = cross_prod2(e02.position().xy(), e01.position().xy());
-	if(equal<float>(area, 0.0f)) return;
-	float inv_area = 1.0f / area;
-
-	/**********************************************************
-	*  Compute difference of attributes.
-	*********************************************************/
-	vs_output ddx, ddy;
-	{
-		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
-		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
-		vs_output tmp0, tmp1, tmp2;
-		vso_ops_->mul(
-			ddx,
-			vso_ops_->sub(
-				tmp2,
-				vso_ops_->mul( tmp0, e02, e01.position().y() ),
-				vso_ops_->mul( tmp1, e01, e02.position().y() )
-			), inv_area);
-		vso_ops_->mul(
-			ddy,
-			vso_ops_->sub(
-				tmp2,
-				vso_ops_->mul( tmp0, e01, e02.position().x() ),
-				vso_ops_->mul( tmp1, e02, e01.position().x() )
-			), inv_area);
-	}
-
-	triangle_info info;
-	info.set(reordered_verts[0]->position(), ddx, ddy);
-	if( !psu ){ cpp_ps->tri_info_ = &info; }
-
-	const float x_min = min(reordered_verts[0]->position().x(), min(reordered_verts[1]->position().x(), reordered_verts[2]->position().x())) - vp.x;
-	const float x_max = max(reordered_verts[0]->position().x(), max(reordered_verts[1]->position().x(), reordered_verts[2]->position().x())) - vp.x;
-	const float y_min = min(reordered_verts[0]->position().y(), min(reordered_verts[1]->position().y(), reordered_verts[2]->position().y())) - vp.y;
-	const float y_max = max(reordered_verts[0]->position().y(), max(reordered_verts[1]->position().y(), reordered_verts[2]->position().y())) - vp.y;
+	float const x_min = tri_info->bounding_box[0] - vp.x;
+	float const x_max = tri_info->bounding_box[1] - vp.x;
+	float const y_min = tri_info->bounding_box[2] - vp.y;
+	float const y_max = tri_info->bounding_box[3] - vp.y;
 
 	/*************************************************
 	*   Draw triangles with Larrabee algorithm .
@@ -935,7 +858,7 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 		for (unsigned long i_sample = 0; i_sample < target_sample_count_; ++ i_sample)
 		{
 			const vec2& sp = samples_pattern_[i_sample];
-			aa_z_offset[i_sample] = (sp.x() - 0.5f) * ddx.position().z() + (sp.y() - 0.5f) * ddy.position().z();
+			aa_z_offset[i_sample] = (sp.x() - 0.5f) * tri_info->ddx.position().z() + (sp.y() - 0.5f) * tri_info->ddy.position().z();
 		}
 	}
     else
@@ -945,10 +868,8 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 
     drawing_triangle_context tri_ctx;
     tri_ctx.aa_z_offset = aa_z_offset;
-    tri_ctx.pixel_stat = ctx->pixel_stat;
-    tri_ctx.v0 = reordered_verts[0];
-    tri_ctx.ddx = &ddx;
-    tri_ctx.ddy = &ddy;
+    tri_ctx.pixel_stat  = ctx->pixel_stat;
+	tri_ctx.tri_info	= tri_info;
 
 	while (test_region_size[src_stage] > 0)
 	{
@@ -1027,11 +948,6 @@ rasterizer::~rasterizer()
 
 void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
 {
-	float x_min;
-	float x_max;
-	float y_min;
-	float y_max;
-
 	vector<vector<uint32_t>>& tiled_prims = threaded_tiled_prims_[thread_ctx->thread_id];
 	for(auto& prims: tiled_prims)
 	{
@@ -1045,41 +961,22 @@ void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
 
 		for (int32_t i = prim_range.first; i < prim_range.second; ++ i)
 		{
-			const vec4* pv[3];
-			for (size_t j = 0; j < prim_size_; ++ j)
-			{
-				pv[j] = &( clipped_verts_[i*prim_size_+j]->position() );
-			}
-
 			if (3 == prim_size_)
 			{
-				// x * (y1 - y0) - y * (x1 - x0) - (y1 * x0 - x1 * y0)
-				vec3* edge_factors = &edge_factors_[i * 3];
-				for (int e = 0; e < 3; ++ e)
-				{
-					const int se = e;
-					const int ee = (e + 1) % 3;
-					edge_factors[e].x() = pv[se]->y() - pv[ee]->y();
-					edge_factors[e].y() = pv[ee]->x() - pv[se]->x();
-					edge_factors[e].z() = pv[ee]->x() * pv[se]->y() - pv[ee]->y() * pv[se]->x();
-				}
+				compute_triangle_info(i);
 			}
 
-			x_min = x_max = pv[0]->x();
-			y_min = y_max = pv[0]->y();
-
-			for (size_t j = 1; j < prim_size_; ++ j)
-			{
-				x_min = min(x_min, pv[j]->x());
-				x_max = max(x_max, pv[j]->x());
-				y_min = min(y_min, pv[j]->y());
-				y_max = max(y_max, pv[j]->y());
-			}
+			triangle_info const* tri_info = tri_infos_.data() + i;
+			
+			float const x_min = tri_info->bounding_box[0];
+			float const x_max = tri_info->bounding_box[1];
+			float const y_min = tri_info->bounding_box[2];
+			float const y_max = tri_info->bounding_box[3];
 
 			const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE),		static_cast<int>(tile_x_count_));
 			const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE),		static_cast<int>(tile_y_count_));
-			const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1,	static_cast<int>(tile_x_count_));
-			const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1,	static_cast<int>(tile_y_count_));
+			const int ex = std::min(fast_ceili (std::max(0.0f, x_max) / TILE_SIZE) + 1,	static_cast<int>(tile_x_count_));
+			const int ey = std::min(fast_ceili (std::max(0.0f, y_max) / TILE_SIZE) + 1,	static_cast<int>(tile_y_count_));
 
 			if ((sx + 1 == ex) && (sy + 1 == ey))
 			{
@@ -1090,7 +987,7 @@ void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
 			{
 				if (3 == prim_size_)
 				{
-					vec3* edge_factors = &edge_factors_[i * 3];
+					vec4 const* edge_factors = tri_infos_[i].edge_factors;
 
 					bool const mark_x[3] =
 					{
@@ -1151,6 +1048,116 @@ void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
 	}
 }
 
+void rasterizer::compute_triangle_info(uint32_t i)
+{
+	triangle_info* tri_info = tri_infos_.data() + i;
+	tri_info->v0 = nullptr;
+
+	vs_output const* verts[3] =
+	{
+		clipped_verts_[i*prim_size_+0],
+		clipped_verts_[i*prim_size_+1],
+		clipped_verts_[i*prim_size_+2],
+	};
+
+	vec4 const* vert_pos[3] =
+	{
+		&( verts[0]->position() ),
+		&( verts[1]->position() ),
+		&( verts[2]->position() )
+	};
+
+	// Reorder vertexes.
+	// Pick the vertex which is nearby center of viewport
+	// It will get more precision in interpolation.
+	double dist[3] =
+	{
+		fabs( vert_pos[0]->x() ) + fabs( vert_pos[0]->y() ),
+		fabs( vert_pos[1]->x() ) + fabs( vert_pos[1]->y() ),
+		fabs( vert_pos[2]->x() ) + fabs( vert_pos[2]->y() )
+	};
+
+	int reordered_index[3];
+	if(dist[0] < dist[1])
+	{
+		if(dist[0] < dist[2])
+		{
+			reordered_index[0] = 0;
+		}
+		else
+		{
+			reordered_index[0] = 2;
+		}
+	}
+	else
+	{
+		if(dist[1] < dist[2])
+		{
+			reordered_index[0] = 1;
+		}
+		else
+		{
+			reordered_index[0] = 2;
+		}
+	}
+	reordered_index[1] = ( reordered_index[0] + 1 ) % 3;
+	reordered_index[2] = ( reordered_index[1] + 1 ) % 3;
+
+	vs_output const* reordered_verts[3] = { verts[reordered_index[0]], verts[reordered_index[1]], verts[reordered_index[2]] };
+
+	// Compute difference along edge.
+	vs_output e01, e02;
+	vso_ops_->sub(e01, *reordered_verts[1], *reordered_verts[0]);
+	vso_ops_->sub(e02, *reordered_verts[2], *reordered_verts[0]);
+
+	// Compute area of triangle.
+	float area = cross_prod2(e02.position().xy(), e01.position().xy());
+	// Return for zero-area triangle.
+	if( equal<float>(area, 0.0f) ) return;
+	float inv_area = 1.0f / area;
+
+	// Compute bounding box
+	tri_info->bounding_box[0] = std::min( std::min( vert_pos[0]->x(), vert_pos[1]->x() ), vert_pos[2]->x() );	// xmin
+	tri_info->bounding_box[1] = std::max( std::max( vert_pos[0]->x(), vert_pos[1]->x() ), vert_pos[2]->x() );	// xmax
+	tri_info->bounding_box[2] = std::min( std::min( vert_pos[0]->y(), vert_pos[1]->y() ), vert_pos[2]->y() );	// ymin
+	tri_info->bounding_box[3] = std::max( std::max( vert_pos[0]->y(), vert_pos[1]->y() ), vert_pos[2]->y() );	// ymax
+
+	for (int i_vert = 0; i_vert < 3; ++ i_vert)
+	{
+		// Edge factors: x * (y1 - y0) - y * (x1 - x0) - (y1 * x0 - x1 * y0)
+		int const se = i_vert;
+		int const ee = (i_vert + 1) % 3;
+
+		vec4* edge_factors = tri_info->edge_factors;
+		edge_factors[i_vert].x(vert_pos[se]->y() - vert_pos[ee]->y()										);
+		edge_factors[i_vert].y(vert_pos[ee]->x() - vert_pos[se]->x()										);
+		edge_factors[i_vert].z(vert_pos[ee]->x() * vert_pos[se]->y() - vert_pos[ee]->y() * vert_pos[se]->x());
+		edge_factors[i_vert].w(0.0f);
+	}
+
+	// Compute difference of attributes.
+	{
+		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
+		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
+		vs_output tmp0, tmp1, tmp2;
+		vso_ops_->mul(
+			tri_info->ddx,
+			vso_ops_->sub(
+				tmp2,
+				vso_ops_->mul( tmp0, e02, e01.position().y() ),
+				vso_ops_->mul( tmp1, e01, e02.position().y() )
+			), inv_area);
+		vso_ops_->mul(
+			tri_info->ddy,
+			vso_ops_->sub(
+				tmp2,
+				vso_ops_->mul( tmp0, e01, e02.position().x() ),
+				vso_ops_->mul( tmp1, e02, e01.position().x() )
+			), inv_area);
+	}
+
+	tri_info->v0 = reordered_verts[0];
+}
 void rasterizer::threaded_rasterize_multi_prim(thread_context const* thread_ctx)
 {
 	viewport tile_vp;
@@ -1352,7 +1359,7 @@ void rasterizer::draw()
 
 	// Dispatch primitives into tiles' bucket
 	threaded_tiled_prims_.resize(num_threads);
-	edge_factors_.resize(clipped_prims_count_ * 3);
+	tri_infos_.resize(clipped_prims_count_);
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
 		threaded_tiled_prims_[i].resize(tile_count_);

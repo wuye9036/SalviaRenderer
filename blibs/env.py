@@ -1,4 +1,4 @@
-import os, sys, platform, subprocess
+import os, sys, platform, subprocess, util
 
 class arch:
 	def __init__(self, tag):
@@ -173,29 +173,36 @@ def add_binpath(env, dirs):
 	return new_env
 
 def windows_kit_dirs():
-	if systems.current() == systems.win32:
-		kits = None
-		close_key = None
+	if systems.current() != systems.win32:
+		report_error("Windows Kits only works on windows system.")
+		
+	kits = None
+	close_key = None
 
-		try:
-			import _winreg
-			winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
-			if winkit_key is None:
-				return None
-			def CloseKey():
-				_winreg.CloseKey(winkit_key)
-			close_key = CloseKey
-			kit_names = ["KitsRoot", "KitsRoot81"]
-			kits = [ str(kit)
-					for kit in map(lambda key_name: _winreg.QueryValueEx(winkit_key, key_name)[0], kit_names)
-					if kit is not None]
-
-		except ImportError as e:
+	try:
+		import _winreg
+		winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
+		if winkit_key is None:
 			return None
-			
-		finally:
-			if close_key:
-				close_key()
-			return kits
-
-	return None
+		def CloseKey():
+			_winreg.CloseKey(winkit_key)
+		close_key = CloseKey
+		kit_key_names = ["KitsRoot", "KitsRoot81"]
+		kits = []
+		for kit_key_name in kit_key_names:
+			try:
+				kit_value = _winreg.QueryValueEx(winkit_key, kit_key_name)[0]
+				kits.append( str(kit_value) )
+			except Exception:
+				continue
+		if close_key: close_key()
+		return kits
+		
+	except ImportError as e:
+		if close_key: close_key()
+		util.report_error("_winreg library is not existed in Python on Win32 platform.")
+		
+	except WindowsError as e:
+		if close_key: close_key()
+		util.report_error('Windows error occurs: "%s" when reading Windows Kits reg.' % e.strerror)
+		

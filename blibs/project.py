@@ -68,9 +68,6 @@ class project:
 
 		if self.use_win_kit_:
 			wdk_dirs = windows_kit_dirs()
-			if wdk_dirs is None:
-				report_error("D3D is used but cannot find Windows Kits.")
-
 			arch_subdir = None
 			if self.arch_ == arch.x86:
 				arch_subdir = "x86"
