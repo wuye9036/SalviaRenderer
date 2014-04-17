@@ -11,3 +11,5 @@
 #pragma warning(disable: 4201)
 #include <d3d10umddi.h>
 #pragma warning(pop)
+
+#include <new>
