@@ -11,7 +11,7 @@ HRESULT APIENTRY OpenAdapter10(D3D10DDIARG_OPENADAPTER* pOpenData)
     HRESULT hr = S_OK;
 
     umd_adapter* adapter = new (std::nothrow) umd_adapter;
-    if (NULL == adapter)
+    if (nullptr == adapter)
     {
         return E_OUTOFMEMORY;
     }
@@ -31,7 +31,7 @@ HRESULT APIENTRY OpenAdapter10_2(D3D10DDIARG_OPENADAPTER* pOpenData)
     HRESULT hr = S_OK;
 
     umd_adapter* adapter = new (std::nothrow) umd_adapter;
-    if (NULL == adapter)
+    if (nullptr == adapter)
     {
         return E_OUTOFMEMORY;
     }
@@ -127,7 +127,7 @@ HRESULT APIENTRY umd_adapter::get_supported_versions(D3D10DDI_HADAPTER ddi_adapt
     uint32_t num_supported_versions = sizeof(supported_versions) / sizeof(supported_versions[0]);
 
     HRESULT hr = S_OK;
-    if (ddi_versions != NULL)
+    if (ddi_versions != nullptr)
     {
         if (*entries < num_supported_versions)
         {
