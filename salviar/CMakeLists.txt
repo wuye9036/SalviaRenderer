@@ -53,6 +53,7 @@ set( SHADER_HEADERS
 	include/shaderregs.h
 	include/shaderregs_op.h
 	include/shader_cbuffer.h
+	include/register_file.h
 )
 
 set( BUFFER_HEADERS

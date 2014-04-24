@@ -22,6 +22,7 @@ set (HEADER_FILES
 	include/memory/lifetime_manager.h
 	include/memory/pool.h
 	include/memory/bounded_buffer.h
+	include/memory/vls.h
 	include/utility/enable_if.h
 	include/utility/unref_declarator.h
 	include/utility/operator_bool.h
