@@ -17,11 +17,14 @@ IF(WDK_DIR)
 	)
 
 	set (HEADER_FILES
+		include/adapter.h
 		include/common.h
+		include/device.h
 	)
 
 	set (SOURCE_FILES
 		src/adapter.cpp
+		src/device.cpp
 		src/thunks.cpp
 		
 		src/d3d_sw_driver.def
