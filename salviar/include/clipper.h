@@ -25,7 +25,7 @@ struct clip_context
 {
 	clip_context();
 
-	typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
+	typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 	typedef bool (*cull_fn) (float);
 
 	vs_output_pool*		vert_pool;
@@ -46,7 +46,7 @@ class clipper
 private:
 	typedef bool (*cull_fn) (float);
 	typedef void (clipper::*clip_impl_fn)(vs_output**, clip_results*);
-	typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
+	typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 	
 	boost::array<eflib::vec4, plane_num>	planes_;
 	

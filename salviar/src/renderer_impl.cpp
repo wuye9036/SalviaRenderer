@@ -1,8 +1,8 @@
 #include <salviar/include/renderer_impl.h>
 
 #include <salviar/include/binary_modules.h>
-#include <salviar/include/shaderregs.h>
-#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader_regs.h>
+#include <salviar/include/shader_regs_op.h>
 #include <salviar/include/shader_cbuffer.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/render_state.h>

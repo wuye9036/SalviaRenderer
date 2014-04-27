@@ -55,7 +55,7 @@ public:
 	}
 	
 private:
-	typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
+	typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 
 	void clip_geometries();
 	void compact_geometries();

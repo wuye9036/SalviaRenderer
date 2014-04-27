@@ -1,6 +1,7 @@
 #include <salviar/include/framebuffer.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shaderregs.h>
+#include <salviar/include/shader_regs.h>
+#include <salviar/include/shader_regs_op.h>
 #include <salviar/include/surface.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/renderer.h>

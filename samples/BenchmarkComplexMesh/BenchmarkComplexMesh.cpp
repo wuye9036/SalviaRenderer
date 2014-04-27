@@ -3,7 +3,7 @@
 #include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviar/include/shader.h>
-#include <salviar/include/shaderregs.h>
+#include <salviar/include/shader_regs.h>
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>

@@ -1,5 +1,5 @@
-#include <salviar/include/shaderregs.h>
-#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader_regs.h>
+#include <salviar/include/shader_regs_op.h>
 #include <salviar/include/shader.h>
 #include <salviar/include/renderer.h>
 

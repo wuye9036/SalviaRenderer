@@ -7,8 +7,8 @@
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/shader_unit.h>
-#include <salviar/include/shaderregs.h>
-#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader_regs.h>
+#include <salviar/include/shader_regs_op.h>
 #include <salviar/include/thread_pool.h>
 #include <salviar/include/thread_context.h>
 #include <salviar/include/vertex_cache.h>

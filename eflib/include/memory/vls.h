@@ -1,5 +1,7 @@
 #pragma once
 
+#include <eflib/include/memory/allocator.h>
+
 #include <utility>
 #include <iterator>
 
@@ -69,14 +71,33 @@ namespace eflib
 
 		template<typename U> struct rebind { typedef vls_allocator<U> other; };
 
+		vls_allocator(size_t alignment = 1): align_(alignment)
+		{
+		}
+
 		pointer allocate(size_type stride, size_type n, vls_allocator<void>::const_pointer hint = 0)
 		{
-			return reinterpret_cast<pointer>( ::operator new(stride * n) );
+			if(align_ == 1)
+			{
+				return reinterpret_cast<pointer>( ::operator new(stride * n) );
+			}
+			else
+			{
+				return reinterpret_cast<pointer>(aligned_malloc(stride * n, align_));
+			}
 		}
 
 		void deallocate(pointer p, size_type stride, size_type n)
 		{
-			::operator delete(p);
+			if(align_ == 1)
+			{
+				::operator delete(p);
+			}
+			else
+			{
+				aligned_free(reinterpret_cast<void*>(p));
+			}
+			
 		}
 
 		pointer address(reference val)
@@ -103,6 +124,9 @@ namespace eflib
 		{
 			return std::numeric_limits<size_type>::max() / stride;
 		}
+
+	private:
+		size_t align_;
 	};
 
 	template <>
@@ -114,18 +138,6 @@ namespace eflib
 		typedef std::size_t     size_type;
 		typedef std::ptrdiff_t  difference_type;
 	};
-
-	template <typename T>
-	T* advance_bytes(T* p, size_t dist)
-	{
-		return reinterpret_cast<T*>(reinterpret_cast<intptr_t>(p) + dist);
-	}
-
-	template <typename T>
-	intptr_t distance_bytes(T const* a, T const* b)
-	{
-		return reinterpret_cast<intptr_t>(b) - reinterpret_cast<intptr_t>(a);
-	}
 
 	template <typename VLSVectorT>
 	struct vls_vector_iterator: public std::iterator<std::random_access_iterator_tag, typename VLSVectorT::value_type>

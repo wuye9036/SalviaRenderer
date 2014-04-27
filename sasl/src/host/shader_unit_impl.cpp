@@ -1,7 +1,7 @@
 #include <sasl/include/host/shader_unit_impl.h>
 
 #include <salviar/include/stream_assembler.h>
-#include <salviar/include/shaderregs.h>
+#include <salviar/include/shader_regs.h>
 #include <salviar/include/shader.h>
 
 #include <eflib/include/diagnostics/assert.h>

@@ -1,8 +1,9 @@
-#ifndef EFLIB_MEMORY_POOL_H
-#define EFLIB_MEMORY_POOL_H
+#pragma once
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/memory/allocator.h>
+#include <eflib/include/memory/pointer_calc.h>
+#include <eflib/include/memory/vls.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/array.hpp>
@@ -15,7 +16,8 @@
 #include <limits>
 #include <vector>
 
-namespace eflib{
+namespace eflib
+{
 	namespace pool
 	{
 		template <typename ObjectT, int MaxCount, bool IsFreeTogether = true>
@@ -118,13 +120,13 @@ namespace eflib{
 		};
 
 		template <typename T>
-		class preserved_pool
+		class reserved_pool
 		{
 		public:
-			preserved_pool(): data_mem(NULL), sz(0), cap(0), align(0)
+			reserved_pool(): data_mem(NULL), sz(0), cap(0), align(0), stride(0)
 			{}
 
-			~preserved_pool()
+			~reserved_pool()
 			{
 				if(align == 1)
 				{
@@ -136,18 +138,18 @@ namespace eflib{
 				}
 			}
 
-			void reserve(size_t capacity, size_t alignment)
+			void reserve(size_t capacity, size_t alignment, size_t stride = sizeof(T))
 			{
 				if(data_mem == nullptr)
 				{
 					align = (alignment == 0 ? 1 : alignment);
 					if(align == 1)
 					{
-						data_mem = static_cast<T*>(::malloc(sizeof(T)*capacity));
+						data_mem = static_cast<T*>(::malloc(stride * capacity));
 					}
 					else
 					{
-						data_mem = static_cast<T*>( aligned_malloc(sizeof(T) * capacity, alignment) );
+						data_mem = static_cast<T*>( aligned_malloc(stride * capacity, alignment) );
 					}
 
 					sz = 0;
@@ -158,7 +160,6 @@ namespace eflib{
 
 			T* alloc()
 			{
-				++sz;
 #if defined(EFLIB_DEBUG)
 				if(sz >= cap)
 				{
@@ -166,25 +167,28 @@ namespace eflib{
 					return NULL;
 				}
 #endif
-				return data_mem + sz;
+				T* ret = advance_bytes(data_mem, stride * sz);
+				++sz;
+				return ret;
 			}
 
 			void dealloc(T*) {}
 
-			T* begin() const
+			vls_vector_iterator<T> begin() const
 			{
-				return data_mem;
+				return vls_vector_iterator<T>(data_mem, stride);
 			}
 
-			T* end() const
+			vls_vector_iterator<T> end() const
 			{
-				return data_mem + sz;
+				return vls_vector_iterator<T>(advance_bytes(data_mem, stride*sz), stride);
 			}
 		private:
-			preserved_pool(preserved_pool const&);
-			preserved_pool& operator = (preserved_pool const&);
+			reserved_pool(reserved_pool const&);
+			reserved_pool& operator = (reserved_pool const&);
 
 			size_t	align;
+			size_t  stride;
 			size_t	sz;
 			size_t	cap;
 			T*		data_mem;
@@ -192,4 +196,3 @@ namespace eflib{
 	}
 }
 
-#endif

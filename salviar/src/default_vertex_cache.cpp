@@ -4,8 +4,8 @@
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/host.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shaderregs.h>
-#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader_regs.h>
+#include <salviar/include/shader_regs_op.h>
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/stream_assembler.h>

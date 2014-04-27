@@ -21,7 +21,7 @@
 
 BEGIN_NS_SALVIAR();
 
-typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
+typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 
 struct scanline_info;
 class  pixel_shader_unit;

@@ -50,8 +50,8 @@ set( SHADER_HEADERS
 	include/shader_object.h
 	include/shader_unit.h
 	include/shader_utility.h
-	include/shaderregs.h
-	include/shaderregs_op.h
+	include/shader_regs.h
+	include/shader_regs_op.h
 	include/shader_cbuffer.h
 	include/register_file.h
 )
@@ -126,7 +126,6 @@ set(SHADER_SOURCES
 	src/cpp_pixel_shader.cpp
 	src/sampler_api.cpp
 	src/shader.cpp
-	src/shader_object.cpp
 	src/shader_unit.cpp
 	src/shader_cbuffer.cpp
 )

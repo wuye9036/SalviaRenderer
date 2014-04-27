@@ -1,6 +1,6 @@
 #include <salviar/include/raster_state.h>
 #include <salviar/include/clipper.h>
-#include <salviar/include/shaderregs.h>
+#include <salviar/include/shader_regs.h>
 #include <salviar/include/rasterizer.h>
 
 using boost::function;
