@@ -968,6 +968,10 @@ void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
 
 			triangle_info const* tri_info = tri_infos_.data() + i;
 			
+			if (tri_info->v0 == nullptr)
+			{
+				continue;
+			}
 			float const x_min = tri_info->bounding_box[0];
 			float const x_max = tri_info->bounding_box[1];
 			float const y_min = tri_info->bounding_box[2];

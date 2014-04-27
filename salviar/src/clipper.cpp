@@ -93,6 +93,34 @@ void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results
 	vs_output*	clipped_verts[2][5];
 	uint32_t	num_clipped_verts[2];
 	
+#if 0
+	// Quick test
+	bool in_frustum = true;
+	for(size_t i_plane = 0; i_plane < planes_.size(); ++i_plane)
+	{
+		for(size_t i_vert = 0; i_vert < 3; ++i_vert)
+		{
+			float d = dot_prod4( planes_[i_plane], tri_verts[i_vert]->position() );
+			if(d < 0)
+			{
+				in_frustum = false;
+				break;
+			}
+		}
+		if (!in_frustum) break;
+	}
+
+	if(in_frustum)
+	{
+		results->num_clipped_verts = 3;
+		for(size_t i = 0; i < 3; ++i)
+		{
+			results->clipped_verts[i] = tri_verts[i];
+		}
+		return;
+	}
+#endif
+
 	// clip by all faces as Ping-Pong idiom
 	clipped_verts[0][0] = tri_verts[0];
 	clipped_verts[0][1] = tri_verts[1];

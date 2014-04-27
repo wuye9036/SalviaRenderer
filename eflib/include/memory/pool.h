@@ -143,6 +143,8 @@ namespace eflib
 				if(data_mem == nullptr)
 				{
 					align = (alignment == 0 ? 1 : alignment);
+					this->stride = stride;
+
 					if(align == 1)
 					{
 						data_mem = static_cast<T*>(::malloc(stride * capacity));
