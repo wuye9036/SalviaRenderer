@@ -88,12 +88,24 @@ void clipper::clip_solid_triangle(vs_output** tri_verts, clip_results* results)
 	}
 }
 
+inline bool compute_front(vec4 const& pos0, vec4 const& pos1, vec4 const& pos2)
+{
+	vec2 pv_2d[3] =
+	{
+		pos0.xy() * ( 1.0f / pos0.w() ),
+		pos1.xy() * ( 1.0f / pos1.w() ),
+		pos2.xy() * ( 1.0f / pos2.w() ),
+	};
+
+	float const area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
+	return area > 0.0f;
+}
+
 void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results) const
 {
 	vs_output*	clipped_verts[2][5];
 	uint32_t	num_clipped_verts[2];
-	
-#if 0
+
 	// Quick test
 	bool in_frustum = true;
 	for(size_t i_plane = 0; i_plane < planes_.size(); ++i_plane)
@@ -112,14 +124,26 @@ void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results
 
 	if(in_frustum)
 	{
+		results->is_front = compute_front(
+			tri_verts[0]->position(),
+			tri_verts[1]->position(),
+			tri_verts[2]->position()
+			);
+		// If triangle is culled, return 0.
+		if( ctxt_.cull(results->is_front ? 1.0 : -1.0) )
+		{
+			results->num_clipped_verts = 0;
+			return;
+		}
+
 		results->num_clipped_verts = 3;
 		for(size_t i = 0; i < 3; ++i)
 		{
 			results->clipped_verts[i] = tri_verts[i];
 		}
+		
 		return;
 	}
-#endif
 
 	// clip by all faces as Ping-Pong idiom
 	clipped_verts[0][0] = tri_verts[0];
