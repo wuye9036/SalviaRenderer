@@ -452,7 +452,10 @@ int main( int /*argc*/, std::_tchar* /*argv*/[] )
 		benchmark bm;
 		for(size_t i = 1; i <= RENDER_FRAME_COUNT; ++i)
 		{
-			cout << "Render Frame #" << i << "/" << RENDER_FRAME_COUNT << endl;
+			if( i % 10 == 0 )
+			{
+				cout << "Render Frame #" << i << "/" << RENDER_FRAME_COUNT << endl;
+			}
 			bm.render();
 		}
 		bm.save_frame("complexmesh_frame.png");
