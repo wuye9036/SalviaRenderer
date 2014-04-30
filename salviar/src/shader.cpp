@@ -457,8 +457,12 @@ namespace vs_output_op_funcs
 			_xmm_extract_ps(out11_m128[0], 3)
 		};
 
-		__m128 w4 = _mm_load_ps(w);
-		__m128 inv_w4 = _mm_rcp_ps(w4);
+		__m128 inv_w4 = _mm_set_ps(
+			1.0f/w[0],
+			1.0f/w[1],
+			1.0f/w[2],
+			1.0f/w[3]
+			);
 
 		for(size_t i_attr = 0; i_attr < N; ++i_attr)
 		{

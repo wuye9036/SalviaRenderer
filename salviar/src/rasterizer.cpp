@@ -351,7 +351,7 @@ void rasterizer::draw_full_tile(
                     continue;
                 }
 
-#define USE_QUAD_INTERPOLATION 0
+#define USE_QUAD_INTERPOLATION 1
 
 #if USE_QUAD_INTERPOLATION
 				int ix = (quad & 1) << 1;
@@ -383,6 +383,18 @@ void rasterizer::draw_full_tile(
 #endif
 	        }
             draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
+#if 0
+			for(int i = 0; i < 16; ++i)
+			{
+				printf("%f_%f_%f_%f\n",
+					unprojed[i].attribute(0).data_[0],
+					unprojed[i].attribute(0).data_[1],
+					unprojed[i].attribute(0).data_[2],
+					unprojed[i].attribute(0).data_[3]
+				);
+			}
+			printf("\n");
+#endif
 		}
 	}
 
