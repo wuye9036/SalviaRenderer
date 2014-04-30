@@ -45,6 +45,11 @@ namespace vs_output_functions
 		float step0, vs_output const& derivation0,
 		float step1, vs_output const& derivation1);
 
+	typedef vs_output& (*step_2d_unproj_quad)(
+		vs_output* out, vs_output const& start,
+		float step0, vs_output const& derivation0,
+		float step1, vs_output const& derivation1);
+
 	typedef vs_output& (*step1)			(vs_output& out, const vs_output& in, const vs_output& derivation);
 	typedef vs_output& (*step_1d)		(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
 	typedef vs_output& (*step_2d)		(
@@ -78,6 +83,8 @@ struct vs_output_op
 	vs_output_functions::step_2d_unproj	step_2d_unproj;
     vs_output_functions::step_2d_unproj	step_2d_unproj_pos;
     vs_output_functions::step_2d_unproj	step_2d_unproj_attr;
+	vs_output_functions::step_2d_unproj_quad
+										step_2d_unproj_attr_quad;
 
 	vs_output_functions::step1			step1;
 	vs_output_functions::step_1d		step_1d;
