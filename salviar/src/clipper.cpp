@@ -130,7 +130,7 @@ void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results
 			tri_verts[2]->position()
 			);
 		// If triangle is culled, return 0.
-		if( ctxt_.cull(results->is_front ? 1.0 : -1.0) )
+		if( ctxt_.cull(results->is_front ? 1.0f : -1.0f) )
 		{
 			results->num_clipped_verts = 0;
 			return;

@@ -104,6 +104,8 @@ public:
     }
 };
 
+static int count = 0;
+
 class sponza_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
@@ -136,6 +138,7 @@ public:
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
+		++count;
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
 		if( sampler_ )
@@ -143,7 +146,6 @@ public:
 			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
-		
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
 		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
@@ -152,9 +154,7 @@ public:
 
 		out.color[0] = diff_color * illum_diffuse;
 		out.color[0][3] = 1.0f;
-
-		/*out.color[0].xy( in.attribute(0).xy() );
-		out.color[0].zw( 0.0f, 1.0f );*/
+		
 		return true;
 	}
 	virtual cpp_shader_ptr clone()

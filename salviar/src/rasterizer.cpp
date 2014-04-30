@@ -109,9 +109,6 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 		}
 
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		triangle_info info;
-		// info.set(start->position(), ddx, ddy);
-		cpp_ps->tri_info_ = &info;
 
 		float fsx = fast_floor(start->position().x() + 0.5f);
 
@@ -146,11 +143,13 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 
 			// Render pixel.
 			vso_ops_->unproject(unprojed, px_in);
+
+#if 0
 			if(cpp_ps->execute(unprojed, px_out))
 			{
 				frame_buffer_->render_sample(cpp_bs_, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
 			}
-
+#endif
 			// Increment ddx
 			++ step;
 			vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
@@ -169,10 +168,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 		}
 
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		triangle_info info;
-		// info.set(start->position(), ddx, ddy);
-		cpp_ps->tri_info_ = &info;
-
+		
 		float fsy = fast_floor(start->position().y() + 0.5f);
 
 		int sy = fast_floori(fsy);
@@ -201,11 +197,13 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 			}
 
 			vso_ops_->unproject(unprojed, px_in);
+
+#if 0
 			if(cpp_ps->execute(unprojed, px_out))
 			{
 				frame_buffer_->render_sample(cpp_bs_, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
 			}
-
+#endif
 			++ step;
 			vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
@@ -382,7 +380,7 @@ void rasterizer::draw_full_tile(
 		        }
 #endif
 	        }
-            draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
+
 #if 0
 			for(int i = 0; i < 16; ++i)
 			{
@@ -395,6 +393,8 @@ void rasterizer::draw_full_tile(
 			}
 			printf("\n");
 #endif
+
+			draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
 		}
 	}
 
@@ -837,8 +837,6 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 		TVT_EMPTY,
 		TVT_PIXEL
 	};
-
-	if( !psu ){ cpp_ps->tri_info_ = tri_info; }
 
 	float const x_min = tri_info->bounding_box[0] - vp.x;
 	float const x_max = tri_info->bounding_box[1] - vp.x;
@@ -1482,12 +1480,13 @@ void rasterizer::draw_package(
 		for ( int ix = 0; ix < 4; ++ix )
 		{
 			int px_index = iy * 4 + ix;
+			int quad_start = (iy & 2) * 4 + (ix & 2);
 			uint32_t mask = masks[px_index];
 
 			// No sampler need to be draw.
 			if(!mask) continue;
 			// Clipped by pixel shader.
-			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) ) continue;
+			if( !psu && !cpp_ps->execute(pixels + quad_start, pixels[px_index], pso[px_index]) ) continue;
 
             ++backend_input_pixels;
 
@@ -1568,6 +1567,7 @@ void rasterizer::draw_full_package(
 			continue;
 		}
 
+		int quad_index = ( (quad & 1) << 1 ) + ( (quad & 2) << 2 );
 		// Write quad
         for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
         {
@@ -1576,7 +1576,7 @@ void rasterizer::draw_full_package(
 
 			int px_index = iy * 4 + ix;
 
-            if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) )
+            if( !psu && !cpp_ps->execute(pixels + quad_index, pixels[px_index], pso[px_index]) )
 			{
 				continue;
 			}
