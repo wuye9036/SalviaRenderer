@@ -97,11 +97,10 @@ namespace vs_output_op_funcs
 {
 	template <int N>
 	vs_output& construct_n(vs_output& out,
-			const eflib::vec4& position, bool front_face,
+			const eflib::vec4& position,
 			eflib::vec4 const* attribs)
 	{
 		out.position() = position;
-		out.front_face(front_face);
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			out.attribute(i_attr) = attribs[i_attr];
 		}
@@ -116,7 +115,6 @@ namespace vs_output_op_funcs
 			__m128 const* src = reinterpret_cast<__m128 const*>( in.raw_data() + i_register );
 			*dst = *src;
 		}
-		out.front_face( in.front_face() );
 		return out;
 	}
 
@@ -131,7 +129,6 @@ namespace vs_output_op_funcs
 				}
 			}
 			out.position() = in.position();
-			out.front_face( in.front_face() );
 		}
 		else{
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -182,8 +179,7 @@ namespace vs_output_op_funcs
 			}
 		}
 #endif
-		out.front_face( in.front_face() );
-
+		
 		return out;
 	}
 
@@ -191,7 +187,6 @@ namespace vs_output_op_funcs
 	vs_output& lerp_n(vs_output& out, const vs_output& start, const vs_output& end, float step)
 	{
 		out.position() = start.position() + ( end.position() - start.position() ) * step;
-		out.front_face( start.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			out.attribute(i_attr) = start.attribute(i_attr);
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
@@ -293,8 +288,6 @@ namespace vs_output_op_funcs
 			}
 		}
 #endif
-		// Face
-		out.front_face( in.front_face() );
 
 		return out;
 	}
@@ -395,11 +388,6 @@ namespace vs_output_op_funcs
 			}
 		}
 #endif
-		// Face
-		out[0].front_face( in.front_face() );
-		out[1].front_face( in.front_face() );
-		out[4].front_face( in.front_face() );
-		out[5].front_face( in.front_face() );
 
 		return *out;
 	}
@@ -447,7 +435,6 @@ namespace vs_output_op_funcs
 	vs_output& add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
 		out.position() = vso0.position() + vso1.position();
-		out.front_face( vso0.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			out.attribute(i_attr) = vso0.attribute(i_attr) + vso1.attribute(i_attr);
 		}
@@ -477,7 +464,6 @@ namespace vs_output_op_funcs
 		}
 #endif
 
-		out.front_face( vso0.front_face() );
 		return out;
 	}
 	
@@ -489,7 +475,6 @@ namespace vs_output_op_funcs
 		{
 			out.attribute(i_attr) = vso0.attribute(i_attr) * f;
 		}
-		out.front_face( vso0.front_face() );
 		return out;
 	}
 

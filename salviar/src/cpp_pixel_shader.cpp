@@ -62,7 +62,6 @@ bool cpp_pixel_shader::execute(vs_output const* quad, vs_output const& in, ps_ou
 	quad_ = quad;
     out.depth = in.position().z();
 	bool rv = shader_prog(in, out);
-	out.front_face = in.front_face();
 	return rv;
 }
 

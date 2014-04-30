@@ -22,7 +22,7 @@ namespace vs_output_functions
 {
 	using eflib::vec4;
 
-	typedef vs_output& (*construct)		(vs_output& out, vec4 const& position, bool front_face, vec4 const* attrs);
+	typedef vs_output& (*construct)		(vs_output& out, vec4 const& position, vec4 const* attrs);
 	typedef vs_output& (*copy)			(vs_output& out, const vs_output& in);
 
 	typedef vs_output& (*project)		(vs_output& out, const vs_output& in);

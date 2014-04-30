@@ -284,10 +284,13 @@ public:
 
 class cpp_pixel_shader : public cpp_shader_impl
 {
+	bool					front_face_;
 	vs_output const*		px_;
 	vs_output const*		quad_;
 
 protected:
+	bool front_face() const	{ return front_face_; }
+
 	eflib::vec4	  ddx(size_t iReg) const;
 	eflib::vec4   ddy(size_t iReg) const;
 
@@ -303,6 +306,11 @@ protected:
 	color_rgba32f texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy);
 
 public:
+	void update_front_face(bool v)
+	{
+		front_face_ = v;
+	}
+
 	bool execute(vs_output const* quad_in, vs_output const& px_in, ps_output& px_out);
 	
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;

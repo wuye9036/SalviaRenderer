@@ -115,16 +115,6 @@ public:
 		return attribute_data()[index];
 	}
 
-	bool front_face() const
-	{
-		return front_face_;
-	}
-
-	void front_face(bool v)
-	{
-		front_face_ = v;
-	}
-
 	vs_output()
 	{}
 
@@ -132,8 +122,6 @@ private:
 	typedef boost::array<
 		eflib::vec4, MAX_VS_OUTPUT_ATTRS+1 > register_array;
 	register_array registers_;
-
-	bool front_face_;
 
 	vs_output(const vs_output& rhs);
 	vs_output& operator=(const vs_output& rhs);
@@ -143,6 +131,7 @@ private:
 struct triangle_info
 {
 	vs_output const*			v0;
+	bool						front_face;
 	EFLIB_ALIGN(16)	eflib::vec4	bounding_box;
 	EFLIB_ALIGN(16)	eflib::vec4	edge_factors[3];
 	vs_output					ddx;
@@ -162,7 +151,6 @@ struct triangle_info
 struct ps_output
 {
 	float		depth;
-	bool		front_face;
 	uint32_t	coverage;
 	boost::array<eflib::vec4, MAX_RENDER_TARGETS> color;
 };
