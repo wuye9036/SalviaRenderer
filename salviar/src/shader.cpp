@@ -201,135 +201,6 @@ namespace vs_output_op_funcs
 		return out;
 	}
 
-	template <int N>
-	vs_output& step_unproj_n(vs_output& out, vs_output const& start, vs_output const& derivation)
-	{
-#if defined(VSO_INTERP_SSE_ENABLED)
-		__m128 const* deri_m128  = reinterpret_cast<__m128 const*>( derivation.raw_data() );
-		__m128 const* start_m128 = reinterpret_cast<__m128 const*>( start.raw_data() );
-		__m128*		  out_m128   = reinterpret_cast<__m128 *>( out.raw_data() );
-
-		// Position
-		out_m128[0] = _mm_add_ps(start_m128[0], deri_m128[0]);
-		float inv_w = _xmm_extract_ps(out_m128[0], 3);
-		__m128 inv_w4 = _mm_load_ps1(&inv_w);
-
-		for(size_t register_index = 1; register_index <= N; ++register_index)
-		{
-			__m128 interp_attr;
-
-			// Interpolation
-			if (vs_output_ops[N].attribute_modifiers[register_index-1] & vs_output::am_nointerpolation)
-			{
-				interp_attr = start_m128[register_index];
-			}
-			else
-			{
-				interp_attr = _mm_add_ps(start_m128[register_index], deri_m128[register_index]);
-			}
-
-			// Perspective
-			if (vs_output_ops[N].attribute_modifiers[register_index-1] & vs_output::am_noperspective)
-			{
-				out_m128[register_index] = interp_attr;
-			}
-			else
-			{
-				out_m128[register_index] = _mm_mul_ps(interp_attr, inv_w4);
-			}
-
-			// Face
-			out.front_face( start.front_face() );
-		}
-
-		return out;
-#else
-		vs_output tmp;
-		step1_n<N>(tmp, start, derivation);
-		unproject_n<N>(out, tmp);
-		return out;
-#endif
-	}
-
-	template <int N>
-	vs_output& step_2d_unproj_n(
-		vs_output& out, const vs_output& in,
-		float step0, const vs_output& derivation0,
-		float step1, const vs_output& derivation1
-        )
-	{
-#if defined(VSO_INTERP_SSE_ENABLED)
-		__m128 const* d0_m128	= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
-		__m128 const* d1_m128	= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
-		__m128 const* in_m128	= reinterpret_cast<__m128 const*>( in.raw_data() );
-		__m128*		  out_m128	= reinterpret_cast<__m128 *>( out.raw_data() );
-		__m128		  step0_m128= _mm_load_ps1(&step0);
-		__m128		  step1_m128= _mm_load_ps1(&step1);
-
-		out_m128[0] = _mm_add_ps(
-			in_m128[0],
-			_mm_add_ps( _mm_mul_ps(d0_m128[0], step0_m128), _mm_mul_ps(d1_m128[0], step1_m128) )
-			);
-
-		float inv_w = 1.0f / _xmm_extract_ps(out_m128[0], 3);
-		__m128 inv_w4 = _mm_load_ps1(&inv_w);
-
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			__m128 interp_attr;
-			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
-			{
-				interp_attr = in_m128[i_attr+1];
-			}
-			else
-			{
-				interp_attr = _mm_add_ps(
-					in_m128[i_attr + 1],
-					_mm_add_ps(
-						_mm_mul_ps(d0_m128[i_attr + 1], step0_m128),
-						_mm_mul_ps(d1_m128[i_attr + 1], step1_m128)
-						)
-					);
-
-			}
-
-			// Perspective
-			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
-			{
-				out_m128[i_attr+1] = interp_attr;
-			}
-			else
-			{
-				out_m128[i_attr+1] = _mm_mul_ps(interp_attr, inv_w4);
-			}
-		}
-#else
-		out.position() =
-			in.position()
-			+ (derivation0.position() * step0)
-			+ (derivation1.position() * step1);
-
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
-			{
-				out.attribute(i_attr) = in.attribute(i_attr);
-			}
-			else
-			{
-				out.attribute(i_attr) =
-					in.attribute(i_attr)
-					+ (derivation0.attribute(i_attr) * step0)
-					+ (derivation1.attribute(i_attr) * step1);
-			}
-		}
-#endif
-		// Face
-		out.front_face( in.front_face() );
-
-		return out;
-	}
-
 	vs_output& step_2d_unproj_pos(
 		vs_output& out, const vs_output& in,
 		float step0, const vs_output& derivation0,
@@ -532,137 +403,6 @@ namespace vs_output_op_funcs
 
 		return *out;
 	}
-	template <int N>
-	vs_output& step1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
-	{
-		out.position() = in.position() + derivation.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				out.attribute(i_attr) = in.attribute(i_attr) + derivation.attribute(i_attr);
-			}
-		}
-		return out;
-	}
-	template <int N>
-	vs_output& step_1d_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
-	{
-		out.position() = in.position() + (derivation.position() * step);
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				out.attribute(i_attr) = in.attribute(i_attr) + (derivation.attribute(i_attr) * step);
-			}
-		}
-		return out;
-	}
-	template <int N>
-	vs_output& step_2d_n(
-		vs_output& out, const vs_output& in,
-		float step0, const vs_output& derivation0,
-		float step1, const vs_output& derivation1)
-	{
-#if defined(VSO_INTERP_SSE_ENABLED)
-		__m128 const* d0_m128	= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
-		__m128 const* d1_m128	= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
-		__m128 const* in_m128	= reinterpret_cast<__m128 const*>( in.raw_data() );
-		__m128*		  out_m128	= reinterpret_cast<__m128 *>( out.raw_data() );
-		__m128		  step0_m128= _mm_load_ps1(&step0);
-		__m128		  step1_m128= _mm_load_ps1(&step1);
-
-		out_m128[0] = _mm_add_ps(
-			in_m128[0],
-			_mm_add_ps( _mm_mul_ps(d0_m128[0], step0_m128), _mm_mul_ps(d1_m128[0], step1_m128) )
-			);
-
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
-			{
-				out_m128[i_attr+1] = in_m128[i_attr+1];
-			}
-			else
-			{
-				out_m128[i_attr+1] = _mm_add_ps(
-					in_m128[i_attr+1],
-					_mm_add_ps(
-						_mm_mul_ps(d0_m128[i_attr+1], step0_m128),
-						_mm_mul_ps(d1_m128[i_attr+1], step1_m128)
-						)
-					);
-			}
-		}
-#else
-		out.position() =
-			in.position()
-			+ (derivation0.position() * step0)
-			+ (derivation1.position() * step1);
-
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
-			{
-				out.attribute(i_attr) = in.attribute(i_attr);
-			}
-			else
-			{
-				out.attribute(i_attr) =
-					in.attribute(i_attr)
-					+ (derivation0.attribute(i_attr) * step0)
-					+ (derivation1.attribute(i_attr) * step1);
-			}
-		}
-#endif
-		return out;
-	}
-
-	template <int N>
-	vs_output& self_step1_n(vs_output& inout, const vs_output& derivation)
-	{
-#if defined(VSO_INTERP_SSE_ENABLED)
-		__m128 const*	src = NULL;
-		__m128*			dst = NULL;
-
-		src = reinterpret_cast<__m128 const*>( &derivation.position() );
-		dst = reinterpret_cast<__m128*>( &inout.position() );
-		*dst = _mm_add_ps(*src, *dst);
-
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			uint32_t modifier
-				= vs_output_ops[N].attribute_modifiers[i_attr];
-			if (!(modifier & vs_output::am_nointerpolation) )
-			{
-				src = reinterpret_cast<__m128 const*>( &derivation.attribute(i_attr) );
-				dst = reinterpret_cast<__m128*>( &inout.attribute(i_attr) );
-
-				*dst = _mm_add_ps(*src, *dst);
-			}
-		}
-#else
-		inout.position() += derivation.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation))
-			{
-				inout.attribute(i_attr) += derivation.attribute(i_attr);
-			}
-		}
-#endif
-		return inout;
-	}
-
-	template <int N>
-	vs_output& self_step_1d_n(vs_output& inout, float step, const vs_output& derivation)
-	{
-		inout.position() += (derivation.position() * step);
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation))
-			{
-				inout.attribute(i_attr) += (derivation.attribute(i_attr) * step);
-			}
-		}
-		return inout;
-	}
 
 	template <int N>
 	vs_output& self_add_n(vs_output& lhs, const vs_output& rhs)
@@ -695,6 +435,7 @@ namespace vs_output_op_funcs
 		}
 		return lhs;
 	}
+	
 	template <int N>
 	vs_output& self_div_n(vs_output& lhs, float f)
 	{
@@ -712,6 +453,7 @@ namespace vs_output_op_funcs
 		}
 		return out;
 	}
+	
 	template <int N>
 	vs_output& sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
@@ -738,6 +480,7 @@ namespace vs_output_op_funcs
 		out.front_face( vso0.front_face() );
 		return out;
 	}
+	
 	template <int N>
 	vs_output& mul_n(vs_output& out, const vs_output& vso0, float f)
 	{
@@ -794,18 +537,9 @@ vs_output_op gen_vs_output_op_n()
 	ret.div = div_n<N>;
 
 	ret.lerp = lerp_n<N>;
-	ret.step_unproj = step_unproj_n<N>;
-	ret.step_2d_unproj = step_2d_unproj_n<N>;
     ret.step_2d_unproj_pos = step_2d_unproj_pos;
     ret.step_2d_unproj_attr = step_2d_unproj_attr_n<N>;
 	ret.step_2d_unproj_attr_quad = step_2d_unproj_attr_n_quad<N>;
-
-	ret.step1		= step1_n<N>;
-	ret.step_1d		= step_1d_n<N>;
-	ret.step_2d		= step_2d_n<N>;
-
-	ret.self_step1	= self_step1_n<N>;
-	ret.self_step_1d= self_step_1d_n<N>;
 
 	return ret;
 }
