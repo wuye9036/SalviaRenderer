@@ -19,6 +19,10 @@
 #include <boost/ref.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#if defined(EFLIB_MSVC)
+#	include <ppl.h>
+#endif
+
 using eflib::num_available_threads;
 
 using boost::atomic;
@@ -107,7 +111,11 @@ public:
 
 		// Unique indices
 		std::vector<uint32_t> unique_indices = indices_;
+#if defined(EFLIB_MSVC)
+		concurrency::parallel_radixsort(unique_indices.begin(), unique_indices.end());
+#else
 		std::sort(unique_indices.begin(), unique_indices.end());
+#endif
 		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
 		transformed_verts_.reset(new vs_output[unique_indices.size()]);
 		used_verts_.resize( unique_indices.back()+1 );

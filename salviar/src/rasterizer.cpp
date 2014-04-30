@@ -345,12 +345,27 @@ void rasterizer::draw_full_tile(
             // Do interpolation
             for(int quad = 0; quad < 4; ++quad)
             {
-                // all 2x2 is masked.
+				// all 2x2 is masked.
                 if((packed_pixel_mask & (0xF << (quad << 2))) == 0)
                 {
                     continue;
                 }
 
+#define USE_QUAD_INTERPOLATION 0
+
+#if USE_QUAD_INTERPOLATION
+				int ix = (quad & 1) << 1;
+                int iy = (quad & 2);
+
+			    dx = offsetx + ix;
+                dy = offsety + iy;
+
+                vso_ops_->step_2d_unproj_attr_quad(
+                    unprojed + iy*4 + ix, v0,
+                    dx, triangle_ctx->tri_info->ddx,
+                    dy, triangle_ctx->tri_info->ddy
+                    );
+#else
                 for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
                 {
                     int ix = ((quad & 1) << 1) | (i_pixel & 1);
@@ -365,8 +380,8 @@ void rasterizer::draw_full_tile(
                         dy, triangle_ctx->tri_info->ddy
                         );
 		        }
+#endif
 	        }
-
             draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
 		}
 	}

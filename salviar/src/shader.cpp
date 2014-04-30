@@ -429,6 +429,106 @@ namespace vs_output_op_funcs
 	}
 
 	template <int N>
+	vs_output& step_2d_unproj_attr_n_quad(
+		vs_output* out, const vs_output& in,
+		float step0, const vs_output& derivation0,
+		float step1, const vs_output& derivation1
+        )
+	{
+#if defined(VSO_INTERP_SSE_ENABLED)
+		__m128 const* d0_m128		= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
+		__m128 const* d1_m128		= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
+
+		__m128 const* in_m128		= reinterpret_cast<__m128 const*>( in.raw_data() );
+		
+		__m128*		  out00_m128	= reinterpret_cast<__m128 *>( out[0].raw_data() );
+		__m128*		  out01_m128	= reinterpret_cast<__m128 *>( out[1].raw_data() );
+		__m128*		  out10_m128	= reinterpret_cast<__m128 *>( out[4].raw_data() );
+		__m128*		  out11_m128	= reinterpret_cast<__m128 *>( out[5].raw_data() );
+
+		__m128		  step0_m128	= _mm_load_ps1(&step0);
+		__m128		  step1_m128	= _mm_load_ps1(&step1);
+
+		EFLIB_ALIGN(16) float w[] = 
+		{
+			_xmm_extract_ps(out00_m128[0], 3),
+			_xmm_extract_ps(out01_m128[0], 3),
+			_xmm_extract_ps(out10_m128[0], 3),
+			_xmm_extract_ps(out11_m128[0], 3)
+		};
+
+		__m128 w4 = _mm_load_ps(w);
+		__m128 inv_w4 = _mm_rcp_ps(w4);
+
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			__m128 interp_attr00;
+			__m128 interp_attr01;
+			__m128 interp_attr10;
+			__m128 interp_attr11;
+
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			{
+				interp_attr00 = in_m128[i_attr+1];
+				interp_attr01 = in_m128[i_attr+1];
+				interp_attr10 = in_m128[i_attr+1];
+				interp_attr11 = in_m128[i_attr+1];
+			}
+			else
+			{
+				interp_attr00 = _mm_add_ps(
+					in_m128[i_attr + 1],
+					_mm_add_ps(
+						_mm_mul_ps(d0_m128[i_attr + 1], step0_m128),
+						_mm_mul_ps(d1_m128[i_attr + 1], step1_m128)
+						)
+					);
+				interp_attr01 = _mm_add_ps(interp_attr00, d0_m128[i_attr+1]);
+				interp_attr10 = _mm_add_ps(interp_attr00, d1_m128[i_attr+1]);
+				interp_attr11 = _mm_add_ps(interp_attr01, d1_m128[i_attr+1]);
+			}
+
+			// Perspective
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
+			{
+				out00_m128[i_attr+1] = interp_attr00;
+				out01_m128[i_attr+1] = interp_attr01;
+				out10_m128[i_attr+1] = interp_attr10;
+				out11_m128[i_attr+1] = interp_attr11;
+			}
+			else
+			{
+				out00_m128[i_attr+1] = _mm_mul_ps(interp_attr00, _mm_shuffle_ps(inv_w4, inv_w4, _MM_SHUFFLE(3, 3, 3, 3)));
+				out01_m128[i_attr+1] = _mm_mul_ps(interp_attr01, _mm_shuffle_ps(inv_w4, inv_w4, _MM_SHUFFLE(2, 2, 2, 2)));
+				out10_m128[i_attr+1] = _mm_mul_ps(interp_attr10, _mm_shuffle_ps(inv_w4, inv_w4, _MM_SHUFFLE(1, 1, 1, 1)));
+				out11_m128[i_attr+1] = _mm_mul_ps(interp_attr11, _mm_shuffle_ps(inv_w4, inv_w4, _MM_SHUFFLE(0, 0, 0, 0)));
+			}
+		}
+#else
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			{
+				out.attribute(i_attr) = in.attribute(i_attr);
+			}
+			else
+			{
+				out.attribute(i_attr) =
+					in.attribute(i_attr)
+					+ (derivation0.attribute(i_attr) * step0)
+					+ (derivation1.attribute(i_attr) * step1);
+			}
+		}
+#endif
+		// Face
+		out[0].front_face( in.front_face() );
+		out[1].front_face( in.front_face() );
+		out[4].front_face( in.front_face() );
+		out[5].front_face( in.front_face() );
+
+		return *out;
+	}
+	template <int N>
 	vs_output& step1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
 	{
 		out.position() = in.position() + derivation.position();
@@ -694,6 +794,7 @@ vs_output_op gen_vs_output_op_n()
 	ret.step_2d_unproj = step_2d_unproj_n<N>;
     ret.step_2d_unproj_pos = step_2d_unproj_pos;
     ret.step_2d_unproj_attr = step_2d_unproj_attr_n<N>;
+	ret.step_2d_unproj_attr_quad = step_2d_unproj_attr_n_quad<N>;
 
 	ret.step1		= step1_n<N>;
 	ret.step_1d		= step_1d_n<N>;

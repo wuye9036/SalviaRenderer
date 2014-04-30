@@ -12,16 +12,6 @@
 #ifdef _MSC_VER
 #	define EFLIB_MSVC
 #	define EFILB_COMPILE_VER _MSC_VER
-#	define _SECURE_SCL 0
-#	pragma warning(disable: 4251 4275 4819)
-#	ifndef _CRT_SECURE_NO_DEPRECATE
-#		define _CRT_SECURE_NO_DEPRECATE
-#		define _CRT_SECURE_NO_WARNINGS
-#	endif
-#	ifndef _SCL_SECURE_NO_DEPRECATE
-#		define _SCL_SECURE_NO_DEPRECATE
-#		define _SCL_SECURE_NO_WARNINGS
-#	endif
 #elif defined(__MINGW32__)
 #	include <_mingw.h>
 #	define EFLIB_MINGW
