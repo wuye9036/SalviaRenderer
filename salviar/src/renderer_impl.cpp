@@ -242,8 +242,8 @@ result renderer_impl::set_render_targets(size_t color_target_count, surface_ptr 
         auto const& color_target = color_targets[i];
         if(color_target.get() != nullptr)
         {
-            target_vp.w = std::min<float>(static_cast<float>(color_target->get_width()), target_vp.w);
-            target_vp.h = std::min<float>(static_cast<float>(color_target->get_height()), target_vp.h);
+            target_vp.w = std::min<float>(static_cast<float>(color_target->width()), target_vp.w);
+            target_vp.h = std::min<float>(static_cast<float>(color_target->height()), target_vp.h);
 
             if(target_sample_count == 0)
             {
@@ -272,16 +272,16 @@ result renderer_impl::set_render_targets(size_t color_target_count, surface_ptr 
 		if(color_target_count == 0)
 		{
 			target_sample_count = ds_target->sample_count();
-			target_vp.w = static_cast<float>(ds_target->get_width());
-            target_vp.h = static_cast<float>(ds_target->get_height());
+			target_vp.w = static_cast<float>(ds_target->width());
+            target_vp.h = static_cast<float>(ds_target->height());
 		}
 
-        if(static_cast<float>(ds_target->get_width()) < target_vp.w)
+        if(static_cast<float>(ds_target->width()) < target_vp.w)
         {
             return result::failed;
         }
 
-        if(static_cast<float>(ds_target->get_height()) < target_vp.h)
+        if(static_cast<float>(ds_target->height()) < target_vp.h)
         {
             return result::failed;
         }

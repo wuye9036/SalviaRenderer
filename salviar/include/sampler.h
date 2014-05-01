@@ -69,8 +69,9 @@ private:
 		float x, float y, size_t sample,
 		sampler_state ss) const;
 
+	template <int FaceStride>
 	color_rgba32f sample_impl(
-		const texture *tex ,
+		const texture* tex,
 		float coordx, float coordy,
 		size_t sample, float miplevel,
 		float ratio, eflib::vec4 const& long_axis) const;

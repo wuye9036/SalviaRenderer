@@ -92,8 +92,8 @@ public:
 
 	void present_impl()
 	{
-		size_t		 surface_width  = resolved_surface_->get_width();
-		size_t		 surface_height = resolved_surface_->get_height();
+		size_t		 surface_width  = resolved_surface_->width();
+		size_t		 surface_height = resolved_surface_->height();
 		pixel_format surf_format = resolved_surface_->get_pixel_format();
 
 		glViewport(

@@ -641,9 +641,9 @@ void framebuffer::clear_depth_stencil(surface* tar, uint32_t flag, float depth, 
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	for(size_t y = 0; y < tar->get_height(); ++y)
+	for(size_t y = 0; y < tar->height(); ++y)
 	{
-		for(size_t x = 0; x < tar->get_width(); ++x)
+		for(size_t x = 0; x < tar->width(); ++x)
 		{
 			pixel_accessor target_pixel(nullptr, tar);
 			target_pixel.set_pos(x, y);
