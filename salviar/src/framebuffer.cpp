@@ -563,7 +563,7 @@ framebuffer::~framebuffer()
 {
 }
 
-void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
+void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth, bool front_face)
 {
 	EFLIB_ASSERT(cpp_bs, "Blend shader is null or invalid.");
 	if(!cpp_bs) return;
@@ -578,11 +578,11 @@ void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, si
     read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
 
     bool depth_passed	= ds_state_->depth_test(depth, old_depth);
-    bool stencil_passed = ds_state_->stencil_test(ps.front_face, stencil_ref_, old_stencil);
+    bool stencil_passed = ds_state_->stencil_test(front_face, stencil_ref_, old_stencil);
 
 	if (depth_passed && stencil_passed)
 	{
-		int32_t new_stencil = ds_state_->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref_, old_stencil);
+		int32_t new_stencil = ds_state_->stencil_operation(front_face, depth_passed, stencil_passed, stencil_ref_, old_stencil);
 		cpp_bs->execute(i_sample, target_pixel, ps);
         write_depth_stencil_(ds_data, depth, new_stencil, stencil_write_mask_);
 	}

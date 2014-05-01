@@ -20,9 +20,9 @@ using boost::make_shared;
 
 texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
 {
-	width_  = width;
-	height_ = height;
-	fmt_    = format;
+	fmt_  = format;
+	sample_count_ = num_samples;
+	size_ = int4(width, height, 1, 0);
 	surfs_.push_back( make_shared<surface>(width, height, num_samples, format) );
 }
 
@@ -88,26 +88,6 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 			break;
 		}
 	}
-}
-
-surface_ptr const& texture_2d::get_surface(size_t subresource) const
-{
-	return surfs_[subresource];
-}
-
-size_t texture_2d::get_width(size_t subresource) const
-{
-	return get_surface(subresource)->get_width();
-}
-
-size_t texture_2d::get_height(size_t subresource) const
-{
-	return get_surface(subresource)->get_height();
-}
-
-size_t texture_2d::get_depth(size_t /*subresource*/) const
-{
-	return 1;
 }
 
 size_t texture_2d::sample_count(size_t subresource) const

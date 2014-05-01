@@ -284,37 +284,35 @@ public:
 
 class cpp_pixel_shader : public cpp_shader_impl
 {
-	friend class rasterizer;
-
-	triangle_info const*	tri_info_;
-	vs_output const*		ppxin_;
+	bool					front_face_;
+	vs_output const*		px_;
+	vs_output const*		quad_;
 
 protected:
-	const eflib::vec4& get_pos_ddx() const;
-	const eflib::vec4& get_pos_ddy() const;
+	bool front_face() const	{ return front_face_; }
 
-	// unproj_dd? = dd?(proj_attr)
-	const eflib::vec4& unproj_ddx(size_t iReg) const;
-	const eflib::vec4& unproj_ddy(size_t iReg) const;
+	eflib::vec4	  ddx(size_t iReg) const;
+	eflib::vec4   ddy(size_t iReg) const;
 
-	// dd? = dd?(proj_attr/proj_attr.w)
-	const eflib::vec4 ddx(size_t iReg) const;
-	const eflib::vec4 ddy(size_t iReg) const;
-
-	color_rgba32f tex2d(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float bias = 0);
 	color_rgba32f tex2d(const sampler& s, size_t iReg);
 	color_rgba32f tex2dlod(const sampler& s, size_t iReg);
     color_rgba32f tex2dlod(sampler const& s, eflib::vec4 const& coord_with_lod);
 	color_rgba32f tex2dproj(const sampler& s, size_t iReg);
-	color_rgba32f tex2dproj(const sampler& s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy);
 
 	color_rgba32f texcube(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float bias = 0);
 	color_rgba32f texcube(const sampler&s, size_t iReg);
 	color_rgba32f texcubelod(const sampler& s, size_t iReg);
 	color_rgba32f texcubeproj(const sampler& s, size_t iReg);
 	color_rgba32f texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy);
+
 public:
-	bool execute(const vs_output& in, ps_output& out);
+	void update_front_face(bool v)
+	{
+		front_face_ = v;
+	}
+
+	bool execute(vs_output const* quad_in, vs_output const& px_in, ps_output& px_out);
+	
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
     virtual bool output_depth() const;
 };

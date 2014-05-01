@@ -65,11 +65,6 @@ void clipper::clip_solid_triangle(vs_output** tri_verts, clip_results* results)
 	results->num_clipped_verts = (tri_clip_results.num_clipped_verts - 2) * 3;
 	results->is_front = tri_clip_results.is_front;
 
-	for (uint32_t i = 0; i < tri_clip_results.num_clipped_verts; ++i)
-	{
-		tri_clip_results.clipped_verts[i]->front_face(tri_clip_results.is_front);
-	}
-
 	vs_output** clipped_cursor = results->clipped_verts;
 	for(size_t i_tri = 1; i_tri < results->num_clipped_verts-1; ++i_tri)
 	{
@@ -130,7 +125,7 @@ void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results
 			tri_verts[2]->position()
 			);
 		// If triangle is culled, return 0.
-		if( ctxt_.cull(results->is_front ? 1.0 : -1.0) )
+		if( ctxt_.cull(results->is_front ? 1.0f : -1.0f) )
 		{
 			results->num_clipped_verts = 0;
 			return;

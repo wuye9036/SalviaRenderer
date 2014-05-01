@@ -53,6 +53,11 @@ size_t texture_cube::get_depth(size_t /*subresource*/) const
 	return 1;
 }
 
+int4 texture_cube::get_int_size(size_t subresource) const
+{
+	return get_surface(subresource)->get_int_size();
+}
+
 size_t texture_cube::sample_count(size_t subresource) const
 {
 	return get_surface(subresource)->sample_count();

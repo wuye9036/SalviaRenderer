@@ -58,24 +58,11 @@ private:
 	filter_op_type  filters_[sampler_state_count];
 
 	float calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const;
-	float calc_lod(
-		const eflib::vec4& unproj_attr, 
-		const eflib::int4& size, 
-		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
-		float inv_x_w, float inv_y_w, float inv_w, float bias) const;
-
+	
 	void calc_anisotropic_lod(
 		eflib::int4 const& size,
 		eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
 		float& out_lod, float& out_ratio, eflib::vec4& out_long_axis ) const;
-
-	void calc_anisotropic_lod(
-		const eflib::vec4& unproj_attr, 
-		const eflib::int4& size, 
-		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
-		float inv_x_w, float inv_y_w, float inv_w, float bias,
-		float& out_lod, float& out_ratio, eflib::vec4& out_long_axis
-		) const;
 
 	color_rgba32f sample_surface(
 		const surface& surf,
@@ -88,30 +75,10 @@ private:
 		size_t sample, float miplevel,
 		float ratio, eflib::vec4 const& long_axis) const;
 
-	color_rgba32f sample_impl(const texture *tex , 
-		float coordx, float coordy, size_t sample, 
-		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
-		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
-
-	color_rgba32f sample_2d_impl(const texture *tex , 
-		const eflib::vec4& coord, size_t sample,
-		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
-		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
-
 public:
 	explicit sampler(const sampler_desc& desc, texture_ptr const& tex);
 
 	color_rgba32f sample(float coordx, float coordy, float miplevel) const;
-
-	color_rgba32f sample(
-		float coordx, float coordy, 
-		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
-		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
-
-	color_rgba32f sample_2d(
-		const eflib::vec4& proj_coord,
-		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
-		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d_lod( eflib::vec2 const& proj_coord, float lod ) const;
 
@@ -128,13 +95,6 @@ public:
 	color_rgba32f sample_cube(
 		float coordx, float coordy, float coordz,
 		float miplevel
-		) const;
-
-	color_rgba32f sample_cube(
-		const eflib::vec4& coord,
-		const eflib::vec4& unproj_ddx,
-		const eflib::vec4& unproj_ddy,
-		float inv_x_w, float inv_y_w, float inv_w, float lod_bias
 		) const;
 };
 

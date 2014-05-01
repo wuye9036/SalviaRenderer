@@ -109,9 +109,6 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 		}
 
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		triangle_info info;
-		// info.set(start->position(), ddx, ddy);
-		cpp_ps->tri_info_ = &info;
 
 		float fsx = fast_floor(start->position().x() + 0.5f);
 
@@ -146,11 +143,13 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 
 			// Render pixel.
 			vso_ops_->unproject(unprojed, px_in);
+
+#if 0
 			if(cpp_ps->execute(unprojed, px_out))
 			{
 				frame_buffer_->render_sample(cpp_bs_, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
 			}
-
+#endif
 			// Increment ddx
 			++ step;
 			vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
@@ -169,10 +168,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 		}
 
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		triangle_info info;
-		// info.set(start->position(), ddx, ddy);
-		cpp_ps->tri_info_ = &info;
-
+		
 		float fsy = fast_floor(start->position().y() + 0.5f);
 
 		int sy = fast_floori(fsy);
@@ -201,11 +197,13 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 			}
 
 			vso_ops_->unproject(unprojed, px_in);
+
+#if 0
 			if(cpp_ps->execute(unprojed, px_out))
 			{
 				frame_buffer_->render_sample(cpp_bs_, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
 			}
-
+#endif
 			++ step;
 			vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
@@ -382,7 +380,7 @@ void rasterizer::draw_full_tile(
 		        }
 #endif
 	        }
-            draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
+
 #if 0
 			for(int i = 0; i < 16; ++i)
 			{
@@ -395,6 +393,8 @@ void rasterizer::draw_full_tile(
 			}
 			printf("\n");
 #endif
+
+			draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
 		}
 	}
 
@@ -838,8 +838,6 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 		TVT_PIXEL
 	};
 
-	if( !psu ){ cpp_ps->tri_info_ = tri_info; }
-
 	float const x_min = tri_info->bounding_box[0] - vp.x;
 	float const x_max = tri_info->bounding_box[1] - vp.x;
 	float const y_min = tri_info->bounding_box[2] - vp.y;
@@ -897,6 +895,10 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
     tri_ctx.aa_z_offset = aa_z_offset;
     tri_ctx.pixel_stat  = ctx->pixel_stat;
 	tri_ctx.tri_info	= tri_info;
+	if (cpp_ps != nullptr)
+	{
+		cpp_ps->update_front_face(tri_info->front_face);
+	}
 
 	while (test_region_size[src_stage] > 0)
 	{
@@ -1145,6 +1147,8 @@ void rasterizer::compute_triangle_info(uint32_t i)
 	float area = cross_prod2(e02.position().xy(), e01.position().xy());
 	// Return for zero-area triangle.
 	if( equal<float>(area, 0.0f) ) return;
+
+	tri_info->front_face = area > 0.0f;
 	float inv_area = 1.0f / area;
 
 	// Compute bounding box
@@ -1189,6 +1193,7 @@ void rasterizer::compute_triangle_info(uint32_t i)
 
 	tri_info->v0 = reordered_verts[0];
 }
+
 void rasterizer::threaded_rasterize_multi_prim(thread_context const* thread_ctx)
 {
 	viewport tile_vp;
@@ -1459,6 +1464,7 @@ void rasterizer::draw_package(
     auto cpp_ps = shaders->cpp_ps;
     auto cpp_bs = shaders->cpp_bs;
     auto aa_z_offset = triangle_ctx->aa_z_offset;
+	bool front_face  = triangle_ctx->tri_info->front_face;
 
 	uint32_t const full_mask = (1UL << target_sample_count_) - 1;
 
@@ -1466,7 +1472,6 @@ void rasterizer::draw_package(
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
 		pso[i].depth = pixels[i].position().z();
-		pso[i].front_face = pixels[i].front_face();
 		pso[i].coverage = 0xFFFFFFFF;
 	}
 
@@ -1482,12 +1487,13 @@ void rasterizer::draw_package(
 		for ( int ix = 0; ix < 4; ++ix )
 		{
 			int px_index = iy * 4 + ix;
+			int quad_start = (iy & 2) * 4 + (ix & 2);
 			uint32_t mask = masks[px_index];
 
 			// No sampler need to be draw.
 			if(!mask) continue;
 			// Clipped by pixel shader.
-			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) ) continue;
+			if( !psu && !cpp_ps->execute(pixels + quad_start, pixels[px_index], pso[px_index]) ) continue;
 
             ++backend_input_pixels;
 
@@ -1497,7 +1503,7 @@ void rasterizer::draw_package(
 			// Whole pixel
 			if (1 == target_sample_count_)
             {
-				frame_buffer_->render_sample(cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+				frame_buffer_->render_sample(cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth, front_face);
 				continue;
 			}
 
@@ -1510,7 +1516,7 @@ void rasterizer::draw_package(
 				{
 					frame_buffer_->render_sample(
 						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
 					);
 				}
 			}
@@ -1521,7 +1527,7 @@ void rasterizer::draw_package(
 				{
 					frame_buffer_->render_sample(
 						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
 					);
 					mask &= mask - 1;
 				}
@@ -1542,6 +1548,7 @@ void rasterizer::draw_full_package(
     auto cpp_ps = shaders->cpp_ps;
     auto cpp_bs = shaders->cpp_bs;
     auto aa_z_offset = triangle_ctx->aa_z_offset;
+	bool front_face  = triangle_ctx->tri_info->front_face;
 
 	uint32_t const full_mask = (1UL << target_sample_count_) - 1;
 
@@ -1549,7 +1556,6 @@ void rasterizer::draw_full_package(
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
 		pso[i].depth = pixels[i].position().z();
-		pso[i].front_face = pixels[i].front_face();
 		pso[i].coverage = 0xFFFFFFFF;
 	}
 
@@ -1568,6 +1574,7 @@ void rasterizer::draw_full_package(
 			continue;
 		}
 
+		int quad_index = ( (quad & 1) << 1 ) + ( (quad & 2) << 2 );
 		// Write quad
         for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
         {
@@ -1576,7 +1583,7 @@ void rasterizer::draw_full_package(
 
 			int px_index = iy * 4 + ix;
 
-            if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) )
+            if( !psu && !cpp_ps->execute(pixels + quad_index, pixels[px_index], pso[px_index]) )
 			{
 				continue;
 			}
@@ -1588,7 +1595,7 @@ void rasterizer::draw_full_package(
 			if (1 == target_sample_count_)
 			{
 				frame_buffer_->render_sample(
-					cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+					cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth, front_face);
 				continue;
 			}
 
@@ -1600,7 +1607,7 @@ void rasterizer::draw_full_package(
 				{
 					frame_buffer_->render_sample(
 						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
 					);
 				}
 			}
@@ -1611,7 +1618,7 @@ void rasterizer::draw_full_package(
 				{
 					frame_buffer_->render_sample(
 						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
 					);
 					mask &= mask - 1;
 				}
