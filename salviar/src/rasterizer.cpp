@@ -25,6 +25,10 @@
 
 #include <algorithm>
 
+#if defined(EFLIB_MSVC)
+#include <ppl.h>
+#endif
+
 using eflib::num_available_threads;
 
 using boost::atomic;
@@ -39,6 +43,7 @@ using namespace boost;
 
 int const TILE_SIZE = 64;
 int const DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
+int const VP_PROJ_TRANSFORM_PAKCAGE_SIZE = 8;
 int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 
 struct pixel_statistic
@@ -413,9 +418,6 @@ void rasterizer::draw_partial_tile(
 	size_t sy = top - top0;
 	const uint32_t full_mask = (1UL << target_sample_count_) - 1;
 
-	uint32_t pixel_mask[4 * 4];
-	memset(pixel_mask, 0, sizeof(pixel_mask));
-
 #ifndef EFLIB_NO_SIMD
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
@@ -434,15 +436,30 @@ void rasterizer::draw_partial_tile(
 	__m128 mtop = _mm_set1_ps(top);
 	__m128 mevalue3 = _mm_sub_ps(medgez, _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
 
-	for (size_t i_sample = 0; i_sample < target_sample_count_; ++ i_sample){
+	
+	EFLIB_ALIGN(16) uint32_t pixel_mask[4 * 4];
+
+#if !defined(EFLIB_NO_SIMD)
+	__m128i zero = _mm_setzero_si128();
+	_mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 0), zero);
+	_mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 4), zero);
+	_mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 8), zero);
+	_mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 12), zero);
+#else
+	memset(pixel_mask, 0, sizeof(pixel_mask));
+#endif
+
+	for (size_t i_sample = 0; i_sample < target_sample_count_; ++ i_sample)
+	{
 		const vec2& sp = samples_pattern_[i_sample];
 		__m128 mspx = _mm_set1_ps(sp.x());
 		__m128 mspy = _mm_set1_ps(sp.y());
 
-		for(int iy = 0; iy < 4; ++ iy){
+		for(int iy = 0; iy < 4; ++ iy)
+		{
 			__m128 my = _mm_add_ps(mspy, _mm_set1_ps(iy));
 			__m128 mx = _mm_add_ps(mspx, _mm_set_ps(3, 2, 1, 0));
-
+			
 			__m128 mask_rej = _mm_setzero_ps();
 			{
 				__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(0, 0, 0, 0));
@@ -475,12 +492,9 @@ void rasterizer::draw_partial_tile(
 			__m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
 			sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
 
-			EFLIB_ALIGN(16) uint32_t store[4];
-			_mm_store_ps(reinterpret_cast<float*>(store), sample_mask);
-			pixel_mask[iy * 4 + 0] |= store[0];
-			pixel_mask[iy * 4 + 1] |= store[1];
-			pixel_mask[iy * 4 + 2] |= store[2];
-			pixel_mask[iy * 4 + 3] |= store[3];
+			__m128 stored_mask = _mm_load_ps( reinterpret_cast<float*>(pixel_mask + iy * 4) );
+			stored_mask = _mm_or_ps(sample_mask, stored_mask);
+			_mm_store_ps(reinterpret_cast<float*>(pixel_mask + iy * 4), stored_mask);
 		}
 	}
 #else
@@ -1172,23 +1186,7 @@ void rasterizer::compute_triangle_info(uint32_t i)
 
 	// Compute difference of attributes.
 	{
-		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
-		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
-		vs_output tmp0, tmp1, tmp2;
-		vso_ops_->mul(
-			tri_info->ddx,
-			vso_ops_->sub(
-				tmp2,
-				vso_ops_->mul( tmp0, e02, e01.position().y() ),
-				vso_ops_->mul( tmp1, e01, e02.position().y() )
-			), inv_area);
-		vso_ops_->mul(
-			tri_info->ddy,
-			vso_ops_->sub(
-				tmp2,
-				vso_ops_->mul( tmp0, e01, e02.position().x() ),
-				vso_ops_->mul( tmp1, e02, e01.position().x() )
-			), inv_area);
+		vso_ops_->compute_derivative(tri_info->ddx, tri_info->ddy, e01, e02, inv_area);
 	}
 
 	tri_info->v0 = reordered_verts[0];
@@ -1629,6 +1627,27 @@ void rasterizer::draw_full_package(
     triangle_ctx->pixel_stat->backend_input_pixels += (drawing_quad_count * 4);
 }
 
+void threaded_viewport_and_project_transform(
+	vs_output_functions::project proj_fn,
+	vs_output** verts,
+	viewport const* vp,
+	thread_context const* thread_ctx)
+{
+	thread_context::package_cursor current_package = thread_ctx->next_package();
+	while ( current_package.valid() )
+	{
+		auto prim_range = current_package.item_range();
+
+		for (int32_t i = prim_range.first; i < prim_range.second; ++ i)
+		{
+			vs_output* vso = verts[i];
+			viewport_transform(vso->position(), *vp);
+			proj_fn(*vso, *vso);
+		}
+		current_package = thread_ctx->next_package();
+	}
+}
+
 void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts)
 {
 	vs_output_functions::project proj_fn = vso_ops_->project;
@@ -1636,16 +1655,24 @@ void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num
 	// Gathering vs_output need to be processed.
 	vector<vs_output*> sorted;
 	sorted.insert( sorted.end(), vertexes, vertexes+num_verts );
+
+#if defined(EFLIB_MSVC)
+	concurrency::parallel_sort( sorted.data(), sorted.data() + sorted.size() );
+#else
 	std::sort( sorted.begin(), sorted.end() );
+#endif
+
 	sorted.erase( std::unique(sorted.begin(), sorted.end()), sorted.end() );
 
-	// Transform vertex
-	for(vector<vs_output*>::iterator iter = sorted.begin(); iter != sorted.end(); ++iter)
-	{
-		vs_output* vso = *iter;
-		viewport_transform(vso->position(), *vp_);
-		proj_fn(*vso, *vso);
-	}
+	vs_output** trans_proj_verts = sorted.data();
+
+	execute_threads(
+		[this, trans_proj_verts](thread_context const* thread_ctx)
+		{
+			threaded_viewport_and_project_transform(this->vso_ops_->project, trans_proj_verts, this->vp_, thread_ctx);
+		},
+		static_cast<int>( sorted.size() ), VP_PROJ_TRANSFORM_PAKCAGE_SIZE
+	);
 }
 
 END_NS_SALVIAR();

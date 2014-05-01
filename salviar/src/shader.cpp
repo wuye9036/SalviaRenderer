@@ -483,6 +483,50 @@ namespace vs_output_op_funcs
 	{
 		return mul_n<N>(out, vso0, 1 / f);
 	}
+
+	template <int N>
+	void compute_derivative_n(vs_output& ddx, vs_output& ddy, vs_output const& e01, vs_output const& e02, float inv_area)
+	{
+		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
+		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
+
+#if !defined(EFLIB_NO_SIMD)
+		__m128*        mddx  = reinterpret_cast<__m128*>( ddx.raw_data() );
+		__m128*        mddy  = reinterpret_cast<__m128*>( ddy.raw_data() );
+		__m128 const * me01  = reinterpret_cast<__m128 const*>( e01.raw_data() );
+		__m128 const * me02  = reinterpret_cast<__m128 const*>( e02.raw_data() );
+
+		__m128 me01x = _mm_shuffle_ps(me01[0], me01[0], _MM_SHUFFLE(0, 0, 0, 0));
+		__m128 me01y = _mm_shuffle_ps(me01[0], me01[0], _MM_SHUFFLE(1, 1, 1, 1));
+		
+		__m128 me02x = _mm_shuffle_ps(me02[0], me02[0], _MM_SHUFFLE(0, 0, 0, 0));
+		__m128 me02y = _mm_shuffle_ps(me02[0], me02[0], _MM_SHUFFLE(1, 1, 1, 1));
+
+		__m128 minv_area = _mm_set_ps1(inv_area);
+
+		for(int i = 0; i < N + 1; ++i)
+		{
+			__m128 x_diff = _mm_sub_ps(
+				_mm_mul_ps(me02[i], me01y),
+				_mm_mul_ps(me01[i], me02y)
+				);
+
+			__m128 y_diff = _mm_sub_ps(
+				_mm_mul_ps(me01[i], me02x),
+				_mm_mul_ps(me02[i], me01x)
+				);
+
+			mddx[i] = _mm_mul_ps(x_diff, minv_area);
+			mddy[i] = _mm_mul_ps(y_diff, minv_area);
+		}
+#else
+		for(int i = 0; i < N + 1; ++i)
+		{
+			ddx.raw_data()[i] = inv_area * ( e02.raw_data()[i] * e01.position().y() - e01.raw_data()[i] * e02.position().y() );
+			ddy.raw_data()[i] = inv_area * ( e01.raw_data()[i] * e02.position().x() - e02.raw_data()[i] * e01.position().x() );
+		}
+#endif
+	}
 }
 
 template <int N>
@@ -525,6 +569,7 @@ vs_output_op gen_vs_output_op_n()
     ret.step_2d_unproj_pos = step_2d_unproj_pos;
     ret.step_2d_unproj_attr = step_2d_unproj_attr_n<N>;
 	ret.step_2d_unproj_attr_quad = step_2d_unproj_attr_n_quad<N>;
+	ret.compute_derivative = compute_derivative_n<N>;
 
 	return ret;
 }

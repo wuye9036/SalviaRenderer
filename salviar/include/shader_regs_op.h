@@ -38,6 +38,8 @@ namespace vs_output_functions
 	typedef vs_output& (*mul)			(vs_output& out, const vs_output& vso0, float f);
 	typedef vs_output& (*div)			(vs_output& out, const vs_output& vso0, float f);
 
+	typedef void (*compute_derivative)	(vs_output& ddx, vs_output& ddy, vs_output const& e01, vs_output const& e02, float inv_area);
+
 	typedef vs_output& (*lerp)			(vs_output& out, const vs_output& start, const vs_output& end, float step);
 	typedef vs_output& (*step_2d_unproj)(
 		vs_output& out, vs_output const& start,
@@ -72,6 +74,9 @@ struct vs_output_op
     vs_output_functions::step_2d_unproj	step_2d_unproj_attr;
 	vs_output_functions::step_2d_unproj_quad
 										step_2d_unproj_attr_quad;
+
+	vs_output_functions::compute_derivative
+										compute_derivative;
 
 	typedef boost::array<uint32_t, MAX_VS_OUTPUT_ATTRS> interpolation_modifier_array;
 	interpolation_modifier_array		attribute_modifiers;
