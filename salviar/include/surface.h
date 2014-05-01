@@ -43,6 +43,11 @@ public:
 		return height_;
 	}
 
+	eflib::int4 get_int_size() const
+	{
+		return eflib::int4(static_cast<int>(width_), static_cast<int>(height_), 1, 0);
+	}
+
 	size_t sample_count() const
     {
 		return num_samples_;

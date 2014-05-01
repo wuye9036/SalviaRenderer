@@ -753,8 +753,7 @@ color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod )
 
 color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
 {
-	int4 size(static_cast<int>(tex_->get_width(0)), static_cast<int>(tex_->get_height(0)),
-		static_cast<int>(tex_->get_depth(0)), 0);
+	int4 size = tex_->get_int_size(0);
 
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
@@ -805,18 +804,6 @@ void sampler::calc_anisotropic_lod(
 	if(rho == 0.0f) rho = 0.000001f;
 	lambda = fast_log2(rho);
 	out_lod = lambda + bias;
-}
-
-void sampler::calc_anisotropic_lod(
-	const eflib::vec4& unproj_attr,
-	const eflib::int4& size, const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
-	float inv_x_w, float inv_y_w, float inv_w, float bias,
-	float& out_lod, float& out_ratio, vec4& out_long_axis ) const
-{
-	eflib::vec4 ddx2 = (unproj_attr + unproj_ddx) * inv_x_w - unproj_attr * inv_w;
-	eflib::vec4 ddy2 = (unproj_attr + unproj_ddy) * inv_y_w - unproj_attr * inv_w;
-
-	calc_anisotropic_lod(size, ddx2, ddy2, bias, out_lod, out_ratio, out_long_axis);
 }
 
 END_NS_SALVIAR();

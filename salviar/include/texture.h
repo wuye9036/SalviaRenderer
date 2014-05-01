@@ -52,10 +52,11 @@ public:
 
 	virtual surface_ptr const& get_surface(size_t subresource) const = 0;
 	
-	virtual size_t get_width(size_t subresource) const= 0;
-	virtual size_t get_height(size_t subresource) const= 0;
-	virtual size_t get_depth(size_t subresource) const= 0;
-	virtual size_t sample_count(size_t subresource) const= 0;
+	virtual size_t		get_width(size_t subresource)    const = 0;
+	virtual size_t		get_height(size_t subresource)   const = 0;
+	virtual size_t		get_depth(size_t subresource)    const = 0;
+	virtual eflib::int4 get_int_size(size_t subresource) const = 0;
+	virtual size_t		sample_count(size_t subresource) const = 0;
 	
 	virtual void set_max_lod(size_t miplevel) = 0;
 	virtual void set_min_lod(size_t miplevel) = 0;
@@ -82,10 +83,11 @@ public:
 
 	virtual surface_ptr const& get_surface(size_t subresource) const;
 
-	virtual size_t get_width(size_t subresource) const;
-	virtual size_t get_height(size_t subresource) const;
-	virtual size_t get_depth(size_t subresource) const;
-	virtual size_t sample_count(size_t subresource) const;
+	virtual size_t		get_width(size_t subresource) const;
+	virtual size_t		get_height(size_t subresource) const;
+	virtual size_t		get_depth(size_t subresource) const;
+	virtual eflib::int4 get_int_size(size_t subresource) const;
+	virtual size_t		sample_count(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);
@@ -110,10 +112,11 @@ public:
 	virtual surface_ptr     const& get_surface(size_t subresource) const;
 	virtual texture_2d_ptr  const& get_face(cubemap_faces face) const;
 
-	virtual size_t get_width(size_t subresource) const;
-	virtual size_t get_height(size_t subresource) const;
-	virtual size_t get_depth(size_t subresource) const;
-	virtual size_t sample_count(size_t subresource) const;
+	virtual size_t		get_width(size_t subresource) const;
+	virtual size_t		get_height(size_t subresource) const;
+	virtual size_t		get_depth(size_t subresource) const;
+	virtual eflib::int4 get_int_size(size_t subresource) const;
+	virtual size_t		sample_count(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);
