@@ -7,6 +7,7 @@
 #include <eflib/include/math/collision_detection.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -17,6 +18,9 @@
 BEGIN_NS_SALVIAR();
 
 struct internal_mapped_resource;
+
+class surface;
+typedef boost::shared_ptr<surface> surface_ptr;
 
 class surface
 {
@@ -29,6 +33,7 @@ public:
 	result unmap(internal_mapped_resource& mapped, map_mode mm);
 
 	void resolve(surface& target);
+	surface_ptr make_mip_surface(filter_type filter);
 
 	void transfer(pixel_format srcfmt, const eflib::rect<size_t>& dest_rect, void* pdata);
 	void transfer(const eflib::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);

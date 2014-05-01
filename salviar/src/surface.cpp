@@ -1,6 +1,10 @@
 #include <salviar/include/surface.h>
 #include <salviar/include/internal_mapped_resource.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/make_shared.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <memory.h>
 
 using eflib::int4;
@@ -15,7 +19,7 @@ const size_t TILE_MASK = TILE_SIZE - 1;
 
 surface::surface(size_t w, size_t h, size_t samp_count, pixel_format fmt)
 		: format_(fmt)
-		, size_(static_cast<int>(w), static_cast<int>(h), 1, 0),
+		, size_(static_cast<int>(w), static_cast<int>(h), 1, 0)
 		, sample_count_(samp_count), elem_size_(color_infos[fmt].size)
 {
 #if SALVIA_TILED_SURFACE
@@ -49,6 +53,57 @@ surface::~surface()
 {
 }
 
+surface_ptr surface::make_mip_surface(filter_type filter)
+{
+	int mip_w = ( width()  + 1 ) / 2;
+	int mip_h = ( height() + 1 ) / 2;
+
+	auto ret = boost::make_shared<surface>(mip_w, mip_h, sample_count_, format_);
+
+	switch (filter)
+	{
+	case filter_point:
+		for(size_t y = 0; y < mip_h; ++y)
+        {
+			for(size_t x = 0; x < mip_w; ++x)
+            {
+				for(size_t s = 0; s < sample_count_; ++s)
+				{
+					color_rgba32f c = get_texel(x*2, y*2, s);
+					ret->set_texel(x, y, s, c);
+				}
+			}
+		}
+		break;
+
+	case filter_linear:
+		for(size_t y = 0; y < mip_h; ++y)
+        {
+			for(size_t x = 0; x < mip_w; ++x)
+            {
+				for(size_t s = 0; s < sample_count_; ++s)
+				{
+					color_rgba32f c[4] =
+					{
+						get_texel(x*2+0, y*2+0, s),
+						get_texel(x*2+1, y*2+0, s),
+						get_texel(x*2+0, y*2+1, s),
+						get_texel(x*2+1, y*2+1, s)
+					};
+
+					color_rgba32f dst_color(
+						(c[0].get_vec4() + c[1].get_vec4() + c[2].get_vec4() + c[3].get_vec4()) * 0.25f
+						);
+					ret->set_texel(x, y, s, dst_color);
+				}
+			}
+		}
+		break;
+	}
+
+	return ret;
+}
+
 result surface::map(internal_mapped_resource& mapped, map_mode mm)
 {
 #if SALVIA_TILED_SURFACE
@@ -69,7 +124,7 @@ result surface::map(internal_mapped_resource& mapped, map_mode mm)
 		break;
 	}
 
-	mapped.row_pitch = static_cast<uint32_t>( get_pitch() );
+	mapped.row_pitch = static_cast<uint32_t>( pitch() );
 	mapped.depth_pitch = static_cast<uint32_t>(mapped.row_pitch * size_[1]);
 
 	return result::ok;

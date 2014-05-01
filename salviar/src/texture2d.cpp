@@ -34,59 +34,11 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 		min_lod_ = calc_lod_limit(size_) - 1;
 	}
 
-	size_t cur_width    = surfs_[max_lod_]->width();
-	size_t cur_height   = surfs_[max_lod_]->height();
-	size_t num_samples  = surfs_[max_lod_]->sample_count();
+	surfs_.reserve(min_lod_ + 1);
 
-	surfs_.resize(min_lod_ + 1);
-
-	for(size_t lod_level = max_lod_ + 1; lod_level <= min_lod_; ++lod_level)
+	for(size_t lod_level = max_lod_; lod_level < min_lod_; ++lod_level)
 	{
-		cur_width =  (cur_width + 1) / 2;
-		cur_height = (cur_height + 1) / 2;
-
-		surfs_[lod_level] = make_shared<surface>(cur_width, cur_height, num_samples, fmt_);
-
-		switch (filter)
-		{
-		case filter_point:
-			for(size_t y = 0; y < cur_height; ++y)
-            {
-				for(size_t x = 0; x < cur_width; ++x)
-                {
-					for(size_t s = 0; s < num_samples; ++s)
-					{
-						color_rgba32f c = surfs_[lod_level-1]->get_texel(x*2, y*2, s);
-						surfs_[lod_level]->set_texel(x, y, s, c);
-					}
-				}
-			}
-			break;
-
-		case filter_linear:
-			for(size_t y = 0; y < cur_height; ++y)
-            {
-				for(size_t x = 0; x < cur_width; ++x)
-                {
-					for(size_t s = 0; s < num_samples; ++s)
-					{
-						color_rgba32f c[4] =
-						{
-							surfs_[lod_level-1]->get_texel(x*2+0, y*2+0, s),
-							surfs_[lod_level-1]->get_texel(x*2+1, y*2+0, s),
-							surfs_[lod_level-1]->get_texel(x*2+0, y*2+1, s),
-							surfs_[lod_level-1]->get_texel(x*2+1, y*2+1, s)
-						};
-
-						color_rgba32f dst_color(
-							(c[0].get_vec4() + c[1].get_vec4() + c[2].get_vec4() + c[3].get_vec4()) * 0.25f
-							);
-						surfs_[lod_level]->set_texel(x, y, s, dst_color);
-					}
-				}
-			}
-			break;
-		}
+		surfs_.push_back( surfs_.back()->make_mip_surface(filter) );
 	}
 }
 

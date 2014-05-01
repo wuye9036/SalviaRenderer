@@ -15,15 +15,26 @@ texture_cube::texture_cube(size_t width, size_t height, size_t num_samples, pixe
 {
 	for(size_t i = 0; i < 6; ++i)
 	{
-		faces_[i] = make_shared<texture_2d>(width, height, num_samples, format);
+		surfs_.push_back( make_shared<surface>(width, height, num_samples, format) );
 	}
 }
 
 void texture_cube::gen_mipmap(filter_type filter, bool auto_gen)
 {
-	for(size_t i = 0; i < 6; ++i)
+	if(auto_gen)
     {
-		faces_[i]->gen_mipmap(filter, auto_gen);
+		max_lod_ = 0;
+		min_lod_ = calc_lod_limit(size_) - 1;
+	}
+
+	surfs_.reserve( (min_lod_ + 1) * 6 );
+
+	for(size_t lod_level = max_lod_; lod_level < min_lod_; ++lod_level)
+	{
+		for(int i_face = 0; i_face < 6; ++i_face)
+		{
+			surfs_.push_back( subresource(i_face, lod_level)->make_mip_surface(filter) );
+		}
 	}
 }
 

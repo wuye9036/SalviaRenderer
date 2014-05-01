@@ -68,7 +68,7 @@ public:
 	
 	surface_ptr const& subresource(size_t index) const
 	{
-		EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
+		EFLIB_ASSERT(max_lod_ <= index && index <= min_lod_, "Mipmap level is out of bound.");
 		return surfs_[index];
 	}
 	
@@ -122,6 +122,11 @@ public:
 	{
 		return texture_type_cube;
 	};
+
+	surface_ptr const& subresource(int face, int lod) const
+	{
+		return texture::subresource(lod * 6 + face);
+	}
 
 	virtual void gen_mipmap(filter_type filter, bool auto_gen);
 };

@@ -121,10 +121,10 @@ namespace addresser
 			int selection_coord_y = fast_floori(coord[1]);
 			vec4 o_coord((selection_coord_x & 1
 				? 1 + selection_coord_x - coord[0]
-				: coord[0] - selection_coord_x) * size[0],
+			: coord[0] - selection_coord_x) * size[0],
 				(selection_coord_y & 1
 				? 1 + selection_coord_y - coord[1]
-				: coord[1] - selection_coord_y) * size[1],
+			: coord[1] - selection_coord_y) * size[1],
 				0, 0);
 
 #ifndef EFLIB_NO_SIMD
@@ -157,10 +157,10 @@ namespace addresser
 			int selection_coord_y = fast_floori(coord[1]);
 			vec4 o_coord((selection_coord_x & 1
 				? 1 + selection_coord_x - coord[0]
-				: coord[0] - selection_coord_x) * size[0] - 0.5f,
+			: coord[0] - selection_coord_x) * size[0] - 0.5f,
 				(selection_coord_y & 1
 				? 1 + selection_coord_y - coord[1]
-				: coord[1] - selection_coord_y) * size[1] - 0.5f,
+			: coord[1] - selection_coord_y) * size[1] - 0.5f,
 				0, 0);
 
 #ifndef EFLIB_NO_SIMD
@@ -434,15 +434,15 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color)
 		{
-            int4 region_size(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0);
+			int4 region_size(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0);
 			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0), region_size);
 
-            if( 0 <= ixy[0] && ixy[0] < region_size[0] && 0 <= ixy[1] && ixy[1] < region_size[1] )
-            {
-                return surf.get_texel(ixy[0], ixy[1], sample);
-            }
+			if( 0 <= ixy[0] && ixy[0] < region_size[0] && 0 <= ixy[1] && ixy[1] < region_size[1] )
+			{
+				return surf.get_texel(ixy[0], ixy[1], sample);
+			}
 
-            return border_color;
+			return border_color;
 		}
 	};
 
@@ -465,54 +465,54 @@ namespace surface_sampler
 		{
 			{
 				point<addresser::wrap, addresser::wrap>::op,
-				point<addresser::wrap, addresser::mirror>::op,
-				point<addresser::wrap, addresser::clamp>::op,
-				point<addresser::wrap, addresser::border>::op
+					point<addresser::wrap, addresser::mirror>::op,
+					point<addresser::wrap, addresser::clamp>::op,
+					point<addresser::wrap, addresser::border>::op
 			},
 			{
 				point<addresser::mirror, addresser::wrap>::op,
-				point<addresser::mirror, addresser::mirror>::op,
-				point<addresser::mirror, addresser::clamp>::op,
-				point<addresser::mirror, addresser::border>::op
-			},
-			{
-				point<addresser::clamp, addresser::wrap>::op,
-				point<addresser::clamp, addresser::mirror>::op,
-				point<addresser::clamp, addresser::clamp>::op,
-				point<addresser::clamp, addresser::border>::op
-			},
-			{
-				point<addresser::border, addresser::wrap>::op,
-				point<addresser::border, addresser::mirror>::op,
-				point<addresser::border, addresser::clamp>::op,
-				point<addresser::border, addresser::border>::op
-			}
+					point<addresser::mirror, addresser::mirror>::op,
+					point<addresser::mirror, addresser::clamp>::op,
+					point<addresser::mirror, addresser::border>::op
+				},
+				{
+					point<addresser::clamp, addresser::wrap>::op,
+						point<addresser::clamp, addresser::mirror>::op,
+						point<addresser::clamp, addresser::clamp>::op,
+						point<addresser::clamp, addresser::border>::op
+				},
+				{
+					point<addresser::border, addresser::wrap>::op,
+						point<addresser::border, addresser::mirror>::op,
+						point<addresser::border, addresser::clamp>::op,
+						point<addresser::border, addresser::border>::op
+					}
 		},
 		{
 			{
 				linear<addresser::wrap, addresser::wrap>::op,
-				linear<addresser::wrap, addresser::mirror>::op,
-				linear<addresser::wrap, addresser::clamp>::op,
-				linear<addresser::wrap, addresser::border>::op
+					linear<addresser::wrap, addresser::mirror>::op,
+					linear<addresser::wrap, addresser::clamp>::op,
+					linear<addresser::wrap, addresser::border>::op
 			},
 			{
 				linear<addresser::mirror, addresser::wrap>::op,
-				linear<addresser::mirror, addresser::mirror>::op,
-				linear<addresser::mirror, addresser::clamp>::op,
-				linear<addresser::mirror, addresser::border>::op
-			},
-			{
-				linear<addresser::clamp, addresser::wrap>::op,
-				linear<addresser::clamp, addresser::mirror>::op,
-				linear<addresser::clamp, addresser::clamp>::op,
-				linear<addresser::clamp, addresser::border>::op
-			},
-			{
-				linear<addresser::border, addresser::wrap>::op,
-				linear<addresser::border, addresser::mirror>::op,
-				linear<addresser::border, addresser::clamp>::op,
-				linear<addresser::border, addresser::border>::op
-			}
+					linear<addresser::mirror, addresser::mirror>::op,
+					linear<addresser::mirror, addresser::clamp>::op,
+					linear<addresser::mirror, addresser::border>::op
+				},
+				{
+					linear<addresser::clamp, addresser::wrap>::op,
+						linear<addresser::clamp, addresser::mirror>::op,
+						linear<addresser::clamp, addresser::clamp>::op,
+						linear<addresser::clamp, addresser::border>::op
+				},
+				{
+					linear<addresser::border, addresser::wrap>::op,
+						linear<addresser::border, addresser::mirror>::op,
+						linear<addresser::border, addresser::clamp>::op,
+						linear<addresser::border, addresser::border>::op
+					}
 		}
 	};
 }
@@ -576,54 +576,72 @@ color_rgba32f sampler::sample_surface(
 	sampler_state ss) const
 {
 	return filters_[ss](
-			surf,
-			x, y, sample,
-			desc_.border_color
-			);
+		surf,
+		x, y, sample,
+		desc_.border_color
+		);
 }
 
 sampler::sampler(sampler_desc const& desc, texture_ptr const& tex)
 	: desc_(desc)
-    , tex_(tex)
+	, tex_(tex)
 {
 	filters_[sampler_state_min] = surface_sampler::filter_table[desc_.min_filter][desc_.addr_mode_u][desc.addr_mode_v];
 	filters_[sampler_state_mag] = surface_sampler::filter_table[desc_.mag_filter][desc_.addr_mode_u][desc.addr_mode_v];
 	filters_[sampler_state_mip] = surface_sampler::filter_table[desc_.mip_filter][desc_.addr_mode_u][desc.addr_mode_v];
 }
 
-color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, size_t sample, float miplevel, float ratio, vec4 const& long_axis) const
+inline int compute_cube_subresource(std::true_type, int face, int lod_level)
 {
-	bool is_mag = true;
+	return lod_level * 6 + face;
+}
 
-	if(desc_.mip_filter == filter_point) {
-		is_mag = (miplevel < 0.5f);
-	} else {
-		is_mag = (miplevel < 0);
-	}
+inline int compute_cube_subresource(std::false_type, int /*face*/, int lod_level)
+{
+	return lod_level;
+}
+
+template <bool IsCubeTexture>
+color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t sample, float miplevel, float ratio, vec4 const& long_axis) const
+{
+	std::integral_constant<bool, IsCubeTexture> dummy;
+
+	bool is_mag
+		= (desc_.mip_filter == filter_point)
+		? (miplevel < 0.5f)
+		: (miplevel < 0.0f)
+		;
 
 	if(is_mag)
 	{
-		return sample_surface(*tex->subresource(tex->max_lod()), coordx, coordy, sample, sampler_state_mag);
+		int subres_index = compute_cube_subresource(dummy, face, tex_->max_lod() );
+		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_mag);
 	}
 
-	if(desc_.mip_filter == filter_point){
+	if(desc_.mip_filter == filter_point)
+	{
 		int ml = fast_floori(miplevel + 0.5f);
-		ml = clamp(ml, tex->max_lod(), tex->min_lod());
+		ml = clamp(ml, tex_->max_lod(), tex_->min_lod());
 
-		return sample_surface(*tex->subresource(ml), coordx, coordy, sample, sampler_state_min);
+		int subres_index = compute_cube_subresource(dummy, face, ml);
+		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_min);
 	}
 
-	if(desc_.mip_filter == filter_linear){
-		int low = fast_floori(miplevel);
-		int up = low + 1;
+	if(desc_.mip_filter == filter_linear)
+	{
+		int lo = fast_floori(miplevel);
+		int hi = lo + 1;
 
-		float frac = miplevel - low;
+		float frac = miplevel - lo;
 
-		low = clamp(low, tex->max_lod(), tex->min_lod());
-		up  = clamp(up,  tex->max_lod(), tex->min_lod());
+		lo = clamp(lo, tex_->max_lod(), tex_->min_lod());
+		hi = clamp(hi, tex_->max_lod(), tex_->min_lod());
 
-		color_rgba32f c0 = sample_surface(*tex->subresource(low), coordx, coordy, sample, sampler_state_min);
-		color_rgba32f c1 = sample_surface(*tex->subresource(up), coordx, coordy, sample, sampler_state_min);
+		int subres_index_lo = compute_cube_subresource(dummy, face, lo);
+		int subres_index_hi = compute_cube_subresource(dummy, face, hi);
+
+		color_rgba32f c0 = sample_surface(*tex_->subresource(subres_index_lo), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c1 = sample_surface(*tex_->subresource(subres_index_hi), coordx, coordy, sample, sampler_state_min);
 
 		return lerp(c0, c1, frac);
 	}
@@ -643,19 +661,22 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		float sample_coord_x = coordx + long_axis.x() * start_relative_distance;
 		float sample_coord_y = coordy + long_axis.y() * start_relative_distance;
 
-		int low = fast_floori(miplevel+miplevel_af_bias);
-		int up  = low + 1;
+		int lo = fast_floori(miplevel+miplevel_af_bias);
+		int hi  = lo + 1;
 
 		// float frac = miplevel + miplevel_af_bias - low;
 
-		low = clamp(low, tex->max_lod(), tex->min_lod());
-		up  = clamp(up,  tex->max_lod(), tex->min_lod());
+		lo = clamp(lo, tex_->max_lod(), tex_->min_lod());
+		hi = clamp(hi, tex_->max_lod(), tex_->min_lod());
 
 		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
 		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
 		{
-			color_rgba32f c0 = sample_surface(*tex->subresource(low), sample_coord_x, sample_coord_y, sample, sampler_state_min);
-			// color_rgba32f c1 = sample_surface(tex->subresource(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+			int subres_index_lo = compute_cube_subresource(dummy, face, lo);
+			color_rgba32f c0 = sample_surface(
+				*tex_->subresource(subres_index_lo), sample_coord_x, sample_coord_y, sample, sampler_state_min
+				);
+			// color_rgba32f c1 = sample_surface(tex_->subresource(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
 
 			color += c0.get_vec4(); //lerp(c0, c1, frac).get_vec4();
 
@@ -674,7 +695,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 
 color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 {
-	return sample_impl(tex_.get(), coordx, coordy, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	return sample_impl<false>(0, coordx, coordy, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 color_rgba32f sampler::sample_cube(
@@ -738,12 +759,9 @@ color_rgba32f sampler::sample_cube(
 		}
 	}
 
-	if(tex_->get_texture_type() != texture_type_cube)
-	{
-		EFLIB_ASSERT(false , "texture is not a cube texture.");
-	}
-	const texture_cube* cube_tex = static_cast<const texture_cube*>(tex_.get());
-	return sample_impl(cube_tex->get_face(major_dir).get(), s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	EFLIB_ASSERT(tex_->get_texture_type() != texture_type_cube , "texture is not a cube texture.");
+
+	return sample_impl<true>(major_dir, s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod ) const
@@ -770,7 +788,7 @@ color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec
 		ratio = 1.0f;
 	}
 
-	return sample_impl(tex_.get(), proj_coord[0], proj_coord[1], 0, lod, ratio, long_axis);
+	return sample_impl<false>(0, proj_coord[0], proj_coord[1], 0, lod, ratio, long_axis);
 }
 
 void sampler::calc_anisotropic_lod(

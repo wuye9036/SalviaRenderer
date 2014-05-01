@@ -148,7 +148,7 @@ texture_ptr load_cube(renderer* rend, const vector<_tstring>& filenames, pixel_f
 		}
 
 		texture_cube* cube_tex = static_cast<texture_cube*>(ret.get());
-		surface_ptr face_surface = cube_tex->get_face( cubemap_faces(i_cubeface) )->subresource(0);
+		surface_ptr face_surface = cube_tex->subresource(i_cubeface, 0);
 		copy_image_to_surface( face_surface, cube_img.get() );
 	}
 
