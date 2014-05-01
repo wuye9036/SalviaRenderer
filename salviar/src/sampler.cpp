@@ -407,8 +407,8 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color)
 		{
-			int ix = coord_calculator::point_cc<addresser_type_u>(x, int(surf.get_width()));
-			int iy = coord_calculator::point_cc<addresser_type_v>(y, int(surf.get_height()));
+			int ix = coord_calculator::point_cc<addresser_type_u>(x, int(surf.width()));
+			int iy = coord_calculator::point_cc<addresser_type_v>(y, int(surf.height()));
 
 			if(ix < 0 || iy < 0) return border_color;
 			return surf.get_texel(ix, iy, sample);
@@ -422,8 +422,8 @@ namespace surface_sampler
 		{
 			int xpos0, ypos0, xpos1, ypos1;
 			float tx, ty;
-			coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.get_width()));
-			coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.get_height()));
+			coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.width()));
+			coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.height()));
 
 			return surf.get_texel(xpos0, ypos0, xpos1, ypos1, tx, ty, sample);
 		}
@@ -434,7 +434,7 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color)
 		{
-            int4 region_size(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0);
+            int4 region_size(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0);
 			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0), region_size);
 
             if( 0 <= ixy[0] && ixy[0] < region_size[0] && 0 <= ixy[1] && ixy[1] < region_size[1] )
@@ -454,7 +454,7 @@ namespace surface_sampler
 			int4 pos0, pos1;
 			vec4 t;
 			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
-				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
+				int4(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0));
 
 			return surf.get_texel(pos0[0], pos0[1], pos1[0], pos1[1], t[0], t[1], sample);
 		}
@@ -603,27 +603,27 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 
 	if(is_mag)
 	{
-		return sample_surface(*tex->get_surface(tex->get_max_lod()), coordx, coordy, sample, sampler_state_mag);
+		return sample_surface(*tex->subresource(tex->max_lod()), coordx, coordy, sample, sampler_state_mag);
 	}
 
 	if(desc_.mip_filter == filter_point){
-		size_t ml = fast_floori(miplevel + 0.5f);
-		ml = clamp(ml, tex->get_max_lod(), tex->get_min_lod());
+		int ml = fast_floori(miplevel + 0.5f);
+		ml = clamp(ml, tex->max_lod(), tex->min_lod());
 
-		return sample_surface(*tex->get_surface(ml), coordx, coordy, sample, sampler_state_min);
+		return sample_surface(*tex->subresource(ml), coordx, coordy, sample, sampler_state_min);
 	}
 
 	if(desc_.mip_filter == filter_linear){
-		size_t low = fast_floori(miplevel);
-		size_t up = low + 1;
+		int low = fast_floori(miplevel);
+		int up = low + 1;
 
 		float frac = miplevel - low;
 
-		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
-		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
+		low = clamp(low, tex->max_lod(), tex->min_lod());
+		up  = clamp(up,  tex->max_lod(), tex->min_lod());
 
-		color_rgba32f c0 = sample_surface(*tex->get_surface(low), coordx, coordy, sample, sampler_state_min);
-		color_rgba32f c1 = sample_surface(*tex->get_surface(up), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c0 = sample_surface(*tex->subresource(low), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c1 = sample_surface(*tex->subresource(up), coordx, coordy, sample, sampler_state_min);
 
 		return lerp(c0, c1, frac);
 	}
@@ -643,19 +643,19 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		float sample_coord_x = coordx + long_axis.x() * start_relative_distance;
 		float sample_coord_y = coordy + long_axis.y() * start_relative_distance;
 
-		size_t low = fast_floori(miplevel+miplevel_af_bias);
-		size_t up = low + 1;
+		int low = fast_floori(miplevel+miplevel_af_bias);
+		int up  = low + 1;
 
 		// float frac = miplevel + miplevel_af_bias - low;
 
-		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
-		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
+		low = clamp(low, tex->max_lod(), tex->min_lod());
+		up  = clamp(up,  tex->max_lod(), tex->min_lod());
 
 		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
 		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
 		{
-			color_rgba32f c0 = sample_surface(*tex->get_surface(low), sample_coord_x, sample_coord_y, sample, sampler_state_min);
-			// color_rgba32f c1 = sample_surface(tex->get_surface(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+			color_rgba32f c0 = sample_surface(*tex->subresource(low), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+			// color_rgba32f c1 = sample_surface(tex->subresource(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
 
 			color += c0.get_vec4(); //lerp(c0, c1, frac).get_vec4();
 
@@ -753,7 +753,7 @@ color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod )
 
 color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
 {
-	int4 size = tex_->get_int_size(0);
+	int4 size = tex_->isize();
 
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);

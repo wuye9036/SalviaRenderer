@@ -20,7 +20,7 @@ swap_chain_impl::swap_chain_impl(
 		render_params.backbuffer_height,
 		render_params.backbuffer_num_samples,
 		render_params.backbuffer_format
-		)->get_surface(0);
+		)->subresource(0);
 
 	if( render_params.backbuffer_num_samples > 1 )
 	{
@@ -29,7 +29,7 @@ swap_chain_impl::swap_chain_impl(
 			render_params.backbuffer_height,
 			1,
 			render_params.backbuffer_format
-		)->get_surface(0);
+		)->subresource(0);
 	}
 	else
 	{

@@ -203,7 +203,7 @@ protected:
             render_params.backbuffer_height,
             render_params.backbuffer_num_samples,
             pixel_format_color_rg32f
-            )->get_surface(0);
+            )->subresource(0);
         renderer_->set_render_targets(1, &color_surface_, ds_surface_);
         
         pipeline_stat_obj_ = renderer_->create_query(async_object_ids::pipeline_statistics);

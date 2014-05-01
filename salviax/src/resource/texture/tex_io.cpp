@@ -43,10 +43,10 @@ bool copy_image_to_surface_impl(surface_ptr const& surf, FIBITMAP* image,
 	pixel_format inter_format = salvia_rgba_color_type<FIColorT>::fmt;
 	BYTE*		 source_line = FreeImage_GetBits(image);
 
-	for(size_t y = 0; y < surf->get_height(); ++y)
+	for(size_t y = 0; y < surf->height(); ++y)
 	{
 		byte* src_pixel = source_line;
-		for(size_t x = 0; x < surf->get_width(); ++x)
+		for(size_t x = 0; x < surf->width(); ++x)
 		{
 			FIUC<FIColorT> uc((typename FIUC<FIColorT>::CompT*)src_pixel, default_alpha);
 			typename salvia_rgba_color_type<FIColorT>::type c(uc.r, uc.g, uc.b, uc.a);
@@ -95,7 +95,7 @@ texture_ptr load_texture(renderer* rend, const std::_tstring& filename, pixel_fo
 
 	ret = rend->create_tex2d(src_w, src_h, 1, tex_format);
 
-	if( !copy_image_to_surface(ret->get_surface(0), img) )
+	if( !copy_image_to_surface(ret->subresource(0), img) )
 	{
 		ret.reset();
 	}
@@ -148,7 +148,7 @@ texture_ptr load_cube(renderer* rend, const vector<_tstring>& filenames, pixel_f
 		}
 
 		texture_cube* cube_tex = static_cast<texture_cube*>(ret.get());
-		surface_ptr face_surface = cube_tex->get_face( cubemap_faces(i_cubeface) )->get_surface(0);
+		surface_ptr face_surface = cube_tex->get_face( cubemap_faces(i_cubeface) )->subresource(0);
 		copy_image_to_surface( face_surface, cube_img.get() );
 	}
 
@@ -162,8 +162,8 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
 	FIBITMAP* image = NULL;
-	int surface_width  = static_cast<int>( surf->get_width() );
-	int surface_height = static_cast<int>( surf->get_height() );
+	int surface_width  = static_cast<int>( surf->width() );
+	int surface_height = static_cast<int>( surf->height() );
 
 	switch(image_format)
 	{
@@ -188,8 +188,8 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 	byte* 		 surf_data = reinterpret_cast<byte*>(mapped.data);
 	byte*		 img_data = FreeImage_GetBits(image);
 	pixel_format surf_format = surf->get_pixel_format();
-	size_t		 height = surf->get_height();
-	size_t		 width = surf->get_width();
+	size_t		 height = surf->height();
+	size_t		 width = surf->width();
 
 	for(size_t y = 0; y < height; ++y)
 	{

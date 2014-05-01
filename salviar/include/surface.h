@@ -33,34 +33,34 @@ public:
 	void transfer(pixel_format srcfmt, const eflib::rect<size_t>& dest_rect, void* pdata);
 	void transfer(const eflib::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);
 
-	size_t get_width() const
+	int width() const
     {
-		return width_;
+		return size_[0];
 	}
 
-	size_t get_height() const
+	int height() const
     {
-		return height_;
+		return size_[1];
 	}
 
-	eflib::int4 get_int_size() const
+	eflib::int4 isize() const
 	{
-		return eflib::int4(static_cast<int>(width_), static_cast<int>(height_), 1, 0);
+		return size_;
 	}
 
-	size_t sample_count() const
+	int sample_count() const
     {
-		return num_samples_;
+		return sample_count_;
 	}
 
-	size_t get_pitch() const
+	size_t pitch() const
     {
-		return width_ * num_samples_ * color_infos[pxfmt_].size;
+		return width() * sample_count_ * elem_size_;
 	}
 
 	pixel_format get_pixel_format() const
     {
-		return pxfmt_;
+		return format_;
 	}
 
     void*         texel_address(size_t x, size_t y, size_t sample);
@@ -77,13 +77,12 @@ public:
     void		  fill_texels(color_rgba32f const& color);
 
 private:
+	int				elem_size_;
+	int				sample_count_;
+	eflib::int4		size_;
+	pixel_format	format_;
 	std::vector<byte, eflib::aligned_allocator<byte, 16>>
 					datas_;
-	size_t			width_;
-	size_t			height_;
-	size_t			elem_size_;
-	pixel_format	pxfmt_;
-	size_t			num_samples_;
 
 #if SALVIA_TILED_SURFACE
 	size_t			tile_width_;

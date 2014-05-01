@@ -319,15 +319,15 @@ public:
 
 		renderer_ = create_benchmark_renderer();
 
-        color_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, color_format_)->get_surface(0);
-        ds_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, pixel_format_color_rg32f)->get_surface(0);
+        color_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, color_format_)->subresource(0);
+        ds_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, pixel_format_color_rg32f)->subresource(0);
         if(sample_count_ == 1)
         {
             resolved_color_surface_ = color_surface_;
         }
         else
         {
-            resolved_color_surface_ = renderer_->create_tex2d(width_, height_, 1, color_format_)->get_surface(0);
+            resolved_color_surface_ = renderer_->create_tex2d(width_, height_, 1, color_format_)->subresource(0);
         }
         renderer_->set_render_targets(1, &color_surface_, ds_surface_);
 

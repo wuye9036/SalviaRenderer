@@ -26,19 +26,18 @@ protected:
 	int					     sample_count_;
 	int						 min_lod_;
 	int					     max_lod_;
-	int4					 size_;
+	eflib::int4				 size_;
 	std::vector<surface_ptr> surfs_;
 
-	static size_t calc_lod_limit(size_t x, size_t y = 1, size_t z = 1)
+	static int calc_lod_limit(eflib::int4 sz)
 	{
-		assert(x > 0 && y > 0 && z > 0);
+		assert(sz[0] > 0 && sz[1] > 0 && sz[2] > 0);
 
 		int rv = 0;
-		while (x > 0 || y > 0 || z > 0)
+		int max_sz = std::max( sz[0], std::max(sz[1], sz[2]) );
+		while (max_sz > 0)
 		{
-			x >>= 1;
-			y >>= 1;
-			z >>= 1;
+			max_sz >>= 1;
 			++rv;
 		}
 
@@ -80,7 +79,7 @@ public:
 
 	eflib::int4	isize(size_t subresource_index) const
 	{
-		return subresource(subresource_index)->get_int_size();
+		return subresource(subresource_index)->isize();
 	}
 
 	size_t sample_count() const

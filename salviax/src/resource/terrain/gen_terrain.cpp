@@ -251,7 +251,7 @@ texture_ptr make_terrain_texture(renderer* rend, std::vector<float>& normalized_
 	
 	salviar::mapped_resource mapped;
 
-	rend->map(mapped, ret->get_surface(0), salviar::map_write);
+	rend->map(mapped, ret->subresource(0), salviar::map_write);
 	for(size_t y = 0; y < size; ++y)
 	{
 		uint8_t* dst_line = reinterpret_cast<uint8_t*>(mapped.data) + y * mapped.row_pitch;

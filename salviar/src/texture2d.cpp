@@ -21,8 +21,8 @@ using boost::make_shared;
 texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
 {
 	fmt_  = format;
-	sample_count_ = num_samples;
-	size_ = int4(width, height, 1, 0);
+	sample_count_ = static_cast<int>(num_samples);
+	size_ = int4(static_cast<int>(width), static_cast<int>(height), 1, 0);
 	surfs_.push_back( make_shared<surface>(width, height, num_samples, format) );
 }
 
@@ -31,11 +31,11 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 	if(auto_gen)
     {
 		max_lod_ = 0;
-		min_lod_ = calc_lod_limit(width_, height_) - 1;
+		min_lod_ = calc_lod_limit(size_) - 1;
 	}
 
-	size_t cur_width    = surfs_[max_lod_]->get_width();
-	size_t cur_height   = surfs_[max_lod_]->get_height();
+	size_t cur_width    = surfs_[max_lod_]->width();
+	size_t cur_height   = surfs_[max_lod_]->height();
 	size_t num_samples  = surfs_[max_lod_]->sample_count();
 
 	surfs_.resize(min_lod_ + 1);
@@ -88,31 +88,6 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 			break;
 		}
 	}
-}
-
-size_t texture_2d::sample_count(size_t subresource) const
-{
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-
-	return get_surface(subresource)->sample_count();
-}
-
-void texture_2d::set_max_lod(size_t miplevel)
-{
-	EFLIB_ASSERT(max_lod_ <= min_lod_, "Max lod is less than min lod.");
-
-	if(! (max_lod_ <= min_lod_)) return;
-	max_lod_ = miplevel;
-}
-
-void texture_2d::set_min_lod(size_t miplevel)
-{
-	size_t ml_limit = calc_lod_limit(surfs_[0]->get_width());
-	EFLIB_ASSERT(max_lod_ <= miplevel, "Mip level is larger than max LoD level that is set by user.");
-	EFLIB_ASSERT(miplevel < ml_limit, "Mip level is larger than max LoD level that texture supported.");
-
-	if(! (max_lod_ <= miplevel && miplevel < ml_limit)) return;
-	min_lod_ = miplevel;
 }
 
 END_NS_SALVIAR();

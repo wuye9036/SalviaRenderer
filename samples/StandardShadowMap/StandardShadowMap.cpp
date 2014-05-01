@@ -214,7 +214,7 @@ protected:
             render_params.backbuffer_height,
             render_params.backbuffer_num_samples,
             pixel_format_color_rg32f
-            )->get_surface(0);
+            )->subresource(0);
 
 		sampler_desc sm_desc;
 		sm_desc.min_filter = filter_point;
@@ -263,8 +263,8 @@ protected:
 
 	void gen_sm()
 	{
-		renderer_->set_render_targets(0, nullptr, sm_texture_->get_surface(0));
-        renderer_->clear_depth_stencil(sm_texture_->get_surface(0), clear_depth | clear_stencil, 1.0f, 0);
+		renderer_->set_render_targets(0, nullptr, sm_texture_->subresource(0));
+        renderer_->clear_depth_stencil(sm_texture_->subresource(0), clear_depth | clear_stencil, 1.0f, 0);
 
         renderer_->set_vertex_shader_code(gen_sm_vs_);
 		renderer_->set_pixel_shader(gen_sm_ps_);
