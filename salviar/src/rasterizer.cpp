@@ -435,8 +435,8 @@ void rasterizer::draw_partial_tile(
 	__m128 mleft = _mm_set1_ps(left);
 	__m128 mtop = _mm_set1_ps(top);
 	__m128 mevalue3 = _mm_sub_ps(medgez, _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
+#endif
 
-	
 	EFLIB_ALIGN(16) uint32_t pixel_mask[4 * 4];
 
 #if !defined(EFLIB_NO_SIMD)
@@ -449,6 +449,7 @@ void rasterizer::draw_partial_tile(
 	memset(pixel_mask, 0, sizeof(pixel_mask));
 #endif
 
+#if !defined(EFLIB_NO_SIMD)
 	for (size_t i_sample = 0; i_sample < target_sample_count_; ++ i_sample)
 	{
 		const vec2& sp = samples_pattern_[i_sample];
