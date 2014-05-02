@@ -393,45 +393,6 @@ namespace vs_output_op_funcs
 	}
 
 	template <int N>
-	vs_output& self_add_n(vs_output& lhs, const vs_output& rhs)
-	{
-		lhs.position() += rhs.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			lhs.attribute(i_attr) += rhs.attribute(i_attr);
-		}
-		return lhs;
-	}
-
-	template <int N>
-	vs_output& self_sub_n(vs_output& lhs, const vs_output& rhs)
-	{
-		lhs.position() -= rhs.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr)
-		{
-			lhs.attribute(i_attr) -= rhs.attribute(i_attr);
-		}
-		return lhs;
-	}
-
-	template <int N>
-	vs_output& self_mul_n(vs_output& lhs, float f)
-	{
-		lhs.position() *= f;
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			lhs.attribute(i_attr) *= f;
-		}
-		return lhs;
-	}
-	
-	template <int N>
-	vs_output& self_div_n(vs_output& lhs, float f)
-	{
-		assert( !eflib::equal<float>(f, 0.0f) );
-		return self_mul_n<N>(lhs, 1 / f);
-	}
-
-	template <int N>
 	vs_output& add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
 		out.position() = vso0.position() + vso1.position();
@@ -554,11 +515,6 @@ vs_output_op gen_vs_output_op_n()
 
 	ret.project		= project_n<N>;
 	ret.unproject	= unproject_n<N>;
-
-	ret.self_add = self_add_n<N>;
-	ret.self_sub = self_sub_n<N>;
-	ret.self_mul = self_mul_n<N>;
-	ret.self_div = self_div_n<N>;
 
 	ret.add = add_n<N>;
 	ret.sub = sub_n<N>;

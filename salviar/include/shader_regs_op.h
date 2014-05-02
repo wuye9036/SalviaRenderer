@@ -28,11 +28,6 @@ namespace vs_output_functions
 	typedef vs_output& (*project)		(vs_output& out, const vs_output& in);
 	typedef vs_output& (*unproject)		(vs_output& out, const vs_output& in);
 
-	typedef vs_output& (*self_add)		(vs_output& lhs, const vs_output& rhs);
-	typedef vs_output& (*self_sub)		(vs_output& lhs, const vs_output& rhs);
-	typedef vs_output& (*self_mul)		(vs_output& lhs, float f);
-	typedef vs_output& (*self_div)		(vs_output& lhs, float f);
-
 	typedef vs_output& (*add)			(vs_output& out, const vs_output& vso0, const vs_output& vso1);
 	typedef vs_output& (*sub)			(vs_output& out, const vs_output& vso0, const vs_output& vso1);
 	typedef vs_output& (*mul)			(vs_output& out, const vs_output& vso0, float f);
@@ -58,11 +53,6 @@ struct vs_output_op
 
 	vs_output_functions::project		project;
 	vs_output_functions::unproject		unproject;
-
-	vs_output_functions::self_add		self_add;
-	vs_output_functions::self_sub		self_sub;
-	vs_output_functions::self_mul		self_mul;
-	vs_output_functions::self_div		self_div;
 
 	vs_output_functions::add			add;
 	vs_output_functions::sub			sub;
