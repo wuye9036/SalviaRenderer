@@ -43,6 +43,7 @@ public:
 	default_vertex_cache()
 		: assembler_(nullptr)
 		, verts_pool_( sizeof(vs_output) )
+		, transformed_verts_capacity_ (0)
 	{
 	}
 
@@ -54,7 +55,7 @@ public:
 
 	void update(render_state const* state)
 	{
-		transformed_verts_.reset();
+		// transformed_verts_.reset();
 		index_fetcher_.update(state);
 		topology_	= state->prim_topo;
 		viewport_	= &(state->vp);
@@ -117,7 +118,11 @@ public:
 		std::sort(unique_indices.begin(), unique_indices.end());
 #endif
 		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-		transformed_verts_.reset(new vs_output[unique_indices.size()]);
+		if( transformed_verts_capacity_ < unique_indices.size() )
+		{
+			transformed_verts_.reset(new vs_output[unique_indices.size()]);
+			transformed_verts_capacity_ = unique_indices.size();
+		}
 		used_verts_.resize( unique_indices.back()+1 );
 
         // Accumulate query counters.
@@ -288,6 +293,8 @@ private:
 	index_fetcher			index_fetcher_;
 
 	shared_array<vs_output> transformed_verts_;
+	size_t					transformed_verts_capacity_;
+
 	vector<int32_t>			used_verts_;
     async_object*           pipeline_stat_;
     accumulate_fn<uint64_t>::type
