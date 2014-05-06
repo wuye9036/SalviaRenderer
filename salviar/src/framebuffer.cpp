@@ -437,6 +437,7 @@ void framebuffer::update(render_state* state)
 
     ds_target_ = state->depth_stencil_target.get();
     sample_count_ = static_cast<uint32_t>(state->target_sample_count);
+	px_full_mask_ = (1UL << sample_count_) - 1;
 
     bool output_depth_enabled = false;
     if(!state->vx_shader || !state->vs_proto)
@@ -585,6 +586,46 @@ void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, si
 		int32_t new_stencil = ds_state_->stencil_operation(front_face, depth_passed, stencil_passed, stencil_ref_, old_stencil);
 		cpp_bs->execute(i_sample, target_pixel, ps);
         write_depth_stencil_(ds_data, depth, new_stencil, stencil_write_mask_);
+	}
+}
+
+void framebuffer::render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t y, uint64_t sample_mask, ps_output const* quad, float const* depth, bool front_face, float const* aa_offset)
+{
+	EFLIB_ASSERT(cpp_bs, "Blend shader is null or invalid.");
+	if(!cpp_bs) return;
+
+	for(int i = 0; i < 4; ++i)
+	{
+		size_t pixel_x = x + (i & 1);
+		size_t pixel_y = y + ( (i & 2) >> 1 );
+
+		uint64_t px_sample_mask = sample_mask & SAMPLE_MASK;
+		sample_mask >>= MAX_SAMPLE_COUNT;
+
+		if(px_sample_mask == 0)
+		{
+			continue;
+		}
+			
+		if(sample_count_ == 1)
+		{
+			render_sample(cpp_bs, pixel_x, pixel_y, 0, quad[0], depth[0], front_face);
+		}
+		else if(sample_mask == px_full_mask_)
+		{
+			for(uint32_t i_samp = 0; i_samp < sample_count_; ++i_samp)
+			{
+				render_sample(cpp_bs, pixel_x, pixel_y, i_samp, quad[i], depth[i], front_face);
+			}
+		}
+		else
+		{
+			uint32_t i_samp;
+			while ( _xmm_bsf(&i_samp, (uint32_t)px_sample_mask) )
+			{
+				render_sample(cpp_bs, pixel_x, pixel_y, i_samp, quad[i], depth[i]+aa_offset[i_samp], front_face);
+			}
+		}
 	}
 }
 

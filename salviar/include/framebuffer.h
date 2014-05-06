@@ -90,6 +90,7 @@ private:
     uint32_t                stencil_write_mask_;
     bool                    early_z_enabled_;
     uint32_t                sample_count_;
+	uint32_t				px_full_mask_;
 
 	void (*read_depth_stencil_)(float& depth, uint32_t& stencil, uint32_t stencil_mask, void const* ds_data);
 	void (*write_depth_stencil_)(void* ds_data, float depth, uint32_t stencil, uint32_t stencil_mask);
@@ -104,6 +105,7 @@ public:
 	~framebuffer(void);
 
 	void render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth, bool front_face);
+	void render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t y, uint64_t, ps_output const* quad, float const* depth, bool front_face, float const* aa_offset);
     bool early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset);
 
 	static void clear_depth_stencil(surface* tar, uint32_t flag, float depth, uint32_t stencil);
