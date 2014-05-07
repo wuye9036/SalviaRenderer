@@ -104,9 +104,14 @@ public:
 	framebuffer();
 	~framebuffer(void);
 
-	void render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth, bool front_face);
-	void render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t y, uint64_t, ps_output const* quad, float const* depth, bool front_face, float const* aa_offset);
-    bool early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset);
+	bool		early_z_enabled() const { return early_z_enabled_; } 
+
+	void		render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth, bool front_face);
+	void		render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t y, uint64_t quad_mask, ps_output const* quad, float const* depth, bool front_face, float const* aa_offset);
+    uint64_t	early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset);
+	uint64_t	early_z_test(size_t x, size_t y, uint32_t px_mask, float depth, float const* aa_z_offset);
+	uint64_t	early_z_test_quad(size_t x, size_t y, float const* depth, float const* aa_z_offset);
+	uint64_t	early_z_test_quad(size_t x, size_t y, uint64_t quad_mask, float const* depth, float const* aa_z_offset);
 
 	static void clear_depth_stencil(surface* tar, uint32_t flag, float depth, uint32_t stencil);
 };

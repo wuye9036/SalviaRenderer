@@ -629,29 +629,85 @@ void framebuffer::render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t 
 	}
 }
 
-bool framebuffer::early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset)
+uint64_t framebuffer::early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset)
 {
-    if( !early_z_enabled_ )
-    {
-        return true;
-    }
-
     pixel_accessor target_pixel(color_targets_, ds_target_);
 	target_pixel.set_pos(x, y);
     
+	if(sample_count_ == 1)
+	{
+		void* ds_data = target_pixel.depth_stencil_address(0);
+        float       old_depth;
+        uint32_t    old_stencil;
+        read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
+        return ds_state_->depth_test(depth, old_depth) ? 1 : 0;
+	}
+
+	uint64_t mask = 0;
     for(size_t i = 0; i < sample_count_; ++i)
     {
         void* ds_data = target_pixel.depth_stencil_address(i);
         float       old_depth;
         uint32_t    old_stencil;
         read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
-        if( ds_state_->depth_test(aa_z_offset[i] + depth, old_depth) )
-        {
-            return true;
-        }
+        mask |= ( ds_state_->depth_test(aa_z_offset[i] + depth, old_depth) ? 1 : 0 ) << i;
     }
 
-    return false;
+    return mask;
+}
+
+uint64_t framebuffer::early_z_test_quad(size_t x, size_t y, float const* depth, float const* aa_z_offset)
+{
+	return 
+		( early_z_test(x+0, y+0, depth[0], aa_z_offset) << (MAX_SAMPLE_COUNT * 3) ) |
+		( early_z_test(x+1, y+0, depth[1], aa_z_offset) << (MAX_SAMPLE_COUNT * 2) )	|
+		( early_z_test(x+0, y+1, depth[2], aa_z_offset) << (MAX_SAMPLE_COUNT * 1) )	|
+		( early_z_test(x+1, y+1, depth[3], aa_z_offset) << (MAX_SAMPLE_COUNT * 0) );
+}
+
+uint64_t framebuffer::early_z_test(size_t x, size_t y, uint32_t px_mask, float depth, float const* aa_z_offset)
+{
+	if(px_mask == px_full_mask_)
+	{
+		return early_z_test(x, y, depth, aa_z_offset);
+	}
+
+	pixel_accessor target_pixel(color_targets_, ds_target_);
+	target_pixel.set_pos(x, y);
+
+	uint64_t mask = 0;
+	uint32_t i_samp;
+	while ( _xmm_bsf(&i_samp, (uint32_t)px_mask) )
+	{
+		void* ds_data = target_pixel.depth_stencil_address(i_samp);
+		float       old_depth;
+		uint32_t    old_stencil;
+		read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
+		mask |= ( ds_state_->depth_test(aa_z_offset[i_samp] + depth, old_depth) ? 1 : 0 ) << i_samp;
+		px_mask &= (px_mask - 1);
+	}
+
+	return mask;
+}
+
+uint64_t framebuffer::early_z_test_quad(size_t x, size_t y, uint64_t quad_mask, float const* depth, float const* aa_z_offset)
+{
+	uint32_t px_mask;
+	
+	uint64_t mask = 0;
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 3) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+0, y+0, px_mask, depth[0], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 3);
+
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 2) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+1, y+0, px_mask, depth[1], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 2);
+
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 1) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+0, y+1, px_mask, depth[2], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 1);
+
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 0) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+1, y+1, px_mask, depth[3], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 0);
+
+	return mask;
 }
 
 void framebuffer::clear_depth_stencil(surface* tar, uint32_t flag, float depth, uint32_t stencil)
