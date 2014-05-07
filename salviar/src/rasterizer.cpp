@@ -231,6 +231,12 @@ void rasterizer::update(render_state const* state)
 	vp_			            = &(state->vp);
     target_vp_              = &(state->target_vp);
     target_sample_count_    = state->target_sample_count;
+	full_mask_				= (1ULL << target_sample_count_) - 1;
+	quad_full_mask_			= 
+		( full_mask_ << (MAX_SAMPLE_COUNT * 0) ) |
+		( full_mask_ << (MAX_SAMPLE_COUNT * 1) ) |
+		( full_mask_ << (MAX_SAMPLE_COUNT * 2) ) |
+		( full_mask_ << (MAX_SAMPLE_COUNT * 3) );
 	vso_ops_	            = state->vso_ops;
 
 	if(state->cpp_vs)
@@ -295,59 +301,13 @@ void rasterizer::draw_full_tile(
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
-	auto& v0 = *triangle_ctx->tri_info->v0;
-
-	float v0x = v0.position().x();
-	float v0y = v0.position().y();
-
 	EFLIB_ALIGN(16) vs_output unprojed[4];
-	EFLIB_ALIGN(16) float	  depth[4];
 
 	for(int top = tile_top; top < tile_bottom; top += 2)
 	{
 		for(int left = tile_left; left < tile_right; left += 2)
 		{
-            float const dx = 0.5f + left - v0x;
-	        float const dy = 0.5f + top - v0y;
-
-            // Compute Mask with Early Z
-			vso_ops_->step_2d_unproj_pos_quad(
-				unprojed, v0,
-                dx, triangle_ctx->tri_info->ddx,
-                dy, triangle_ctx->tri_info->ddy
-            );
-
-            for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
-            {
-				depth[i_pixel] = unprojed[i_pixel].position().z();
-            }
-
-            // Full tile was rejected.
-			if(frame_buffer_->early_z_test_quad(left, top, depth, triangle_ctx->aa_z_offset) == 0)
-            {
-                continue;
-            }
-
-            vso_ops_->step_2d_unproj_attr_quad(
-                unprojed, v0,
-                dx, triangle_ctx->tri_info->ddx,
-                dy, triangle_ctx->tri_info->ddy
-                );
-
-#if 0
-			for(int i = 0; i < 4; ++i)
-			{
-				printf("%f_%f_%f_%f\n",
-					unprojed[i].attribute(0).data_[0],
-					unprojed[i].attribute(0).data_[1],
-					unprojed[i].attribute(0).data_[2],
-					unprojed[i].attribute(0).data_[3]
-				);
-			}
-			printf("\n");
-#endif
-
-			draw_full_quad(top, left, unprojed, shaders, triangle_ctx);
+			draw_full_quad(left, top, unprojed, shaders, triangle_ctx);
 		}
 	}
 
@@ -482,9 +442,6 @@ void rasterizer::draw_partial_tile(
 	}
 #endif
 
-	float const offsetx = left + 0.5f - v0.position().x();
-	float const offsety = top  + 0.5f - v0.position().y();
-
 	vs_output unprojed[4];
 	float	  depth[4];
 
@@ -493,133 +450,28 @@ void rasterizer::draw_partial_tile(
 		int const quad_x = (quad & 1) << 1;
 		int const quad_y = (quad & 2);
 
-		int const quad_start = quad_x | (quad_y << 1);
+		int const quad_start = quad_x | (quad_y << 2);
 
-		int quad_any_mask = 
-			pixel_mask[quad_start+0] |
-			pixel_mask[quad_start+1] |
-			pixel_mask[quad_start+4] |
-			pixel_mask[quad_start+5];
+		uint64_t quad_mask = 
+			( (pixel_mask[quad_start+0] & static_cast<uint64_t>(SAMPLE_MASK)) << (MAX_SAMPLE_COUNT * 0) ) |
+			( (pixel_mask[quad_start+1] & static_cast<uint64_t>(SAMPLE_MASK)) << (MAX_SAMPLE_COUNT * 1) ) |
+			( (pixel_mask[quad_start+4] & static_cast<uint64_t>(SAMPLE_MASK)) << (MAX_SAMPLE_COUNT * 2) ) |
+			( (pixel_mask[quad_start+5] & static_cast<uint64_t>(SAMPLE_MASK)) << (MAX_SAMPLE_COUNT * 3) );
 
 		// No sample need to render.
-        if(quad_any_mask == 0)
+        if(quad_mask == 0)
         {
             continue;
         }
 
-		// It is a full quad.
-		int quad_all_mask = 
-			pixel_mask[quad_start+0] &
-			pixel_mask[quad_start+1] &
-			pixel_mask[quad_start+4] &
-			pixel_mask[quad_start+5];
-
-		if (!has_centroid_ || quad_all_mask == full_mask)
+		if (quad_mask == quad_full_mask_)
 		{
-			float const dx = offsetx + quad_x;
-			float const dy = offsety + quad_y;
-
-			// Compute Mask with Early Z
-			vso_ops_->step_2d_unproj_pos_quad(
-				unprojed, v0,
-				dx, triangle_ctx->tri_info->ddx,
-				dy, triangle_ctx->tri_info->ddy
-				);
-
-			for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
-			{
-				depth[i_pixel] = unprojed[i_pixel].position().z();
-			}
-
-			// Full tile was rejected.
-			if( !frame_buffer_->early_z_test_quad(left + quad_x, top + quad_y, depth, triangle_ctx->aa_z_offset) )
-			{
-				continue;
-			}
-
-			vso_ops_->step_2d_unproj_attr_quad(
-				unprojed, v0,
-				dx, triangle_ctx->tri_info->ddx,
-				dy, triangle_ctx->tri_info->ddy
-				);
-
 			draw_full_quad(left + quad_x, top + quad_y, unprojed, shaders, triangle_ctx);
 		}
 		else
 		{
-			// It is a partial quad.
-			bool need_draw_quad = false;
-			for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
-			{
-				int ix = quad_x | (i_pixel & 1);
-				int iy = quad_y | ((i_pixel & 2) >> 1);
-
-				uint32_t mask = pixel_mask[iy*4+ix];
-				float const dx = offsetx + ix;
-				float const dy = offsety + iy;
-
-				auto unproj_pixel = unprojed + i_pixel;
-				vso_ops_->step_2d_unproj_pos(
-					*unproj_pixel, v0,
-					dx, triangle_ctx->tri_info->ddx,
-					dy, triangle_ctx->tri_info->ddy
-					);
-
-				if( mask != 0 && frame_buffer_->early_z_test(left+ix, top+iy, unproj_pixel->position().z(), triangle_ctx->aa_z_offset) )
-				{
-					need_draw_quad = true;
-				}
-			}
-
-			if(!need_draw_quad)
-			{
-				continue;
-			}
-
-			for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
-			{
-				int ix = quad_x | (i_pixel & 1);
-				int iy = quad_y | ((i_pixel & 2) >> 1);
-
-				uint32_t mask = pixel_mask[iy*4+ix];
-				float dx = offsetx + ix;
-				float dy = offsety + iy;
-
-				if ( (mask != full_mask) && mask != 0 )
-				{
-					// centroid interpolate
-					vec2 sp_centroid(0, 0);
-					int n = 0;
-
-					uint32_t	   i_sample;
-					uint32_t const mask_backup = mask;
-					while (_xmm_bsf(&i_sample, mask))
-					{
-						const vec2& sp = samples_pattern_[i_sample];
-						sp_centroid.x() += sp.x() - 0.5f;
-						sp_centroid.y() += sp.y() - 0.5f;
-						++ n;
-
-						mask &= mask - 1;
-					}
-					sp_centroid /= n;
-
-					mask = mask_backup;
-
-					dx += sp_centroid.x();
-					dy += sp_centroid.y();
-				}
-
-				vso_ops_->step_2d_unproj_attr(
-					unprojed[i_pixel], v0,
-					dx, triangle_ctx->tri_info->ddx,
-					dy, triangle_ctx->tri_info->ddy
-					);
-			}
+			draw_quad(left + quad_x, top + quad_y, unprojed, quad_mask, shaders, triangle_ctx);
 		}
-
-		// Execute pixel shader and render to target.
-		draw_full_quad(left + quad_x, top + quad_y, pixel_mask + quad_start, shaders, triangle_ctx);
     }
 
     triangle_ctx->pixel_stat->ps_invocations += 16;
@@ -1420,181 +1272,6 @@ void rasterizer::draw()
 	}
 }
 
-void rasterizer::draw_package(
-    uint32_t top, uint32_t left,
-	vs_output* pixels, uint32_t const* masks,
-    drawing_shader_context const* shaders,
-    drawing_triangle_context const* triangle_ctx)
-{
-    auto psu = shaders->ps_unit;
-    auto cpp_ps = shaders->cpp_ps;
-    auto cpp_bs = shaders->cpp_bs;
-    auto aa_z_offset = triangle_ctx->aa_z_offset;
-	bool front_face  = triangle_ctx->tri_info->front_face;
-
-	uint32_t const full_mask = (1UL << target_sample_count_) - 1;
-
-	ps_output pso[PACKAGE_ELEMENT_COUNT];
-	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
-	{
-		pso[i].depth = pixels[i].position().z();
-		pso[i].coverage = 0xFFFFFFFF;
-	}
-
-	if(psu)
-	{
-		psu->update(pixels, vs_reflection_);
-		psu->execute(pso);
-	}
-
-    uint64_t backend_input_pixels = 0;
-	for( int iy = 0; iy < 4; ++iy )
-	{
-		for ( int ix = 0; ix < 4; ++ix )
-		{
-			int px_index = iy * 4 + ix;
-			int quad_start = (iy & 2) * 4 + (ix & 2);
-			uint32_t mask = masks[px_index];
-
-			// No sampler need to be draw.
-			if(!mask) continue;
-			// Clipped by pixel shader.
-			if( !psu && !cpp_ps->execute(pixels + quad_start, pixels[px_index], pso[px_index]) ) continue;
-
-            ++backend_input_pixels;
-
-			const int x_coord = left + ix;
-			const int y_coord = top + iy;
-
-			// Whole pixel
-			if (1 == target_sample_count_)
-            {
-				frame_buffer_->render_sample(cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth, front_face);
-				continue;
-			}
-
-			mask &= pso[px_index].coverage;
-
-			// MSAA.
-			if (full_mask == mask)
-			{
-				for (unsigned long i_sample = 0; i_sample < target_sample_count_; ++ i_sample)
-				{
-					frame_buffer_->render_sample(
-						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
-					);
-				}
-			}
-			else
-			{
-				uint32_t i_sample;
-				while (_xmm_bsf(&i_sample, mask))
-				{
-					frame_buffer_->render_sample(
-						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
-					);
-					mask &= mask - 1;
-				}
-			}
-		}
-	}
-
-    triangle_ctx->pixel_stat->backend_input_pixels += backend_input_pixels;
-}
-
-void rasterizer::draw_full_package(
-	uint32_t top, uint32_t left,
-	vs_output* pixels, uint16_t packed_pixel_mask,
-    drawing_shader_context const* shaders,
-	drawing_triangle_context const* triangle_ctx)
-{
-    auto psu = shaders->ps_unit;
-    auto cpp_ps = shaders->cpp_ps;
-    auto cpp_bs = shaders->cpp_bs;
-    auto aa_z_offset = triangle_ctx->aa_z_offset;
-	bool front_face  = triangle_ctx->tri_info->front_face;
-
-	uint32_t const full_mask = (1UL << target_sample_count_) - 1;
-
-	ps_output pso[PACKAGE_ELEMENT_COUNT];
-	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
-	{
-		pso[i].depth = pixels[i].position().z();
-		pso[i].coverage = 0xFFFFFFFF;
-	}
-
-	if(psu)
-	{
-		psu->update(pixels, vs_reflection_);
-		psu->execute(pso);
-	}
-
-	int drawing_quad_count = 0;
-	for(int quad = 0; quad < 4; ++quad)
-	{
-		// all 2x2 is masked.
-		if((packed_pixel_mask & (0xF << (quad << 2))) == 0)
-		{
-			continue;
-		}
-
-		int quad_index = ( (quad & 1) << 1 ) + ( (quad & 2) << 2 );
-		// Write quad
-        for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
-        {
-            int ix = ((quad & 1) << 1) | (i_pixel & 1);
-            int iy = (quad & 2) | ((i_pixel & 2) >> 1);
-
-			int px_index = iy * 4 + ix;
-
-            if( !psu && !cpp_ps->execute(pixels + quad_index, pixels[px_index], pso[px_index]) )
-			{
-				continue;
-			}
-			++drawing_quad_count;
-
-			const int x_coord = left + ix;
-			const int y_coord = top + iy;
-
-			if (1 == target_sample_count_)
-			{
-				frame_buffer_->render_sample(
-					cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth, front_face);
-				continue;
-			}
-
-			uint32_t mask = pso[px_index].coverage;
-
-			if (full_mask == mask)
-			{
-				for (unsigned long i_sample = 0; i_sample < target_sample_count_; ++ i_sample)
-				{
-					frame_buffer_->render_sample(
-						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
-					);
-				}
-			}
-			else
-			{
-				uint32_t i_sample;
-				while (_xmm_bsf(&i_sample, mask))
-				{
-					frame_buffer_->render_sample(
-						cpp_bs, x_coord, y_coord, i_sample,
-						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample], front_face
-					);
-					mask &= mask - 1;
-				}
-			}
-        }
-	}
-
-    triangle_ctx->pixel_stat->backend_input_pixels += (drawing_quad_count * 4);
-}
-
 void threaded_viewport_and_project_transform(
 	vs_output_functions::project proj_fn,
 	vs_output** verts,
@@ -1644,13 +1321,14 @@ void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num
 }
 
 void rasterizer::draw_full_quad(
-	uint32_t top, uint32_t left, vs_output* pixels,
+	uint32_t left, uint32_t top, vs_output* pixels,
 	drawing_shader_context const* shaders,
     drawing_triangle_context const* triangle_ctx
 	)
 {
+#if 1
 	float const dx = 0.5f + left - triangle_ctx->tri_info->v0->position().x();
-	float const dy = 0.5f + left - triangle_ctx->tri_info->v0->position().y();
+	float const dy = 0.5f + top  - triangle_ctx->tri_info->v0->position().y();
 
 	vso_ops_->step_2d_unproj_pos_quad(
 		pixels, *triangle_ctx->tri_info->v0, 
@@ -1658,7 +1336,7 @@ void rasterizer::draw_full_quad(
 		dy, triangle_ctx->tri_info->ddy
 		);
 
-	uint64_t  quad_mask = 0xFFFFFFFFFFFFFFFF;
+	uint64_t  quad_mask = quad_full_mask_;
 	ps_output pso[4];
 	float     depth[4] = 
 	{
@@ -1670,7 +1348,7 @@ void rasterizer::draw_full_quad(
 
 	if ( frame_buffer_->early_z_enabled() )
 	{
-		quad_mask = frame_buffer_->early_z_test_quad(top, left, depth, triangle_ctx->aa_z_offset);
+		// quad_mask = frame_buffer_->early_z_test_quad(left, top, depth, triangle_ctx->aa_z_offset);
 	}
 
 	if (quad_mask == 0)
@@ -1683,10 +1361,24 @@ void rasterizer::draw_full_quad(
 		dx, triangle_ctx->tri_info->ddx,
 		dy, triangle_ctx->tri_info->ddy
 		);
-	
+	          
+#if 0
+	for(int i = 0; i < 4; ++i)
+	{
+		printf("%f_%f_%f_%f\n",
+			unprojed[i].attribute(0).data_[0],
+			unprojed[i].attribute(0).data_[1],
+			unprojed[i].attribute(0).data_[2],
+			unprojed[i].attribute(0).data_[3]
+		);
+	}
+	printf("\n");
+#endif
+
 	if(shaders->ps_unit)
 	{
-		// TODO
+		shaders->ps_unit->update(pixels, vs_reflection_);
+		shaders->ps_unit->execute(pso);
 	}
 	else
 	{
@@ -1696,18 +1388,114 @@ void rasterizer::draw_full_quad(
 	if(quad_mask != 0)
 	{
 		frame_buffer_->render_sample_quad(
-			shaders->cpp_bs, top, left, quad_mask,
+			shaders->cpp_bs, left, top, quad_mask,
 			pso, depth, triangle_ctx->tri_info->front_face, triangle_ctx->aa_z_offset
 			);
 	}
+#endif
 }
 
 void rasterizer::draw_quad(
-	uint32_t top, uint32_t left,
-	vs_output const* px, uint32_t const* masks,
+	uint32_t left, uint32_t top,
+	vs_output* pixels, uint64_t quad_mask,
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
+#if 1
+	auto v0  =  triangle_ctx->tri_info->v0;
+	auto ddx = &triangle_ctx->tri_info->ddx; 
+	auto ddy = &triangle_ctx->tri_info->ddy;
 
+	float const quad_dx = 0.5f + left - v0->position().x();
+	float const quad_dy = 0.5f + top  - v0->position().y();
+
+	for(int i = 0; i < 4; ++i)
+	{
+		vso_ops_->step_2d_unproj_pos(pixels[i], *v0, quad_dx+(i&1), *ddx, quad_dy+((i&2)>>1), *ddy);
+	}
+	// vso_ops_->step_2d_unproj_pos_quad(pixels, *v0, quad_dx, *ddx, quad_dy, *ddy);
+
+	ps_output pso[4];
+	float     depth[4] = 
+	{
+		pixels[0].position().z(),
+		pixels[1].position().z(),
+		pixels[2].position().z(),
+		pixels[3].position().z()
+	};
+
+	uint64_t tested_quad_mask = quad_mask;
+	if ( frame_buffer_->early_z_enabled() )
+	{
+		// tested_quad_mask = frame_buffer_->early_z_test_quad(left, top, quad_mask, depth, triangle_ctx->aa_z_offset);
+	}
+
+	if(tested_quad_mask == 0)
+	{
+		return;
+	}
+
+	if(!has_centroid_)
+	{
+		vso_ops_->step_2d_unproj_attr_quad(pixels, *v0, quad_dx, *ddx, quad_dy, *ddy);
+	}
+	else
+	{
+		for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+		{
+			int ix = (i_pixel & 1);
+			int iy = (i_pixel & 2) >> 1;
+
+			float dx = quad_dx + ix;
+			float dy = quad_dy + iy;
+
+			uint32_t pixel_mask = ( quad_mask >> (i_pixel * MAX_SAMPLE_COUNT) ) & SAMPLE_MASK;
+
+			if(pixel_mask != full_mask_ && pixel_mask != 0)
+			{
+				vec2 sp_centroid(0, 0);
+				int n = 0;
+
+				uint32_t	   i_sample;
+				uint32_t const mask_backup = pixel_mask;
+				while (_xmm_bsf(&i_sample, pixel_mask))
+				{
+					const vec2& sp = samples_pattern_[i_sample];
+					sp_centroid.x() += sp.x();
+					sp_centroid.y() += sp.y();
+					++ n;
+
+					pixel_mask &= pixel_mask - 1;
+				}
+				sp_centroid /= n;
+
+				pixel_mask = mask_backup;
+
+				dx += sp_centroid.x() - 0.5f;
+				dy += sp_centroid.y() - 0.5f;
+			}
+			vso_ops_->step_2d_unproj_attr(pixels[i_pixel], *v0, dx, *ddx, dy, *ddy);
+		}
+	}
+
+	if(shaders->ps_unit)
+	{
+		shaders->ps_unit->update(pixels, vs_reflection_);
+		shaders->ps_unit->execute(pso);
+	}
+	else
+	{
+		quad_mask &= shaders->cpp_ps->execute(pixels, pso, depth);
+	}
+
+	if(quad_mask != 0)
+	{
+		frame_buffer_->render_sample_quad(
+			shaders->cpp_bs, left, top, quad_mask,
+			pso, depth, triangle_ctx->tri_info->front_face, triangle_ctx->aa_z_offset
+			);
+	}
+#endif
 }
+
 END_NS_SALVIAR();

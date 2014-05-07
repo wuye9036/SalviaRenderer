@@ -311,9 +311,9 @@ public:
 		front_face_ = v;
 	}
 
-	bool execute(vs_output const* quad_in, vs_output const& px_in, ps_output& px_out);
+	uint64_t execute(vs_output const* quad_in, ps_output* px_out, float* depth);
 	
-	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
+	virtual bool shader_prog(vs_output const& in, ps_output& out) = 0;
     virtual bool output_depth() const;
 };
 

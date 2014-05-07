@@ -34,7 +34,7 @@ using std::cout;
 using std::endl;
 
 #define SASL_VERTEX_SHADER_ENABLED
-#define SALVIA_PIXEL_SHADER_ENABLED
+// #define SALVIA_PIXEL_SHADER_ENABLED
 
 char const* vs_code =
 "float4x4 wvpMatrix; \r\n"

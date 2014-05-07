@@ -609,13 +609,13 @@ void framebuffer::render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t 
 			
 		if(sample_count_ == 1)
 		{
-			render_sample(cpp_bs, pixel_x, pixel_y, 0, quad[0], depth[0], front_face);
+			render_sample(cpp_bs, pixel_x, pixel_y, 0, quad[i], depth[i], front_face);
 		}
-		else if(sample_mask == px_full_mask_)
+		else if(px_sample_mask == px_full_mask_)
 		{
 			for(uint32_t i_samp = 0; i_samp < sample_count_; ++i_samp)
 			{
-				render_sample(cpp_bs, pixel_x, pixel_y, i_samp, quad[i], depth[i], front_face);
+				render_sample(cpp_bs, pixel_x, pixel_y, i_samp, quad[i], depth[i]+aa_offset[i_samp], front_face);
 			}
 		}
 		else
@@ -624,6 +624,7 @@ void framebuffer::render_sample_quad(cpp_blend_shader* cpp_bs, size_t x, size_t 
 			while ( _xmm_bsf(&i_samp, (uint32_t)px_sample_mask) )
 			{
 				render_sample(cpp_bs, pixel_x, pixel_y, i_samp, quad[i], depth[i]+aa_offset[i_samp], front_face);
+				px_sample_mask &= px_sample_mask - 1;
 			}
 		}
 	}
@@ -659,10 +660,10 @@ uint64_t framebuffer::early_z_test(size_t x, size_t y, float depth, float const*
 uint64_t framebuffer::early_z_test_quad(size_t x, size_t y, float const* depth, float const* aa_z_offset)
 {
 	return 
-		( early_z_test(x+0, y+0, depth[0], aa_z_offset) << (MAX_SAMPLE_COUNT * 3) ) |
-		( early_z_test(x+1, y+0, depth[1], aa_z_offset) << (MAX_SAMPLE_COUNT * 2) )	|
-		( early_z_test(x+0, y+1, depth[2], aa_z_offset) << (MAX_SAMPLE_COUNT * 1) )	|
-		( early_z_test(x+1, y+1, depth[3], aa_z_offset) << (MAX_SAMPLE_COUNT * 0) );
+		( early_z_test(x+0, y+0, depth[0], aa_z_offset) << (MAX_SAMPLE_COUNT * 0) ) |
+		( early_z_test(x+1, y+0, depth[1], aa_z_offset) << (MAX_SAMPLE_COUNT * 1) )	|
+		( early_z_test(x+0, y+1, depth[2], aa_z_offset) << (MAX_SAMPLE_COUNT * 2) )	|
+		( early_z_test(x+1, y+1, depth[3], aa_z_offset) << (MAX_SAMPLE_COUNT * 3) );
 }
 
 uint64_t framebuffer::early_z_test(size_t x, size_t y, uint32_t px_mask, float depth, float const* aa_z_offset)
@@ -695,17 +696,17 @@ uint64_t framebuffer::early_z_test_quad(size_t x, size_t y, uint64_t quad_mask, 
 	uint32_t px_mask;
 	
 	uint64_t mask = 0;
-	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 3) ) & SAMPLE_MASK );
-	mask |= ( px_mask == 0 ? 0 : early_z_test(x+0, y+0, px_mask, depth[0], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 3);
-
-	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 2) ) & SAMPLE_MASK );
-	mask |= ( px_mask == 0 ? 0 : early_z_test(x+1, y+0, px_mask, depth[1], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 2);
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 0) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+0, y+0, px_mask, depth[0], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 0);
 
 	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 1) ) & SAMPLE_MASK );
-	mask |= ( px_mask == 0 ? 0 : early_z_test(x+0, y+1, px_mask, depth[2], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 1);
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+1, y+0, px_mask, depth[1], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 1);
 
-	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 0) ) & SAMPLE_MASK );
-	mask |= ( px_mask == 0 ? 0 : early_z_test(x+1, y+1, px_mask, depth[3], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 0);
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 2) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+0, y+1, px_mask, depth[2], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 2);
+
+	px_mask = static_cast<uint32_t>( ( quad_mask >> (MAX_SAMPLE_COUNT * 3) ) & SAMPLE_MASK );
+	mask |= ( px_mask == 0 ? 0 : early_z_test(x+1, y+1, px_mask, depth[3], aa_z_offset) ) << (MAX_SAMPLE_COUNT * 3);
 
 	return mask;
 }

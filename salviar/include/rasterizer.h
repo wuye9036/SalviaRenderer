@@ -76,6 +76,8 @@ private:
 	viewport const*					vp_;
     viewport const*                 target_vp_;
     size_t                          target_sample_count_;
+	uint64_t						full_mask_;
+	uint64_t						quad_full_mask_;
 	vs_output_op const*				vso_ops_;
     bool                            has_centroid_;
     uint32_t                        prim_count_;
@@ -130,29 +132,14 @@ private:
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
 		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y);
 
-	void draw_full_package(
-        uint32_t top, uint32_t left,
-		vs_output* pixels, uint16_t packed_pixel_mask,
-        drawing_shader_context const* shaders,
-		drawing_triangle_context const* triangle_ctx
-        );
-
-	void draw_package(
-        uint32_t top, uint32_t left,
-		vs_output* pixels, uint32_t const* masks,
-        drawing_shader_context const* shaders,
-        drawing_triangle_context const* triangle_ctx
-        );
-
 	void draw_full_quad(
-		uint32_t top, uint32_t left,
+		uint32_t left, uint32_t top,
 		vs_output* px,
 		drawing_shader_context const* shaders, drawing_triangle_context const* triangle_ctx);
 	void draw_quad(
-		uint32_t top, uint32_t left,
-		vs_output* px, uint32_t const* masks,
+		uint32_t left, uint32_t top,
+		vs_output* px, uint64_t quad_mask,
 		drawing_shader_context const* shaders, drawing_triangle_context const* triangle_ctx);
-
 
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);
 	void compute_triangle_info(uint32_t prim_id);

@@ -56,13 +56,17 @@ color_rgba32f cpp_pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 	return s.sample_2d_grad(proj_coord.xy(), dcdx.xy(), dcdy.xy(), 0.0f);
 }
 
-bool cpp_pixel_shader::execute(vs_output const* quad, vs_output const& in, ps_output& out)
+uint64_t cpp_pixel_shader::execute(vs_output const* quad, ps_output* out, float* /*depth*/)
 {
-	px_   = &in;
 	quad_ = quad;
-    out.depth = in.position().z();
-	bool rv = shader_prog(in, out);
-	return rv;
+	uint64_t mask = 0;
+	for(int i = 0; i < 4; ++i)
+	{
+		px_ = quad + i;
+		mask |= (shader_prog(*px_, out[i]) ? 0xFFFF : 0x0) << (i * MAX_SAMPLE_COUNT); 	
+	}
+	
+	return mask;
 }
 
 bool cpp_pixel_shader::output_depth() const
