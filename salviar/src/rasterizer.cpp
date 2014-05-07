@@ -1348,7 +1348,7 @@ void rasterizer::draw_full_quad(
 
 	if ( frame_buffer_->early_z_enabled() )
 	{
-		// quad_mask = frame_buffer_->early_z_test_quad(left, top, depth, triangle_ctx->aa_z_offset);
+		quad_mask = frame_buffer_->early_z_test_quad(left, top, depth, triangle_ctx->aa_z_offset);
 	}
 
 	if (quad_mask == 0)
@@ -1409,11 +1409,7 @@ void rasterizer::draw_quad(
 	float const quad_dx = 0.5f + left - v0->position().x();
 	float const quad_dy = 0.5f + top  - v0->position().y();
 
-	for(int i = 0; i < 4; ++i)
-	{
-		vso_ops_->step_2d_unproj_pos(pixels[i], *v0, quad_dx+(i&1), *ddx, quad_dy+((i&2)>>1), *ddy);
-	}
-	// vso_ops_->step_2d_unproj_pos_quad(pixels, *v0, quad_dx, *ddx, quad_dy, *ddy);
+	vso_ops_->step_2d_unproj_pos_quad(pixels, *v0, quad_dx, *ddx, quad_dy, *ddy);
 
 	ps_output pso[4];
 	float     depth[4] = 
@@ -1427,7 +1423,7 @@ void rasterizer::draw_quad(
 	uint64_t tested_quad_mask = quad_mask;
 	if ( frame_buffer_->early_z_enabled() )
 	{
-		// tested_quad_mask = frame_buffer_->early_z_test_quad(left, top, quad_mask, depth, triangle_ctx->aa_z_offset);
+		tested_quad_mask = frame_buffer_->early_z_test_quad(left, top, quad_mask, depth, triangle_ctx->aa_z_offset);
 	}
 
 	if(tested_quad_mask == 0)
