@@ -319,7 +319,7 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 
 	builtin_types hint = v.hint();
 
-	assert( parallel_factor_ == 16 );
+	assert( parallel_factor_ == 4 );
 
 	value_array values = v.load();
 	value_array diff_values(parallel_factor_, NULL);
@@ -329,22 +329,22 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 		);
 	multi_value source1 = source0;
 
-	for(size_t i = 0; i < 4; i+=2)
+	for(size_t i = 0; i < 2; i+=2)
 	{
-		for(size_t j = 0; j < 4; ++j)
+		for(size_t j = 0; j < 2; ++j)
 		{
 			size_t value_index0(0);
 			size_t value_index1(0);
 
 			if(dd == dd_horizontal)
 			{
-				value_index0 = j * 4 + i;
+				value_index0 = j * 2 + i;
 				value_index1 = value_index0 + 1;
 			}
 			else
 			{
-				value_index0 = i * 4 + j;
-				value_index1 = value_index0 + 4;
+				value_index0 = i * 2 + j;
+				value_index1 = value_index0 + 2;
 			}
 
 			Value* source_vm_value[2] = {values[value_index0], values[value_index1] };

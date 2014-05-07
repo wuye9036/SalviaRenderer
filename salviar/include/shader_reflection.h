@@ -124,21 +124,9 @@ struct sv_layout{
 	semantic_value			sv;
 };
 
-int const PACKAGE_ELEMENT_COUNT			= 16;
-int const PACKAGE_LINE_ELEMENT_COUNT	= 4;
-
-inline int SIMD_ELEMENT_COUNT()
-{
-	return 4;
-}
-
-inline int SIMD_VECTOR_BYTES(){
-	return SIMD_ELEMENT_COUNT() * sizeof(float);
-}
-
-inline int SIMD_VECTOR_BITS(){
-	return SIMD_VECTOR_BYTES() << 3;
-}
+int const PACKAGE_ELEMENT_COUNT			= 4;
+int const PACKAGE_LINE_ELEMENT_COUNT	= 2;
+int const SIMD_ELEMENT_COUNT			= 4;
 
 // ! Reflection of shader.
 //

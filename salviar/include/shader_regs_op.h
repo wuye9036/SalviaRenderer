@@ -63,6 +63,8 @@ struct vs_output_op
     vs_output_functions::step_2d_unproj	step_2d_unproj_pos;
     vs_output_functions::step_2d_unproj	step_2d_unproj_attr;
 	vs_output_functions::step_2d_unproj_quad
+										step_2d_unproj_pos_quad;
+	vs_output_functions::step_2d_unproj_quad
 										step_2d_unproj_attr_quad;
 
 	vs_output_functions::compute_derivative

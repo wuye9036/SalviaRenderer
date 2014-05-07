@@ -292,6 +292,40 @@ namespace vs_output_op_funcs
 		return out;
 	}
 
+	vs_output& step_2d_unproj_pos_quad(
+		vs_output* out, const vs_output& in,
+		float step0, const vs_output& derivation0,
+		float step1, const vs_output& derivation1
+        )
+	{
+#if defined(VSO_INTERP_SSE_ENABLED)
+		__m128  d0_m128 = _mm_load_ps( reinterpret_cast<float const*>( derivation0.raw_data() ) );
+		__m128  d1_m128 = _mm_load_ps( reinterpret_cast<float const*>( derivation1.raw_data() ) );
+
+		__m128  in_m128 = _mm_load_ps( reinterpret_cast<float const*>( in.raw_data() ) );
+		
+		__m128& pos00_m128	= *reinterpret_cast<__m128 *>( out[0].raw_data() );
+		__m128& pos01_m128	= *reinterpret_cast<__m128 *>( out[1].raw_data() );
+		__m128& pos10_m128	= *reinterpret_cast<__m128 *>( out[2].raw_data() );
+		__m128& pos11_m128	= *reinterpret_cast<__m128 *>( out[3].raw_data() );
+
+		__m128  step0_m128	= _mm_load_ps1(&step0);
+		__m128  step1_m128	= _mm_load_ps1(&step1);
+
+		pos00_m128 = _mm_add_ps(
+			in_m128,
+			_mm_add_ps( _mm_mul_ps(d0_m128, step0_m128), _mm_mul_ps(d1_m128, step1_m128) )
+			);
+		pos01_m128 = _mm_add_ps(pos00_m128, d0_m128);
+		pos10_m128 = _mm_add_ps(pos00_m128, d1_m128);
+		pos11_m128 = _mm_add_ps(pos01_m128, d1_m128);
+#else
+		EFLIB_ASSERT_UNIMPLEMENTED();
+#endif
+
+		return *out;
+	}
+
 	template <int N>
 	vs_output& step_2d_unproj_attr_n_quad(
 		vs_output* out, const vs_output& in,
@@ -307,8 +341,8 @@ namespace vs_output_op_funcs
 		
 		__m128*		  out00_m128	= reinterpret_cast<__m128 *>( out[0].raw_data() );
 		__m128*		  out01_m128	= reinterpret_cast<__m128 *>( out[1].raw_data() );
-		__m128*		  out10_m128	= reinterpret_cast<__m128 *>( out[4].raw_data() );
-		__m128*		  out11_m128	= reinterpret_cast<__m128 *>( out[5].raw_data() );
+		__m128*		  out10_m128	= reinterpret_cast<__m128 *>( out[2].raw_data() );
+		__m128*		  out11_m128	= reinterpret_cast<__m128 *>( out[3].raw_data() );
 
 		__m128		  step0_m128	= _mm_load_ps1(&step0);
 		__m128		  step1_m128	= _mm_load_ps1(&step1);
@@ -524,6 +558,7 @@ vs_output_op gen_vs_output_op_n()
 	ret.lerp = lerp_n<N>;
     ret.step_2d_unproj_pos = step_2d_unproj_pos;
     ret.step_2d_unproj_attr = step_2d_unproj_attr_n<N>;
+	ret.step_2d_unproj_pos_quad = step_2d_unproj_pos_quad;
 	ret.step_2d_unproj_attr_quad = step_2d_unproj_attr_n_quad<N>;
 	ret.compute_derivative = compute_derivative_n<N>;
 
