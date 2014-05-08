@@ -1182,7 +1182,6 @@ void rasterizer::draw()
 
 	size_t num_threads	= num_available_threads();
 
-	geom_setup_engine	gse;
 	geom_setup_context	geom_setup_ctx;
 
 	geom_setup_ctx.cull			    = state_->get_cull_func();
@@ -1194,10 +1193,10 @@ void rasterizer::draw()
     geom_setup_ctx.pipeline_stat    = pipeline_stat_;
     geom_setup_ctx.acc_cinvocations = acc_cinvocations_;
 
-	gse.execute(&geom_setup_ctx);
+	gse_.execute(&geom_setup_ctx);
 
-	clipped_verts_			= gse.verts();
-	clipped_verts_count_	= gse.verts_count();
+	clipped_verts_			= gse_.verts();
+	clipped_verts_count_	= gse_.verts_count();
 	clipped_prims_count_	= clipped_verts_count_ / prim_size_;
 
     acc_ia_primitives_(pipeline_stat_, prim_count_);
@@ -1375,7 +1374,7 @@ void rasterizer::draw_full_quad(
 	if(shaders->ps_unit)
 	{
 		shaders->ps_unit->update(pixels, vs_reflection_);
-		shaders->ps_unit->execute(pso);
+		shaders->ps_unit->execute(pso, depth);
 	}
 	else
 	{
@@ -1475,7 +1474,7 @@ void rasterizer::draw_quad(
 	if(shaders->ps_unit)
 	{
 		shaders->ps_unit->update(pixels, vs_reflection_);
-		shaders->ps_unit->execute(pso);
+		shaders->ps_unit->execute(pso, depth);
 	}
 	else
 	{

@@ -286,7 +286,7 @@ void pixel_shader_unit::update( vs_output* inputs, shader_reflection const* vs_a
 	}
 }
 
-void pixel_shader_unit::execute( ps_output* outs )
+void pixel_shader_unit::execute(ps_output* outs, float* depths)
 {
 	void* psi = stream_data.empty() ? NULL : &(stream_data[0]);
 	void* pbi = buffer_data.empty() ? NULL : &(buffer_data[0]);
@@ -319,7 +319,7 @@ void pixel_shader_unit::execute( ps_output* outs )
 				uintptr_t pixel_addr = * reinterpret_cast<uintptr_t*>( &(stream_odata[i_pixel*sizeof(void*)]) );
 				uintptr_t data_addr = pixel_addr + static_cast<uintptr_t>(info->offset);
 				float* pdata = reinterpret_cast<float*>(data_addr);
-				outs[i_pixel].depth = *pdata;
+				depths[i_pixel] = *pdata;
 			}
 		}
 	}

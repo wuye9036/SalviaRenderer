@@ -150,8 +150,6 @@ struct triangle_info
 //vs_output compute_derivate
 struct ps_output
 {
-	float		depth;
-	uint32_t	coverage;
 	boost::array<eflib::vec4, MAX_RENDER_TARGETS> color;
 };
 

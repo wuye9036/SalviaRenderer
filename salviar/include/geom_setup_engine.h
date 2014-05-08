@@ -65,6 +65,8 @@ private:
 	
 	boost::shared_array<vs_output_pool>	vso_pools_;
 	boost::shared_array<vs_output*>		clipped_verts_;
+	size_t								clipped_verts_size_;
+
 	boost::shared_array<uint32_t>		clipped_package_verts_count_;
 	
 	boost::shared_array<vs_output*>		compacted_verts_;

@@ -112,11 +112,12 @@ private:
 	std::vector<cpp_pixel_shader*>	threaded_cpp_ps_;
 	std::vector<pixel_shader_unit*>	threaded_psu_;
 
+	boost::function< void (rasterizer*, rasterize_multi_prim_context*)>
+									rasterize_prims_;
+	geom_setup_engine				gse_;
+
 	void threaded_dispatch_primitive(thread_context const*);
 	void threaded_rasterize_multi_prim(thread_context const*);
-
-	boost::function< void (rasterizer*, rasterize_multi_prim_context*)>
-		rasterize_prims_;
 
 	void draw_full_tile(
 		int left, int top, int right, int bottom,

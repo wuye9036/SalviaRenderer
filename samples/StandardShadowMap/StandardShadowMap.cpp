@@ -52,7 +52,6 @@ class gen_sm_cpp_ps : public cpp_pixel_shader
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-        out.depth = in.position().z();
 		return true;
 	}
 

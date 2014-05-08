@@ -89,7 +89,7 @@ public:
 	void set_sampler( std::string const&, sampler_ptr const& samp );
 
 	void update( vs_output* inputs, shader_reflection const* vs_abi );
-	void execute( ps_output* outs );
+	void execute(ps_output* outs, float* depths);
 
 public:
 	shader_object const* code;

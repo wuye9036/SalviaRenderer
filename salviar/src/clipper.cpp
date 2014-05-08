@@ -55,7 +55,23 @@ void clipper::clip_solid_triangle(vs_output** tri_verts, clip_results* results)
 	clip_triangle_to_poly(tri_verts, &tri_clip_results);
 
 	// Re-topo/subdivde polygon to triangles.
-	assert(tri_clip_results.num_clipped_verts <= 5);
+	assert(tri_clip_results.num_clipped_verts <= 5 || tri_clip_results.num_clipped_verts == 0xFF);
+	if (tri_clip_results.num_clipped_verts == 0xFF)
+	{
+		results->num_clipped_verts = 3;
+		results->is_front = tri_clip_results.is_front;
+		
+		int offset = results->is_front ? 0 : 1;
+
+		// OPT: do this without branch
+		//    if(results->is_front) swap(results->clipped_verts[1], results->clipped_verts[2]);
+		results->clipped_verts[0] = tri_verts[0];
+		results->clipped_verts[1] = tri_verts[1+offset];
+		results->clipped_verts[2] = tri_verts[2-offset];
+
+		return;
+	}
+
 	if (tri_clip_results.num_clipped_verts < 3 )
 	{
 		results->num_clipped_verts = 0;
@@ -131,12 +147,7 @@ void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results
 			return;
 		}
 
-		results->num_clipped_verts = 3;
-		for(size_t i = 0; i < 3; ++i)
-		{
-			results->clipped_verts[i] = tri_verts[i];
-		}
-		
+		results->num_clipped_verts = 0xFF;
 		return;
 	}
 
