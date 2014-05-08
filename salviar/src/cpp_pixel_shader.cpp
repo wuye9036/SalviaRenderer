@@ -16,7 +16,7 @@ eflib::vec4 cpp_pixel_shader::ddx(size_t iReg) const
 
 eflib::vec4 cpp_pixel_shader::ddy(size_t iReg) const
 {
-	return quad_[4].attribute(iReg) - quad_[0].attribute(iReg);
+	return quad_[2].attribute(iReg) - quad_[0].attribute(iReg);
 }
 
 // ---------------------------------------
