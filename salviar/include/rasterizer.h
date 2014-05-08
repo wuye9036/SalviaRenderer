@@ -134,11 +134,9 @@ private:
 
 	void draw_full_quad(
 		uint32_t left, uint32_t top,
-		vs_output* px,
 		drawing_shader_context const* shaders, drawing_triangle_context const* triangle_ctx);
 	void draw_quad(
-		uint32_t left, uint32_t top,
-		vs_output* px, uint64_t quad_mask,
+		uint32_t left, uint32_t top, uint64_t quad_mask,
 		drawing_shader_context const* shaders, drawing_triangle_context const* triangle_ctx);
 
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);

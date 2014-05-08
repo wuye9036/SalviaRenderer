@@ -301,13 +301,11 @@ void rasterizer::draw_full_tile(
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
-	EFLIB_ALIGN(16) vs_output unprojed[4];
-
 	for(int top = tile_top; top < tile_bottom; top += 2)
 	{
 		for(int left = tile_left; left < tile_right; left += 2)
 		{
-			draw_full_quad(left, top, unprojed, shaders, triangle_ctx);
+			draw_full_quad(left, top, shaders, triangle_ctx);
 		}
 	}
 
@@ -442,9 +440,6 @@ void rasterizer::draw_partial_tile(
 	}
 #endif
 
-	vs_output unprojed[4];
-	float	  depth[4];
-
     for(int quad = 0; quad < 4; ++quad)
     {
 		int const quad_x = (quad & 1) << 1;
@@ -466,11 +461,11 @@ void rasterizer::draw_partial_tile(
 
 		if (quad_mask == quad_full_mask_)
 		{
-			draw_full_quad(left + quad_x, top + quad_y, unprojed, shaders, triangle_ctx);
+			draw_full_quad(left + quad_x, top + quad_y, shaders, triangle_ctx);
 		}
 		else
 		{
-			draw_quad(left + quad_x, top + quad_y, unprojed, quad_mask, shaders, triangle_ctx);
+			draw_quad(left + quad_x, top + quad_y, quad_mask, shaders, triangle_ctx);
 		}
     }
 
@@ -1321,12 +1316,14 @@ void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num
 }
 
 void rasterizer::draw_full_quad(
-	uint32_t left, uint32_t top, vs_output* pixels,
+	uint32_t left, uint32_t top,
 	drawing_shader_context const* shaders,
     drawing_triangle_context const* triangle_ctx
 	)
 {
 #if 1
+	EFLIB_ALIGN(16) vs_output pixels[4];
+
 	float const dx = 0.5f + left - triangle_ctx->tri_info->v0->position().x();
 	float const dy = 0.5f + top  - triangle_ctx->tri_info->v0->position().y();
 
@@ -1396,12 +1393,13 @@ void rasterizer::draw_full_quad(
 }
 
 void rasterizer::draw_quad(
-	uint32_t left, uint32_t top,
-	vs_output* pixels, uint64_t quad_mask,
+	uint32_t left, uint32_t top, uint64_t quad_mask,
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
 #if 1
+	EFLIB_ALIGN(16) vs_output pixels[4];
+
 	auto v0  =  triangle_ctx->tri_info->v0;
 	auto ddx = &triangle_ctx->tri_info->ddx; 
 	auto ddy = &triangle_ctx->tri_info->ddy;
