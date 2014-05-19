@@ -210,6 +210,7 @@ enum class async_object_ids: uint32_t
     pipeline_statistics,
     occlusion_predicate,
     internal_statistics,
+	pipeline_profiles,
     count
 };
 

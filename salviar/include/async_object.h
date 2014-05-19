@@ -220,6 +220,67 @@ protected:
     }
 };
 
+struct pipeline_profiles
+{
+	uint64_t unique_indicies;
+	uint64_t vtx_proc;
+	uint64_t clipping;
+	uint64_t vp_trans;
+	uint64_t tri_dispatch;
+	uint64_t ras;
+};
+
+enum class pipeline_profile_id: uint32_t
+{
+	unique_indicies = 0,
+	vtx_proc,
+	clipping,
+	vp_trans,
+	tri_dispatch,
+	ras,
+	count
+};
+
+class async_pipeline_profiles: public async_object
+{
+public:
+    template <pipeline_profile_id StatID>
+    static void accumulate(async_object* query_obj, uint64_t v)
+    {
+        assert(dynamic_cast<async_pipeline_profiles*>(query_obj) != nullptr);
+	    static_cast<async_pipeline_profiles*>(query_obj)->counters_[static_cast<uint32_t>(StatID)] += v;
+    }
+
+    virtual async_object_ids id()
+    {
+        return async_object_ids::internal_statistics;
+    }
+
+protected:
+    boost::array<
+        boost::atomic<uint64_t>,
+        static_cast<uint32_t>(pipeline_profile_id::count)
+    > counters_;
+
+    void get_value(void* v)
+    {
+        auto ret = reinterpret_cast<pipeline_profiles*>(v);
+		ret->unique_indicies = counters_[static_cast<uint32_t>(pipeline_profile_id::unique_indicies)];
+		ret->vtx_proc		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
+		ret->clipping		 = counters_[static_cast<uint32_t>(pipeline_profile_id::clipping)];
+		ret->vp_trans		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vp_trans)];
+		ret->tri_dispatch	 = counters_[static_cast<uint32_t>(pipeline_profile_id::tri_dispatch)];
+		ret->ras				 = counters_[static_cast<uint32_t>(pipeline_profile_id::ras)];
+    }
+
+    virtual void init_async_data()
+    {
+        for(auto& counter: counters_)
+        {
+            counter = 0;
+        }
+    }
+};
 
 template <typename ValueT>
 struct accumulate_fn
