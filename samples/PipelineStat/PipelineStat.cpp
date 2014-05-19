@@ -208,6 +208,7 @@ protected:
         
         pipeline_stat_obj_ = renderer_->create_query(async_object_ids::pipeline_statistics);
         internal_stat_obj_ = renderer_->create_query(async_object_ids::internal_statistics);
+		pipeline_prof_obj_ = renderer_->create_query(async_object_ids::pipeline_profiles);
 
         viewport vp;
         vp.w = static_cast<float>(render_params.backbuffer_width);
@@ -270,6 +271,7 @@ protected:
 
         renderer_->begin(pipeline_stat_obj_);
         renderer_->begin(internal_stat_obj_);
+		renderer_->begin(pipeline_prof_obj_);
 
         renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
@@ -346,11 +348,15 @@ protected:
         
         renderer_->end(pipeline_stat_obj_);
         renderer_->end(internal_stat_obj_);
+		renderer_->end(pipeline_prof_obj_);
 
         pipeline_statistics pipeline_stat_data;
         internal_statistics internal_stat_data;
+		pipeline_profiles   pipeline_prof_data;
+
         renderer_->get_data(pipeline_stat_obj_, &pipeline_stat_data, false);
         renderer_->get_data(internal_stat_obj_, &internal_stat_data, false); 
+		renderer_->get_data(pipeline_prof_obj_, &pipeline_prof_data, false); 
 
         cout
             << "CI: " << pipeline_stat_data.cinvocations << " "
@@ -361,6 +367,15 @@ protected:
             << "PSI:" << pipeline_stat_data.ps_invocations << " "
             << "BIP:" << internal_stat_data.backend_input_pixels << " "
             << endl;
+
+		cout
+			<< "GV: " << pipeline_prof_data.gather_vtx << " "
+			<< "VTP:" << pipeline_prof_data.vtx_proc << " "
+			<< "CLP:" << pipeline_prof_data.clipping << " "
+			<< "VPT:" << pipeline_prof_data.vp_trans << " "
+			<< "TRD:" << pipeline_prof_data.tri_dispatch << " "
+			<< "RAS:" << pipeline_prof_data.ras << " "
+			<< endl;
 
 		impl->main_window()->refresh();
 	}
@@ -383,6 +398,7 @@ protected:
     
     async_object_ptr        pipeline_stat_obj_;
     async_object_ptr        internal_stat_obj_;
+	async_object_ptr		pipeline_prof_obj_;
 
 	raster_state_ptr        rs_back;
 

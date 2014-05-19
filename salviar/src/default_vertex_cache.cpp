@@ -64,6 +64,8 @@ public:
         prim_count_ = state->prim_count;
 
         pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
+		pipeline_prof_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_profiles)].get();
+
         if(pipeline_stat_)
         {
             acc_ia_vertices_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_vertices>;
@@ -74,10 +76,25 @@ public:
             acc_ia_vertices_ = &accumulate_fn<uint64_t>::null;
             acc_vs_invocations_ = &accumulate_fn<uint64_t>::null;
         }
+
+		if(pipeline_prof_)
+		{
+			fetch_time_stamp_	= &async_pipeline_profiles::time_stamp;
+			acc_gather_vtx_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::gather_vtx>; 
+			acc_vtx_proc_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::vtx_proc>;
+		}
+		else
+		{
+			fetch_time_stamp_	= &time_stamp_fn::null;
+			acc_gather_vtx_		= &accumulate_fn<uint64_t>::null;
+			acc_vtx_proc_		= &accumulate_fn<uint64_t>::null;
+		}
 	}
 
 	void transform_vertices()
 	{
+		uint64_t gather_vtx_start_time = fetch_time_stamp_();
+
 		uint32_t prim_size = 0;
 		switch(topology_)
 		{
@@ -128,6 +145,7 @@ public:
         // Accumulate query counters.
         acc_ia_vertices_( pipeline_stat_, static_cast<uint64_t>(prim_count_*prim_size) );
         acc_vs_invocations_( pipeline_stat_, static_cast<uint64_t>(unique_indices.size()) );
+		acc_gather_vtx_(pipeline_prof_, fetch_time_stamp_() - gather_vtx_start_time);
 
 		// Transform vertexes
 		if( cpp_vs_ )
@@ -162,12 +180,14 @@ public:
 				);
 		}
 
+		volatile uint64_t vtx_proc_start_time = fetch_time_stamp_();
 		for (size_t i = 0; i < num_threads - 1; ++ i)
 		{
 			global_thread_pool().schedule(task_transform_vertex);
 		}
 		task_transform_vertex();
 		global_thread_pool().wait();
+		acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
 	}
 
 	vs_output& fetch(cache_entry_index id)
@@ -296,11 +316,20 @@ private:
 	size_t					transformed_verts_capacity_;
 
 	vector<int32_t>			used_verts_;
+
     async_object*           pipeline_stat_;
+	async_object*			pipeline_prof_;
+
+	time_stamp_fn::type		fetch_time_stamp_;
+
     accumulate_fn<uint64_t>::type
                             acc_ia_vertices_;
     accumulate_fn<uint64_t>::type
                             acc_vs_invocations_;
+	accumulate_fn<uint64_t>::type
+							acc_gather_vtx_;
+	accumulate_fn<uint64_t>::type
+							acc_vtx_proc_;
 
 	boost::pool<>			verts_pool_;
 };

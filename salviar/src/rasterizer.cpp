@@ -271,6 +271,8 @@ void rasterizer::update(render_state const* state)
     // Initialize statistics.
     pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
     internal_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::internal_statistics)].get();
+	pipeline_prof_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_profiles)].get();
+
     if(pipeline_stat_)
     {
         acc_ia_primitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_primitives>;
@@ -294,6 +296,23 @@ void rasterizer::update(render_state const* state)
     {
         acc_backend_input_pixels_ = &accumulate_fn<uint64_t>::null;
     }
+
+	if(pipeline_prof_)
+	{
+		fetch_time_stamp_	= &async_pipeline_profiles::time_stamp;
+		acc_vp_trans_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::vp_trans>;
+		acc_tri_dispatch_	= &async_pipeline_profiles::accumulate<pipeline_profile_id::tri_dispatch>;
+		acc_ras_			= &async_pipeline_profiles::accumulate<pipeline_profile_id::ras>;
+		acc_clipping_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::clipping>;
+	}
+	else
+	{
+		fetch_time_stamp_	= &time_stamp_fn::null;
+		acc_clipping_		= &accumulate_fn<uint64_t>::null;
+		acc_vp_trans_		= &accumulate_fn<uint64_t>::null;
+		acc_tri_dispatch_	= &accumulate_fn<uint64_t>::null;
+		acc_ras_			= &accumulate_fn<uint64_t>::null;
+	}
 }
 
 void rasterizer::draw_full_tile(
@@ -1193,7 +1212,9 @@ void rasterizer::draw()
     geom_setup_ctx.pipeline_stat    = pipeline_stat_;
     geom_setup_ctx.acc_cinvocations = acc_cinvocations_;
 
+	uint64_t clipping_start_time = fetch_time_stamp_();
 	gse_.execute(&geom_setup_ctx);
+	acc_clipping_(pipeline_prof_, fetch_time_stamp_() - clipping_start_time);
 
 	clipped_verts_			= gse_.verts();
 	clipped_verts_count_	= gse_.verts_count();
@@ -1203,8 +1224,11 @@ void rasterizer::draw()
     acc_cprimitives_(pipeline_stat_, clipped_prims_count_);
 
 	// Project and Transformed to Viewport
+	uint64_t vp_trans_start_time = fetch_time_stamp_();
 	viewport_and_project_transform(clipped_verts_, clipped_verts_count_);
+	acc_vp_trans_(pipeline_prof_, fetch_time_stamp_() - vp_trans_start_time);
 
+	uint64_t tri_dispatch_start_time = fetch_time_stamp_();
 	// Dispatch primitives into tiles' bucket
 	threaded_tiled_prims_.resize(num_threads);
 	tri_infos_.resize(clipped_prims_count_);
@@ -1218,6 +1242,7 @@ void rasterizer::draw()
 		[this](thread_context const* thread_ctx) { this->threaded_dispatch_primitive(thread_ctx); },
 		clipped_prims_count_, DISPATCH_PRIMITIVE_PACKAGE_SIZE, num_threads
 		);
+	acc_tri_dispatch_(pipeline_prof_, fetch_time_stamp_() - tri_dispatch_start_time);
 
 	// Rasterize tiles
 	switch(prim_)
@@ -1254,10 +1279,12 @@ void rasterizer::draw()
 		}
 	}
 
+	uint64_t ras_start_time = fetch_time_stamp_();
 	execute_threads(
 		[this](thread_context const* thread_ctx){ this->threaded_rasterize_multi_prim(thread_ctx); },
 		tile_count_, RASTERIZE_PRIMITIVE_PACKAGE_SIZE, num_threads
 		);
+	acc_ras_(pipeline_prof_, fetch_time_stamp_() - ras_start_time);
 
 	// destroy all cpp_pixel_shader clone
 	for (size_t i = 0; i < num_threads; ++ i)

@@ -11,6 +11,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/array.hpp>
+#include <boost/chrono.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 BEGIN_NS_SALVIAR();
@@ -222,7 +223,7 @@ protected:
 
 struct pipeline_profiles
 {
-	uint64_t unique_indicies;
+	uint64_t gather_vtx;	// Including: Genenrate index of primitives and unique indexes
 	uint64_t vtx_proc;
 	uint64_t clipping;
 	uint64_t vp_trans;
@@ -232,7 +233,7 @@ struct pipeline_profiles
 
 enum class pipeline_profile_id: uint32_t
 {
-	unique_indicies = 0,
+	gather_vtx = 0,
 	vtx_proc,
 	clipping,
 	vp_trans,
@@ -244,6 +245,12 @@ enum class pipeline_profile_id: uint32_t
 class async_pipeline_profiles: public async_object
 {
 public:
+	static uint64_t time_stamp()
+	{
+		using namespace boost::chrono;
+		return static_cast<uint64_t>( duration_cast<nanoseconds>( high_resolution_clock::now().time_since_epoch() ).count() );
+	}
+
     template <pipeline_profile_id StatID>
     static void accumulate(async_object* query_obj, uint64_t v)
     {
@@ -253,7 +260,7 @@ public:
 
     virtual async_object_ids id()
     {
-        return async_object_ids::internal_statistics;
+		return async_object_ids::pipeline_profiles;
     }
 
 protected:
@@ -265,12 +272,12 @@ protected:
     void get_value(void* v)
     {
         auto ret = reinterpret_cast<pipeline_profiles*>(v);
-		ret->unique_indicies = counters_[static_cast<uint32_t>(pipeline_profile_id::unique_indicies)];
-		ret->vtx_proc		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
+		ret->gather_vtx		 = counters_[static_cast<uint32_t>(pipeline_profile_id::gather_vtx)];
 		ret->clipping		 = counters_[static_cast<uint32_t>(pipeline_profile_id::clipping)];
 		ret->vp_trans		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vp_trans)];
 		ret->tri_dispatch	 = counters_[static_cast<uint32_t>(pipeline_profile_id::tri_dispatch)];
-		ret->ras				 = counters_[static_cast<uint32_t>(pipeline_profile_id::ras)];
+		ret->ras			 = counters_[static_cast<uint32_t>(pipeline_profile_id::ras)];
+		ret->vtx_proc		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
     }
 
     virtual void init_async_data()
@@ -280,6 +287,15 @@ protected:
             counter = 0;
         }
     }
+};
+
+struct time_stamp_fn
+{
+	typedef uint64_t (*type)();
+	static uint64_t null()
+	{
+		return 0;
+	}
 };
 
 template <typename ValueT>

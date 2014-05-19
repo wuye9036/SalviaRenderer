@@ -84,11 +84,19 @@ private:
 
     async_object*                   pipeline_stat_;
     async_object*                   internal_stat_;
+	async_object*					pipeline_prof_;
+
     accumulate_fn<uint64_t>::type   acc_ia_primitives_;
     accumulate_fn<uint64_t>::type   acc_cinvocations_;
     accumulate_fn<uint64_t>::type   acc_cprimitives_;
     accumulate_fn<uint64_t>::type   acc_ps_invocations_;
     accumulate_fn<uint64_t>::type   acc_backend_input_pixels_;
+
+	time_stamp_fn::type				fetch_time_stamp_;
+	accumulate_fn<uint64_t>::type	acc_vp_trans_;
+	accumulate_fn<uint64_t>::type	acc_tri_dispatch_;
+	accumulate_fn<uint64_t>::type	acc_ras_;
+	accumulate_fn<uint64_t>::type	acc_clipping_;
 
 	// Intermediate data
 	prim_type						prim_;
