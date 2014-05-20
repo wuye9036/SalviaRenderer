@@ -9,7 +9,7 @@
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/stream_assembler.h>
-#include <salviar/include/thread_pool.h>
+#include <salviar/include/thread_context.h>
 #include <salviar/include/async_object.h>
 #include <salviar/include/shader_unit.h>
 
@@ -18,6 +18,8 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/ref.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <atomic>
 
 #if defined(EFLIB_MSVC)
 #	include <ppl.h>
@@ -35,7 +37,9 @@ BEGIN_NS_SALVIAR();
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
 
-const size_t invalid_id = 0xffffffff;
+size_t const invalid_id = 0xffffffff;
+
+#define USE_INDEX_RANGE 0
 
 class default_vertex_cache : public vertex_cache
 {
@@ -115,18 +119,16 @@ public:
 		size_t num_threads = num_available_threads( );
 
 		// Generate indices
-		boost::function<void()> task_generate_indices = 
-			boost::bind( &default_vertex_cache::generate_indices, this,
-			boost::ref(indices_), static_cast<int32_t>(prim_count_),
-			prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE
-			);
-		for (size_t i = 0; i < num_threads - 1; ++ i)
-		{
-			global_thread_pool().schedule(task_generate_indices);
-		}
-		task_generate_indices();
-		global_thread_pool().wait();
+		std::atomic<uint32_t> min_index( std::numeric_limits<uint32_t>::max() );
+		std::atomic<uint32_t> max_index(0);
 
+		auto generate_indicies_ = [this, &min_index, &max_index, prim_size](thread_context* ctx)
+		{
+			this->generate_indices(this->indices_, min_index, max_index, prim_size, ctx);
+		};
+		execute_threads(generate_indicies_, prim_count_, GENERATE_INDICES_PACKAGE_SIZE);
+
+#if !USE_INDEX_RANGE
 		// Unique indices
 		std::vector<uint32_t> unique_indices = indices_;
 #if defined(EFLIB_MSVC)
@@ -188,11 +190,14 @@ public:
 		task_transform_vertex();
 		global_thread_pool().wait();
 		acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
+#else
+#endif
 	}
 
 	vs_output& fetch(cache_entry_index id)
 	{
 		static vs_output null_obj;
+#if !USE_INDEX_RANGE
 		id = indices_[id];
 
 #if defined(EFLIB_DEBUG)
@@ -204,25 +209,52 @@ public:
 #endif
 
 		return transformed_verts_[used_verts_[id]];
+#else
+		return transformed_verts_[id - min_index_];
+#endif
 	}
 
 private:
 	void generate_indices(
-		vector<uint32_t>& indices, int32_t prim_count,
-		uint32_t stride, atomic<int32_t>& working_package, int32_t package_size)
+		vector<uint32_t>& indices, std::atomic<uint32_t>& min_index, std::atomic<uint32_t>& max_index,
+		uint32_t stride, thread_context const* thread_ctx)
 	{
-		const int32_t num_packages = (prim_count + package_size - 1) / package_size;
+		// Fetch indexes and min/max of package
+		uint32_t thread_min_index = std::numeric_limits<uint32_t>::max();
+		uint32_t thread_max_index = 0;
 
-		int32_t local_working_package = working_package ++;
-		while (local_working_package < num_packages)
+		thread_context::package_cursor current_package = thread_ctx->next_package();
+		while ( current_package.valid() )
 		{
-			const int32_t start = local_working_package * package_size;
-			const int32_t end = std::min(prim_count, start + package_size);
-			index_fetcher_.fetch_indexes(&indices[start*stride], start, end);
-			local_working_package = working_package++;
+			auto prim_range = current_package.item_range();
+			uint32_t pkg_min_index, pkg_max_index;
+			index_fetcher_.fetch_indexes(&indices[prim_range.first*stride], &pkg_min_index, &pkg_max_index, prim_range.first, prim_range.second);
+			thread_min_index = std::min(pkg_min_index, thread_min_index);
+			thread_max_index = std::min(pkg_max_index, thread_max_index);
+			current_package = thread_ctx->next_package();
 		}
+
+		// While thread is ended, merge min/max index to global.
+		uint32_t old_min_index = 0;
+		uint32_t new_min_index = 0;
+		do
+		{
+			old_min_index = min_index;	
+			new_min_index = std::min(old_min_index, thread_min_index);
+		}
+		while( !min_index.compare_exchange_weak(old_min_index, new_min_index) );
+
+		uint32_t old_max_index = 0;
+		uint32_t new_max_index = 0;
+		do
+		{
+			new_max_index = std::max(old_max_index, thread_max_index);
+			old_max_index = max_index;
+		}
+		while( !max_index.compare_exchange_weak(old_max_index, new_max_index) );
 	}
 
+#if !USE_INDEX_RANGE
 	void transform_vertex_cppvs(
 		vector<uint32_t> const& indices, int32_t index_count,
 		atomic<int32_t>& working_package, int32_t package_size)
@@ -299,6 +331,57 @@ private:
 			local_working_package = working_package ++;
 		}
 	}
+#else
+	void transform_vertex_cppvs(uint32_t min_index, thread_context* thread_ctx)
+	{
+		thread_context::package_cursor current_package = thread_ctx->next_package();
+		while ( current_package.valid() )
+		{
+			auto vert_range = current_package.item_range();
+			for(auto i = vert_range.first; i < vert_range.second; ++i)
+			{
+				vs_input vertex;
+				assembler_->fetch_vertex(vertex, i);
+				cpp_vs_->execute(vertex, transformed_verts_[i-min_index]);
+			}
+			current_package = thread_ctx->next_package();
+		}
+	}
+
+	void transform_vertex_vs(uint32_t min_index, thread_context* thread_ctx)
+	{
+		vertex_shader_unit vsu = *vs_proto_;
+		vsu.bind_streams(assembler_);
+
+		thread_context::package_cursor current_package = thread_ctx->next_package();
+		while ( current_package.valid() )
+		{
+			auto vert_range = current_package.item_range();
+			for(auto i = vert_range.first; i < vert_range.second; ++i)
+			{
+				vsu.update(i);
+				vsu.execute( transformed_verts_[i-min_index] );
+			}
+			current_package = thread_ctx->next_package();
+		}
+	}
+
+	void transform_vertex_vs2(uint32_t min_index, thread_context* thread_ctx)
+	{
+		vx_shader_unit_ptr vsu = host_->get_vx_shader_unit();
+		thread_context::package_cursor current_package = thread_ctx->next_package();
+		while ( current_package.valid() )
+		{
+			auto vert_range = current_package.item_range();
+			for(auto i = vert_range.first; i < vert_range.second; ++i)
+			{
+				vsu->execute(i, transformed_verts_[i-min_index]);
+			}
+			current_package = thread_ctx->next_package();
+		}
+	}
+#endif
+
 private:
 	stream_assembler*		assembler_;
 	host*					host_;
