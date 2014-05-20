@@ -16,7 +16,7 @@ class index_fetcher
 {
 public:
 	void update(render_state const* state);
-	void fetch_indexes(uint32_t* indexes_of_prim, uint32_t prim_id_beg, uint32_t prim_id_end);
+	void fetch_indexes(uint32_t* indexes_of_prim, uint32_t* min_index, uint32_t* max_index, uint32_t prim_id_beg, uint32_t prim_id_end);
 
 private:
 	buffer*				index_buffer_;
