@@ -97,6 +97,7 @@ private:
 	accumulate_fn<uint64_t>::type	acc_tri_dispatch_;
 	accumulate_fn<uint64_t>::type	acc_ras_;
 	accumulate_fn<uint64_t>::type	acc_clipping_;
+	accumulate_fn<uint64_t>::type	acc_compact_clip_;
 
 	// Intermediate data
 	prim_type						prim_;

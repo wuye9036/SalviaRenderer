@@ -26,11 +26,12 @@ geom_setup_engine::geom_setup_engine():
 {
 }
 
-void geom_setup_engine::execute(geom_setup_context const* ctxt)
+void geom_setup_engine::execute(geom_setup_context const* ctxt, uint64_t (*fetch_time_stamp)())
 {
 	ctxt_ = ctxt;
 
 	clip_geometries();
+	compact_start_time_ = fetch_time_stamp();
 	compact_geometries();
 }
 

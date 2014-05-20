@@ -128,6 +128,8 @@ public:
 		};
 		execute_threads(generate_indicies_, prim_count_, GENERATE_INDICES_PACKAGE_SIZE);
 
+		min_index_ = min_index;
+
 #if !USE_INDEX_RANGE
 		// Unique indices
 		std::vector<uint32_t> unique_indices = indices_;
@@ -191,15 +193,62 @@ public:
 		global_thread_pool().wait();
 		acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
 #else
+		uint32_t verts_count = max_index - min_index_ + 1;
+		if(transformed_verts_capacity_ < verts_count)
+		{
+			transformed_verts_.reset(new vs_output[verts_count]);
+			transformed_verts_capacity_ = verts_count;
+		}
+
+        // Accumulate query counters.
+        acc_ia_vertices_( pipeline_stat_, static_cast<uint64_t>(prim_count_*prim_size) );
+        acc_vs_invocations_( pipeline_stat_, static_cast<uint64_t>(verts_count) );
+		acc_gather_vtx_(pipeline_prof_, fetch_time_stamp_() - gather_vtx_start_time);
+
+		// Transform vertexes
+		if( cpp_vs_ )
+		{
+			assembler_->update_register_map( cpp_vs_->get_register_map() );
+		}
+
+		uint64_t vtx_proc_start_time = fetch_time_stamp_();
+
+		if(cpp_vs_)
+		{
+			auto execute_vert_shader = [this](thread_context* thread_ctx)
+			{
+				this->transform_vertex_cppvs(thread_ctx);
+			};
+			execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
+		}
+		else if (host_ != nullptr)
+		{
+			auto execute_vert_shader = [this](thread_context* thread_ctx)
+			{
+				this->transform_vertex_vs2(thread_ctx);
+			};
+			execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
+		}
+		else
+		{
+			auto execute_vert_shader = [this](thread_context* thread_ctx)
+			{
+				this->transform_vertex_vs(thread_ctx);
+			};
+			execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
+		}
+
+		acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
 #endif
 	}
 
 	vs_output& fetch(cache_entry_index id)
 	{
 		static vs_output null_obj;
-#if !USE_INDEX_RANGE
 		id = indices_[id];
 
+#if !USE_INDEX_RANGE
+		
 #if defined(EFLIB_DEBUG)
 		if((id > used_verts_.size()) || (-1 == used_verts_[id]))
 		{
@@ -230,7 +279,7 @@ private:
 			uint32_t pkg_min_index, pkg_max_index;
 			index_fetcher_.fetch_indexes(&indices[prim_range.first*stride], &pkg_min_index, &pkg_max_index, prim_range.first, prim_range.second);
 			thread_min_index = std::min(pkg_min_index, thread_min_index);
-			thread_max_index = std::min(pkg_max_index, thread_max_index);
+			thread_max_index = std::max(pkg_max_index, thread_max_index);
 			current_package = thread_ctx->next_package();
 		}
 
@@ -248,8 +297,8 @@ private:
 		uint32_t new_max_index = 0;
 		do
 		{
-			new_max_index = std::max(old_max_index, thread_max_index);
 			old_max_index = max_index;
+			new_max_index = std::max(old_max_index, thread_max_index);
 		}
 		while( !max_index.compare_exchange_weak(old_max_index, new_max_index) );
 	}
@@ -332,7 +381,7 @@ private:
 		}
 	}
 #else
-	void transform_vertex_cppvs(uint32_t min_index, thread_context* thread_ctx)
+	void transform_vertex_cppvs(thread_context* thread_ctx)
 	{
 		thread_context::package_cursor current_package = thread_ctx->next_package();
 		while ( current_package.valid() )
@@ -341,14 +390,14 @@ private:
 			for(auto i = vert_range.first; i < vert_range.second; ++i)
 			{
 				vs_input vertex;
-				assembler_->fetch_vertex(vertex, i);
-				cpp_vs_->execute(vertex, transformed_verts_[i-min_index]);
+				assembler_->fetch_vertex(vertex, i + min_index_);
+				cpp_vs_->execute(vertex, transformed_verts_[i]);
 			}
 			current_package = thread_ctx->next_package();
 		}
 	}
 
-	void transform_vertex_vs(uint32_t min_index, thread_context* thread_ctx)
+	void transform_vertex_vs(thread_context* thread_ctx)
 	{
 		vertex_shader_unit vsu = *vs_proto_;
 		vsu.bind_streams(assembler_);
@@ -359,14 +408,14 @@ private:
 			auto vert_range = current_package.item_range();
 			for(auto i = vert_range.first; i < vert_range.second; ++i)
 			{
-				vsu.update(i);
-				vsu.execute( transformed_verts_[i-min_index] );
+				vsu.update(i + min_index_);
+				vsu.execute( transformed_verts_[i] );
 			}
 			current_package = thread_ctx->next_package();
 		}
 	}
 
-	void transform_vertex_vs2(uint32_t min_index, thread_context* thread_ctx)
+	void transform_vertex_vs2(thread_context* thread_ctx)
 	{
 		vx_shader_unit_ptr vsu = host_->get_vx_shader_unit();
 		thread_context::package_cursor current_package = thread_ctx->next_package();
@@ -375,7 +424,7 @@ private:
 			auto vert_range = current_package.item_range();
 			for(auto i = vert_range.first; i < vert_range.second; ++i)
 			{
-				vsu->execute(i, transformed_verts_[i-min_index]);
+				vsu->execute(i + min_index_, transformed_verts_[i]);
 			}
 			current_package = thread_ctx->next_package();
 		}
@@ -399,6 +448,7 @@ private:
 	size_t					transformed_verts_capacity_;
 
 	vector<int32_t>			used_verts_;
+	uint32_t				min_index_;
 
     async_object*           pipeline_stat_;
 	async_object*			pipeline_prof_;

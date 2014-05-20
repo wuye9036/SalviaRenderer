@@ -304,11 +304,13 @@ void rasterizer::update(render_state const* state)
 		acc_tri_dispatch_	= &async_pipeline_profiles::accumulate<pipeline_profile_id::tri_dispatch>;
 		acc_ras_			= &async_pipeline_profiles::accumulate<pipeline_profile_id::ras>;
 		acc_clipping_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::clipping>;
+		acc_compact_clip_	= &async_pipeline_profiles::accumulate<pipeline_profile_id::compact_clip>;
 	}
 	else
 	{
 		fetch_time_stamp_	= &time_stamp_fn::null;
 		acc_clipping_		= &accumulate_fn<uint64_t>::null;
+		acc_compact_clip_   = &accumulate_fn<uint64_t>::null;
 		acc_vp_trans_		= &accumulate_fn<uint64_t>::null;
 		acc_tri_dispatch_	= &accumulate_fn<uint64_t>::null;
 		acc_ras_			= &accumulate_fn<uint64_t>::null;
@@ -1213,8 +1215,9 @@ void rasterizer::draw()
     geom_setup_ctx.acc_cinvocations = acc_cinvocations_;
 
 	uint64_t clipping_start_time = fetch_time_stamp_();
-	gse_.execute(&geom_setup_ctx);
-	acc_clipping_(pipeline_prof_, fetch_time_stamp_() - clipping_start_time);
+	gse_.execute(&geom_setup_ctx, fetch_time_stamp_);
+	acc_clipping_(pipeline_prof_, gse_.compact_start_time() - clipping_start_time);
+	acc_compact_clip_(pipeline_prof_, fetch_time_stamp_() - gse_.compact_start_time());
 
 	clipped_verts_			= gse_.verts();
 	clipped_verts_count_	= gse_.verts_count();

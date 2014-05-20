@@ -226,6 +226,7 @@ struct pipeline_profiles
 	uint64_t gather_vtx;	// Including: Genenrate index of primitives and unique indexes
 	uint64_t vtx_proc;
 	uint64_t clipping;
+	uint64_t compact_clip;
 	uint64_t vp_trans;
 	uint64_t tri_dispatch;
 	uint64_t ras;
@@ -236,6 +237,7 @@ enum class pipeline_profile_id: uint32_t
 	gather_vtx = 0,
 	vtx_proc,
 	clipping,
+	compact_clip,
 	vp_trans,
 	tri_dispatch,
 	ras,
@@ -274,9 +276,10 @@ protected:
         auto ret = reinterpret_cast<pipeline_profiles*>(v);
 		ret->gather_vtx		 = counters_[static_cast<uint32_t>(pipeline_profile_id::gather_vtx)];
 		ret->clipping		 = counters_[static_cast<uint32_t>(pipeline_profile_id::clipping)];
+		ret->compact_clip	 = counters_[static_cast<uint32_t>(pipeline_profile_id::compact_clip)];
 		ret->vp_trans		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vp_trans)];
 		ret->tri_dispatch	 = counters_[static_cast<uint32_t>(pipeline_profile_id::tri_dispatch)];
-		ret->ras			 = counters_[static_cast<uint32_t>(pipeline_profile_id::ras)];
+		ret->ras				 = counters_[static_cast<uint32_t>(pipeline_profile_id::ras)];
 		ret->vtx_proc		 = counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
     }
 

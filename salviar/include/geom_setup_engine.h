@@ -42,7 +42,7 @@ class geom_setup_engine
 public:
 	geom_setup_engine();
 
-	void execute(geom_setup_context const*);
+	void execute(geom_setup_context const*, uint64_t (*fetch_time_stamp)());
 
 	size_t verts_count() const
 	{
@@ -54,6 +54,11 @@ public:
 		return compacted_verts_.get();
 	}
 	
+	uint64_t compact_start_time() const
+	{
+		return compact_start_time_;
+	}
+
 private:
 	typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 
@@ -75,6 +80,7 @@ private:
 	int32_t								clipping_package_count_;
 
 	size_t								thread_count_;
+	uint64_t							compact_start_time_;
 
 	geom_setup_context const*			ctxt_;
 };

@@ -39,6 +39,7 @@ struct clip_results
 	vs_output**	clipped_verts;
 	uint32_t	num_clipped_verts;
 	bool		is_front;
+	bool		is_clipped;
 };
 
 class clipper
@@ -53,7 +54,8 @@ private:
 	clip_context ctxt_;
 	clip_impl_fn clip_impl_;
 
-	void clip_triangle_to_poly	(vs_output** tri_verts, clip_results*) const;
+	void clip_triangle_to_poly_general (vs_output** tri_verts, clip_results*) const;
+	void clip_triangle_to_poly_simple  (vs_output** tri_verts, clip_results*) const;
 
 	void clip_wireframe_triangle(vs_output** tri_verts, clip_results* rslt);
 	void clip_solid_triangle	(vs_output** tri_verts, clip_results* rslt);
