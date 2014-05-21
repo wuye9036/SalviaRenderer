@@ -31,9 +31,9 @@ class vertex_cache
 public:
 	virtual void initialize(render_stages const* stages) = 0;
 	virtual void update(render_state const* state) = 0;
-	virtual void transform_vertices() = 0;
+	virtual void prepare_vertices() = 0;
 
-	virtual vs_output&	fetch(cache_entry_index id) = 0;
+	virtual void fetch3(vs_output** v, cache_entry_index id) = 0;
 	virtual ~vertex_cache(){}
 };
 

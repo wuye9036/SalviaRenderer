@@ -61,7 +61,7 @@ result render_core::draw()
     stages_.backend->update(state_.get());
 	apply_shader_cbuffer();
 
-    stages_.vert_cache->transform_vertices();
+	stages_.vert_cache->prepare_vertices();
     stages_.ras->draw();
 
 	return result::ok;

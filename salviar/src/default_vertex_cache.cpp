@@ -95,7 +95,7 @@ public:
 		}
 	}
 
-	void transform_vertices()
+	void prepare_vertices()
 	{
 		uint64_t gather_vtx_start_time = fetch_time_stamp_();
 
@@ -132,23 +132,23 @@ public:
 
 #if !USE_INDEX_RANGE
 		// Unique indices
-		std::vector<uint32_t> unique_indices = indices_;
+		unique_indices_ = indices_;
 #if defined(EFLIB_MSVC)
-		concurrency::parallel_radixsort(unique_indices.begin(), unique_indices.end());
+		concurrency::parallel_radixsort(unique_indices_.begin(), unique_indices_.end());
 #else
-		std::sort(unique_indices.begin(), unique_indices.end());
+		std::sort(unique_indices_.begin(), unique_indices_.end());
 #endif
-		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-		if( transformed_verts_capacity_ < unique_indices.size() )
+		unique_indices_.erase(std::unique(unique_indices_.begin(), unique_indices_.end()), unique_indices_.end());
+		if( transformed_verts_capacity_ < unique_indices_.size() )
 		{
-			transformed_verts_.reset(new vs_output[unique_indices.size()]);
-			transformed_verts_capacity_ = unique_indices.size();
+			transformed_verts_.reset(new vs_output[unique_indices_.size()]);
+			transformed_verts_capacity_ = unique_indices_.size();
 		}
-		used_verts_.resize( unique_indices.back()+1 );
+		used_verts_.resize( unique_indices_.back()+1 );
 
         // Accumulate query counters.
         acc_ia_vertices_( pipeline_stat_, static_cast<uint64_t>(prim_count_*prim_size) );
-        acc_vs_invocations_( pipeline_stat_, static_cast<uint64_t>(unique_indices.size()) );
+        acc_vs_invocations_( pipeline_stat_, static_cast<uint64_t>(unique_indices_.size()) );
 		acc_gather_vtx_(pipeline_prof_, fetch_time_stamp_() - gather_vtx_start_time);
 
 		// Transform vertexes
@@ -163,24 +163,24 @@ public:
 		{
 			task_transform_vertex = boost::bind(
 				&default_vertex_cache::transform_vertex_cppvs,
-				this, boost::ref(unique_indices),
-				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				this, boost::ref(unique_indices_),
+				static_cast<int32_t>(unique_indices_.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
 		}
 		else if (host_ != nullptr)
 		{
 			task_transform_vertex = boost::bind(
 				&default_vertex_cache::transform_vertex_vs2,
-				this, boost::ref(unique_indices),
-				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				this, boost::ref(unique_indices_),
+				static_cast<int32_t>(unique_indices_.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
 		}
 		else
 		{
 			task_transform_vertex = boost::bind(
 				&default_vertex_cache::transform_vertex_vs,
-				this, boost::ref(unique_indices),
-				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				this, boost::ref(unique_indices_),
+				static_cast<int32_t>(unique_indices_.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
 		}
 
@@ -242,22 +242,25 @@ public:
 #endif
 	}
 
-	vs_output& fetch(cache_entry_index id)
+	void fetch3(vs_output** v, cache_entry_index id)
 	{
 		static vs_output null_obj;
-		id = indices_[id];
-
+		uint32_t id0 = indices_[id];
+		uint32_t id1 = indices_[id+1];
+		uint32_t id2 = indices_[id+2];
 #if !USE_INDEX_RANGE
 		
 #if defined(EFLIB_DEBUG)
 		if((id > used_verts_.size()) || (-1 == used_verts_[id]))
 		{
 			assert( !"The vertex could not be transformed. Maybe errors occurred on index statistics or vertex tranformation." );
-			return null_obj;
+			// return null_obj;
 		}
 #endif
 
-		return transformed_verts_[used_verts_[id]];
+		v[0] = &transformed_verts_[used_verts_[id0]];
+		v[1] = &transformed_verts_[used_verts_[id1]];
+		v[2] = &transformed_verts_[used_verts_[id2]];
 #else
 		return transformed_verts_[id - min_index_];
 #endif
@@ -441,6 +444,7 @@ private:
 	viewport const*			viewport_;
 
 	vector<uint32_t>		indices_;
+	vector<uint32_t>		unique_indices_;
 	primitive_topology		topology_;
 	index_fetcher			index_fetcher_;
 

@@ -128,6 +128,11 @@ private:
 };
 #include <eflib/include/platform/enable_warnings.h>
 
+#if defined(EFLIB_MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4324)	// warning C4324: Structure was padded due to __declspec(align())
+#endif
+
 struct triangle_info
 {
 	vs_output const*			v0;
@@ -146,6 +151,10 @@ struct triangle_info
 		return *this;
 	}
 };
+
+#if defined(EFLIB_MSVC)
+#pragma warning(pop)
+#endif
 
 //vs_output compute_derivate
 struct ps_output

@@ -140,6 +140,27 @@ namespace eflib
 
 			void reserve(size_t capacity, size_t alignment, size_t stride = sizeof(T))
 			{
+				if(sz == 0 && data_mem != nullptr)
+				{
+					if(stride*capacity <= this->stride*cap && align % alignment == 0)
+					{
+						this->stride = stride;
+						return;
+					}
+					else
+					{
+						if(align == 1)
+						{
+							free(data_mem);
+						}
+						else
+						{
+							aligned_free(data_mem);
+						}
+						data_mem = nullptr;
+					}
+				}
+
 				if(data_mem == nullptr)
 				{
 					align = (alignment == 0 ? 1 : alignment);
@@ -151,13 +172,13 @@ namespace eflib
 					}
 					else
 					{
-						data_mem = static_cast<T*>( aligned_malloc(stride * capacity, alignment) );
+						data_mem = static_cast<T*>( aligned_malloc( stride*capacity, static_cast<uint32_t>(alignment) ) );
 					}
 
 					sz = 0;
 					cap = capacity;
 				}
-				assert((capacity <= cap) && (align % alignment == 0));
+				assert(false);
 			}
 
 			T* alloc()
@@ -175,6 +196,11 @@ namespace eflib
 			}
 
 			void dealloc(T*) {}
+
+			void clear()
+			{
+				sz = 0;
+			}
 
 			vls_vector_iterator<T> begin() const
 			{

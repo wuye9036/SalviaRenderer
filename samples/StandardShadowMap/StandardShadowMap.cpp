@@ -50,7 +50,7 @@ class gen_sm_cpp_ps : public cpp_pixel_shader
         return true;
     }
 
-	bool shader_prog(const vs_output& in, ps_output& out)
+	bool shader_prog(const vs_output& /*in*/, ps_output& /*out*/)
 	{
 		return true;
 	}

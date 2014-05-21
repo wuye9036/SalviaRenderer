@@ -372,6 +372,7 @@ protected:
 			<< "GV: " << pipeline_prof_data.gather_vtx << " "
 			<< "VTP:" << pipeline_prof_data.vtx_proc << " "
 			<< "CLP:" << pipeline_prof_data.clipping << " "
+			<< "CPC:" << pipeline_prof_data.compact_clip << " "
 			<< "VPT:" << pipeline_prof_data.vp_trans << " "
 			<< "TRD:" << pipeline_prof_data.tri_dispatch << " "
 			<< "RAS:" << pipeline_prof_data.ras << " "

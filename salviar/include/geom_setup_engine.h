@@ -69,14 +69,19 @@ private:
 	void threaded_compact_geometries(thread_context const* thread_ctx);
 	
 	boost::shared_array<vs_output_pool>	vso_pools_;
+	
 	boost::shared_array<vs_output*>		clipped_verts_;
-	size_t								clipped_verts_size_;
+	size_t								clipped_verts_cap_;
 
 	boost::shared_array<uint32_t>		clipped_package_verts_count_;
+	size_t								clipped_package_verts_count_cap_;
 	
 	boost::shared_array<vs_output*>		compacted_verts_;
+	size_t								compacted_verts_cap_;
 
 	boost::shared_array<uint32_t>		clipped_package_compacted_addresses_;
+	size_t								clipped_package_compacted_addresses_cap_;
+
 	int32_t								clipping_package_count_;
 
 	size_t								thread_count_;
