@@ -61,7 +61,6 @@ result render_core::draw()
     stages_.backend->update(state_.get());
 	apply_shader_cbuffer();
 
-	stages_.vert_cache->prepare_vertices();
     stages_.ras->draw();
 
 	return result::ok;
@@ -84,34 +83,6 @@ render_core::render_core()
 
 void render_core::apply_shader_cbuffer()
 {
-	if(state_->vs_proto)
-	{
-		for(auto const& variable: state_->vx_cbuffer.variables())
-		{
-			auto const& var_name = variable.first;
-			auto const& var_data = variable.second;
-			auto var_data_addr = state_->vx_cbuffer.data_pointer(var_data);
-
-			sv_layout* layout = state_->vx_shader->get_reflection()->input_sv_layout(var_name);
-
-            if(!layout) continue;
-
-			if(layout->agg_type == aggt_array)
-			{
-				state_->vs_proto->set_variable_pointer(var_name, var_data_addr, var_data.length);
-			}
-			else
-			{
-				state_->vs_proto->set_variable(var_name, var_data_addr);
-			}
-		}
-
-		for(auto const& samp: state_->vx_cbuffer.samplers())
-		{
-			state_->vs_proto->set_sampler(samp.first, samp.second);
-		}
-	}
-
 	if(state_->ps_proto)
 	{
 		for(auto const& variable: state_->px_cbuffer.variables())

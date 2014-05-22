@@ -77,9 +77,7 @@ struct render_state
 	shader_cbuffer	    	    px_cbuffer;
 
 	vs_input_op*				vsi_ops;
-	vs_output_op*				vso_ops;
 
-	vertex_shader_unit_ptr		vs_proto;
 	pixel_shader_unit_ptr		ps_proto;
 
 	std::vector<surface_ptr>	color_targets;

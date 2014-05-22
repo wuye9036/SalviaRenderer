@@ -2,6 +2,7 @@
 
 #include <salviar/include/clipper.h>
 #include <salviar/include/framebuffer.h>
+#include <salviar/include/host.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>
 #include <salviar/include/shader_reflection.h>
@@ -219,13 +220,14 @@ void rasterizer::initialize(render_stages const* stages)
 {
 	frame_buffer_	= stages->backend.get();
 	vert_cache_		= stages->vert_cache.get();
+	host_			= stages->host.get();
 }
 
 void rasterizer::update(render_state const* state)
 {
 	state_		            = state->ras_state.get();
-	vs_proto_	            = state->vs_proto.get();
 	ps_proto_	            = state->ps_proto.get();
+	cpp_vs_					= state->cpp_vs.get();
 	cpp_ps_		            = state->cpp_ps.get();
 	cpp_bs_		            = state->cpp_bs.get();
 	vp_			            = &(state->vp);
@@ -237,34 +239,9 @@ void rasterizer::update(render_state const* state)
 		( full_mask_ << (MAX_SAMPLE_COUNT * 1) ) |
 		( full_mask_ << (MAX_SAMPLE_COUNT * 2) ) |
 		( full_mask_ << (MAX_SAMPLE_COUNT * 3) );
-	vso_ops_	            = state->vso_ops;
 
-	if(state->cpp_vs)
-	{
-		num_vs_output_attributes_ = state->cpp_vs->num_output_attributes();
-	}
-	else
-	{
-		num_vs_output_attributes_ = 0;
-	}
-
-    has_centroid_ = false;
-   	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr)
-	{
-		if (vso_ops_->attribute_modifiers[i_attr] & vs_output::am_centroid)
-		{
-			has_centroid_ = true;
-		}
-	}
-
-	if(vs_proto_ != nullptr)
-	{
-		vs_reflection_ = vs_proto_->code->get_reflection();
-	}
-	else
-	{
-		vs_reflection_ = nullptr;
-	}
+	
+	vs_reflection_ = state->vx_shader ? state->vx_shader->get_reflection() : nullptr;
 
 	update_prim_info(state);
 
@@ -1173,8 +1150,38 @@ void rasterizer::update_prim_info(render_state const* state)
 	}
 }
 
-void rasterizer::draw()
+void rasterizer::prepare_draw()
 {
+	// Set shader and interpolation attributes
+	if(cpp_vs_)
+	{
+		num_vs_output_attributes_ = cpp_vs_->num_output_attributes();
+		vso_ops_ = &get_vs_output_op(num_vs_output_attributes_);
+		for(uint32_t i = 0; i < num_vs_output_attributes_; ++i)
+		{
+			vso_ops_->attribute_modifiers[i] == cpp_vs_->output_attribute_modifiers(i);
+		}
+	}
+	else if(host_)
+	{
+		num_vs_output_attributes_ = host_->vs_output_attr_count();
+		vso_ops_ = &get_vs_output_op(num_vs_output_attributes_);
+		for(int i = 0; i < num_vs_output_attributes_; ++i)
+		{
+			vso_ops_->attribute_modifiers[i] == vs_output::am_linear;
+		}
+	}
+
+    has_centroid_ = false;
+   	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr)
+	{
+		if (vso_ops_->attribute_modifiers[i_attr] & vs_output::am_centroid)
+		{
+			has_centroid_ = true;
+		}
+	}
+
+	// Compute sample patterns
 	switch (target_sample_count_)
     {
 	case 1:
@@ -1197,9 +1204,16 @@ void rasterizer::draw()
 		break;
 	}
 
+	// Compute tile count
 	tile_x_count_	= static_cast<size_t>(vp_->w + TILE_SIZE - 1) / TILE_SIZE;
 	tile_y_count_	= static_cast<size_t>(vp_->h + TILE_SIZE - 1) / TILE_SIZE;
 	tile_count_		= tile_x_count_ * tile_y_count_;
+}
+
+void rasterizer::draw()
+{
+	vert_cache_->prepare_vertices();
+	prepare_draw();
 
 	size_t num_threads	= num_available_threads();
 

@@ -123,7 +123,7 @@ void host_impl::update(render_state const* state)
 
 	// Update vertex buffers from state.
 	vx_cbuffer_.resize( vx_shader_->get_reflection()->total_size(su_buffer_in) );
-
+	
 	for(auto const& variable: state->vx_cbuffer.variables())
 	{
 		auto const& var_name = variable.first;
@@ -159,7 +159,7 @@ vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 	shader_reflection const* vx_reflection = vx_shader_->get_reflection();
 
 	size_t attrs_count = vx_reflection->layouts_count(su_buffer_out);
-
+	
 	ia_shim_data data;
 	data.stream_descs	= stream_descs_;
 	data.dest_offsets	= &(ia_shim_dest_offsets_[0]);
@@ -185,6 +185,11 @@ vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 px_shader_unit_ptr host_impl::get_px_shader_unit() const
 {
 	return px_shader_unit_ptr();
+}
+
+size_t host_impl::vs_output_attr_count() const
+{
+	return vx_shader_ ? vx_shader_->get_reflection()->layouts_count(su_buffer_out) - 1 : 0;
 }
 
 bool host_impl::vx_update_constant(fixed_string const& name, void const* value, size_t sz)

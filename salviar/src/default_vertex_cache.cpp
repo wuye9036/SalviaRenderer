@@ -14,12 +14,14 @@
 #include <salviar/include/shader_unit.h>
 
 #include <eflib/include/platform/cpuinfo.h>
+#include <eflib/include/memory/pool.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/ref.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <atomic>
+#include <memory>
 
 #if defined(EFLIB_MSVC)
 #	include <ppl.h>
@@ -41,12 +43,92 @@ size_t const invalid_id = 0xffffffff;
 
 #define USE_INDEX_RANGE 0
 
+class vertex_cache_impl: public vertex_cache
+{
+public:
+	void initialize(render_stages const* stages)
+	{
+		assembler_	= stages->assembler.get();
+		host_		= stages->host.get();
+	}
+
+	void update(render_state const* state)
+	{
+		// transformed_verts_.reset();
+		index_fetcher_.update(state);
+		topology_	= state->prim_topo;
+		viewport_	= &(state->vp);
+		cpp_vs_		= state->cpp_vs.get();
+        prim_count_ = state->prim_count;
+
+        pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
+		pipeline_prof_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_profiles)].get();
+
+        if(pipeline_stat_)
+        {
+            acc_ia_vertices_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_vertices>;
+            acc_vs_invocations_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::vs_invocations>;
+        }
+        else
+        {
+            acc_ia_vertices_ = &accumulate_fn<uint64_t>::null;
+            acc_vs_invocations_ = &accumulate_fn<uint64_t>::null;
+        }
+
+		if(pipeline_prof_)
+		{
+			fetch_time_stamp_	= &async_pipeline_profiles::time_stamp;
+			acc_gather_vtx_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::gather_vtx>; 
+			acc_vtx_proc_		= &async_pipeline_profiles::accumulate<pipeline_profile_id::vtx_proc>;
+		}
+		else
+		{
+			fetch_time_stamp_	= &time_stamp_fn::null;
+			acc_gather_vtx_		= &accumulate_fn<uint64_t>::null;
+			acc_vtx_proc_		= &accumulate_fn<uint64_t>::null;
+		}
+	}
+
+protected:
+	stream_assembler*		assembler_;
+	host*					host_;
+
+    uint32_t                prim_count_;
+	cpp_vertex_shader*		cpp_vs_;
+	vertex_shader_unit_ptr	vs_proto_;
+	viewport const*			viewport_;
+
+	vector<uint32_t>		indices_;
+	vector<uint32_t>		unique_indices_;
+	primitive_topology		topology_;
+	index_fetcher			index_fetcher_;
+
+	shared_array<vs_output> transformed_verts_;
+	size_t					transformed_verts_capacity_;
+
+	vector<int32_t>			used_verts_;
+	uint32_t				min_index_;
+
+    async_object*           pipeline_stat_;
+	async_object*			pipeline_prof_;
+
+	time_stamp_fn::type		fetch_time_stamp_;
+
+    accumulate_fn<uint64_t>::type
+                            acc_ia_vertices_;
+    accumulate_fn<uint64_t>::type
+                            acc_vs_invocations_;
+	accumulate_fn<uint64_t>::type
+							acc_gather_vtx_;
+	accumulate_fn<uint64_t>::type
+							acc_vtx_proc_;
+};
+
 class default_vertex_cache : public vertex_cache
 {
 public:
 	default_vertex_cache()
 		: assembler_(nullptr)
-		, verts_pool_( sizeof(vs_output) )
 		, transformed_verts_capacity_ (0)
 	{
 	}
@@ -64,7 +146,6 @@ public:
 		topology_	= state->prim_topo;
 		viewport_	= &(state->vp);
 		cpp_vs_		= state->cpp_vs.get();
-		vs_proto_	= state->vs_proto;
         prim_count_ = state->prim_count;
 
         pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
@@ -167,14 +248,6 @@ public:
 				static_cast<int32_t>(unique_indices_.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
 		}
-		else if (host_ != nullptr)
-		{
-			task_transform_vertex = boost::bind(
-				&default_vertex_cache::transform_vertex_vs2,
-				this, boost::ref(unique_indices_),
-				static_cast<int32_t>(unique_indices_.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
-				);
-		}
 		else
 		{
 			task_transform_vertex = boost::bind(
@@ -221,14 +294,6 @@ public:
 			};
 			execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
 		}
-		else if (host_ != nullptr)
-		{
-			auto execute_vert_shader = [this](thread_context* thread_ctx)
-			{
-				this->transform_vertex_vs2(thread_ctx);
-			};
-			execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
-		}
 		else
 		{
 			auto execute_vert_shader = [this](thread_context* thread_ctx)
@@ -251,7 +316,7 @@ public:
 #if !USE_INDEX_RANGE
 		
 #if defined(EFLIB_DEBUG)
-		if((id > used_verts_.size()) || (-1 == used_verts_[id]))
+		if((id2 > used_verts_.size()) || (-1 == used_verts_[id0]) || (-1 == used_verts_[id1]) || (-1 == used_verts_[id2]))
 		{
 			assert( !"The vertex could not be transformed. Maybe errors occurred on index statistics or vertex tranformation." );
 			// return null_obj;
@@ -335,34 +400,6 @@ private:
 		vector<uint32_t> const& indices, int32_t index_count,
 		atomic<int32_t>& working_package, int32_t package_size )
 	{
-		vertex_shader_unit vsu	= *vs_proto_;
-
-		vsu.bind_streams(assembler_);
-
-		const int32_t num_packages = (index_count + package_size - 1) / package_size;
-
-		int32_t local_working_package = working_package ++;
-		while (local_working_package < num_packages)
-		{
-			const int32_t start = local_working_package * package_size;
-			const int32_t end = std::min(index_count, start+package_size);
-			for (int32_t i = start; i < end; ++ i)
-			{
-				uint32_t id = indices[i];
-				used_verts_[id] = i;
-
-				vsu.update( id );
-				vsu.execute( transformed_verts_[i] );
-			}
-
-			local_working_package = working_package ++;
-		}
-	}
-
-	void transform_vertex_vs2(
-		vector<uint32_t> const& indices, int32_t index_count,
-		atomic<int32_t>& working_package, int32_t package_size )
-	{
 		vx_shader_unit_ptr vsu	= host_->get_vx_shader_unit();
 
 		const int32_t num_packages = (index_count + package_size - 1) / package_size;
@@ -401,24 +438,6 @@ private:
 	}
 
 	void transform_vertex_vs(thread_context* thread_ctx)
-	{
-		vertex_shader_unit vsu = *vs_proto_;
-		vsu.bind_streams(assembler_);
-
-		thread_context::package_cursor current_package = thread_ctx->next_package();
-		while ( current_package.valid() )
-		{
-			auto vert_range = current_package.item_range();
-			for(auto i = vert_range.first; i < vert_range.second; ++i)
-			{
-				vsu.update(i + min_index_);
-				vsu.execute( transformed_verts_[i] );
-			}
-			current_package = thread_ctx->next_package();
-		}
-	}
-
-	void transform_vertex_vs2(thread_context* thread_ctx)
 	{
 		vx_shader_unit_ptr vsu = host_->get_vx_shader_unit();
 		thread_context::package_cursor current_package = thread_ctx->next_package();
@@ -467,8 +486,46 @@ private:
 							acc_gather_vtx_;
 	accumulate_fn<uint64_t>::type
 							acc_vtx_proc_;
+};
 
-	boost::pool<>			verts_pool_;
+class tls_vertex_cache
+{
+	size_t fetch_clipped_prim_package(vs_output** v, uint32_t package_id)
+	{
+
+	}
+
+	void fetch3(vs_output** v, uint32_t prim)
+	{
+		uint32_t indexes[3];
+		uint32_t min_index, max_index;
+		index_fetcher_.fetch_indexes(indexes, &min_index, &max_index, prim, prim+1);
+
+		for(int i = 0; i < 3; ++i)
+		{
+			uint32_t index = indexes[i];
+			uint32_t key = indexes[i] % ENTRY_SIZE;
+			auto& cache_item = cache[key];
+			if(cache_item.first == indexes[i])
+			{
+				v[i] = cache[key].second;
+			}
+			else
+			{
+				auto ret = vso_pool_.alloc();
+				
+				//TODO: Transform vertex
+
+				cache_item = std::make_pair(index, ret);
+				v[i] = ret;
+			}
+		}
+	}
+private:
+	static const int ENTRY_SIZE = 32;
+	index_fetcher							index_fetcher_;
+	std::pair<uint32_t, vs_output*>			cache[ENTRY_SIZE];
+	eflib::pool::reserved_pool<vs_output>	vso_pool_;
 };
 
 vertex_cache_ptr create_default_vertex_cache()

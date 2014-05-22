@@ -26,6 +26,7 @@ typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 struct scanline_info;
 class  pixel_shader_unit;
 class  vs_output;
+class  host;
 struct vs_output_op;
 struct clip_context;
 class  vertex_shader_unit;
@@ -66,11 +67,12 @@ private:
 	uint32_t						num_vs_output_attributes_;
 
 	vertex_cache*					vert_cache_;
+	host*							host_;
 	framebuffer*					frame_buffer_;
 
 	raster_state*					state_;
-	vertex_shader_unit*				vs_proto_;
 	pixel_shader_unit*				ps_proto_;
+	cpp_vertex_shader*				cpp_vs_;
 	cpp_pixel_shader*				cpp_ps_;
 	cpp_blend_shader*				cpp_bs_;
 	viewport const*					vp_;
@@ -152,6 +154,7 @@ private:
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);
 	void compute_triangle_info(uint32_t prim_id);
 
+	void prepare_draw();
 public:
 	//inherited
 	void initialize	(render_stages const* stages);
