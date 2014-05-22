@@ -104,7 +104,7 @@ void geom_setup_engine::threaded_clip_geometries(thread_context const* thread_ct
 			if (3 == ctxt_->prim_size)
 			{
 				vs_output* pv[3];
-				ctxt_->dvc->fetch3(pv, i*3);
+				ctxt_->dvc->fetch3(pv, i*3, thread_ctx->thread_id);
 
                 ++clip_invocations;
 				clp.clip(pv, &clip_rslt);
