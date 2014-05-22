@@ -177,7 +177,9 @@ namespace eflib
 
 					sz = 0;
 					cap = capacity;
+					return;
 				}
+
 				assert(false);
 			}
 

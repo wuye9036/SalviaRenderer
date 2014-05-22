@@ -96,13 +96,6 @@ result renderer_impl::set_vertex_shader(cpp_vertex_shader_ptr const& hvs)
 {
 	state_->cpp_vs = hvs;
 
-	uint32_t n = state_->cpp_vs->num_output_attributes();
-	state_->vso_ops = &get_vs_output_op(n);
-	for (uint32_t i = 0; i < n; ++ i)
-	{
-		state_->vso_ops->attribute_modifiers[i] = state_->cpp_vs->output_attribute_modifiers(i);
-	}
-
 	return result::ok;
 }
 
@@ -111,20 +104,9 @@ cpp_vertex_shader_ptr renderer_impl::get_vertex_shader() const
 	return state_->cpp_vs;
 }
 
-result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& code ){
+result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& code )
+{
 	state_->vx_shader = code;
-	
-	state_->vs_proto.reset( new vertex_shader_unit() );
-	state_->vs_proto->initialize( state_->vx_shader.get() );
-
-	uint32_t n = state_->vs_proto->output_attributes_count();
-	state_->vso_ops = &get_vs_output_op(n);
-
-	for (uint32_t i = 0; i < n; ++ i)
-	{
-		state_->vso_ops->attribute_modifiers[i] = state_->vs_proto->output_attribute_modifiers(i);
-	}
-
 	return result::ok;
 }
 

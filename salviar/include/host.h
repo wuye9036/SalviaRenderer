@@ -34,6 +34,7 @@ public:
 
 	virtual vx_shader_unit_ptr	get_vx_shader_unit() const = 0;
 	virtual px_shader_unit_ptr	get_px_shader_unit() const = 0;
+	virtual size_t				vs_output_attr_count() const = 0;
 
 	virtual ~host() {}
 };

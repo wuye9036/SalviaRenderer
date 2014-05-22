@@ -98,6 +98,8 @@ public:
 
 	salviar::vx_shader_unit_ptr get_vx_shader_unit() const;
 	salviar::px_shader_unit_ptr get_px_shader_unit() const;
+
+	size_t						vs_output_attr_count() const;
 	
 private:
 	// Data used by Shim and Shader

@@ -440,7 +440,7 @@ void framebuffer::update(render_state* state)
 	px_full_mask_ = (1UL << sample_count_) - 1;
 
     bool output_depth_enabled = false;
-    if(!state->vx_shader || !state->vs_proto)
+    if(!state->vx_shader)
     {
         if(state->cpp_ps && state->cpp_ps->output_depth())
         {
