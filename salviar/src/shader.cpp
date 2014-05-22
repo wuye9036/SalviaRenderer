@@ -189,7 +189,8 @@ namespace vs_output_op_funcs
 		out.position() = start.position() + ( end.position() - start.position() ) * step;
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			out.attribute(i_attr) = start.attribute(i_attr);
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation))
+			{
 				out.attribute(i_attr) += (end.attribute(i_attr) - start.attribute(i_attr)) * step;
 			}
 		}

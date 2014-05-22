@@ -1156,20 +1156,22 @@ void rasterizer::prepare_draw()
 	if(cpp_vs_)
 	{
 		num_vs_output_attributes_ = cpp_vs_->num_output_attributes();
-		vso_ops_ = &get_vs_output_op(num_vs_output_attributes_);
+		auto vso_op = &get_vs_output_op(num_vs_output_attributes_);
 		for(uint32_t i = 0; i < num_vs_output_attributes_; ++i)
 		{
-			vso_ops_->attribute_modifiers[i] == cpp_vs_->output_attribute_modifiers(i);
+			vso_op->attribute_modifiers[i] = cpp_vs_->output_attribute_modifiers(i);
 		}
+		vso_ops_ = vso_op;
 	}
 	else if(host_)
 	{
 		num_vs_output_attributes_ = host_->vs_output_attr_count();
-		vso_ops_ = &get_vs_output_op(num_vs_output_attributes_);
-		for(int i = 0; i < num_vs_output_attributes_; ++i)
+		auto vso_op = &get_vs_output_op(num_vs_output_attributes_);
+		for(uint32_t i = 0; i < num_vs_output_attributes_; ++i)
 		{
-			vso_ops_->attribute_modifiers[i] == vs_output::am_linear;
+			vso_op->attribute_modifiers[i] = vs_output::am_linear;
 		}
+		vso_ops_ = vso_op;
 	}
 
     has_centroid_ = false;
