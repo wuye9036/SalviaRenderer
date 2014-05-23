@@ -1429,6 +1429,7 @@ void rasterizer::draw_full_quad(
 
 	if(quad_mask != 0)
 	{
+		triangle_ctx->pixel_stat->backend_input_pixels += 4;
 		frame_buffer_->render_sample_quad(
 			shaders->cpp_bs, left, top, quad_mask,
 			pso, depth, triangle_ctx->tri_info->front_face, triangle_ctx->aa_z_offset
@@ -1529,6 +1530,7 @@ void rasterizer::draw_quad(
 
 	if(quad_mask != 0)
 	{
+		triangle_ctx->pixel_stat->backend_input_pixels += 4;
 		frame_buffer_->render_sample_quad(
 			shaders->cpp_bs, left, top, quad_mask,
 			pso, depth, triangle_ctx->tri_info->front_face, triangle_ctx->aa_z_offset

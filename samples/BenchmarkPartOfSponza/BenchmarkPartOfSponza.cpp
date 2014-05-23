@@ -218,8 +218,6 @@ public:
 		rs_back.reset(new raster_state(rs_desc));
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
-		cout << "Compiling vertex shader ... " << endl;
-
 		profiling( "CompilingVS", [this]()
 		{
 			vx_shader_ = compile(benchmark_vs_code, lang_vertex_shader);
@@ -254,8 +252,12 @@ public:
 
 		initialize();
 
-		for(int i = 0; i < 512; ++i)
+		for(int i = 0; i < 500; ++i)
 		{
+			if ( (i + 1) % 50 == 0 )
+			{
+				cout << "Frame " << i + 1 << "/" << 500 << endl;
+			}
 			begin_frame();
 			render_frame();
 			end_frame();
@@ -359,6 +361,5 @@ int main( int /*argc*/, std::_tchar* /*argv*/[] )
 {
 	benchmark_sponza bm;
 	bm.run();
-	system("pause");
 	return 0;
 }

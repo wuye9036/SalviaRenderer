@@ -255,17 +255,14 @@ namespace eflib
 	ptree make_ptree(profiler const* prof, size_t max_level)
 	{
 		ptree			root;
-		vector<ptree*>	walk_stack;
-		walk_stack.push_back(&root);
-
+		vector<ptree*>	walk_stack(max_level + 1, nullptr);
+		walk_stack[0] = &root;
 		auto ptree_gen = [&walk_stack](profiling_item const* item, size_t level)
 		{
-			auto parent = walk_stack[level];
-			auto& current = parent->put(item->name, item->tag);
+			ptree current;
 			current.put("I_duration", item->duration());
 			current.put("E_duration", item->exclusive_duration());
-			walk_stack.resize(level + 1);
-			walk_stack.back() = &current;
+			walk_stack[level+1] = &( walk_stack[level]->put_child(item->name, current) );
 		};
 
 		visit_profiling_items(prof->root(), 0, max_level, ptree_gen);

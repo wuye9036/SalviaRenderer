@@ -63,7 +63,7 @@ void benchmark::begin_frame()
 
 void benchmark::profiling(std::string const& stage_name, std::function<void()> const& fn)
 {
-	std::cout << "[PROFILING] " << stage_name << std::endl;
+	// std::cout << "[PROFILING] " << stage_name << std::endl;
 
 	prof_.start(stage_name, 0);
 	fn();
@@ -117,7 +117,7 @@ void reduce_and_output(IterT beg, IterT end, TransformT trans, ptree& parent, st
 		++it;
 
 		size_t count = 1;
-		for(auto it = beg; it != end; ++it)
+		for(; it != end; ++it)
 		{
 			auto v = trans(*it);
 			min_max(minv, maxv, v);
@@ -128,11 +128,12 @@ void reduce_and_output(IterT beg, IterT end, TransformT trans, ptree& parent, st
 		avg = total / count;
 	}
 
-	auto& vnode = parent.put(path, 0);
+	ptree vnode;
 	vnode.put("min", minv);
 	vnode.put("max", maxv);
 	vnode.put("total", total);
 	vnode.put("avg", avg);
+	parent.put_child(path, vnode);
 }
 
 void benchmark::save_results(std::string const& file_name)
