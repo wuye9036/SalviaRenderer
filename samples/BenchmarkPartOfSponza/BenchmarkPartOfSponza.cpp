@@ -18,11 +18,6 @@
 
 #include <vector>
 
-#if defined(EFLIB_WINDOWS)
-#define NOMINMAX
-#include <Windows.h>
-#endif
-
 using namespace eflib;
 using namespace salviar;
 using namespace salviax;

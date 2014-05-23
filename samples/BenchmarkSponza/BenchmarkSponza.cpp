@@ -14,15 +14,11 @@
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
+#include <salviau/include/common/benchmark.h>
 
 #include <eflib/include/diagnostics/profiler.h>
 
 #include <vector>
-
-#if defined(EFLIB_WINDOWS)
-#define NOMINMAX
-#include <Windows.h>
-#endif
 
 #if defined( SALVIA_BUILD_WITH_DIRECTX )
 #define PRESENTER_NAME "d3d9"
@@ -166,7 +162,6 @@ public:
 	}
 };
 
-
 class bs : public cpp_blend_shader
 {
 public:
@@ -185,30 +180,21 @@ public:
 
 };
 
-class benchmark
+class benchmark_sponza: public benchmark
 {
 public:
-	benchmark()
+	benchmark_sponza()
+		:benchmark("BenchmarkSponza")
 	{
-		prof.start("Benchmark", 0);
-		initialize();
 	}
-
-	~benchmark()
-	{
-		prof.end("Benchmark");
-		prof.merge_items();
-		print_profiler(&prof, 3);
-	}
-
 	void initialize()
 	{
+		renderer_ = create_benchmark_renderer();
+
 		color_format_ = pixel_format_color_bgra8;
 		height_ = 512;
 		width_ = 512;
 		sample_count_ = 1;
-
-		renderer_ = create_benchmark_renderer();
 
         color_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, color_format_)->subresource(0);
         ds_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, pixel_format_color_rg32f)->subresource(0);
@@ -236,44 +222,65 @@ public:
 		rs_back.reset(new raster_state(rs_desc));
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
-		cout << "Compiling vertex shader ... " << endl;
-		prof.start("Vertex Shader Compiling", 0);
-		benchmark_vs = compile( benchmark_vs_code, lang_vertex_shader );
-		prof.end("Vertex Shader Compiling");
+		profiling( "CompilingVS", [this]()
+		{
+			vx_shader_ = compile(benchmark_vs_code, lang_vertex_shader);
+		});
 #endif
 
-		cout << "Loading mesh ... " << endl;
-		prof.start("Mesh Loading", 0);
-		benchmark_mesh = create_mesh_from_obj(renderer_.get(), "../../resources/models/sponza/sponza.obj", false);
-		prof.end("Mesh Loading");
-		cout << "Loading pixel and blend shader... " << endl;
+		profiling("LoadingMesh", [this]()
+		{
+			mesh_ = create_mesh_from_obj( renderer_.get(), "../../resources/models/sponza/sponza.obj", false );
+		});
 
 		cpp_vs.reset( new ::benchmark_vs() );
 		cpp_ps.reset( new ::benchmark_ps() );
 		cpp_bs.reset( new ::bs() );
 	}
-	/** @} */
-
+	
 	void save_frame(std::string const& file_name)
 	{
-		cout << "Save" << endl;
-		prof.start("Saving", 0);
-        if (color_surface_ != resolved_color_surface_)
+		profiling("SaveFrame", [&, this]()
 		{
-			color_surface_->resolve(*resolved_color_surface_);
-		}
-		save_surface(renderer_.get(), resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
-		prof.end("Saving");
+			if (color_surface_ != resolved_color_surface_)
+			{
+				color_surface_->resolve(*resolved_color_surface_);
+			}
+			save_surface(renderer_.get(), resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
+		});
 	}
 
-	void render()
+	void run()
 	{
-		prof.start("Back buffer Clearing", 0);
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
-		prof.end("Back buffer Clearing");
+		begin_bench();
 
-		prof.start("Set rendering parameters", 0);
+		initialize();
+
+		for(int i = 0; i < 60; ++i)
+		{
+			if ( (i + 1) % 6 == 0 )
+			{
+				cout << "Frame " << i + 1 << "/" << 60 << endl;
+			}
+			begin_frame();
+			render_frame();
+			end_frame();
+		}
+		
+		save_frame("BenchmarkSponza_Frame.png");
+
+		end_bench();
+
+		save_results("BenchmarkSponza_Result.log");
+	}
+
+	void render_frame()
+	{
+		profiling("BackBufferClearing", [this]()
+		{
+			renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		vec3 camera(-36.0f, 8.0f, 0.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
@@ -294,7 +301,7 @@ public:
 
 		// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-		renderer_->set_vertex_shader_code(benchmark_vs);
+		renderer_->set_vertex_shader_code(vx_shader_);
 #else
 		cpp_vs->set_constant( _T("wvpMatrix"), &wvp );
 		cpp_vs->set_constant( _T("eyePos"), &camera_pos );
@@ -306,42 +313,36 @@ public:
 		renderer_->set_vs_variable( "eyePos", &camera_pos );
 		renderer_->set_vs_variable( "lightPos", &lightPos );
 
-		prof.end("Set rendering parameters");
-
-		prof.start("Rendering", 0);
-		for( size_t i_mesh = 0; i_mesh < benchmark_mesh.size(); ++i_mesh )
+		profiling("Rendering", [this]()
 		{
-			mesh_ptr cur_mesh = benchmark_mesh[i_mesh];
+			for( size_t i_mesh = 0; i_mesh < mesh_.size(); ++i_mesh )
+			{
+				mesh_ptr cur_mesh = mesh_[i_mesh];
 
-			shared_ptr<obj_material> mtl
-				= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
+				shared_ptr<obj_material> mtl
+					= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
 
-			cpp_ps->set_constant( _EFLIB_T("Ambient"),  &mtl->ambient );
-			cpp_ps->set_constant( _EFLIB_T("Diffuse"),  &mtl->diffuse );
-			cpp_ps->set_constant( _EFLIB_T("Specular"), &mtl->specular );
-			cpp_ps->set_constant( _EFLIB_T("Shininess"),&mtl->ambient );
+				cpp_ps->set_constant( _EFLIB_T("Ambient"),  &mtl->ambient );
+				cpp_ps->set_constant( _EFLIB_T("Diffuse"),  &mtl->diffuse );
+				cpp_ps->set_constant( _EFLIB_T("Specular"), &mtl->specular );
+				cpp_ps->set_constant( _EFLIB_T("Shininess"),&mtl->ambient );
 
-            sampler_desc desc;
-            desc.min_filter = filter_linear;
-            desc.mag_filter = filter_linear;
-            desc.mip_filter = filter_point;
-            desc.addr_mode_u = address_wrap;
-            desc.addr_mode_v = address_wrap;
-            desc.addr_mode_w = address_wrap;
+				sampler_desc desc;
+				desc.min_filter = filter_linear;
+				desc.mag_filter = filter_linear;
+				desc.mip_filter = filter_linear;
+				desc.addr_mode_u = address_wrap;
+				desc.addr_mode_v = address_wrap;
+				desc.addr_mode_w = address_wrap;
 
-            cpp_ps->set_sampler(_EFLIB_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
+				cpp_ps->set_sampler(_EFLIB_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
 
-			cur_mesh->render();
-		}
-		prof.end("Rendering");
+				cur_mesh->render();
+			}
+		});
 	}
 
 protected:
-	/** Properties @{ */
-	renderer_ptr			renderer_;
-	vector<mesh_ptr>		benchmark_mesh;
-	shader_object_ptr 	    benchmark_vs;
-
     pixel_format            color_format_;
     size_t                  width_;
     size_t                  height_;
@@ -350,36 +351,19 @@ protected:
     surface_ptr             resolved_color_surface_;
     surface_ptr             ds_surface_;
 
+	vector<mesh_ptr>		mesh_;
+	shader_object_ptr 	    vx_shader_;
+
 	cpp_vertex_shader_ptr	cpp_vs;
 	cpp_pixel_shader_ptr	cpp_ps;
 	cpp_blend_shader_ptr	cpp_bs;
 
 	raster_state_ptr	    rs_back;
-	profiler			    prof;
 };
-
-#if defined(EFLIB_DEBUG)
-static size_t const RENDER_FRAME_COUNT = 1;
-#else
-static size_t const RENDER_FRAME_COUNT = 60;
-#endif
 
 int main( int /*argc*/, std::_tchar* /*argv*/[] )
 {
-#if defined(EFLIB_WINDOWS)
-	HANDLE process_handle = GetCurrentProcess();
-	SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
-#endif
-
-	{
-		benchmark bm;
-		for(size_t i_frame = 1; i_frame <= RENDER_FRAME_COUNT; ++i_frame)
-		{
-			cout << "Render Frame #" << i_frame << "/" << RENDER_FRAME_COUNT << endl;
-			bm.render();
-		}
-		bm.save_frame("sponza_frame.png");
-	}
-	system("pause");
+	benchmark_sponza bm;
+	bm.run();
 	return 0;
 }

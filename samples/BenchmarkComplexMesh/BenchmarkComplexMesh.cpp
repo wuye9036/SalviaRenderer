@@ -8,6 +8,8 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
+#include <salviau/include/common/benchmark.h>
+
 #include <eflib/include/utility/unref_declarator.h>
 #include <eflib/include/diagnostics/profiler.h>
 
@@ -19,13 +21,6 @@
 #include <fstream>
 #include <string>
 
-#if defined(EFLIB_WINDOWS)
-#	define NOMINMAX
-#	include <Windows.h>
-#	undef NOMINMAX
-#	include <tchar.h>
-#endif
-
 using namespace eflib;
 using namespace boost;
 using namespace boost::assign;
@@ -33,6 +28,7 @@ using namespace std;
 using namespace salviar;
 using namespace salviax;
 using namespace salviax::resource;
+using namespace salviau;
 
 struct vert
 {
@@ -294,30 +290,22 @@ public:
 
 };
 
-class benchmark
+class benchmark_complex_mesh: public benchmark
 {
 public:
-	benchmark()
+	benchmark_complex_mesh()
+		:benchmark("BenchmarkComplexMesh")
 	{
-		prof.start("Benchmark", 0);
-		initialize();
-	}
-
-	~benchmark()
-	{
-		prof.end("Benchmark");
-		prof.merge_items();
-		print_profiler(&prof, 3);
 	}
 
 	void initialize()
 	{
+		renderer_ = create_benchmark_renderer();
+
 		color_format_ = pixel_format_color_bgra8;
 		height_ = 512;
 		width_ = 512;
 		sample_count_ = 1;
-
-		renderer_ = create_benchmark_renderer();
 
         color_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, color_format_)->subresource(0);
         ds_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, pixel_format_color_rg32f)->subresource(0);
@@ -346,77 +334,89 @@ public:
 		rs_back.reset(new raster_state(rs_desc));
 
 		// Loading mesh
-		cout << "Loading mesh ... " << endl;
-		prof.start("Mesh Loading", 0);
-		complex_mesh = LoadModel(renderer_, "../../resources/M134 Predator.MESHML.model_bin");
-		prof.end("Mesh Loading");
-		cout << "Loading pixel and blend shader... " << endl;
+		profiling("MeshLoading", [this]()
+		{
+			complex_mesh = LoadModel(renderer_, "../../resources/M134 Predator.MESHML.model_bin");
+		});
 
 		// Initialize shader
 		cpp_vs.reset(new vs_mesh());
 		cpp_ps.reset(new ps_mesh());
 		cpp_bs.reset(new ts_blend_off());
 	}
-	/** @} */
-
+	
 	void save_frame(std::string const& file_name)
 	{
-		cout << "Save" << endl;
-		prof.start("Saving", 0);
-        if (color_surface_ != resolved_color_surface_)
+		profiling("SaveFrame", [&, this]()
 		{
-			color_surface_->resolve(*resolved_color_surface_);
-		}
-		save_surface(renderer_.get(), resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
-		prof.end("Saving");
+			if (color_surface_ != resolved_color_surface_)
+			{
+				color_surface_->resolve(*resolved_color_surface_);
+			}
+			save_surface(renderer_.get(), resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
+		});
 	}
 
-	void render()
+	void run()
 	{
+		begin_bench();
+
+		initialize();
+
+		for(int i = 0; i < 300; ++i)
 		{
-			prof.start("Back buffer Clearing", 0);
-            renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		    renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
-			prof.end("Back buffer Clearing");
+			if ( (i + 1) % 30 == 0 )
+			{
+				cout << "Frame " << i + 1 << "/" << 300 << endl;
+			}
+			begin_frame();
+			render_frame();
+			end_frame();
 		}
+		
+		save_frame("BenchmarkComplexMesh_Frame.png");
 
+		end_bench();
+
+		save_results("BenchmarkComplexMesh_Result.log");
+	}
+
+	void render_frame()
+	{
+		profiling("BackBufferClearing", [this]()
 		{
-			prof.start("Set rendering parameters", 0);
+			renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
-			mat44 world(mat44::identity()), view, proj, wv;
-			static float s_angle = -1;
-			vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
-			vec3 eye(0.0f, 0.0f, 0.0f);
-			mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
-			mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
-			mat_mul(wv, world, view);
+		mat44 world(mat44::identity()), view, proj, wv;
+		static float s_angle = -1;
+		vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
+		vec3 eye(0.0f, 0.0f, 0.0f);
+		mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
+		mat_mul(wv, world, view);
 
-			vec3 light_pos(vec3(-4, 2, 0));
+		vec3 light_pos(vec3(-4, 2, 0));
 
-			renderer_->set_vertex_shader(cpp_vs);
-			renderer_->set_pixel_shader(cpp_ps);
-			renderer_->set_blend_shader(cpp_bs);
+		renderer_->set_vertex_shader(cpp_vs);
+		renderer_->set_pixel_shader(cpp_ps);
+		renderer_->set_blend_shader(cpp_bs);
 
-			renderer_->set_rasterizer_state(rs_back);
+		renderer_->set_rasterizer_state(rs_back);
 
-			cpp_vs->set_constant(_EFLIB_T("WorldViewMat"), &wv);
-			cpp_vs->set_constant(_EFLIB_T("ProjMat"), &proj);
-			cpp_vs->set_constant(_EFLIB_T("LightPos"), &light_pos);
-			cpp_vs->set_constant(_EFLIB_T("EyePos"), &eye);
+		cpp_vs->set_constant(_EFLIB_T("WorldViewMat"), &wv);
+		cpp_vs->set_constant(_EFLIB_T("ProjMat"), &proj);
+		cpp_vs->set_constant(_EFLIB_T("LightPos"), &light_pos);
+		cpp_vs->set_constant(_EFLIB_T("EyePos"), &eye);
 
-			prof.end("Set rendering parameters");
-		}
-
+		profiling("Rendering", [this]()
 		{
-			prof.start("Rendering", 0);
 			complex_mesh->render();
-			prof.end("Rendering");
-		}
+		});
 	}
 
 protected:
-	/** Properties @{ */
-	renderer_ptr			renderer_;
 	mesh_ptr				complex_mesh;
 
     pixel_format            color_format_;
@@ -432,34 +432,11 @@ protected:
 	cpp_blend_shader_ptr	cpp_bs;
 
 	raster_state_ptr	    rs_back;
-	profiler			    prof;
 };
-
-#if defined(EFLIB_DEBUG)
-static size_t const RENDER_FRAME_COUNT = 5;
-#else
-static size_t const RENDER_FRAME_COUNT = 300;
-#endif
 
 int main( int /*argc*/, std::_tchar* /*argv*/[] )
 {
-#if defined(EFLIB_WINDOWS)
-	HANDLE process_handle = GetCurrentProcess();
-	SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
-#endif
-
-	{
-		benchmark bm;
-		for(size_t i = 1; i <= RENDER_FRAME_COUNT; ++i)
-		{
-			if( i % 10 == 0 )
-			{
-				cout << "Render Frame #" << i << "/" << RENDER_FRAME_COUNT << endl;
-			}
-			bm.render();
-		}
-		bm.save_frame("complexmesh_frame.png");
-	}
-	::system("pause");
+	benchmark_complex_mesh bm;
+	bm.run();
 	return 0;
 }
