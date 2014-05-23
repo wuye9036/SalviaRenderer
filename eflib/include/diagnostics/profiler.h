@@ -7,6 +7,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/chrono.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -72,6 +73,7 @@ namespace eflib
 	};
 
 	void print_profiler(profiler const* prof, size_t max_level);
+	boost::property_tree::ptree make_ptree(profiler const* prof, size_t max_level);
 }
 
 #endif

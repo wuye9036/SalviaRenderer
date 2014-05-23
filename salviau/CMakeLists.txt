@@ -12,6 +12,7 @@ LINK_DIRECTORIES(
 
 set( APP_COMMON_HEADERS
 	${SALVIA_HOME_DIR}/salviau/include/common/application.h
+	${SALVIA_HOME_DIR}/salviau/include/common/benchmark.h
 	${SALVIA_HOME_DIR}/salviau/include/common/window.h
 	${SALVIA_HOME_DIR}/salviau/include/common/timer.h
 )
@@ -37,6 +38,7 @@ set( APP_WTL_IMPLS
 
 
 set( APP_COMMON_SOURCES
+	${SALVIA_HOME_DIR}/salviau/src/common/benchmark.cpp
 	${SALVIA_HOME_DIR}/salviau/src/common/timer.cpp
 	${SALVIA_HOME_DIR}/salviau/src/common/application.cpp
 )

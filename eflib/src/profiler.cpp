@@ -151,9 +151,8 @@ namespace eflib
 		return &root_;
 	}
 
-	void visit_profiling_item_recursively(
-		profiling_item const* item, size_t level, size_t max_level
-		)
+	template <typename FuncT>
+	void visit_profiling_items(profiling_item const* item, size_t level, size_t max_level, FuncT const& fn, bool root_first = true)
 	{
 		assert(level < 40);
 
@@ -162,6 +161,24 @@ namespace eflib
 			return;
 		}
 
+		if(root_first)
+		{
+			fn(item, level);
+		}
+
+		for(size_t i_child = 0; i_child < item->children.size(); ++i_child)
+		{
+			visit_profiling_items(item->children[i_child], level+1, max_level, fn, root_first);
+		}
+
+		if(!root_first)
+		{
+			fn(item, level);
+		}
+	}
+
+	void print_profiling_item(profiling_item const* item, size_t level)
+	{
 		// Print item.
 		// 80 char width,
 		// Name,  Inclusive ms Exclusive Seconds, Inclusive Percentage.
@@ -223,23 +240,37 @@ namespace eflib
 
 		std::replace(line, line+line_width, '\0', ' ');
 		cout << line << endl;
-
-		for(size_t i_child = 0; i_child < item->children.size(); ++i_child)
-		{
-			visit_profiling_item_recursively(
-				item->children[i_child], level+1, max_level
-				);
-		}
-
-		return;
 	}
-
+	
 	void print_profiler(profiler const* prof, size_t max_level)
 	{
 		cout << " --- Profiling Result BEG --- " << endl;
 		cout << "                      Name                            Secs(I)   Secs(E)    %  " << endl;
-		visit_profiling_item_recursively(prof->root(), 0, max_level);
+		visit_profiling_items(prof->root(), 0, max_level, print_profiling_item);
 		cout << " --- Profiling Result END --- " << endl;
+	}
+
+	using boost::property_tree::ptree;
+
+	ptree make_ptree(profiler const* prof, size_t max_level)
+	{
+		ptree			root;
+		vector<ptree*>	walk_stack;
+		walk_stack.push_back(&root);
+
+		auto ptree_gen = [&walk_stack](profiling_item const* item, size_t level)
+		{
+			auto parent = walk_stack[level];
+			auto& current = parent->put(item->name, item->tag);
+			current.put("I_duration", item->duration());
+			current.put("E_duration", item->exclusive_duration());
+			walk_stack.resize(level + 1);
+			walk_stack.back() = &current;
+		};
+
+		visit_profiling_items(prof->root(), 0, max_level, ptree_gen);
+
+		return ptree(std::move(root));
 	}
 
 	profiling_scope::profiling_scope(profiler* prof, std::string const& name, size_t tag)
