@@ -330,7 +330,7 @@ public:
 				sampler_desc desc;
 				desc.min_filter = filter_linear;
 				desc.mag_filter = filter_linear;
-				desc.mip_filter = filter_linear;
+				desc.mip_filter = filter_point;
 				desc.addr_mode_u = address_wrap;
 				desc.addr_mode_v = address_wrap;
 				desc.addr_mode_w = address_wrap;
