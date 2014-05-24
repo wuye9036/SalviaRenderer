@@ -764,6 +764,28 @@ color_rgba32f sampler::sample_cube(
 	return sample_impl<true>(major_dir, s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
+float sampler::calc_lod_2d(eflib::vec2& ddx, eflib::vec2& ddy) const
+{
+	int4 size = tex_->isize();
+
+	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
+	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
+
+	float lod, ratio;
+	vec4  long_axis;
+	if( desc_.mip_filter == filter_anisotropic && desc_.max_anisotropy > 1 )
+	{
+		calc_anisotropic_lod(size, ddx_vec4, ddy_vec4, 0.0f, lod, ratio, long_axis);
+	}
+	else
+	{
+		lod = calc_lod(size, ddx_vec4, ddy_vec4, 0.0f);
+		ratio = 1.0f;
+	}
+
+	return lod;
+}
+
 color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod ) const
 {
 	return sample( proj_coord[0], proj_coord[1], lod );

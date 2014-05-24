@@ -78,6 +78,8 @@ private:
 public:
 	explicit sampler(const sampler_desc& desc, texture_ptr const& tex);
 
+	float calc_lod_2d(eflib::vec2& ddx, eflib::vec2& ddy) const;
+
 	color_rgba32f sample(float coordx, float coordy, float miplevel) const;
 
 	color_rgba32f sample_2d_lod( eflib::vec2 const& proj_coord, float lod ) const;

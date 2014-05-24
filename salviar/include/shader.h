@@ -5,6 +5,7 @@
 #include <salviar/include/shader_utility.h>
 #include <salviar/include/sampler.h>
 #include <salviar/include/enums.h>
+#include <salviar/include/renderer_capacity.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
@@ -287,7 +288,8 @@ class cpp_pixel_shader : public cpp_shader_impl
 	bool					front_face_;
 	vs_output const*		px_;
 	vs_output const*		quad_;
-	uint64_t				lod_;
+	uint64_t				lod_flag_;
+	float					lod_[MAX_VS_OUTPUT_ATTRS];
 
 protected:
 	bool front_face() const	{ return front_face_; }
