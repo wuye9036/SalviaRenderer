@@ -15,6 +15,7 @@
 
 #include <eflib/include/platform/cpuinfo.h>
 #include <eflib/include/memory/pool.h>
+#include <eflib/include/memory/allocator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/ref.hpp>
@@ -199,11 +200,6 @@ public:
 		acc_gather_vtx_(pipeline_prof_, fetch_time_stamp_() - gather_vtx_start_time);
 
 		// Transform vertexes
-		if( cpp_vs_ )
-		{
-			assembler_->update_register_map( cpp_vs_->get_register_map() );
-		}
-
 		uint64_t vtx_proc_start_time = fetch_time_stamp_();
 
 		if(cpp_vs_)
@@ -226,12 +222,12 @@ public:
 		acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
 	}
 
-	void fetch3(vs_output** v, cache_entry_index id, uint32_t /*thread_id*/)
+	void fetch3(vs_output** v, cache_entry_index prim, uint32_t /*thread_id*/)
 	{
 		static vs_output null_obj;
-		uint32_t id0 = indices_[id];
-		uint32_t id1 = indices_[id+1];
-		uint32_t id2 = indices_[id+2];
+		uint32_t id0 = indices_[prim*3+0];
+		uint32_t id1 = indices_[prim*3+1];
+		uint32_t id2 = indices_[prim*3+2];
 #if !USE_INDEX_RANGE
 		
 #if defined(EFLIB_DEBUG)
@@ -250,6 +246,10 @@ public:
 #endif
 	}
 
+	void update_statistic()
+	{
+		// do nothing
+	}
 private:
 	void generate_indices(thread_context const* thread_ctx)
 	{
@@ -372,17 +372,40 @@ private:
 
 class tls_vertex_cache: public vertex_cache_impl
 {
-	tls_vertex_cache()
+public:
+	tls_vertex_cache(): caches_( num_available_threads() )
 	{
 	}
-	
-	void fetch3(vs_output** v, uint32_t prim, uint32_t thread_id)
+
+	void prepare_vertices()
 	{
+		for(uint32_t i = 0; i < num_available_threads(); ++i)
+		{
+			auto& cache = caches_[i];
+			cache.vso_pool.clear();
+			cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
+			for(int j = 0; j < ENTRY_SIZE; ++j)
+			{
+				cache.items[j] = std::make_pair(std::numeric_limits<uint32_t>::max(), nullptr);
+			}
+			if(host_) cache.vsu = host_->get_vx_shader_unit();
+			cache.ia_vertices = 0;
+			cache.vs_invocations = 0;
+			cache.vs_during = 0;
+		}
+	}
+	
+	void fetch3(vs_output** v, cache_entry_index prim, uint32_t thread_id)
+	{
+		// uint64_t vs_start_time = fetch_time_stamp_();
+
 		uint32_t indexes[3];
 		uint32_t min_index, max_index;
 		index_fetcher_.fetch_indexes(indexes, &min_index, &max_index, prim, prim+1);
 
 		auto& cache = caches_[thread_id];
+
+		cache.ia_vertices += 3;
 
 		for(int i = 0; i < 3; ++i)
 		{
@@ -395,6 +418,8 @@ class tls_vertex_cache: public vertex_cache_impl
 			}
 			else
 			{
+				++cache.vs_invocations;
+
 				auto ret = cache.vso_pool.alloc();
 				
 				if(cpp_vs_)
@@ -412,24 +437,53 @@ class tls_vertex_cache: public vertex_cache_impl
 				v[i] = ret;
 			}
 		}
+
+		// cache.vs_during += fetch_time_stamp_() - vs_start_time;
 	}
 
+	void update_statistic() override
+	{
+		for(uint32_t i = 0; i < num_available_threads(); ++i)
+		{
+			auto& cache = caches_[i];
+			
+			acc_ia_vertices_(pipeline_stat_, cache.ia_vertices);
+			cache.ia_vertices = 0;
+
+			acc_vs_invocations_(pipeline_stat_, cache.vs_invocations);
+			cache.vs_invocations = 0;
+
+			acc_vtx_proc_(pipeline_prof_, cache.vs_during);
+			cache.vs_during = 0;
+		}
+	}
 private:
 	static const int ENTRY_SIZE = 32;
 	
-	struct thread_cache
+	struct EFLIB_ALIGN(64) thread_cache
 	{
-		std::pair<uint32_t, vs_output*>			items[ENTRY_SIZE];
+		thread_cache(){}
+		thread_cache(thread_cache const&) {}
+		thread_cache& operator = (thread_cache const&) { return *this; }
+
 		eflib::pool::reserved_pool<vs_output>	vso_pool;
-		vx_shader_unit_ptr						vsu;	
+		vx_shader_unit_ptr						vsu;
+		uint64_t								vs_invocations;
+		uint64_t								ia_vertices;
+		uint64_t								vs_during;
+
+		std::pair<uint32_t, vs_output*>			items[ENTRY_SIZE];
 	};
 
-	std::vector<thread_cache>	caches_;
+	std::vector<
+		thread_cache,
+		eflib::aligned_allocator<thread_cache, 64>
+	>	caches_;
 };
 
 vertex_cache_ptr create_default_vertex_cache()
 {
-	return vertex_cache_ptr( new default_vertex_cache() );
+	return vertex_cache_ptr( new tls_vertex_cache() );
 }
 
 END_NS_SALVIAR();

@@ -156,6 +156,11 @@ void host_impl::update_target_params(renderer_parameters const& /*rp*/, buffer_p
 
 vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 {
+	if (!vx_shader_)
+	{
+		return vx_shader_unit_ptr();
+	}
+
 	shader_reflection const* vx_reflection = vx_shader_->get_reflection();
 
 	size_t attrs_count = vx_reflection->layouts_count(su_buffer_out);

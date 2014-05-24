@@ -287,6 +287,7 @@ class cpp_pixel_shader : public cpp_shader_impl
 	bool					front_face_;
 	vs_output const*		px_;
 	vs_output const*		quad_;
+	uint64_t				lod_;
 
 protected:
 	bool front_face() const	{ return front_face_; }

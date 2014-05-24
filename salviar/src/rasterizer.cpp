@@ -306,8 +306,6 @@ void rasterizer::draw_full_tile(
 			draw_full_quad(left, top, shaders, triangle_ctx);
 		}
 	}
-
-    triangle_ctx->pixel_stat->ps_invocations += ((tile_bottom - tile_top) * (tile_right - tile_left));
 }
 
 void rasterizer::draw_partial_tile(
@@ -466,8 +464,6 @@ void rasterizer::draw_partial_tile(
 			draw_quad(left + quad_x, top + quad_y, quad_mask, shaders, triangle_ctx);
 		}
     }
-
-    triangle_ctx->pixel_stat->ps_invocations += 16;
 }
 
 void rasterizer::subdivide_tile(
@@ -1397,6 +1393,8 @@ void rasterizer::draw_full_quad(
 	{
 		return;
 	}
+	
+	triangle_ctx->pixel_stat->ps_invocations += 4;
 
 	vso_ops_->step_2d_unproj_attr_quad(
 		pixels, *triangle_ctx->tri_info->v0, 
@@ -1517,6 +1515,8 @@ void rasterizer::draw_quad(
 			vso_ops_->step_2d_unproj_attr(pixels[i_pixel], *v0, dx, *ddx, dy, *ddy);
 		}
 	}
+
+	triangle_ctx->pixel_stat->ps_invocations += 4;
 
 	if(shaders->ps_unit)
 	{

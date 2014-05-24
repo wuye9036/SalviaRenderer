@@ -58,6 +58,11 @@ void stream_assembler::update(render_state const* state)
 {
 	layout_				= state->layout.get();
 	stream_buffer_descs_= state->str_state.buffer_descs.data();
+
+	if(state->cpp_vs)
+	{
+		update_register_map(state->cpp_vs->get_register_map());
+	}
 }
 
 /// Only used by Cpp Vertex Shader

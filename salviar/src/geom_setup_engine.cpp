@@ -73,6 +73,8 @@ void geom_setup_engine::clip_geometries()
 		[this] (thread_context const* thread_ctx) -> void { this->threaded_clip_geometries(thread_ctx); },
 		ctxt_->prim_count, GEOMETRY_SETUP_PACKAGE_SIZE
 		);
+
+	ctxt_->dvc->update_statistic();
 }
 
 void geom_setup_engine::threaded_clip_geometries(thread_context const* thread_ctx)
@@ -104,7 +106,7 @@ void geom_setup_engine::threaded_clip_geometries(thread_context const* thread_ct
 			if (3 == ctxt_->prim_size)
 			{
 				vs_output* pv[3];
-				ctxt_->dvc->fetch3(pv, i*3, thread_ctx->thread_id);
+				ctxt_->dvc->fetch3(pv, i, thread_ctx->thread_id);
 
                 ++clip_invocations;
 				clp.clip(pv, &clip_rslt);
