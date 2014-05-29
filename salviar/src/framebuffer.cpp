@@ -573,6 +573,12 @@ void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, si
     pixel_accessor target_pixel(color_targets_, ds_target_);
 	target_pixel.set_pos(x, y);
     
+	if(early_z_enabled_)
+	{
+		cpp_bs->execute(i_sample, target_pixel, ps);
+		return;
+	}
+
     void* ds_data = target_pixel.depth_stencil_address(i_sample);
     float       old_depth;
     uint32_t    old_stencil;
@@ -641,7 +647,13 @@ uint64_t framebuffer::early_z_test(size_t x, size_t y, float depth, float const*
         float       old_depth;
         uint32_t    old_stencil;
         read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
-        return ds_state_->depth_test(depth, old_depth) ? 1 : 0;
+        if( ds_state_->depth_test(depth, old_depth) )
+		{
+			assert( !ds_state_->get_desc().stencil_enable );
+			write_depth_stencil_(ds_data, depth, 0, 0);
+			return 1;
+		}
+		return 0;
 	}
 
 	uint64_t mask = 0;
@@ -651,7 +663,13 @@ uint64_t framebuffer::early_z_test(size_t x, size_t y, float depth, float const*
         float       old_depth;
         uint32_t    old_stencil;
         read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
-        mask |= ( ds_state_->depth_test(aa_z_offset[i] + depth, old_depth) ? 1 : 0 ) << i;
+		float new_depth = aa_z_offset[i] + depth;
+		bool depth_test_passed = ds_state_->depth_test(new_depth, old_depth);
+        mask |= ( depth_test_passed ? 1 : 0 ) << i;
+		if(depth_test_passed)
+		{
+			write_depth_stencil_(ds_data, new_depth, 0, 0);
+		}
     }
 
     return mask;
@@ -684,8 +702,13 @@ uint64_t framebuffer::early_z_test(size_t x, size_t y, uint32_t px_mask, float d
 		float       old_depth;
 		uint32_t    old_stencil;
 		read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
-		mask |= ( ds_state_->depth_test(aa_z_offset[i_samp] + depth, old_depth) ? 1 : 0 ) << i_samp;
-		px_mask &= (px_mask - 1);
+		float new_depth = aa_z_offset[i_samp] + depth;
+		bool depth_test_passed = ds_state_->depth_test(new_depth, old_depth);
+        mask |= ( depth_test_passed ? 1 : 0 ) << i_samp;
+		if(depth_test_passed)
+		{
+			write_depth_stencil_(ds_data, new_depth, 0, 0);
+		}
 	}
 
 	return mask;
