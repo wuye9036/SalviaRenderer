@@ -23,6 +23,7 @@
 
 #include <atomic>
 #include <memory>
+#include <iostream>
 
 #if defined(EFLIB_MSVC)
 #	include <ppl.h>
@@ -486,8 +487,16 @@ class shared_vertex_cache: public vertex_cache_impl
 public:
 	shared_vertex_cache(): caches_( num_available_threads() )
 	{
+		conflict_count_ = 0;
+		l2_missing_ = 0;
+		l2_hitting_ = 0;
 	}
-
+	~shared_vertex_cache()
+	{
+		std::cout << "Conflict: " << conflict_count_ << std::endl;
+		std::cout << "L2 Missing: " << l2_missing_ << std::endl;
+		std::cout << "L2 Hitting: " << l2_hitting_ << std::endl;
+	}
 	void prepare_vertices()
 	{
 		memset(shared_indexes_, INVALID_SHARED_ENTRY, sizeof(shared_indexes_));
@@ -505,9 +514,39 @@ public:
 			cache.ia_vertices = 0;
 			cache.vs_invocations = 0;
 			cache.vs_during = 0;
+			cache.conflict_count = 0;
+			cache.l2_missing = 0;
+			cache.l2_hitting = 0;
 		}
 	}
 	
+	inline uint32_t lock_shared_cache(uint64_t& conflict_count, std::atomic<uint32_t>& cache_entry)
+	{
+		uint32_t index_in_cache;
+				
+		for(;;)
+		{	
+			index_in_cache = cache_entry.load(std::memory_order_acquire);
+			if(index_in_cache == SHARED_ENTRY_IS_USING)
+			{
+				++conflict_count;
+				continue;
+			}
+
+			if( cache_entry.compare_exchange_weak(index_in_cache, SHARED_ENTRY_IS_USING) )
+			{
+				return index_in_cache;
+			}
+			++conflict_count;
+		}
+	}
+	
+	inline void release_shared_cache(std::atomic<uint32_t>& cache_entry, uint32_t index)
+	{
+		cache_entry = index;
+	}
+
+
 	void fetch3(vs_output** v, cache_entry_index prim, uint32_t thread_id)
 	{
 		// uint64_t vs_start_time = fetch_time_stamp_();
@@ -533,29 +572,24 @@ public:
 			{
 				uint32_t sc_key = index % SHARED_ENTRY_SIZE;
 				auto&    shared_index = shared_indexes_[sc_key];
-				uint32_t index_in_cache;
-				
-				for(;;)
-				{	
-					index_in_cache = shared_index.load();
-					if(index_in_cache == SHARED_ENTRY_IS_USING)
-					{
-						continue;
-					}
-
-					if( shared_index.compare_exchange_weak(index_in_cache, SHARED_ENTRY_IS_USING) )
-					{
-						break;
-					}
-				}
+				uint32_t index_in_cache = lock_shared_cache(cache.conflict_count, shared_index);
 
 				if(index_in_cache == index)
 				{
 					cache_item = std::make_pair(index, shared_vso_[sc_key]);
-					v[i] = shared_vso_[sc_key];
+					release_shared_cache(shared_index, index);
+
+					v[i] = cache_item.second;
+					++cache.l2_hitting;
 				}
 				else
 				{
+					release_shared_cache(shared_index, index_in_cache);
+
+					if(index_in_cache != INVALID_SHARED_ENTRY)
+					{
+						++cache.l2_missing;
+					}
 					++cache.vs_invocations;
 
 					auto ret = cache.vso_pool.alloc();
@@ -573,10 +607,11 @@ public:
 
 					cache_item = std::make_pair(index, ret);
 					v[i] = ret;
-					shared_vso_[sc_key] = ret;
-				}
 
-				shared_index = index;
+					lock_shared_cache(cache.conflict_count, shared_index);
+					shared_vso_[sc_key] = ret;
+					release_shared_cache(shared_index, index);
+				}
 			}
 		}
 
@@ -597,6 +632,10 @@ public:
 
 			acc_vtx_proc_(pipeline_prof_, cache.vs_during);
 			cache.vs_during = 0;
+
+			conflict_count_ += cache.conflict_count;
+			l2_missing_ += cache.l2_missing;
+			l2_hitting_ += cache.l2_hitting;
 		}
 	}
 private:
@@ -616,7 +655,9 @@ private:
 		uint64_t								vs_invocations;
 		uint64_t								ia_vertices;
 		uint64_t								vs_during;
-
+		uint64_t								conflict_count;
+		uint64_t								l2_hitting;
+		uint64_t								l2_missing;
 		std::pair<uint32_t, vs_output*>			items[ENTRY_SIZE];
 	};
 
@@ -626,6 +667,9 @@ private:
 	>						caches_;
 	std::atomic<uint32_t>	shared_indexes_[SHARED_ENTRY_SIZE];
 	vs_output*				shared_vso_[SHARED_ENTRY_SIZE];
+	uint32_t				conflict_count_;
+	uint32_t				l2_missing_;
+	uint32_t				l2_hitting_;
 };
 
 vertex_cache_ptr create_default_vertex_cache()
