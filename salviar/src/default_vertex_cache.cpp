@@ -141,10 +141,10 @@ protected:
 	size_t					thread_count_;
 };
 
-class default_vertex_cache : public vertex_cache_impl
+class precomputed_vertex_cache : public vertex_cache_impl
 {
 public:
-	default_vertex_cache()
+	precomputed_vertex_cache()
 		: transformed_verts_capacity_ (0)
 	{
 	}
@@ -458,7 +458,7 @@ public:
 		}
 	}
 private:
-	static const int ENTRY_SIZE = 32;
+	static const int ENTRY_SIZE = 128;
 	
 	struct EFLIB_ALIGN(64) thread_cache
 	{
@@ -481,9 +481,156 @@ private:
 	>	caches_;
 };
 
+class shared_vertex_cache: public vertex_cache_impl
+{
+public:
+	shared_vertex_cache(): caches_( num_available_threads() )
+	{
+	}
+
+	void prepare_vertices()
+	{
+		memset(shared_indexes_, INVALID_SHARED_ENTRY, sizeof(shared_indexes_));
+
+		for(uint32_t i = 0; i < num_available_threads(); ++i)
+		{
+			auto& cache = caches_[i];
+			cache.vso_pool.clear();
+			cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
+			for(int j = 0; j < ENTRY_SIZE; ++j)
+			{
+				cache.items[j] = std::make_pair(std::numeric_limits<uint32_t>::max(), nullptr);
+			}
+			if(host_) cache.vsu = host_->get_vx_shader_unit();
+			cache.ia_vertices = 0;
+			cache.vs_invocations = 0;
+			cache.vs_during = 0;
+		}
+	}
+	
+	void fetch3(vs_output** v, cache_entry_index prim, uint32_t thread_id)
+	{
+		// uint64_t vs_start_time = fetch_time_stamp_();
+
+		uint32_t indexes[3];
+		uint32_t min_index, max_index;
+		index_fetcher_.fetch_indexes(indexes, &min_index, &max_index, prim, prim+1);
+
+		auto& cache = caches_[thread_id];
+
+		cache.ia_vertices += 3;
+
+		for(int i = 0; i < 3; ++i)
+		{
+			uint32_t index = indexes[i];
+			uint32_t key = indexes[i] % ENTRY_SIZE;
+			auto& cache_item = cache.items[key];
+			if(cache_item.first == indexes[i])
+			{
+				v[i] = cache_item.second;
+			}
+			else
+			{
+				uint32_t sc_key = index % SHARED_ENTRY_SIZE;
+				auto&    shared_index = shared_indexes_[sc_key];
+				uint32_t index_in_cache;
+				
+				for(;;)
+				{	
+					index_in_cache = shared_index.load();
+					if(index_in_cache == SHARED_ENTRY_IS_USING)
+					{
+						continue;
+					}
+
+					if( shared_index.compare_exchange_weak(index_in_cache, SHARED_ENTRY_IS_USING) )
+					{
+						break;
+					}
+				}
+
+				if(index_in_cache == index)
+				{
+					cache_item = std::make_pair(index, shared_vso_[sc_key]);
+					v[i] = shared_vso_[sc_key];
+				}
+				else
+				{
+					++cache.vs_invocations;
+
+					auto ret = cache.vso_pool.alloc();
+				
+					if(cpp_vs_)
+					{
+						vs_input vertex;
+						assembler_->fetch_vertex(vertex, index);
+						cpp_vs_->execute(vertex, *ret);
+					}
+					else
+					{
+						cache.vsu->execute(index, *ret);
+					}
+
+					cache_item = std::make_pair(index, ret);
+					v[i] = ret;
+					shared_vso_[sc_key] = ret;
+				}
+
+				shared_index = index;
+			}
+		}
+
+		// cache.vs_during += fetch_time_stamp_() - vs_start_time;
+	}
+
+	void update_statistic() override
+	{
+		for(uint32_t i = 0; i < num_available_threads(); ++i)
+		{
+			auto& cache = caches_[i];
+			
+			acc_ia_vertices_(pipeline_stat_, cache.ia_vertices);
+			cache.ia_vertices = 0;
+
+			acc_vs_invocations_(pipeline_stat_, cache.vs_invocations);
+			cache.vs_invocations = 0;
+
+			acc_vtx_proc_(pipeline_prof_, cache.vs_during);
+			cache.vs_during = 0;
+		}
+	}
+private:
+	static int const		SHARED_ENTRY_SIZE = 1024;
+	static int const		ENTRY_SIZE = 32;
+	static uint32_t const	SHARED_ENTRY_IS_USING = 0xFFFFFFFEU;
+	static uint32_t const	INVALID_SHARED_ENTRY  = 0xFFFFFFFFU;
+	
+	struct EFLIB_ALIGN(64) thread_cache
+	{
+		thread_cache(){}
+		thread_cache(thread_cache const&) {}
+		thread_cache& operator = (thread_cache const&) { return *this; }
+
+		eflib::pool::reserved_pool<vs_output>	vso_pool;
+		vx_shader_unit_ptr						vsu;
+		uint64_t								vs_invocations;
+		uint64_t								ia_vertices;
+		uint64_t								vs_during;
+
+		std::pair<uint32_t, vs_output*>			items[ENTRY_SIZE];
+	};
+
+	std::vector<
+		thread_cache,
+		eflib::aligned_allocator<thread_cache, 64>
+	>						caches_;
+	std::atomic<uint32_t>	shared_indexes_[SHARED_ENTRY_SIZE];
+	vs_output*				shared_vso_[SHARED_ENTRY_SIZE];
+};
+
 vertex_cache_ptr create_default_vertex_cache()
 {
-	return vertex_cache_ptr( new tls_vertex_cache() );
+	return vertex_cache_ptr( new shared_vertex_cache() );
 }
 
 END_NS_SALVIAR();
