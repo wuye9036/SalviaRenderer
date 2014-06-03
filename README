@@ -1,10 +1,37 @@
-ALL-IN-ONE build:
-	If project.py is existed
-		Run build_all.py
-	otherwise
-		Run build_all.py to generate project.py
-		Modify proj.py to set environments
-		Run build_all.py
-		
-Manual build:
-	see doc/HowToBuildSalviaManual.txt
+﻿If proj.py is existed
+	Run build_all.py
+otherwise
+	Run build_all.py to generate proj.py
+	Modify proj.py to set environments
+	Run build_all.py
+	
+----------------------------
+	
+首先请确认您的机器上具有：
+
+Windows平台：
+1. Visual Studio 2012 （建议使用 Professional 或以上版本）；
+2. Boost 1.55 或以上版本；
+3. Python 2.7；
+4. CMake 2.8.10或以上版本；
+
+Linux平台：
+
+1. GCC 4.7或以上版本；
+2. Boost 1.55或以上版本；
+3. Python 2.7；
+4. CMake 2.8.10或以上版本。
+
+运行build_all.py文件。如果您是首次运行该脚本，它会生成proj.py文件。
+打开proj.py文件，阅读说明并修改配置。
+再次运行build_all.py，便可以等待其直到编译结束。
+如果您使用的是Visual Studio，sln文件会生成在您指定的 build_root 的目录下。
+
+注意事项：
+
+和Visual Studio默认的多配置工程不同，脚本一次只会编译一个配置（Debug， RelWithDebInfo等等）。
+如果需要在工程文件中自由切换配置，需要您多次修改proj.py中的config并执行build_all.py，随后您就可以在Solution中自由切换Configuration并编译了。
+
+如果您有任何疑问或建议，请邮件至：
+
+wuye9036 _at_ gmail _dot_ com
