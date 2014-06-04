@@ -178,7 +178,7 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 		image = FreeImage_AllocateT(fit, surface_width, surface_height, 96);
 		break;
 	default:
-		EFLIB_ASSERT(false, "Unsupport format was used£¡");
+		EFLIB_ASSERT(false, "Unsupport format was used.");
 		return;
 	}
 

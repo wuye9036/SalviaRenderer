@@ -1525,14 +1525,14 @@ void rasterizer::draw_quad(
 	}
 	else
 	{
-		quad_mask &= shaders->cpp_ps->execute(pixels, pso, depth);
+		tested_quad_mask &= shaders->cpp_ps->execute(pixels, pso, depth);
 	}
 
 	if(quad_mask != 0)
 	{
 		triangle_ctx->pixel_stat->backend_input_pixels += 4;
 		frame_buffer_->render_sample_quad(
-			shaders->cpp_bs, left, top, quad_mask,
+			shaders->cpp_bs, left, top, tested_quad_mask,
 			pso, depth, triangle_ctx->tri_info->front_face, triangle_ctx->aa_z_offset
 			);
 	}

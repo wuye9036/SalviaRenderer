@@ -15,6 +15,7 @@
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
+#include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
@@ -195,7 +196,8 @@ public:
 
 		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
 		out.color[0] = diff_color * illum_diffuse;
-		//out.color[0] = ( vec4(norm, 1.0f) + vec4(1.0f, 1.0f, 1.0f, 1.0f) ) * 0.5f;
+		// out.color[0] = ( vec4(norm, 1.0f) + vec4(1.0f, 1.0f, 1.0f, 1.0f) ) * 0.5f;
+
 		out.color[0][3] = 1.0f;
 
 		return true;
@@ -270,7 +272,7 @@ protected:
         renderer_->set_viewport(vp);
 		
 		raster_desc rs_desc;
-		rs_desc.cm = cull_none;
+		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
@@ -371,16 +373,19 @@ protected:
 
 			renderer_->set_vertex_shader(pvs);
 #endif
-			f = fopen("indices.txt", "a");
-			fprintf(f, "FRAME %d", frame_count);
+			// f = fopen("indices.txt", "a");
+			// fprintf(f, "FRAME %d\n", frame_count);
 			for(uint32_t i_mesh = 0; i_mesh < 1 /*astro_boy_mesh->submesh_count()*/; ++i_mesh)
 			{
 				astro_boy_mesh->render(i_mesh);
 			}
-			fclose(f);
+			// fclose(f);
 		}
 
 		impl->main_window()->refresh();
+
+		//save_surface(renderer_.get(), color_surface_, _EFLIB_T("astroboy.png"), pixel_format_color_bgra8);
+		//exit(1);
 	}
 
 protected:

@@ -540,7 +540,7 @@ void framebuffer::update_ds_rw_functions(bool ds_format_changed, bool ds_state_c
         return;
     }
 
-    early_z_enabled_ = !ds_state_->get_desc().stencil_enable || !output_depth_enabled;
+    early_z_enabled_ = !ds_state_->get_desc().stencil_enable && !output_depth_enabled;
 }
 
 framebuffer::framebuffer()
