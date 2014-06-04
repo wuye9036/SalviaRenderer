@@ -677,7 +677,7 @@ private:
 
 vertex_cache_ptr create_default_vertex_cache()
 {
-	return vertex_cache_ptr( new shared_vertex_cache() );
+	return vertex_cache_ptr( new tls_vertex_cache() );
 }
 
 END_NS_SALVIAR();
