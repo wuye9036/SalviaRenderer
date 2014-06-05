@@ -30,47 +30,6 @@ class  vs_output;
 struct ps_output;
 class  stream_assembler;
 
-class vertex_shader_unit
-{
-public:
-	vertex_shader_unit();
-	~vertex_shader_unit();
-
-	vertex_shader_unit( vertex_shader_unit const& );
-	vertex_shader_unit& operator = ( vertex_shader_unit const& );
-
-	void initialize( shader_object const* );
-
-	void bind_streams( stream_assembler const* sa );
-	void set_variable( std::string const&, void const* pvariable );
-	void set_variable_pointer( std::string const&, void const* pvariable, size_t sz);
-	void set_sampler( std::string const&, sampler_ptr const& samp );
-
-	uint32_t output_attributes_count() const;
-	uint32_t output_attribute_modifiers( size_t index ) const;
-
-	void update( size_t ivert );
-
-	void execute( vs_output& out );
-
-public:
-	shader_object const*		code;
-	stream_assembler const*		sa;
-
-	std::vector<sampler_ptr>	used_samplers;	// For take ownership
-
-	std::vector<char>			stream_data;
-	std::vector<char>			buffer_data;
-
-	std::vector<char>			stream_odata;
-	std::vector<char>			buffer_odata;
-
-	boost::unordered_map<
-		std::string,
-		boost::shared_array<char> 
-	>							dynamic_datas;
-};
-
 class pixel_shader_unit
 {
 public:

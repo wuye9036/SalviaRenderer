@@ -16,7 +16,6 @@ struct renderer_parameters;
 EFLIB_DECLARE_CLASS_SHARED_PTR (host);
 EFLIB_DECLARE_CLASS_SHARED_PTR (render_core);
 EFLIB_DECLARE_CLASS_SHARED_PTR (shader_object);
-EFLIB_DECLARE_CLASS_SHARED_PTR (vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR (pixel_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR (stream_assembler);
 EFLIB_DECLARE_CLASS_SHARED_PTR (resource_manager);

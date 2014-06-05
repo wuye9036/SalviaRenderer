@@ -29,7 +29,6 @@ class  vs_output;
 class  host;
 struct vs_output_op;
 struct clip_context;
-class  vertex_shader_unit;
 class  shader_reflection;
 
 struct pixel_statistic;

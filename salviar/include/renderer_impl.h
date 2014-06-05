@@ -16,7 +16,6 @@ struct vs_output_op;
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sync_renderer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
-EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
