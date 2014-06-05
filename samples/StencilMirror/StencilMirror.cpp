@@ -238,7 +238,7 @@ protected:
         renderer_->set_viewport(vp);
 		
 		raster_desc rs_desc;
-		rs_desc.cm = cull_back;
+		rs_desc.cm = cull_none;
 		rs_back.reset(new raster_state(rs_desc));
 		rs_desc.cm = cull_none;
 		rs_none.reset(new raster_state(rs_desc));
