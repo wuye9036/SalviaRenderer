@@ -133,10 +133,10 @@ struct reg_name
 	}
 };
 
-struct buffer_regs
+struct buffer_rfile
 {
 public:
-	buffer_regs(reg_slots slot, uint32_t index)
+	buffer_rfile(reg_slots slot, uint32_t index)
 		: uid_(slot, index), total_reg_count(0)
 	{
 	}
@@ -273,15 +273,15 @@ class rfile_sasl_mapping
 public:
 	void initialize(shader_profile prof);
 	
-	buffer_regs* buffer(reg_slots slot, uint32_t buf_index)
+	buffer_rfile* buffer(reg_slots slot, uint32_t buf_index)
 	{
-		auto& slot_bufs = buffer_regs_[static_cast<uint32_t>(slot)];
+		auto& slot_bufs = buffer_rfile_[static_cast<uint32_t>(slot)];
 		
 		if( buf_index < slot_bufs.size() )
 		{
 			if(!slot_bufs[buf_index])
 			{
-				slot_bufs[buf_index].reset(new buffer_regs(slot, buf_index));
+				slot_bufs[buf_index].reset(new buffer_rfile(slot, buf_index));
 			}
 			return slot_bufs[buf_index].get();
 		}
@@ -291,14 +291,14 @@ public:
 		}
 	}
 	
-	buffer_regs* buffer(buffer_uid buf_uid)
+	buffer_rfile* buffer(buffer_uid buf_uid)
 	{
 		return buffer(buf_uid.slot, buf_uid.index);
 	}
 	
-	buffer_regs const* buffer(reg_slots slot, uint32_t buf_index) const
+	buffer_rfile const* buffer(reg_slots slot, uint32_t buf_index) const
 	{
-		auto& slot_bufs = buffer_regs_[static_cast<uint32_t>(slot)];
+		auto& slot_bufs = buffer_rfile_[static_cast<uint32_t>(slot)];
 		
 		if( buf_index < slot_bufs.size() )
 		{
@@ -310,7 +310,7 @@ public:
 		}
 	}
 	
-	buffer_regs const* buffer(buffer_uid buf_uid) const
+	buffer_rfile const* buffer(buffer_uid buf_uid) const
 	{
 		return buffer(buf_uid.slot, buf_uid.index);
 	}
@@ -319,7 +319,7 @@ public:
 	{
 		for(uint32_t slot = static_cast<uint32_t>(reg_slots::unknown); slot = static_cast<uint32_t>(reg_slots::count); ++slot)
 		{
-			auto& slot_bufs		= buffer_regs_[slot];
+			auto& slot_bufs		= buffer_rfile_[slot];
 			auto& slot_buf_addr = buf_start_addr_[slot];
 			
 			uint32_t total = 0;
@@ -334,7 +334,7 @@ public:
 	
 	uint32_t used_reg_count(reg_slot slot)
 	{
-		auto& slot_bufs = buffer_regs_[static_cast<uint32_t>(slot)];
+		auto& slot_bufs = buffer_rfile_[static_cast<uint32_t>(slot)];
 		uint32_t total = 0;
 		for(auto& buf: slot_bufs)
 		{
@@ -346,19 +346,15 @@ public:
 	{
 		uint32_t slot = static_cast<uint32_t>(rname.buf.slot);
 		return	buf_start_addr_[slot][rname.buf.index] +
-				buffer_regs_[slot][rname.buf.index]->reg_addr(rname);
+				buffer_rfile_[slot][rname.buf.index]->reg_addr(rname);
 	}
 	
 private:
-	std::vector< boost::unique_ptr<buffer_regs> >
-				buffer_regs_	[static_cast<uint32_t>(reg_slots::count)];
+	std::vector< boost::unique_ptr<buffer_rfile> >
+				buffer_rfile_	[static_cast<uint32_t>(reg_slots::count)];
 	uint32_t	used_reg_count_	[static_cast<uint32_t>(reg_slots::count)];
 	std::vector<uint32_t>
 				buf_start_addr_	[static_cast<uint32_t>(reg_slots::count)];
 				
 };
 
-class rfile_hlsl_bc_mapping
-{
-	
-};
