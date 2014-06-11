@@ -65,6 +65,12 @@ namespace eflib
 		return (T)(d+0.5);
 	}
 
+	template <typename T, typename U>
+	T round_up(T v, U align)
+	{
+		return (v + align - 1) / align * align;
+	}
+
 	float fast_ceil(float val);
 	float fast_floor(float val);
 

@@ -54,6 +54,7 @@ set( SHADER_HEADERS
 	include/shader_regs_op.h
 	include/shader_cbuffer.h
 	include/register_file.h
+	include/rfile.h
 )
 
 set( BUFFER_HEADERS
@@ -128,6 +129,7 @@ set(SHADER_SOURCES
 	src/shader.cpp
 	src/shader_unit.cpp
 	src/shader_cbuffer.cpp
+	src/rfile.cpp
 )
 
 SOURCE_GROUP( "Header Files" )

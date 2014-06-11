@@ -139,6 +139,15 @@ public:
 		return !( *this == v );
 	}
 
+	semantic_value advance_index(size_t i) const
+	{
+		semantic_value ret;
+		ret.name	= name;
+		ret.sv		= sv;
+		ret.index	= static_cast<uint32_t>(index + i);
+		return ret;
+	}
+
 private:
 	std::string		name;
 	system_values	sv;
