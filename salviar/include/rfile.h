@@ -42,6 +42,14 @@ enum class reg_slots: uint32_t
 	count
 };
 
+uint32_t SLOT_BUFFER_COUNTS[] = 
+{
+	0,
+	16 + 16 + 2 + 2,	// CB(16) + ICB(16) + Samplers + Textures + Global + Params
+	1,					// Varying
+	1
+}
+
 enum class reg_types
 {
 	none = 0,
@@ -53,10 +61,15 @@ enum class reg_types
 	count
 };
 
+struct buffer_uid
+{
+	reg_slots slot;
+	size_t	  buf_index;
+};
+
 struct reg_name
 {
-	reg_slots	slot;
-	uint32_t	buffer_index;
+	buffer_uid	buf;
 	uint32_t	reg_index;
 	uint32_t	elem;
 	
@@ -83,21 +96,23 @@ struct reg_name
 	{
 		return reg_name(slot, buffer_index, reg_index+distance, 0);
 	}
+	
+	bool valid()
+	{
+		return buf.slot == reg_slots::unknown;
+	}
 };
- 
-typedef size_t register_handle;
-class rfile_sasl_mapping
+
+struct buffer_regs
 {
 public:
-	void initialize(shader_profile prof);
-	
 	alloc_result alloc_reg(size_t sz, reg_name const& rname)
 	{	
 		reg_name reg_end;
 		return alloc_reg(reg_end, rname, sz);
 	}
 	
-	alloc_result alloc_reg(reg_slots slot, size_t buf, size_t sz, reg_name const& rname)
+	alloc_result alloc_reg(size_t sz, reg_name const& rname)
 	{
 		reg_name reg_end;
 		auto rslt = alloc_reg(reg_end, rname, sz);
@@ -112,45 +127,131 @@ public:
 		auto reg_end = rname.advance( round_up(sz, 16) / 16 );
 		auto reg_range = interval<reg_name>::right_open(reg_beg, reg_end);
 		
-		if( used_regs_[slot].intersects(reg_range) )
-		{
-			return alloc_result::register_has_been_allocated;
-		}
-		
-		lut_var_reg_[vname] = reg_range;
+		return assign_variable(reg_range, vname) ? alloc_result::ok : alloc_result::register_has_been_allocated;
 	}
 	
-	alloc_result alloc_reg(reg_slots slot, size_t buf, size_t sz, std::string const& vname)
+	alloc_result alloc_reg(size_t sz, std::string const& vname)
 	{
 		pending_vars_[slot].push_back( std::make_tuple(vname, buf, sz) );
 	}
+	
+	void update_unspecified_reg_variable()
+	{
+		for(auto const& var_sz: pending_vars_)
+		{
+			reg_name beg, end;
+			alloc_reg(beg, end, var_sz.second);
+			assign_variable(beg, end, var_sz.first);
+		}
+	}
+	
+	void assign_semantic(reg_name const& beg, reg_name const& end, semantic_value const& sv_beg)
+	{
+		reg_sv_[beg] = sv_beg;
+		
+		for( uint32_t rindex = beg.reg_index+1; rindex <= end.reg_index; ++rindex)
+		{
+			auto rname = reg_name(beg.slot, beg.buffer_index, rindex, 0);
+			reg_sv_[reg_name] = sv.advance_index(rindex - sv_beg.reg_index);
+		}
+	}
+	
+	reg_name find_reg(semantic_value const& sem) const
+	{
+	}
+	
+	boost::icl::interval<reg_name>
+			 find_reg(std::string    const& vname) const
+	{
+		auto iter = var_reg_.find(vname);
+		if( iter == var_reg_.end() )
+		{
+			return boost::icl_interval<reg_name>();
+		}
+		
+		return iter->second;
+	}
+	
+	void update_packed_index()
+	{
+		uint32_t total_reg_count = 0;
+		for(auto const& reg_interval: used_regs_)
+		{
+			uint32_t reg_count = reg_interval.up.reg_index - reg_interval.low.reg_index;
+			
+		}
+	}
+	
+private:
+	alloc_result alloc_reg(reg_name& beg, reg_name& end, size_t sz)
+	{
+		auto& slot_used_regs = used_regs_[slot];
+		beg = slot_used_regs.empty() ? reg_name(uid_, 0, 0) : boost::icl::last(slot_used_regs).next();
+		return alloc_reg(end, beg, sz);
+	}
+	
+	alloc_result alloc_reg(reg_name& end, reg_name const& beg, size_t sz)
+	{
+		end = reg_name.advance( align_up(sz, 16) / 16 );
+		slot_used_regs_.add( icl::right_open(beg, end) );
+		return alloc_result::ok;
+	}
+	
+	bool assign_variable(interval<reg_name> const& regs, std::string const& reg_name)
+	{
+		if( used_regs_[slot].intersects(reg_range) )
+		{
+			return false;
+		}
+		
+		lut_var_reg_[vname] = reg_range;
+		return true;
+	}
+	
+	buffer_uid									uid_;
+	boost::icl::interval_set<reg_name>			used_regs_;
+	
+	std::vector< std::pair<std::string /*var name*/, uint32_t /*size*/> >
+												pending_vars_;
+												
+	// Lookup table
+	//		1. semantic - registers (1:N)	- X
+	//		2. register - semantic  (1:1)
+	//		3. variable - register  (1:1)
+	//		4. register - variable  (1:1)
+	std::map<reg_name, semantic_value>								reg_sv_;
+	std::map<reg_name, std::string>									reg_var_;
+	std::map<std::string, interval<reg_name>>						var_reg_;
+	std::map<uint32_t /*reg index*/, uint32_t /*physical index*/>	reg_packed_index_;
+};
 
+class rfile_sasl_mapping
+{
+public:
+	void initialize(shader_profile prof);
+	
+	buffer_regs& buffer(reg_slots slot, size_t buf_index)
+	{
+	}
+	
+	buffer_regs& buffer(buffer_uid buf_uid)
+	{
+	}
+	
+	buffer_regs const& buffer(reg_slots slot, size_t buf_index) const
+	{
+	}
+	
+	buffer_regs const& buffer(buffer_uid buf_uid) const
+	{
+	}
+	
 	void update_variable_reg_usage()
 	{
 		for (uint32_t slot = static_cast<uint32_t>(reg_slots::unknown); slot < static_cast<uint32_t>(reg_slots::count); ++slot)
 		{
 			
 		}
-	}
-	
-	void assign_semantic(reg_name const& beg, reg_name const& end, semantic_value const& sv_beg)
-	{
-		lut_reg_sv_[beg] = sv_beg;
-		
-		for( uint32_t rindex = beg.reg_index+1; rindex <= end.reg_index; ++rindex)
-		{
-			auto rname = reg_name(beg.slot, beg.buffer_index, rindex, 0);
-			lut_reg_sv_[reg_name] = sv.advance_index(rindex - sv_beg.reg_index);
-		}
-	}
-	
-	reg_name find_reg(reg_slot slot, size_t buffer_index, semantic_value const& sem) const
-	{
-	}
-	
-	boost::icl::interval<reg_name>
-			 find_reg(reg_slot slot, size_t buffer_index, std::string    const& vname) const
-	{
 	}
 	
 	void update_reg_physical_pos();
@@ -163,34 +264,7 @@ public:
 	}
 	
 private:
-	alloc_result alloc_reg(reg_name& beg, reg_name& end, reg_slots slot, size_t buf, size_t sz)
-	{
-		auto& slot_used_regs = used_regs_[slot];
-		beg = slot_used_regs.empty() ? reg_name(slot, buf, 0, 0) : boost::icl::last(slot_used_regs).next();
-		return alloc_reg(end, beg, sz);
-	}
-	
-	alloc_result alloc_reg(reg_name& end, reg_name const& beg, size_t sz)
-	{
-		end = reg_name.advance( align_up(sz, 16) / 16 );
-		slot_used_regs_.add( icl::right_open(beg, end) );
-		return alloc_result::ok;
-	}
-	
-	boost::icl::interval_set<reg_name>			used_regs_[static_cast<uint32_t>(reg_slots::count)];
-	
-	std::vector< std::tuple<std::string /*var name*/, uint32_t /*buffer*/, uint32_t /*reg*/> >
-												pending_vars_[static_cast<uint32_t>(reg_slots::count)];
-	// Lookup table
-	//		1. semantic - registers (1:N)	- X
-	//		2. register - semantic  (1:1)
-	//		3. variable - register  (1:1)
-	//		4. register - variable  (1:1)
-	std::map<reg_name, semantic_value>			lut_reg_sv_ [static_cast<uint32_t>(reg_slots::count)];
-	std::map<reg_name, std::string>				lut_reg_var_[static_cast<uint32_t>(reg_slots::count)];
-	std::map<std::string, interval<reg_name>>	lut_var_reg_[static_cast<uint32_t>(reg_slots::count)];
-	
-	std::map<reg_name, uint32_t>				lut_reg_phy_[static_cast<uint32_t>(reg_slots::count)]
+	std::vector< boost::unique_ptr<buffer_regs> > buffer_regs_[static_cast<uint32_t>(reg_slots::count)];
 };
 
 class rfile_hlsl_bc_mapping
