@@ -92,13 +92,8 @@ public:
 		: node_semantic_pool_( sizeof(node_semantic) )
 		, symbol_pool_( sizeof(symbol) )
 	{
-		printf("new module_semantic_impl @ 0x%08X\n", this);
-		
 		pety_		= pety_t::create(this);
-		printf("Pety @ 0x%08X\n", pety_.get());
-		
 		root_symbol_= symbol::create_root(this);
-		printf("Root symbol @ 0x%08X\n", root_symbol_);
 
 		diag_chat_	= diag_chat::create();
 		pety_->root_symbol(root_symbol_);
@@ -177,11 +172,6 @@ public:
 
 	virtual node_semantic* get_semantic(node const* v) const
 	{
-		//static int counter = 0;
-		//++counter;
-		//if(counter % 10000 == 0) {
-		//	printf("get_semantic() has been called %d times.\n", counter);
-		//}
 		assert(v);
 		semantics_dict::const_iterator it = semantics_dict_.find(v);
 		if( it == semantics_dict_.end() ){ 
@@ -209,11 +199,6 @@ public:
 
 	virtual symbol* get_symbol(sasl::syntax_tree::node* v) const
 	{
-		//static int counter = 0;
-		//++counter;
-		//if(counter % 1000 == 0) {
-		//	printf("get_symbol() has been called %d times.\n", counter);
-		//}
 		symbols_dict::const_iterator it = symbols_dict_.find(v);
 
 		if ( it != symbols_dict_.end() )
@@ -233,33 +218,22 @@ public:
 
 	virtual void link_symbol(node* v, symbol* sym)
 	{
-		// static size_t erase_counter = 0;
-		// static size_t insert_counter = 0;
-
 		// Only available for symbol create by this module.
 		assert( sym->owner() == this );
 		// symbol* ref_sym = get_symbol(v);
 		assert( get_symbol(v) == NULL );	// v was not connected to symbol.
 
 		node* old_assoc_node = sym->associated_node();
-		if(old_assoc_node != NULL) {
-			// ++erase_counter;
+		
+		if(old_assoc_node != NULL)
+		{
 			symbols_dict_.erase(old_assoc_node);	
 		}
 
-		if( v != NULL ) {
-			// ++insert_counter;
+		if( v != NULL )
+		{
 			symbols_dict_.insert( make_pair(const_cast<node const*>(v), sym) );
 		}
-
-		//if( erase_counter % 1000 == 0 )
-		//{
-		//	printf("erase counter: %d\n", erase_counter);
-		//}
-		//if( insert_counter % 1000 == 0 )
-		//{
-		//	printf("insert counter: %d\n", insert_counter);
-		//}
 
 		sym->associated_node(v);
 	}

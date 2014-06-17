@@ -24,6 +24,7 @@ set( HEADER_FILES
 
 set( SOURCE_FILES
 	reflector.cpp
+	reflector2.cpp
 	reflection_impl.cpp
 	semantic_analyser.cpp
 	semantic_api.cpp

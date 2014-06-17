@@ -171,12 +171,10 @@ public:
 	bool	partial_execution() const { return partial_execution_; }
 	bool	is_constructor() const { return is_constructor_; }
 	sasl::syntax_tree::node*
-		referenced_declarator() const { return referenced_declarator_; }
+			referenced_declarator() const { return referenced_declarator_; }
 	// Statement
 	labeled_statement_array const&
 			labeled_statements() const;
-	//sasl::syntax_tree::node*
-	//		parent_block() const { return parent_block_; }
 	bool	has_loop() const { return has_loop_; }
 	
 	// Write functions
@@ -261,8 +259,7 @@ private:
 	
 	// Statement
 	labeled_statement_array*	labeled_statements_;
-	//sasl::syntax_tree::node* parent_block_;
-	bool	has_loop_;
+	bool						has_loop_;
 };
 
 END_NS_SASL_SEMANTIC();
