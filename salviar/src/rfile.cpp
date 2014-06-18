@@ -15,36 +15,6 @@ enum class reg_types: uint32_t
 	count
 };
 
-class struct_layout
-{
-public:
-	struct_layout();
-	
-	size_t add_member(size_t sz)
-	{
-		size_t offset = 0;
-		if(total_size_ % 16 == 0)
-		{
-			offset = total_size_;
-		}
-		else if ( total_size_ + sz >= eflib::round_up(total_size_, 16) )
-		{
-			offset = eflib::round_up(total_size_, 16);
-		}
-		
-		total_size_ = offset + sz;
-	}
-	
-	size_t size() const
-	{
-		return eflib::round_up(total_size_, 16);
-	}
-	
-private:
-	size_t total_size_;
-};
-
-
 class rfile_sasl_mapping
 {
 public:

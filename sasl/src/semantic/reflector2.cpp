@@ -39,10 +39,46 @@ BEGIN_NS_SASL_SEMANTIC();
 EFLIB_DECLARE_CLASS_SHARED_PTR(reflector);
 EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
 
+static const size_t REGISTER_SIZE = 16;
+
 enum class alloc_result: uint32_t
 {
 	ok = 0,
 	register_has_been_allocated
+};
+
+class struct_layout
+{
+public:
+	struct_layout();
+	
+	size_t add_member(size_t sz)
+	{
+		size_t offset = 0;
+		if(total_size_ % 16 == 0)
+		{
+			offset = total_size_;
+		}
+		else if ( total_size_ + sz >= eflib::round_up(total_size_, 16) )
+		{
+			offset = eflib::round_up(total_size_, 16);
+		}
+		
+		total_size_ = offset + sz;
+	}
+	
+	size_t size() const
+	{
+		return eflib::round_up(total_size_, 16);
+	}
+	
+private:
+	size_t total_size_;
+};
+
+struct reg_handle
+{
+	size_t v;
 };
 
 struct rfile_impl: public reg_file
@@ -51,7 +87,7 @@ public:
 	typedef boost::icl::interval_map<reg_name, uint32_t /*physical_reg*/>
 										reg_addr_map;
 	typedef reg_addr_map::interval_type	reg_interval;
-
+	
 public:
 	rfile_impl(rfile_categories cat, uint32_t index)
 		: uid_(cat, index), total_reg_count_(0)
@@ -64,28 +100,12 @@ public:
 		return alloc_reg(reg_end, rname, sz);
 	}
 	
-	alloc_result alloc_reg(size_t sz, std::string const& vname, reg_name const& rname)
+	reg_handle alloc_reg(size_t sz)
 	{
-		auto const& reg_beg = rname;
-		auto reg_end = rname.advance( eflib::round_up(sz, 16) / 16 );
-		auto reg_range = reg_interval::right_open(reg_beg, reg_end);
-		
-		return assign_variable(reg_range, vname) ? alloc_result::ok : alloc_result::register_has_been_allocated;
-	}
-	
-	alloc_result alloc_reg(size_t sz, std::string const& vname)
-	{
-		pending_vars_.push_back( std::make_pair( vname, static_cast<uint32_t>(sz) ) );
-	}
-	
-	void update_unspecified_reg_variable()
-	{
-		for(auto const& var_sz: pending_vars_)
-		{
-			reg_name beg, end;
-			alloc_reg(beg, end, var_sz.second);
-			assign_variable( reg_interval(beg, end), var_sz.first);
-		}
+		undetermined_regs_.push_back( static_cast<uint32_t>(sz) );
+		reg_handle ret;
+		ret.v = undetermined_regs_.size() - 1;
+		return ret;
 	}
 	
 	void assign_semantic(reg_name const& beg, reg_name const& end, semantic_value const& sv_beg)
@@ -105,17 +125,6 @@ public:
 		if(iter == sv_reg_.end())
 		{
 			return reg_name();
-		}
-		return iter->second;
-	}
-	
-	reg_interval
-			 find_reg(std::string    const& vname) const
-	{
-		auto iter = var_reg_.find(vname);
-		if( iter == var_reg_.end() )
-		{
-			return reg_interval();
 		}
 		return iter->second;
 	}
@@ -162,26 +171,13 @@ private:
 		return alloc_result::ok;
 	}
 	
-	bool assign_variable(reg_interval const& reg_range, std::string const& vname)
-	{
-		if( boost::icl::intersects(used_regs_, reg_range) )
-		{
-			return false;
-		}
-		
-		var_reg_[vname] = reg_range;
-		return true;
-	}
-	
 	reg_file_uid						uid_;
 	uint32_t							total_reg_count_;
 
 	reg_addr_map						used_regs_;
-	std::vector< std::pair<std::string /*var name*/, uint32_t /*size*/> >
-										pending_vars_;
+	std::vector<uint32_t>				undetermined_regs_;
 	std::map<semantic_value, reg_name>	sv_reg_;
 	std::map<reg_name, semantic_value>	reg_sv_;
-	std::map<std::string, reg_interval>	var_reg_;
 	std::map<uint32_t /*reg index*/, uint32_t /*addr*/>
 										reg_addr_;
 };
@@ -350,7 +346,7 @@ private:
 
 			BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
 			{
-				if( !process_params(param, false, lang, semantic_value()) )
+				if( !process_registers(param, false, false, nullptr, nullptr) )
 				{
 					ret.reset();
 					return ret;
@@ -361,26 +357,12 @@ private:
 			BOOST_FOREACH( symbol* gvar_sym, sem_->global_vars() )
 			{
 				shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
-				assert(gvar);
-
-				// is_member is set to true for preventing aggregated variable.
-				// And global variable only be treated as input.
-				if( !add_semantic(gvar, true, false, lang, false) )
+				
+				if( !process_registers(gvar, false, true, nullptr, nullptr) )
 				{
-					// If it is not attached to an valid semantic, it should be uniform variable.
-
-					// Check the data type of global. Now global variables only support built-in types.
-					node_semantic* psi = sem_->get_semantic( gvar.get() );
-					if( psi->ty_proto()->is_builtin() || psi->ty_proto()->is_array()  )
-					{
-						ret->add_global_var(gvar_sym, psi->ty_proto()->as_handle<tynode>() );
-					}
-					else
-					{
-						//TODO: It an semantic error need to be reported.
-						ret.reset();
-						return ret;
-					}
+					//TODO: It an semantic error need to be reported.
+					ret.reset();
+					return ret;
 				}
 			}
 		}
@@ -388,7 +370,14 @@ private:
 		return ret;
 	}
 
-	bool process_registers(node_ptr const& v, bool is_member, bool is_global, semantic_value const* sv, * semantic_value* updated_sv)
+	bool process_registers(
+		size_t* total_size,
+		semantic_value* updated_sv,
+		node_ptr const& v,
+		bool is_member,
+		bool is_global,
+		semantic_value const* sv
+		)
 	{
 		assert(reflection_);
 		node_semantic* node_sem = sem_->get_semantic( v.get() );
@@ -444,7 +433,23 @@ private:
 		if( ty->is_builtin() )
 		{
 			var_size = reg_storage_size(ty->tycode);
-			rfile->alloc_reg(
+			
+			if( user_reg.valid() )
+			{
+				if( rfile->alloc_reg(var_size, user_reg, sv) != alloc_result::ok)
+				{
+					// TODO: error: register allocation failed. Maybe out of capacity or register has been allocated.
+					return false;
+				}
+			}
+			else
+			{
+				auto rhandle = rfile->alloc_reg(var_size, sv);
+				if( !is_member ) { undetermined_regs_.push_back( std::make_pair(node_sem, rhandle) );}
+			}
+
+			size_t reg_count = eflib::round_up(var_size, REGISTER_SIZE) / 16;
+			*updated_sv = sv->advance_index(reg_count);
 			return true;
 		}
 
@@ -455,9 +460,9 @@ private:
 			assert(struct_ty);
 
 			semantic_value child_sv, updated_child_sv;
-			if(sv != nullptr)
+			if(node_sv != nullptr)
 			{
-				child_sv = *sv;
+				child_sv = *node_sv;
 			}
 
 			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_ty->decls )
@@ -475,6 +480,7 @@ private:
 						{
 							process_registers(dclr, true, is_global, nullptr, nullptr);
 						}
+						child_sv = updated_child_sv;
 					}
 				}
 			}
@@ -490,6 +496,9 @@ private:
 
 		return false;
 	}
+	
+	std::vector< std::pair<node_semantic*, reg_handle> >
+						undetermined_regs_;
 
 	module_semantic*	sem_;
 	fixed_string		entry_name_;
