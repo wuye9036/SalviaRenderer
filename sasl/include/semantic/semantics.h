@@ -195,6 +195,7 @@ public:
 	lvalue_or_rvalue::id
 			lr_value() const { return lrv_; }
 	bool	is_modified() const { return modified_; }
+	size_t	member_offset() const { return member_offset_; }
 
 	// Function and intrinsic
 	std::string const&
@@ -228,7 +229,6 @@ public:
 
 	// Constant
 	void const_value(std::string const& lit, literal_classifications lit_class);
-
 	void const_value(int64_t v) { signed_constant_ = v; }
 	void const_value(uint64_t v) { unsigned_constant_ = v; }
 	void const_value(std::string const& v);
@@ -243,7 +243,8 @@ public:
 	void is_function_pointer(bool v) { is_function_pointer_ = v; }
 	void modify_value() { modified_ = true; }
 	void referenced_declarator(sasl::syntax_tree::node* v) { referenced_declarator_ = v; }
-
+	void member_offset(size_t offset) { member_offset_ = offset; }
+	
 	// Function and intrinsic
 	void function_name(std::string const& v);
 	void overloaded_function(symbol* v) { overloaded_function_ = v; }
@@ -255,7 +256,6 @@ public:
 
 	// Statement
 	labeled_statement_array& labeled_statements();
-	//void parent_block(sasl::syntax_tree::node* v) { parent_block_ = v; }
 	void has_loop(bool v) { has_loop_ = v; }
 
 private:
@@ -282,7 +282,8 @@ private:
 	bool						is_reference_;
 	bool						is_function_pointer_;
 	bool						modified_;
-	lvalue_or_rvalue::id		lrv_;					
+	lvalue_or_rvalue::id		lrv_;
+	size_t						member_offset_;
 	
 	// Function and intrinsic
 	std::string*				function_name_;

@@ -65,6 +65,7 @@ public:
 		}
 		
 		total_size_ = offset + sz;
+		return offset;
 	}
 	
 	size_t size() const
@@ -114,7 +115,7 @@ public:
 		
 		for( uint32_t rindex = beg.reg_index+1; rindex <= end.reg_index; ++rindex)
 		{
-			auto rname = reg_name(beg.rf, rindex, 0);
+			auto rname = reg_name(beg.rfile, rindex, 0);
 			reg_sv_[rname] = sv_beg.advance_index(rindex - beg.reg_index);
 		}
 	}
@@ -442,10 +443,10 @@ private:
 					return false;
 				}
 			}
-			else
+			else if(!is_member)
 			{
 				auto rhandle = rfile->alloc_reg(var_size, sv);
-				if( !is_member ) { undetermined_regs_.push_back( std::make_pair(node_sem, rhandle) );}
+				undetermined_regs_.push_back( std::make_pair(node_sem, rhandle) );
 			}
 
 			size_t reg_count = eflib::round_up(var_size, REGISTER_SIZE) / 16;
@@ -459,36 +460,46 @@ private:
 			struct_type* struct_ty = dynamic_cast<struct_type*>(ty);
 			assert(struct_ty);
 
-			semantic_value child_sv, updated_child_sv;
+			semantic_value	child_sv, updated_child_sv;
+			size_t			child_size = 0;
+			struct_layout	layout;
+
 			if(node_sv != nullptr)
 			{
 				child_sv = *node_sv;
 			}
 
-			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_ty->decls )
+			for(auto const& decl: struct_ty->decls)
 			{
-				if ( decl->node_class() == node_ids::variable_declaration )
+				if ( decl->node_class() != node_ids::variable_declaration )
 				{
-					shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-					BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators )
+					continue;
+				}
+
+				auto vardecl = decl->as_handle<variable_declaration>();
+				for(auto const& dclr: vardecl->declarators)
+				{
+					if(node_sv != nullptr)
 					{
-						if(sv != nullptr)
-						{
-							process_registers(dclr, true, is_global, &child_sv, &updated_child_sv);
-						}
-						else
-						{
-							process_registers(dclr, true, is_global, nullptr, nullptr);
-						}
+						process_registers(&child_size, &updated_child_sv, dclr, true, is_global, &child_sv);
 						child_sv = updated_child_sv;
 					}
+					else
+					{
+						process_registers(&child_size, nullptr, dclr, true, is_global, nullptr);
+					}
+
+					size_t decl_offset = layout.add_member(child_size);
+					auto child_sem = sem_->get_semantic(dclr);
+					child_sem->member_offset(decl_offset);
 				}
 			}
 
+			*total_size = layout.size();
 			if(sv != nullptr)
 			{
 				assert(updated_sv != nullptr);
-				*updated_sv = *sv;
+				*updated_sv = updated_child_sv;
 			}
 
 			return true;
