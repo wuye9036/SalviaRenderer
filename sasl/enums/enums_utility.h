@@ -13,10 +13,11 @@
 struct builtin_types;
 struct operators;
 
-namespace sasl{
-	namespace utility{
-	
-		// builtin type code
+namespace sasl
+{
+	namespace utility
+	{	
+		// builtin type traits
 		bool is_none( const builtin_types& /*btc*/ );
 		bool is_void( const builtin_types& /*btc*/ );
 		bool is_sampler( const builtin_types& /*btc*/ );
@@ -44,6 +45,7 @@ namespace sasl{
 		size_t vector_size( const builtin_types& /*btc*/);
 		size_t vector_count( const builtin_types& /*btc*/);
 
+		size_t reg_storage_size(builtin_types const& btc);
 		size_t storage_size( const builtin_types& /*btc*/ );
 
 		const std::vector<builtin_types>& list_of_builtin_types();

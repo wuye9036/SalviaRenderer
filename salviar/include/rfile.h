@@ -16,6 +16,7 @@ BEGIN_NS_SALVIAR();
 enum class rfile_categories: uint32_t
 {
 	unknown = 0,
+	undetermined,			// A special category, which register will be reallocated to correct category.
 	uniforms,				// cb#, s#, t#
 	varying,				// v#
 	outputs,				// o#
@@ -24,6 +25,7 @@ enum class rfile_categories: uint32_t
 
 uint32_t RFILE_CATEGORY_BUFFER_COUNTS[] = 
 {
+	0,
 	0,
 	16 + 16 + 2 + 2,	// CB(16) + ICB(16) + Samplers + Textures + Global + Params
 	1,					// Varying

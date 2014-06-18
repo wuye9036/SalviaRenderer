@@ -1,6 +1,9 @@
 #include <sasl/enums/enums_utility.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
+
+#include <eflib/include/math/math.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/enable_warnings.h>
@@ -139,33 +142,66 @@ namespace sasl{
 				);
 		}
 
-		size_t storage_size( const builtin_types& btc ){
-			if( is_none(btc) || is_void(btc) ){
+		size_t reg_storage_size(builtin_types const& btc)
+		{
+			if( is_none(btc) || is_void(btc) )
+			{
 				return 0;
 			}
-			if( is_sampler(btc) ){
+
+			builtin_types s_btc = scalar_of( btc );
+
+			size_t comp_size = 0;
+			if(    s_btc == builtin_types::_sint32
+				|| s_btc == builtin_types::_uint32
+				|| s_btc == builtin_types::_float 
+				|| s_btc == builtin_types::_boolean)
+			{
+				comp_size = 4;
+			}
+			else
+			{
+				return 0;
+			}
+
+			if( is_matrix(btc) )
+			{
+				return vector_count(btc) * comp_size * 4;
+			}
+			else( is_vector(btc) )
+			{
+				return vector_size(btc) * comp_size;
+			}
+			return comp_size;
+		}
+
+		size_t storage_size( const builtin_types& btc ){
+			if( is_none(btc) || is_void(btc) )
+			{
+				return 0;
+			}
+			if( is_sampler(btc) )
+			{
 				return sizeof(void*);
 			}
 			size_t component_count = vector_size(btc) * vector_count(btc);
 			size_t component_size = 0;
 			builtin_types s_btc = scalar_of( btc );
-			if( s_btc == builtin_types::_sint8 
-				|| s_btc == builtin_types::_uint8 || s_btc == builtin_types::_boolean )
+			if(	   s_btc == builtin_types::_sint8 
+				|| s_btc == builtin_types::_uint8
+				|| s_btc == builtin_types::_boolean )
 			{
 				component_size = 1;
-			} else if( s_btc == builtin_types::_sint16
-				|| s_btc == builtin_types::_uint16 )
+			}
+			else if(s_btc == builtin_types::_sint16 || s_btc == builtin_types::_uint16)
 			{
 				component_size = 2;
-			} else if( s_btc == builtin_types::_sint32 
-				|| s_btc == builtin_types::_uint32 
-				|| s_btc == builtin_types::_float
-				|| s_btc == builtin_types::_boolean)
+			}
+			else if( s_btc == builtin_types::_sint32 || s_btc == builtin_types::_uint32 || s_btc == builtin_types::_float || s_btc == builtin_types::_boolean)
 			{
 				component_size = 4;
-			} else if( s_btc == builtin_types::_sint64
-				|| s_btc == builtin_types::_uint64 
-				|| s_btc == builtin_types::_double)
+			} 
+			else if( s_btc == builtin_types::_sint64 || s_btc == builtin_types::_uint64 || s_btc == builtin_types::_double)
 			{
 				component_size = 8;
 			}

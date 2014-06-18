@@ -148,6 +148,11 @@ public:
 		return ret;
 	}
 
+	bool valid() const
+	{
+		return sv != sv_none || !name.empty();
+	}
+
 private:
 	std::string		name;
 	system_values	sv;

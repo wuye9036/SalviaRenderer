@@ -39,6 +39,40 @@ namespace sasl
 
 BEGIN_NS_SASL_SEMANTIC();
 
+#if 0
+class semantic_node;
+class literal_value;
+
+class type
+{
+	builtin_type	bt_code;
+	type*			inner_type;
+	std::vector<semantic_node*>
+					dims_or_members;
+	std::vector<type*>
+					param_types;
+};
+
+class semantic_block
+{
+	vector< std::pair<semantic_node*, semantic_block*> > jumps;
+};
+
+// Declarators and expressions
+class semantic_node
+{
+	// Declarator and expression
+	symbol*			name;
+	type*			ty;
+
+	literal_value*	lit_value;
+
+	// Expression
+	operators		op;			// expression
+	semantic_node*	exprs[3];	// sub expressions
+};
+#endif
+
 class node_semantic;
 class pety_t;
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
@@ -151,6 +185,8 @@ public:
 			semantic_value() const { return semantic_value_; }
 	salviar::semantic_value const&
 			semantic_value_ref() const;
+	reg_name
+			user_defined_reg() const { return user_defined_reg_; }
 	int		member_index() const { return member_index_; }
 	elem_indexes
 			swizzle() const {return swizzle_code_; }
@@ -240,6 +276,7 @@ private:
 	// Expression and variable
 	sasl::syntax_tree::node*	referenced_declarator_;
 	salviar::semantic_value*	semantic_value_;
+	reg_name					user_defined_reg_;
 	int							member_index_;
 	elem_indexes				swizzle_code_;
 	bool						is_reference_;
