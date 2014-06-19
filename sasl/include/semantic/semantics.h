@@ -7,6 +7,7 @@
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/rfile.h>
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/typedefs.h>
 
@@ -185,7 +186,7 @@ public:
 			semantic_value() const { return semantic_value_; }
 	salviar::semantic_value const&
 			semantic_value_ref() const;
-	reg_name
+	salviar::reg_name
 			user_defined_reg() const { return user_defined_reg_; }
 	int		member_index() const { return member_index_; }
 	elem_indexes
@@ -276,7 +277,7 @@ private:
 	// Expression and variable
 	sasl::syntax_tree::node*	referenced_declarator_;
 	salviar::semantic_value*	semantic_value_;
-	reg_name					user_defined_reg_;
+	salviar::reg_name			user_defined_reg_;
 	int							member_index_;
 	elem_indexes				swizzle_code_;
 	bool						is_reference_;

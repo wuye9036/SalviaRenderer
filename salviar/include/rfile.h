@@ -16,7 +16,7 @@ BEGIN_NS_SALVIAR();
 enum class rfile_categories: uint32_t
 {
 	unknown = 0,
-	undetermined,			// A special category, which register will be reallocated to correct category.
+	offset,					// A special category, which register will be reallocated to correct category.
 	uniforms,				// cb#, s#, t#
 	varying,				// v#
 	outputs,				// o#
