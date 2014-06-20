@@ -7,7 +7,7 @@
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/rfile.h>
+#include <salviar/include/shader_reflection.h>
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/typedefs.h>
 

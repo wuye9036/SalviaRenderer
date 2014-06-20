@@ -1,7 +1,5 @@
 #if 0
 
-#include <sasl/include/semantic/reflector.h>
-
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -9,13 +7,14 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <salviar/include/rfile.h>
+#include <salviar/include/shader_reflection.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <boost/utility/addressof.hpp>
+#include <boost/icl/interval_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
@@ -37,11 +36,10 @@ using std::make_pair;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-EFLIB_DECLARE_CLASS_SHARED_PTR(reflector);
-EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
-class rfile_impl;
+EFLIB_DECLARE_CLASS_SHARED_PTR(reflector2);
+EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl2);
 
-static const size_t REGISTER_SIZE = 16;
+class reg_file;
 
 enum class alloc_result: uint32_t
 {
@@ -82,11 +80,11 @@ private:
 
 struct reg_handle
 {
-	rfile_impl*	rfile;
+	reg_file*	rfile;
 	size_t		v;
 };
 
-class rfile_impl: public reg_file
+class reg_file
 {
 private:
 	typedef boost::icl::interval_map<reg_name, uint32_t /*physical_reg*/>
@@ -94,14 +92,14 @@ private:
 	typedef reg_addr_map::interval_type	reg_interval;
 
 public:
-	rfile_impl(rfile_categories cat, uint32_t index)
+	reg_file(reg_categories cat, uint32_t index)
 		: uid_(cat, index), total_reg_count_(0)
 	{
 	}
 
 	reg_name absolute_reg(reg_name const& rname) const
 	{
-		if(rname.rfile.cat == uid_.cat || rname.rfile.cat == rfile_categories::offset)
+		if(rname.rfile.cat == uid_.cat || rname.rfile.cat == reg_categories::offset)
 		{
 			return reg_name(uid_, rname.reg_index, rname.elem);
 		}
@@ -156,6 +154,7 @@ public:
 		}
 		return iter->second;
 	}
+
 	reg_name find_reg(reg_handle const& rh) const
 	{
 		return auto_alloc_regs_[rh.v];
@@ -207,7 +206,7 @@ private:
 		return alloc_result::ok;
 	}
 
-	reg_file_uid						uid_;
+	rfile_name							uid_;
 	uint32_t							total_reg_count_;
 
 	reg_addr_map						used_regs_;
@@ -218,28 +217,70 @@ private:
 	std::map<semantic_value, reg_name>	sv_reg_;
 	std::map<reg_name, semantic_value>	reg_sv_;
 	std::map<uint32_t /*reg index*/, uint32_t /*addr*/>
-		reg_addr_;
+										reg_addr_;
 };
 
-class reflection_impl
+class reflection_impl2: public shader_reflection2
 {
 public:
-	// Friend for reflector could call compute_layout();
-	friend class reflector;
-
-	virtual eflib::fixed_string	entry_name() const;
-
-	void	initialize(languages prof);
-
-	rfile_impl* rfile(rfile_categories cat, uint32_t rfile_index)
+	// Impl specific members
+	reflection_impl2(module_semantic* mod_sem, symbol* entry)
+		: module_sem_(mod_sem)
+		, entry_point_(entry)
+		, entry_point_name_(entry->mangled_name())
 	{
-		auto& cat_rfiles = rfiles_[static_cast<uint32_t>(cat)];
-		return &cat_rfiles[rfile_index];
 	}
 
-	rfile_impl* rfile(reg_file_uid rfile_id)
+	virtual languages language() const
 	{
-		return rfile(rfile_id.cat, rfile_id.index);
+		return module_sem_->get_language();
+	}
+
+	virtual eflib::fixed_string	entry_name() const override;
+	
+	virtual std::vector<semantic_value> varying_semantics() const override
+	{
+		std::vector<semantic_value> ret;
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return ret;
+	}
+
+	virtual size_t available_reg_count(reg_categories cat) const override
+	{
+		return used_reg_count_[static_cast<uint32_t>(cat)];
+	}
+
+	virtual reg_name find_reg(reg_categories cat, semantic_value const& sv) const override
+	{
+		switch(cat)
+		{
+		case reg_categories::uniforms:
+			return rfile( rfile_name::global() )->find_reg(sv);
+		case reg_categories::varying:
+			return rfile( rfile_name::varyings() )->find_reg(sv);
+		default:
+			return reg_name();
+		}
+	}
+
+	virtual size_t reg_addr(reg_name const& rname) const override
+	{
+		uint32_t cat = static_cast<uint32_t>(rname.rfile.cat);
+		return
+			rfile_start_addr_[cat][rname.rfile.index] +
+			rfiles_[cat][rname.rfile.index].reg_addr(rname);
+	}
+
+	reg_file const* rfile(rfile_name rfname) const
+	{
+		auto& cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
+		return &cat_rfiles[rfname.index];
+	}
+	
+	reg_file* rfile(rfile_name rfname)
+	{
+		auto& cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
+		return &cat_rfiles[rfname.index];
 	}
 
 	void add_variable_reg(node_semantic const* var, reg_name const& rname)
@@ -277,7 +318,7 @@ public:
 
 	void update_reg_address()
 	{
-		for(uint32_t cat = static_cast<uint32_t>(rfile_categories::unknown); cat = static_cast<uint32_t>(rfile_categories::count); ++cat)
+		for(uint32_t cat = static_cast<uint32_t>(reg_categories::unknown); cat = static_cast<uint32_t>(reg_categories::count); ++cat)
 		{
 			auto& rfile			= rfiles_[cat];
 			auto& rfiles_addr	= rfile_start_addr_[cat];
@@ -292,26 +333,10 @@ public:
 		}
 	}
 
-	uint32_t used_reg_count(rfile_categories cat)
-	{
-		return used_reg_count_[static_cast<uint32_t>(cat)];
-	}
-
 	reg_name find_reg(reg_handle rhandle) const
 	{
 		return rhandle.rfile->find_reg(rhandle);
 	}
-
-	uint32_t reg_addr(reg_name const& rname)
-	{
-		uint32_t cat = static_cast<uint32_t>(rname.rfile.cat);
-		return
-			rfile_start_addr_[cat][rname.rfile.index] +
-			rfiles_[cat][rname.rfile.index].reg_addr(rname);
-	}
-
-	// Impl specific members
-	reflection_impl();
 
 	void module( module_semantic_ptr const& );
 	bool is_module( module_semantic_ptr const& ) const;
@@ -320,52 +345,49 @@ public:
 	bool is_entry(symbol*) const;
 
 private:
-	module_semantic*	module_sem_;
+	module_semantic*		module_sem_;
 
-	symbol*				entry_point_;
-	eflib::fixed_string	entry_point_name_;
+	symbol*					entry_point_;
+	eflib::fixed_string		entry_point_name_;
 
-	std::vector<rfile_impl>
-		rfiles_				[static_cast<uint32_t>(rfile_categories::count)];
-	uint32_t			used_reg_count_		[static_cast<uint32_t>(rfile_categories::count)];
-	std::vector<uint32_t>
-		rfile_start_addr_	[static_cast<uint32_t>(rfile_categories::count)];
+	std::vector<reg_file>	rfiles_				[static_cast<uint32_t>(reg_categories::count)];
+	uint32_t				used_reg_count_		[static_cast<uint32_t>(reg_categories::count)];
+	std::vector<uint32_t>	rfile_start_addr_	[static_cast<uint32_t>(reg_categories::count)];
 
 	std::vector< std::pair<node_semantic const*, reg_handle> >
-		var_auto_regs_;
-
+							var_auto_regs_;
 	boost::unordered_map<node_semantic const*, reg_name>
-		input_var_regs_;
+							input_var_regs_;
 };
 
-class reflector
+class reflector2
 {
 public:
-	reflector(module_semantic* sem, eflib::fixed_string const& entry_name)
+	reflector2(module_semantic* sem, eflib::fixed_string const& entry_name)
 		: sem_(sem), current_entry_(NULL), reflection_(NULL), entry_name_(entry_name)
 	{
 	}
 
-	reflector(module_semantic* sem)	: sem_(sem), current_entry_(NULL), reflection_(NULL)
+	reflector2(module_semantic* sem)	: sem_(sem), current_entry_(NULL), reflection_(NULL)
 	{
 	}
 
-	reflection_impl_ptr reflect()
+	reflection_impl2_ptr reflect()
 	{
 		if( !entry_name_.empty() )
 		{
 			vector<symbol*> overloads = sem_->root_symbol()->find_overloads(entry_name_);
 			if ( overloads.size() != 1 )
 			{
-				return reflection_impl_ptr();
+				return reflection_impl2_ptr();
 			}
 			current_entry_ = overloads[0];
 			return do_reflect();
 		}
 		else
 		{
-			symbol*				candidate = NULL;
-			reflection_impl_ptr	candidate_reflection;
+			symbol*					candidate = NULL;
+			reflection_impl2_ptr	candidate_reflection;
 			BOOST_FOREACH( symbol* fn_sym, sem_->functions() )
 			{
 				current_entry_ = fn_sym;
@@ -376,7 +398,7 @@ public:
 					if(candidate)
 					{
 						// TODO: More than one matched. conflict error.
-						return reflection_impl_ptr();
+						return reflection_impl2_ptr();
 					}
 					candidate = fn_sym;
 				}
@@ -386,64 +408,63 @@ public:
 	}
 
 private:
-	reflection_impl_ptr do_reflect()
+	reflection_impl2_ptr do_reflect()
 	{
 		if( ! (sem_ && current_entry_) )
 		{
-			return reflection_impl_ptr();
+			return reflection_impl2_ptr();
 		}
 
 		salviar::languages lang = sem_->get_language();
 
 		// Initialize language ABI information.
-		reflection_impl_ptr ret = make_shared<reflection_impl>();
-		ret->module_sem_		= sem_;
-		ret->entry_point_		= current_entry_;
-		ret->entry_point_name_	= current_entry_->mangled_name();
-		reflection_				= ret.get();
+		reflection_impl2_ptr ret = make_shared<reflection_impl2>(sem_, current_entry_);
+		reflection_ = ret.get();
 
-		if( lang == salviar::lang_vertex_shader
-			|| lang == salviar::lang_pixel_shader
-			|| lang == salviar::lang_blending_shader
-			)
+		switch(lang)
 		{
-			// Process entry function.
-			shared_ptr<function_def> entry_fn
-				= current_entry_->associated_node()->as_handle<function_def>();
-			assert(entry_fn);
-
-			// 3 things to do:
-			//		1. struct member offset computation;
-			//		2. register allocation;
-			//		3. semantic allocation;
-
-			// Process parameters
-			for(auto& param: entry_fn->params)
+		case salviar::lang_vertex_shader:
+		case salviar::lang_pixel_shader:
+		case salviar::lang_blending_shader:
 			{
-				if( !process_entry_inputs(nullptr, param, false) )
-				{
-					ret.reset();
-					return ret;
-				}
-			}
+				// Process entry function.
+				shared_ptr<function_def> entry_fn
+					= current_entry_->associated_node()->as_handle<function_def>();
+				assert(entry_fn);
 
-			// Process global variables.
-			for(symbol* gvar_sym: sem_->global_vars())
-			{
-				auto gvar = gvar_sym->associated_node()->as_handle<declarator>();
-				if( !process_entry_inputs(nullptr, gvar, true) )
-				{
-					//TODO: It an semantic error need to be reported.
-					ret.reset();
-					return ret;
-				}
-			}
+				// 3 things to do:
+				//		1. struct member offset computation;
+				//		2. register allocation;
+				//		3. semantic allocation;
 
-			process_auto_alloc_regs();
-			assign_semantics();
+				// Process parameters
+				for(auto& param: entry_fn->params)
+				{
+					if( !process_entry_inputs(nullptr, param, false) )
+					{
+						ret.reset();
+						return ret;
+					}
+				}
+
+				// Process global variables.
+				for(symbol* gvar_sym: sem_->global_vars())
+				{
+					auto gvar = gvar_sym->associated_node()->as_handle<declarator>();
+					if( !process_entry_inputs(nullptr, gvar, true) )
+					{
+						//TODO: It an semantic error need to be reported.
+						ret.reset();
+						return ret;
+					}
+				}
+
+				reflection_->update_auto_alloc_regs();
+				assign_semantics();
+			}
+		default:
+			return ret;
 		}
-
-		return ret;
 	}
 
 	struct variable_info
@@ -484,11 +505,11 @@ private:
 		node_semantic*	node_sem	= sem_->get_semantic( v.get() );
 		tynode*			ty			= node_sem->ty_proto();
 
-		rfile_impl* rfile =
+		reg_file* rfile =
 			reflection_->rfile(
 			is_global
-			? reg_file_uid::global() 
-			: ty->is_uniform() ? reg_file_uid::params() : reg_file_uid::varyings()
+			? rfile_name::global() 
+			: ty->is_uniform() ? rfile_name::params() : rfile_name::varyings()
 			);
 
 		bool		use_parent_sv	= false;
@@ -614,16 +635,11 @@ private:
 		return true;
 	}
 
-	void process_auto_alloc_regs()
-	{
-		reflection_->update_auto_alloc_regs();
-	}
-
 	void assign_semantics()
 	{
 		for(auto& var_info: var_infos_)
 		{
-			// Compute reg.
+			// Broadcast reg from root entry input to its members.
 			if( var_info.rhandle.rfile != nullptr )
 			{
 				var_info.reg = reflection_->find_reg(var_info.rhandle);
@@ -634,7 +650,7 @@ private:
 				var_info.reg = var_info.parent->reg.advance(var_info.offset);
 			}
 
-			// Semantics only apply leaf nodes.
+			// Assign semantics to reg, only apply leaf nodes.
 			if(var_info.first_child == nullptr && var_info.sv.valid())
 			{
 				reflection_->assign_semantic(var_info.reg, var_info.size, var_info.sv);
@@ -647,18 +663,18 @@ private:
 	module_semantic*	sem_;
 	fixed_string		entry_name_;
 	symbol*				current_entry_;
-	reflection_impl*	reflection_;
+	reflection_impl2*	reflection_;
 };
 
-reflection_impl_ptr reflect(module_semantic_ptr const& sem)
+reflection_impl2_ptr reflect2(module_semantic_ptr const& sem)
 {
-	reflector rfl( sem.get() );
+	reflector2 rfl( sem.get() );
 	return rfl.reflect();
 }
 
-reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
+reflection_impl2_ptr reflect2(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
 {
-	reflector rfl( sem.get(), entry_name );
+	reflector2 rfl( sem.get(), entry_name );
 	return rfl.reflect();
 }
 

@@ -94,6 +94,26 @@ enum sv_usage{
 	sv_usage_count
 };
 
+
+enum class reg_categories: uint32_t
+{
+	unknown = 0,
+	offset,					// A special category, which register will be reallocated to correct category.
+	uniforms,				// cb#, s#, t#
+	varying,				// v#
+	outputs,				// o#
+	count
+};
+
+static uint32_t const REG_CATEGORY_REGFILE_COUNTS[] = 
+{
+	0,					// Unknown
+	0,					// Offset
+	16 + 16 + 2 + 2,	// Uniform: CB(16) + ICB(16) + Samplers + Textures + Global + Params
+	1,					// Varying
+	1					// Output
+};
+
 struct sv_layout{
 	sv_layout()
 		: logical_index(0), physical_index(0)
@@ -128,6 +148,8 @@ int const PACKAGE_ELEMENT_COUNT			= 4;
 int const PACKAGE_LINE_ELEMENT_COUNT	= 2;
 int const SIMD_ELEMENT_COUNT			= 4;
 
+static size_t const REGISTER_SIZE = 16;
+
 // ! Reflection of shader.
 //
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_reflection);
@@ -149,6 +171,117 @@ public:
 	virtual ~shader_reflection() {}
 };
 
+struct rfile_name
+{
+	rfile_name()
+		:cat(reg_categories::unknown), index(0)
+	{
+	}
+	
+	rfile_name(reg_categories cat, uint32_t index)
+		:cat(cat), index(index)
+	{
+	}
+	
+	rfile_name(rfile_name const& rhs)
+		:cat(rhs.cat), index(rhs.index)
+	{
+	}
+	
+	rfile_name& operator = (rfile_name const& rhs)
+	{
+		cat = rhs.cat;
+		index = rhs.index;
+		return *this;
+	}
+	
+	bool operator == (rfile_name const& rhs) const
+	{
+		return cat == rhs.cat && index == rhs.index;
+	}
+
+	static rfile_name global()
+	{
+		return rfile_name(reg_categories::uniforms, 34 + 0);
+	}
+
+	static rfile_name params()
+	{
+		return rfile_name(reg_categories::uniforms, 34 + 1);
+	}
+
+	static rfile_name varyings()
+	{
+		return rfile_name(reg_categories::varying, 0);
+	}
+
+	reg_categories	cat;
+	uint32_t		index;
+};
+
+struct reg_name
+{
+	rfile_name	rfile;
+	uint32_t	reg_index;
+	uint32_t	elem;
+	
+	reg_name(): reg_index(0), elem(0)
+	{
+	}
+	
+	reg_name(reg_categories cat, uint32_t rfile_index, uint32_t reg_index, uint32_t elem)
+		: rfile(cat, rfile_index), reg_index(reg_index), elem(elem)
+	{
+	}
+	
+	reg_name(rfile_name rfile, uint32_t reg_index, uint32_t elem)
+		: rfile(rfile), reg_index(reg_index), elem(elem)
+	{
+	}
+	
+	reg_name(reg_name const& rhs)
+		: rfile(rhs.rfile), reg_index(rhs.reg_index), elem(rhs.elem)
+	{
+	}
+	
+	reg_name& operator = (reg_name const& rhs)
+	{
+		rfile = rhs.rfile;
+		reg_index = rhs.reg_index;
+		elem = rhs.elem;
+		return *this;
+	}
+	
+	reg_name advance(size_t distance) const
+	{
+		return reg_name(rfile, static_cast<uint32_t>(reg_index + distance), 0);
+	}
+	
+	bool valid() const
+	{
+		return rfile.cat == reg_categories::unknown;
+	}
+
+	bool operator < (reg_name const& rhs) const
+	{
+		assert(rfile == rhs.rfile);
+		if( reg_index < rhs.reg_index ) return true;
+		if( reg_index > rhs.reg_index ) return false;
+		return elem < rhs.elem;
+	}
+};
+
+// Shader reflection for register-based shader.
+class shader_reflection2
+{
+	virtual languages			language()								const = 0;
+	virtual eflib::fixed_string	entry_name()							const = 0;
+	virtual std::vector<semantic_value>
+								varying_semantics()						const = 0;
+	virtual	size_t				available_reg_count(reg_categories cat) const = 0;
+	virtual reg_name			find_reg(reg_categories cat, semantic_value const& sv)		const = 0;
+	virtual size_t				reg_addr(reg_name const& rname)			const = 0;
+};
 END_NS_SALVIAR();
 
 #endif
