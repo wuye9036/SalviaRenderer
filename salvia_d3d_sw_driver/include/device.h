@@ -305,6 +305,15 @@ public:
         const D3D11DDIARG_CREATEDEFERREDCONTEXT* create_deferred_context);
     static void APIENTRY recycle_destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list);
 
+    static HRESULT APIENTRY present_dxgi(DXGI_DDI_ARG_PRESENT* present_data);
+    static HRESULT APIENTRY get_gamma_caps_dxgi(DXGI_DDI_ARG_GET_GAMMA_CONTROL_CAPS* gamma_data);
+    static HRESULT APIENTRY set_display_mode_dxgi(DXGI_DDI_ARG_SETDISPLAYMODE* display_mode_data);
+    static HRESULT APIENTRY set_resource_priority_dxgi(DXGI_DDI_ARG_SETRESOURCEPRIORITY* priority_data);
+    static HRESULT APIENTRY query_resource_residency_dxgi(DXGI_DDI_ARG_QUERYRESOURCERESIDENCY* residency_data);
+    static HRESULT APIENTRY rotate_resource_identities_dxgi(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES* rotate_data);
+    static HRESULT APIENTRY blt_dxgi(DXGI_DDI_ARG_BLT* blt_data);
+    static HRESULT APIENTRY resolve_shared_resource_dxgi(DXGI_DDI_ARG_RESOLVESHAREDRESOURCE* resource_data);
+
     // TODO
 
 private:

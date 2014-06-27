@@ -199,14 +199,14 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
 #else
     DXGI1_1_DDI_BASE_FUNCTIONS* dxgi_ddi_funcs = args->DXGIBaseDDI.pDXGIDDIBaseFunctions2;
 #endif
-    dxgi_ddi_funcs->pfnPresent = nullptr;
-    dxgi_ddi_funcs->pfnGetGammaCaps = nullptr;
-    dxgi_ddi_funcs->pfnSetDisplayMode = nullptr;
-    dxgi_ddi_funcs->pfnSetResourcePriority = nullptr;
-    dxgi_ddi_funcs->pfnQueryResourceResidency = nullptr;
-    dxgi_ddi_funcs->pfnRotateResourceIdentities = nullptr;
-    dxgi_ddi_funcs->pfnBlt = nullptr;
-    dxgi_ddi_funcs->pfnResolveSharedResource = nullptr;
+    dxgi_ddi_funcs->pfnPresent = present_dxgi;
+    dxgi_ddi_funcs->pfnGetGammaCaps = get_gamma_caps_dxgi;
+    dxgi_ddi_funcs->pfnSetDisplayMode = set_display_mode_dxgi;
+    dxgi_ddi_funcs->pfnSetResourcePriority = set_resource_priority_dxgi;
+    dxgi_ddi_funcs->pfnQueryResourceResidency = query_resource_residency_dxgi;
+    dxgi_ddi_funcs->pfnRotateResourceIdentities = rotate_resource_identities_dxgi;
+    dxgi_ddi_funcs->pfnBlt = blt_dxgi;
+    dxgi_ddi_funcs->pfnResolveSharedResource = resolve_shared_resource_dxgi;
 #if (D3D_UMD_INTERFACE_VERSION >= D3D_UMD_INTERFACE_VERSION_WIN8)
     dxgi_ddi_funcs->pfnBlt1 = nullptr;
     dxgi_ddi_funcs->pfnOfferResources = nullptr;
@@ -1564,4 +1564,60 @@ void umd_device::recycle_destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(command_list);
+}
+
+HRESULT umd_device::present_dxgi(DXGI_DDI_ARG_PRESENT* present_data)
+{
+    UNREFERENCED_PARAMETER(present_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::get_gamma_caps_dxgi(DXGI_DDI_ARG_GET_GAMMA_CONTROL_CAPS* gamma_data)
+{
+    UNREFERENCED_PARAMETER(gamma_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::set_display_mode_dxgi(DXGI_DDI_ARG_SETDISPLAYMODE* display_mode_data)
+{
+    UNREFERENCED_PARAMETER(display_mode_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::set_resource_priority_dxgi(DXGI_DDI_ARG_SETRESOURCEPRIORITY* priority_data)
+{
+    UNREFERENCED_PARAMETER(priority_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::query_resource_residency_dxgi(DXGI_DDI_ARG_QUERYRESOURCERESIDENCY* residency_data)
+{
+    UNREFERENCED_PARAMETER(residency_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::rotate_resource_identities_dxgi(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES* rotate_data)
+{
+    UNREFERENCED_PARAMETER(rotate_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::blt_dxgi(DXGI_DDI_ARG_BLT* blt_data)
+{
+    UNREFERENCED_PARAMETER(blt_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::resolve_shared_resource_dxgi(DXGI_DDI_ARG_RESOLVESHAREDRESOURCE* resource_data)
+{
+    UNREFERENCED_PARAMETER(resource_data);
+
+    return E_NOTIMPL;
 }
