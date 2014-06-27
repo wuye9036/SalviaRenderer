@@ -90,83 +90,83 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
         d3d11_device_funcs_->pfnCalcPrivateShaderResourceViewSize = calc_private_shader_resource_view_size;
         d3d11_device_funcs_->pfnCreateShaderResourceView = create_shader_resource_view;
         d3d11_device_funcs_->pfnDestroyShaderResourceView = destroy_shader_resource_view;
-        d3d11_device_funcs_->pfnCalcPrivateRenderTargetViewSize = nullptr;
-        d3d11_device_funcs_->pfnCreateRenderTargetView = nullptr;
-        d3d11_device_funcs_->pfnDestroyRenderTargetView = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateDepthStencilViewSize = nullptr;
-        d3d11_device_funcs_->pfnCreateDepthStencilView = nullptr;
-        d3d11_device_funcs_->pfnDestroyDepthStencilView = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateElementLayoutSize = nullptr;
-        d3d11_device_funcs_->pfnCreateElementLayout = nullptr;
-        d3d11_device_funcs_->pfnDestroyElementLayout = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateBlendStateSize = nullptr;
-        d3d11_device_funcs_->pfnCreateBlendState = nullptr;
-        d3d11_device_funcs_->pfnDestroyBlendState = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateDepthStencilStateSize = nullptr;
-        d3d11_device_funcs_->pfnCreateDepthStencilState = nullptr;
-        d3d11_device_funcs_->pfnDestroyDepthStencilState = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateRasterizerStateSize = nullptr;
-        d3d11_device_funcs_->pfnCreateRasterizerState = nullptr;
-        d3d11_device_funcs_->pfnDestroyRasterizerState = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateShaderSize = nullptr;
-        d3d11_device_funcs_->pfnCreateVertexShader = nullptr;
-        d3d11_device_funcs_->pfnCreateGeometryShader = nullptr;
-        d3d11_device_funcs_->pfnCreatePixelShader = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateGeometryShaderWithStreamOutput = nullptr;
-        d3d11_device_funcs_->pfnCreateGeometryShaderWithStreamOutput = nullptr;
-        d3d11_device_funcs_->pfnDestroyShader = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateSamplerSize = nullptr;
-        d3d11_device_funcs_->pfnCreateSampler = nullptr;
-        d3d11_device_funcs_->pfnDestroySampler = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateQuerySize = nullptr;
-        d3d11_device_funcs_->pfnCreateQuery = nullptr;
-        d3d11_device_funcs_->pfnDestroyQuery = nullptr;
-        d3d11_device_funcs_->pfnCheckFormatSupport = nullptr;
-        d3d11_device_funcs_->pfnCheckMultisampleQualityLevels = nullptr;
-        d3d11_device_funcs_->pfnCheckCounterInfo = nullptr;
-        d3d11_device_funcs_->pfnCheckCounter = nullptr;
-        d3d11_device_funcs_->pfnDestroyDevice = nullptr;
-        d3d11_device_funcs_->pfnSetTextFilterSize = nullptr;
+        d3d11_device_funcs_->pfnCalcPrivateRenderTargetViewSize = calc_private_render_target_view_size;
+        d3d11_device_funcs_->pfnCreateRenderTargetView = create_render_target_view;
+        d3d11_device_funcs_->pfnDestroyRenderTargetView = destroy_render_target_view;
+        d3d11_device_funcs_->pfnCalcPrivateDepthStencilViewSize = calc_private_depth_stencil_view_size;
+        d3d11_device_funcs_->pfnCreateDepthStencilView = create_depth_stencil_view;
+        d3d11_device_funcs_->pfnDestroyDepthStencilView = destroy_depth_stencil_view;
+        d3d11_device_funcs_->pfnCalcPrivateElementLayoutSize = calc_private_element_layout_size;
+        d3d11_device_funcs_->pfnCreateElementLayout = create_element_layout;
+        d3d11_device_funcs_->pfnDestroyElementLayout = destroy_element_layout;
+        d3d11_device_funcs_->pfnCalcPrivateBlendStateSize = calc_private_blend_state_size;
+        d3d11_device_funcs_->pfnCreateBlendState = create_blend_state;
+        d3d11_device_funcs_->pfnDestroyBlendState = destroy_blend_state;
+        d3d11_device_funcs_->pfnCalcPrivateDepthStencilStateSize = calc_private_depth_stencil_state_size;
+        d3d11_device_funcs_->pfnCreateDepthStencilState = create_depth_stencil_state;
+        d3d11_device_funcs_->pfnDestroyDepthStencilState = destroy_depth_stencil_state;
+        d3d11_device_funcs_->pfnCalcPrivateRasterizerStateSize = calc_private_rasterizer_stateSize;
+        d3d11_device_funcs_->pfnCreateRasterizerState = create_rasterizer_state;
+        d3d11_device_funcs_->pfnDestroyRasterizerState = destroy_rasterizer_state;
+        d3d11_device_funcs_->pfnCalcPrivateShaderSize = calc_private_shader_size;
+        d3d11_device_funcs_->pfnCreateVertexShader = create_vertex_shader;
+        d3d11_device_funcs_->pfnCreateGeometryShader = create_geometry_shader;
+        d3d11_device_funcs_->pfnCreatePixelShader = create_pixel_shader;
+        d3d11_device_funcs_->pfnCalcPrivateGeometryShaderWithStreamOutput = calc_private_geometry_shader_with_stream_output;
+        d3d11_device_funcs_->pfnCreateGeometryShaderWithStreamOutput = create_geometry_shader_with_stream_output;
+        d3d11_device_funcs_->pfnDestroyShader = destroy_shader;
+        d3d11_device_funcs_->pfnCalcPrivateSamplerSize = calc_private_sampler_size;
+        d3d11_device_funcs_->pfnCreateSampler = create_sampler;
+        d3d11_device_funcs_->pfnDestroySampler = destroy_sampler;
+        d3d11_device_funcs_->pfnCalcPrivateQuerySize = calc_private_query_size;
+        d3d11_device_funcs_->pfnCreateQuery = create_query;
+        d3d11_device_funcs_->pfnDestroyQuery = destroy_query;
+        d3d11_device_funcs_->pfnCheckFormatSupport = check_format_support;
+        d3d11_device_funcs_->pfnCheckMultisampleQualityLevels = check_multisample_quality_levels;
+        d3d11_device_funcs_->pfnCheckCounterInfo = check_counter_info;
+        d3d11_device_funcs_->pfnCheckCounter = check_counter;
+        d3d11_device_funcs_->pfnDestroyDevice = destroy_device;
+        d3d11_device_funcs_->pfnSetTextFilterSize = set_text_filter_size;
 
         // Additional 10.1 entries
-        d3d11_device_funcs_->pfnResourceConvert = nullptr;
-        d3d11_device_funcs_->pfnResourceConvertRegion = nullptr;
+        d3d11_device_funcs_->pfnResourceConvert = resource_convert;
+        d3d11_device_funcs_->pfnResourceConvertRegion = resource_convert_region;
 
         // Additional 11.0 entries
-        d3d11_device_funcs_->pfnDrawIndexedInstancedIndirect = nullptr;
-        d3d11_device_funcs_->pfnDrawInstancedIndirect = nullptr;
-        d3d11_device_funcs_->pfnCommandListExecute = nullptr;
-        d3d11_device_funcs_->pfnHsSetShaderResources = nullptr;
-        d3d11_device_funcs_->pfnHsSetShader = nullptr;
-        d3d11_device_funcs_->pfnHsSetSamplers = nullptr;
-        d3d11_device_funcs_->pfnHsSetConstantBuffers = nullptr;
-        d3d11_device_funcs_->pfnDsSetShaderResources = nullptr;
-        d3d11_device_funcs_->pfnDsSetShader = nullptr;
-        d3d11_device_funcs_->pfnDsSetSamplers = nullptr;
-        d3d11_device_funcs_->pfnDsSetConstantBuffers = nullptr;
-        d3d11_device_funcs_->pfnCreateHullShader = nullptr;
-        d3d11_device_funcs_->pfnCreateDomainShader = nullptr;
-        d3d11_device_funcs_->pfnCheckDeferredContextHandleSizes = nullptr;
-        d3d11_device_funcs_->pfnCalcDeferredContextHandleSize = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateDeferredContextSize = nullptr;
-        d3d11_device_funcs_->pfnCreateDeferredContext = nullptr;
-        d3d11_device_funcs_->pfnAbandonCommandList = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateCommandListSize = nullptr;
-        d3d11_device_funcs_->pfnCreateCommandList = nullptr;
-        d3d11_device_funcs_->pfnDestroyCommandList = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateTessellationShaderSize = nullptr;
-        d3d11_device_funcs_->pfnPsSetShaderWithIfaces = nullptr;
-        d3d11_device_funcs_->pfnVsSetShaderWithIfaces = nullptr;
-        d3d11_device_funcs_->pfnGsSetShaderWithIfaces = nullptr;
-        d3d11_device_funcs_->pfnHsSetShaderWithIfaces = nullptr;
-        d3d11_device_funcs_->pfnDsSetShaderWithIfaces = nullptr;
-        d3d11_device_funcs_->pfnCsSetShaderWithIfaces = nullptr;
-        d3d11_device_funcs_->pfnCreateComputeShader = nullptr;
-        d3d11_device_funcs_->pfnCsSetShader = nullptr;
-        d3d11_device_funcs_->pfnCsSetShaderResources = nullptr;
-        d3d11_device_funcs_->pfnCsSetSamplers = nullptr;
-        d3d11_device_funcs_->pfnCsSetConstantBuffers = nullptr;
-        d3d11_device_funcs_->pfnCalcPrivateUnorderedAccessViewSize = nullptr;
+        d3d11_device_funcs_->pfnDrawIndexedInstancedIndirect = draw_indexed_instanced_indirect;
+        d3d11_device_funcs_->pfnDrawInstancedIndirect = draw_instanced_indirect;
+        d3d11_device_funcs_->pfnCommandListExecute = command_list_execute;
+        d3d11_device_funcs_->pfnHsSetShaderResources = hs_set_shader_resources;
+        d3d11_device_funcs_->pfnHsSetShader = hs_set_shader;
+        d3d11_device_funcs_->pfnHsSetSamplers = hs_set_samplers;
+        d3d11_device_funcs_->pfnHsSetConstantBuffers = hs_set_constant_buffers;
+        d3d11_device_funcs_->pfnDsSetShaderResources = ds_set_shader_resources;
+        d3d11_device_funcs_->pfnDsSetShader = ds_set_shader;
+        d3d11_device_funcs_->pfnDsSetSamplers = ds_set_samplers;
+        d3d11_device_funcs_->pfnDsSetConstantBuffers = ds_set_constant_buffers;
+        d3d11_device_funcs_->pfnCreateHullShader = create_hull_shader;
+        d3d11_device_funcs_->pfnCreateDomainShader = create_domain_shader;
+        d3d11_device_funcs_->pfnCheckDeferredContextHandleSizes = check_deferred_context_handle_sizes;
+        d3d11_device_funcs_->pfnCalcDeferredContextHandleSize = calc_deferred_context_handle_size;
+        d3d11_device_funcs_->pfnCalcPrivateDeferredContextSize = calc_private_deferred_context_size;
+        d3d11_device_funcs_->pfnCreateDeferredContext = create_deferred_context;
+        d3d11_device_funcs_->pfnAbandonCommandList = abandon_command_list;
+        d3d11_device_funcs_->pfnCalcPrivateCommandListSize = calc_private_command_list_size;
+        d3d11_device_funcs_->pfnCreateCommandList = create_command_list;
+        d3d11_device_funcs_->pfnDestroyCommandList = destroy_command_list;
+        d3d11_device_funcs_->pfnCalcPrivateTessellationShaderSize = calc_private_tessellation_shader_size;
+        d3d11_device_funcs_->pfnPsSetShaderWithIfaces = ps_set_shader_with_ifaces;
+        d3d11_device_funcs_->pfnVsSetShaderWithIfaces = vs_set_shader_with_ifaces;
+        d3d11_device_funcs_->pfnGsSetShaderWithIfaces = gs_set_shader_with_ifaces;
+        d3d11_device_funcs_->pfnHsSetShaderWithIfaces = hs_set_shader_with_ifaces;
+        d3d11_device_funcs_->pfnDsSetShaderWithIfaces = ds_set_shader_with_ifaces;
+        d3d11_device_funcs_->pfnCsSetShaderWithIfaces = cs_set_shader_with_ifaces;
+        d3d11_device_funcs_->pfnCreateComputeShader = create_compute_shader;
+        d3d11_device_funcs_->pfnCsSetShader = cs_set_shader;
+        d3d11_device_funcs_->pfnCsSetShaderResources = cs_set_shader_resources;
+        d3d11_device_funcs_->pfnCsSetSamplers = cs_set_samplers;
+        d3d11_device_funcs_->pfnCsSetConstantBuffers = cs_set_constant_buffers;
+        d3d11_device_funcs_->pfnCalcPrivateUnorderedAccessViewSize = calc_private_unordered_access_view_size;
         d3d11_device_funcs_->pfnCreateUnorderedAccessView = nullptr;
         d3d11_device_funcs_->pfnDestroyUnorderedAccessView = nullptr;
         d3d11_device_funcs_->pfnClearUnorderedAccessViewUint = nullptr;
@@ -737,7 +737,7 @@ void umd_device::resource_unmap(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE reso
     UNREFERENCED_PARAMETER(subresource);
 }
 
-BOOL APIENTRY umd_device::resource_is_staging_busy(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource)
+BOOL umd_device::resource_is_staging_busy(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource)
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(resource);
@@ -745,13 +745,13 @@ BOOL APIENTRY umd_device::resource_is_staging_busy(D3D10DDI_HDEVICE device, D3D1
     return FALSE;
 }
 
-void APIENTRY umd_device::relocate_device_funcs(D3D10DDI_HDEVICE device, D3D11DDI_DEVICEFUNCS* device_funcs)
+void umd_device::relocate_device_funcs(D3D10DDI_HDEVICE device, D3D11DDI_DEVICEFUNCS* device_funcs)
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(device_funcs);
 }
 
-SIZE_T APIENTRY umd_device::calc_private_resource_size(D3D10DDI_HDEVICE device, const D3D11DDIARG_CREATERESOURCE* create_resource)
+SIZE_T umd_device::calc_private_resource_size(D3D10DDI_HDEVICE device, const D3D11DDIARG_CREATERESOURCE* create_resource)
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(create_resource);
@@ -759,7 +759,7 @@ SIZE_T APIENTRY umd_device::calc_private_resource_size(D3D10DDI_HDEVICE device, 
     return 0;
 }
 
-SIZE_T APIENTRY umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource)
+SIZE_T umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource)
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(open_resource);
@@ -767,7 +767,7 @@ SIZE_T APIENTRY umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE d
     return 0;
 }
 
-void APIENTRY umd_device::create_resource(D3D10DDI_HDEVICE device, const D3D11DDIARG_CREATERESOURCE* create_resource,
+void umd_device::create_resource(D3D10DDI_HDEVICE device, const D3D11DDIARG_CREATERESOURCE* create_resource,
         D3D10DDI_HRESOURCE resource, D3D10DDI_HRTRESOURCE rt_resource)
 {
     UNREFERENCED_PARAMETER(device);
@@ -776,7 +776,7 @@ void APIENTRY umd_device::create_resource(D3D10DDI_HDEVICE device, const D3D11DD
     UNREFERENCED_PARAMETER(rt_resource);
 }
 
-void APIENTRY umd_device::open_resource(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource,
+void umd_device::open_resource(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource,
         D3D10DDI_HRESOURCE resource, D3D10DDI_HRTRESOURCE rt_resource)
 {
     UNREFERENCED_PARAMETER(device);
@@ -785,13 +785,13 @@ void APIENTRY umd_device::open_resource(D3D10DDI_HDEVICE device, const D3D10DDIA
     UNREFERENCED_PARAMETER(rt_resource);
 }
 
-void APIENTRY umd_device::destroy_resource(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource)
+void umd_device::destroy_resource(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource)
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(resource);
 }
 
-SIZE_T APIENTRY umd_device::calc_private_shader_resource_view_size(D3D10DDI_HDEVICE device,
+SIZE_T umd_device::calc_private_shader_resource_view_size(D3D10DDI_HDEVICE device,
         const D3D11DDIARG_CREATESHADERRESOURCEVIEW* create_shader_resource_view)
 {
     UNREFERENCED_PARAMETER(device);
@@ -800,7 +800,7 @@ SIZE_T APIENTRY umd_device::calc_private_shader_resource_view_size(D3D10DDI_HDEV
     return 0;
 }
 
-void APIENTRY umd_device::create_shader_resource_view(D3D10DDI_HDEVICE device,
+void umd_device::create_shader_resource_view(D3D10DDI_HDEVICE device,
         const D3D11DDIARG_CREATESHADERRESOURCEVIEW* create_shader_resource_view,
         D3D10DDI_HSHADERRESOURCEVIEW shader_resource_view, D3D10DDI_HRTSHADERRESOURCEVIEW rt_shader_resource_view)
 {
@@ -810,9 +810,648 @@ void APIENTRY umd_device::create_shader_resource_view(D3D10DDI_HDEVICE device,
     UNREFERENCED_PARAMETER(rt_shader_resource_view);
 }
 
-void APIENTRY umd_device::destroy_shader_resource_view(D3D10DDI_HDEVICE device,
+void umd_device::destroy_shader_resource_view(D3D10DDI_HDEVICE device,
         D3D10DDI_HSHADERRESOURCEVIEW shader_resource_view)
 {
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(shader_resource_view);
+}
+
+SIZE_T umd_device::calc_private_render_target_view_size(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATERENDERTARGETVIEW* create_render_target_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_render_target_view);
+
+    return 0;
+}
+
+void umd_device::create_render_target_view(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATERENDERTARGETVIEW* create_render_target_view, D3D10DDI_HRENDERTARGETVIEW render_target_view,
+        D3D10DDI_HRTRENDERTARGETVIEW rt_render_target_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_render_target_view);
+    UNREFERENCED_PARAMETER(render_target_view);
+    UNREFERENCED_PARAMETER(rt_render_target_view);
+}
+
+void umd_device::destroy_render_target_view(D3D10DDI_HDEVICE device, D3D10DDI_HRENDERTARGETVIEW render_target_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(render_target_view);
+}
+
+SIZE_T umd_device::calc_private_depth_stencil_view_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEPTHSTENCILVIEW* create_depth_stencil_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_depth_stencil_view);
+
+    return 0;
+}
+
+void umd_device::create_depth_stencil_view(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEPTHSTENCILVIEW* create_depth_stencil_view, D3D10DDI_HDEPTHSTENCILVIEW depth_stencil_view,
+        D3D10DDI_HRTDEPTHSTENCILVIEW rt_depth_stencil_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_depth_stencil_view);
+    UNREFERENCED_PARAMETER(depth_stencil_view);
+    UNREFERENCED_PARAMETER(rt_depth_stencil_view);
+}
+
+void umd_device::destroy_depth_stencil_view(D3D10DDI_HDEVICE device, D3D10DDI_HDEPTHSTENCILVIEW depth_stencil_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(depth_stencil_view);
+}
+
+SIZE_T umd_device::calc_private_element_layout_size(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEELEMENTLAYOUT* create_element_layout)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_element_layout);
+
+    return 0;
+}
+
+void umd_device::create_element_layout(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEELEMENTLAYOUT* create_element_layout, D3D10DDI_HELEMENTLAYOUT element_layout,
+        D3D10DDI_HRTELEMENTLAYOUT rt_element_layout)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_element_layout);
+    UNREFERENCED_PARAMETER(element_layout);
+    UNREFERENCED_PARAMETER(rt_element_layout);
+}
+
+void umd_device::destroy_element_layout(D3D10DDI_HDEVICE device, D3D10DDI_HELEMENTLAYOUT element_layout)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(element_layout);
+}
+
+SIZE_T umd_device::calc_private_blend_state_size(D3D10DDI_HDEVICE device,
+        const D3D10_1_DDI_BLEND_DESC* blend_desc)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(blend_desc);
+
+    return 0;
+}
+
+void umd_device::create_blend_state(D3D10DDI_HDEVICE device,
+        const D3D10_1_DDI_BLEND_DESC* blend_desc, D3D10DDI_HBLENDSTATE blend_state,
+        D3D10DDI_HRTBLENDSTATE rt_blend_state)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(blend_desc);
+    UNREFERENCED_PARAMETER(blend_state);
+    UNREFERENCED_PARAMETER(rt_blend_state);
+}
+
+void umd_device::destroy_blend_state(D3D10DDI_HDEVICE device, D3D10DDI_HBLENDSTATE blend_state)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(blend_state);
+}
+
+SIZE_T umd_device::calc_private_depth_stencil_state_size(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_DEPTH_STENCIL_DESC* depth_stencil_desc)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(depth_stencil_desc);
+
+    return 0;
+}
+
+void umd_device::create_depth_stencil_state(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_DEPTH_STENCIL_DESC* depth_stencil_desc, D3D10DDI_HDEPTHSTENCILSTATE depth_stencil_state,
+        D3D10DDI_HRTDEPTHSTENCILSTATE rt_depth_stencil_state)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(depth_stencil_desc);
+    UNREFERENCED_PARAMETER(depth_stencil_state);
+    UNREFERENCED_PARAMETER(rt_depth_stencil_state);
+}
+
+void umd_device::destroy_depth_stencil_state(D3D10DDI_HDEVICE device, D3D10DDI_HDEPTHSTENCILSTATE depth_stencil_state)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(depth_stencil_state);
+}
+
+SIZE_T umd_device::calc_private_rasterizer_stateSize(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_RASTERIZER_DESC* rasterizer_desc)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(rasterizer_desc);
+
+    return 0;
+}
+
+void umd_device::create_rasterizer_state(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_RASTERIZER_DESC* rasterizer_desc, D3D10DDI_HRASTERIZERSTATE rasterizer_state,
+        D3D10DDI_HRTRASTERIZERSTATE rt_rasterizer_state)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(rasterizer_desc);
+    UNREFERENCED_PARAMETER(rasterizer_state);
+    UNREFERENCED_PARAMETER(rt_rasterizer_state);
+}
+
+void umd_device::destroy_rasterizer_state(D3D10DDI_HDEVICE device, D3D10DDI_HRASTERIZERSTATE rasterizer_state)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(rasterizer_state);
+}
+
+SIZE_T umd_device::calc_private_shader_size(D3D10DDI_HDEVICE device, const UINT* code,
+        const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(signatures);
+
+    return 0;
+}
+
+void umd_device::create_vertex_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+    UNREFERENCED_PARAMETER(signatures);
+}
+
+void umd_device::create_geometry_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+    UNREFERENCED_PARAMETER(signatures);
+}
+
+void umd_device::create_pixel_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+    UNREFERENCED_PARAMETER(signatures);
+}
+
+SIZE_T umd_device::calc_private_geometry_shader_with_stream_output(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEGEOMETRYSHADERWITHSTREAMOUTPUT* create_geometry_shader_with_stream_output,
+        const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_geometry_shader_with_stream_output);
+    UNREFERENCED_PARAMETER(signatures);
+
+    return 0;
+}
+
+void umd_device::create_geometry_shader_with_stream_output(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEGEOMETRYSHADERWITHSTREAMOUTPUT* create_geometry_shader_with_stream_output,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_geometry_shader_with_stream_output);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+    UNREFERENCED_PARAMETER(signatures);
+}
+
+void umd_device::destroy_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+}
+
+SIZE_T umd_device::calc_private_sampler_size(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_SAMPLER_DESC* sampler_desc)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(sampler_desc);
+
+    return 0;
+}
+
+void umd_device::create_sampler(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_SAMPLER_DESC* sampler_desc, D3D10DDI_HSAMPLER sampler,
+        D3D10DDI_HRTSAMPLER rt_sampler)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(sampler_desc);
+    UNREFERENCED_PARAMETER(sampler);
+    UNREFERENCED_PARAMETER(rt_sampler);
+}
+
+void umd_device::destroy_sampler(D3D10DDI_HDEVICE device, D3D10DDI_HSAMPLER sampler)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(sampler);
+}
+
+SIZE_T umd_device::calc_private_query_size(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEQUERY* create_query)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_query);
+
+    return 0;
+}
+
+void umd_device::create_query(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEQUERY *create_query, D3D10DDI_HQUERY query,
+        D3D10DDI_HRTQUERY rt_query)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_query);
+    UNREFERENCED_PARAMETER(query);
+    UNREFERENCED_PARAMETER(rt_query);
+}
+
+void umd_device::destroy_query(D3D10DDI_HDEVICE device, D3D10DDI_HQUERY query)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(query);
+}
+
+void umd_device::check_format_support(D3D10DDI_HDEVICE device,
+        DXGI_FORMAT format, UINT* format_caps)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(format);
+    UNREFERENCED_PARAMETER(format_caps);
+}
+
+void umd_device::check_multisample_quality_levels(D3D10DDI_HDEVICE device,
+        DXGI_FORMAT format, UINT sample_count, UINT* num_quality_levels)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(format);
+    UNREFERENCED_PARAMETER(sample_count);
+    UNREFERENCED_PARAMETER(num_quality_levels);
+}
+
+void umd_device::check_counter_info(D3D10DDI_HDEVICE device,
+        D3D10DDI_COUNTER_INFO* counter_info)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(counter_info);
+}
+
+void umd_device::check_counter(D3D10DDI_HDEVICE device,
+        D3D10DDI_QUERY query,  D3D10DDI_COUNTER_TYPE* counter_type,
+        UINT* active_counters, LPSTR name, UINT* name_length, LPSTR units, UINT* units_length,
+        LPSTR description, UINT* description_length)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(query);
+    UNREFERENCED_PARAMETER(counter_type);
+    UNREFERENCED_PARAMETER(active_counters);
+    UNREFERENCED_PARAMETER(name);
+    UNREFERENCED_PARAMETER(name_length);
+    UNREFERENCED_PARAMETER(units);
+    UNREFERENCED_PARAMETER(units_length);
+    UNREFERENCED_PARAMETER(description);
+    UNREFERENCED_PARAMETER(description_length);
+}
+
+void umd_device::destroy_device(D3D10DDI_HDEVICE device)
+{
+    UNREFERENCED_PARAMETER(device);
+}
+
+void umd_device::set_text_filter_size(D3D10DDI_HDEVICE device,
+        UINT width, UINT height)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(width);
+    UNREFERENCED_PARAMETER(height);
+}
+
+void umd_device::resource_convert(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE dst_resource,
+        D3D10DDI_HRESOURCE src_resource)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(dst_resource);
+    UNREFERENCED_PARAMETER(src_resource);
+}
+
+void umd_device::resource_convert_region(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE dst_resource,
+        UINT dst_subresource, UINT dst_x, UINT dst_y, UINT dst_z,
+        D3D10DDI_HRESOURCE src_resource, UINT src_subresource, const D3D10_DDI_BOX* src_box)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(dst_resource);
+    UNREFERENCED_PARAMETER(dst_subresource);
+    UNREFERENCED_PARAMETER(dst_x);
+    UNREFERENCED_PARAMETER(dst_y);
+    UNREFERENCED_PARAMETER(dst_z);
+    UNREFERENCED_PARAMETER(src_resource);
+    UNREFERENCED_PARAMETER(src_subresource);
+    UNREFERENCED_PARAMETER(src_box);
+}
+
+void umd_device::draw_indexed_instanced_indirect(D3D10DDI_HDEVICE device,
+        D3D10DDI_HRESOURCE buffer_for_args, UINT aligned_byte_offset_for_args)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(buffer_for_args);
+    UNREFERENCED_PARAMETER(aligned_byte_offset_for_args);
+}
+
+void umd_device::draw_instanced_indirect(D3D10DDI_HDEVICE device,
+        D3D10DDI_HRESOURCE buffer_for_args, UINT aligned_byte_offset_for_args)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(buffer_for_args);
+    UNREFERENCED_PARAMETER(aligned_byte_offset_for_args);
+}
+
+void umd_device::command_list_execute(D3D10DDI_HDEVICE device,
+        D3D11DDI_HCOMMANDLIST command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(command_list);
+}
+
+void umd_device::hs_set_shader_resources(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D10DDI_HSHADERRESOURCEVIEW* shader_resource_views)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_views);
+    UNREFERENCED_PARAMETER(shader_resource_views);
+}
+
+void umd_device::hs_set_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+}
+
+void umd_device::hs_set_samplers(D3D10DDI_HDEVICE device, UINT offset, UINT num_samplers,
+        const D3D10DDI_HSAMPLER* samplers)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_samplers);
+    UNREFERENCED_PARAMETER(samplers);
+}
+
+void umd_device::hs_set_constant_buffers(D3D10DDI_HDEVICE device, UINT start_buffer, UINT num_buffers,
+        const D3D10DDI_HRESOURCE* buffers)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(start_buffer);
+    UNREFERENCED_PARAMETER(num_buffers);
+    UNREFERENCED_PARAMETER(buffers);
+}
+
+void umd_device::ds_set_shader_resources(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D10DDI_HSHADERRESOURCEVIEW *shader_resource_views)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_views);
+    UNREFERENCED_PARAMETER(shader_resource_views);
+}
+
+void umd_device::ds_set_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+}
+
+void umd_device::ds_set_samplers(D3D10DDI_HDEVICE device, UINT offset, UINT num_samplers,
+        const D3D10DDI_HSAMPLER* samplers)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_samplers);
+    UNREFERENCED_PARAMETER(samplers);
+}
+
+void umd_device::ds_set_constant_buffers(D3D10DDI_HDEVICE device, UINT start_buffer, UINT num_buffers,
+        const D3D10DDI_HRESOURCE* buffers)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(start_buffer);
+    UNREFERENCED_PARAMETER(num_buffers);
+    UNREFERENCED_PARAMETER(buffers);
+}
+
+void umd_device::create_hull_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D11DDIARG_TESSELLATION_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+    UNREFERENCED_PARAMETER(signatures);
+}
+
+void umd_device::create_domain_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D11DDIARG_TESSELLATION_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+    UNREFERENCED_PARAMETER(signatures);
+}
+
+void umd_device::check_deferred_context_handle_sizes(D3D10DDI_HDEVICE device, UINT* h_sizes,
+        D3D11DDI_HANDLESIZE* handle_size)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(h_sizes);
+    UNREFERENCED_PARAMETER(handle_size);
+}
+
+SIZE_T umd_device::calc_deferred_context_handle_size(D3D10DDI_HDEVICE device, D3D11DDI_HANDLETYPE handle_type,
+        void* ic_object)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(handle_type);
+    UNREFERENCED_PARAMETER(ic_object);
+
+    return 0;
+}
+
+SIZE_T umd_device::calc_private_deferred_context_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CALCPRIVATEDEFERREDCONTEXTSIZE* calc_private_deferred_context_size)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(calc_private_deferred_context_size);
+
+    return 0;
+}
+
+void umd_device::create_deferred_context(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEFERREDCONTEXT* create_deferred_context)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_deferred_context);
+}
+
+void umd_device::abandon_command_list(D3D10DDI_HDEVICE device)
+{
+    UNREFERENCED_PARAMETER(device);
+}
+
+SIZE_T umd_device::calc_private_command_list_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATECOMMANDLIST* create_command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_command_list);
+
+    return 0;
+}
+
+void umd_device::create_command_list(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATECOMMANDLIST* create_command_list, D3D11DDI_HCOMMANDLIST command_list,
+        D3D11DDI_HRTCOMMANDLIST rt_command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_command_list);
+    UNREFERENCED_PARAMETER(command_list);
+    UNREFERENCED_PARAMETER(rt_command_list);
+}
+
+void umd_device::destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(command_list);
+}
+
+SIZE_T umd_device::calc_private_tessellation_shader_size(D3D10DDI_HDEVICE device, const UINT* code,
+        const D3D11DDIARG_TESSELLATION_IO_SIGNATURES* signatures)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(signatures);
+
+    return 0;
+}
+
+void umd_device::ps_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(num_class_instances);
+    UNREFERENCED_PARAMETER(ifaces);
+    UNREFERENCED_PARAMETER(pointer_data);
+}
+
+void umd_device::vs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(num_class_instances);
+    UNREFERENCED_PARAMETER(ifaces);
+    UNREFERENCED_PARAMETER(pointer_data);
+}
+
+void umd_device::gs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(num_class_instances);
+    UNREFERENCED_PARAMETER(ifaces);
+    UNREFERENCED_PARAMETER(pointer_data);
+}
+
+void umd_device::hs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(num_class_instances);
+    UNREFERENCED_PARAMETER(ifaces);
+    UNREFERENCED_PARAMETER(pointer_data);
+}
+
+void umd_device::ds_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(num_class_instances);
+    UNREFERENCED_PARAMETER(ifaces);
+    UNREFERENCED_PARAMETER(pointer_data);
+}
+
+void umd_device::cs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(num_class_instances);
+    UNREFERENCED_PARAMETER(ifaces);
+    UNREFERENCED_PARAMETER(pointer_data);
+}
+
+void umd_device::create_compute_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(code);
+    UNREFERENCED_PARAMETER(shader);
+    UNREFERENCED_PARAMETER(rt_shader);
+}
+
+void umd_device::cs_set_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(shader);
+}
+
+void umd_device::cs_set_shader_resources(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D10DDI_HSHADERRESOURCEVIEW* shader_resource_views)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_views);
+    UNREFERENCED_PARAMETER(shader_resource_views);
+}
+
+void umd_device::cs_set_samplers(D3D10DDI_HDEVICE device, UINT offset, UINT num_samplers,
+        const D3D10DDI_HSAMPLER* samplers)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_samplers);
+    UNREFERENCED_PARAMETER(samplers);
+}
+
+void umd_device::cs_set_constant_buffers(D3D10DDI_HDEVICE device, UINT start_buffer, UINT num_buffers,
+        const D3D10DDI_HRESOURCE* buffers)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(start_buffer);
+    UNREFERENCED_PARAMETER(num_buffers);
+    UNREFERENCED_PARAMETER(buffers);
+}
+
+SIZE_T umd_device::calc_private_unordered_access_view_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEUNORDEREDACCESSVIEW* create_unordered_access_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_unordered_access_view);
+
+    return 0;
 }

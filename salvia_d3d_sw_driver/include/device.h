@@ -131,6 +131,153 @@ public:
         D3D10DDI_HSHADERRESOURCEVIEW shader_resource_view, D3D10DDI_HRTSHADERRESOURCEVIEW rt_shader_resource_view);
     static void APIENTRY destroy_shader_resource_view(D3D10DDI_HDEVICE device,
         D3D10DDI_HSHADERRESOURCEVIEW shader_resource_view);
+    static SIZE_T APIENTRY calc_private_render_target_view_size(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATERENDERTARGETVIEW* create_render_target_view);
+    static void APIENTRY create_render_target_view(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATERENDERTARGETVIEW* create_render_target_view, D3D10DDI_HRENDERTARGETVIEW render_target_view,
+        D3D10DDI_HRTRENDERTARGETVIEW rt_render_target_view);
+    static void APIENTRY destroy_render_target_view(D3D10DDI_HDEVICE device, D3D10DDI_HRENDERTARGETVIEW render_target_view);
+    static SIZE_T APIENTRY calc_private_depth_stencil_view_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEPTHSTENCILVIEW* create_depth_stencil_view);
+    static void APIENTRY create_depth_stencil_view(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEPTHSTENCILVIEW* create_depth_stencil_view, D3D10DDI_HDEPTHSTENCILVIEW depth_stencil_view,
+        D3D10DDI_HRTDEPTHSTENCILVIEW rt_depth_stencil_view);
+    static void APIENTRY destroy_depth_stencil_view(D3D10DDI_HDEVICE device, D3D10DDI_HDEPTHSTENCILVIEW depth_stencil_view);
+    static SIZE_T APIENTRY calc_private_element_layout_size(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEELEMENTLAYOUT* create_element_layout);
+    static void APIENTRY create_element_layout(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEELEMENTLAYOUT* create_element_layout, D3D10DDI_HELEMENTLAYOUT element_layout,
+        D3D10DDI_HRTELEMENTLAYOUT rt_element_layout);
+    static void APIENTRY destroy_element_layout(D3D10DDI_HDEVICE device, D3D10DDI_HELEMENTLAYOUT element_layout);
+    static SIZE_T APIENTRY calc_private_blend_state_size(D3D10DDI_HDEVICE device,
+        const D3D10_1_DDI_BLEND_DESC* blend_desc);
+    static void APIENTRY create_blend_state(D3D10DDI_HDEVICE device,
+        const D3D10_1_DDI_BLEND_DESC* blend_desc, D3D10DDI_HBLENDSTATE blend_state,
+        D3D10DDI_HRTBLENDSTATE rt_blend_state);
+    static void APIENTRY destroy_blend_state(D3D10DDI_HDEVICE device, D3D10DDI_HBLENDSTATE blend_state);
+    static SIZE_T APIENTRY calc_private_depth_stencil_state_size(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_DEPTH_STENCIL_DESC* depth_stencil_desc);
+    static void APIENTRY create_depth_stencil_state(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_DEPTH_STENCIL_DESC* depth_stencil_desc, D3D10DDI_HDEPTHSTENCILSTATE depth_stencil_state,
+        D3D10DDI_HRTDEPTHSTENCILSTATE rt_depth_stencil_state);
+    static void APIENTRY destroy_depth_stencil_state(D3D10DDI_HDEVICE device, D3D10DDI_HDEPTHSTENCILSTATE depth_stencil_state);
+    static SIZE_T APIENTRY calc_private_rasterizer_stateSize(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_RASTERIZER_DESC* rasterizer_desc);
+    static void APIENTRY create_rasterizer_state(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_RASTERIZER_DESC* rasterizer_desc, D3D10DDI_HRASTERIZERSTATE rasterizer_state,
+        D3D10DDI_HRTRASTERIZERSTATE rt_rasterizer_state);
+    static void APIENTRY destroy_rasterizer_state(D3D10DDI_HDEVICE device, D3D10DDI_HRASTERIZERSTATE rasterizer_state);
+    static SIZE_T APIENTRY calc_private_shader_size(D3D10DDI_HDEVICE device, const UINT* code,
+        const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures);
+    static void APIENTRY create_vertex_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures);
+    static void APIENTRY create_geometry_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures);
+    static void APIENTRY create_pixel_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures);
+    static SIZE_T APIENTRY calc_private_geometry_shader_with_stream_output(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEGEOMETRYSHADERWITHSTREAMOUTPUT* create_geometry_shader_with_stream_output,
+        const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures);
+    static void APIENTRY create_geometry_shader_with_stream_output(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEGEOMETRYSHADERWITHSTREAMOUTPUT* create_geometry_shader_with_stream_output,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D10DDIARG_STAGE_IO_SIGNATURES* signatures);
+    static void APIENTRY destroy_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader);
+    static SIZE_T APIENTRY calc_private_sampler_size(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_SAMPLER_DESC* sampler_desc);
+    static void APIENTRY create_sampler(D3D10DDI_HDEVICE device,
+        const D3D10_DDI_SAMPLER_DESC* sampler_desc, D3D10DDI_HSAMPLER sampler,
+        D3D10DDI_HRTSAMPLER rt_sampler);
+    static void APIENTRY destroy_sampler(D3D10DDI_HDEVICE device, D3D10DDI_HSAMPLER sampler);
+    static SIZE_T APIENTRY calc_private_query_size(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEQUERY* create_query);
+    static void APIENTRY create_query(D3D10DDI_HDEVICE device,
+        const D3D10DDIARG_CREATEQUERY *create_query, D3D10DDI_HQUERY query,
+        D3D10DDI_HRTQUERY rt_query);
+    static void APIENTRY destroy_query(D3D10DDI_HDEVICE device, D3D10DDI_HQUERY query);
+    static void APIENTRY check_format_support(D3D10DDI_HDEVICE device,
+        DXGI_FORMAT format, UINT* format_caps);
+    static void APIENTRY check_multisample_quality_levels(D3D10DDI_HDEVICE device,
+        DXGI_FORMAT format, UINT sample_count, UINT* num_quality_levels);
+    static void APIENTRY check_counter_info(D3D10DDI_HDEVICE device,
+        D3D10DDI_COUNTER_INFO* counter_info);
+    static void APIENTRY check_counter(D3D10DDI_HDEVICE device,
+        D3D10DDI_QUERY query,  D3D10DDI_COUNTER_TYPE* counter_type,
+        UINT* active_counters, LPSTR name, UINT* name_length, LPSTR units, UINT* units_length,
+        LPSTR description, UINT* description_length);
+    static void APIENTRY destroy_device(D3D10DDI_HDEVICE device);
+    static void APIENTRY set_text_filter_size(D3D10DDI_HDEVICE device,
+        UINT width, UINT height);
+
+    static void APIENTRY resource_convert(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE dst_resource,
+        D3D10DDI_HRESOURCE src_resource);
+    static void APIENTRY resource_convert_region(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE dst_resource,
+        UINT dst_subresource, UINT dst_x, UINT dst_y, UINT dst_z,
+        D3D10DDI_HRESOURCE src_resource, UINT src_subresource, const D3D10_DDI_BOX* src_box);
+
+    static void APIENTRY draw_indexed_instanced_indirect(D3D10DDI_HDEVICE device,
+        D3D10DDI_HRESOURCE buffer_for_args, UINT aligned_byte_offset_for_args);
+    static void APIENTRY draw_instanced_indirect(D3D10DDI_HDEVICE device,
+        D3D10DDI_HRESOURCE buffer_for_args, UINT aligned_byte_offset_for_args);
+    static void APIENTRY command_list_execute(D3D10DDI_HDEVICE device,
+        D3D11DDI_HCOMMANDLIST command_list);
+    static void APIENTRY hs_set_shader_resources(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D10DDI_HSHADERRESOURCEVIEW* shader_resource_views);
+    static void APIENTRY hs_set_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader);
+    static void APIENTRY hs_set_samplers(D3D10DDI_HDEVICE device, UINT offset, UINT num_samplers,
+        const D3D10DDI_HSAMPLER* samplers);
+    static void APIENTRY hs_set_constant_buffers(D3D10DDI_HDEVICE device, UINT start_buffer, UINT num_buffers,
+        const D3D10DDI_HRESOURCE* buffers);
+    static void APIENTRY ds_set_shader_resources(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D10DDI_HSHADERRESOURCEVIEW *shader_resource_views);
+    static void APIENTRY ds_set_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader);
+    static void APIENTRY ds_set_samplers(D3D10DDI_HDEVICE device, UINT offset, UINT num_samplers,
+        const D3D10DDI_HSAMPLER* samplers);
+    static void APIENTRY ds_set_constant_buffers(D3D10DDI_HDEVICE device, UINT start_buffer, UINT num_buffers,
+        const D3D10DDI_HRESOURCE* buffers);
+    static void APIENTRY create_hull_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D11DDIARG_TESSELLATION_IO_SIGNATURES* signatures);
+    static void APIENTRY create_domain_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader, const D3D11DDIARG_TESSELLATION_IO_SIGNATURES* signatures);
+    static void APIENTRY check_deferred_context_handle_sizes(D3D10DDI_HDEVICE device, UINT* h_sizes,
+        D3D11DDI_HANDLESIZE* handle_size);
+    static SIZE_T APIENTRY calc_deferred_context_handle_size(D3D10DDI_HDEVICE device, D3D11DDI_HANDLETYPE handle_type,
+        void* ic_object);
+    static SIZE_T APIENTRY calc_private_deferred_context_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CALCPRIVATEDEFERREDCONTEXTSIZE* calc_private_deferred_context_size);
+    static void APIENTRY create_deferred_context(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEFERREDCONTEXT* create_deferred_context);
+    static void APIENTRY abandon_command_list(D3D10DDI_HDEVICE device);
+    static SIZE_T APIENTRY calc_private_command_list_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATECOMMANDLIST* create_command_list);
+    static void APIENTRY create_command_list(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATECOMMANDLIST* create_command_list, D3D11DDI_HCOMMANDLIST command_list,
+        D3D11DDI_HRTCOMMANDLIST rt_command_list);
+    static void APIENTRY destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list);
+    static SIZE_T APIENTRY calc_private_tessellation_shader_size(D3D10DDI_HDEVICE device, const UINT* code,
+        const D3D11DDIARG_TESSELLATION_IO_SIGNATURES* signatures);
+    static void APIENTRY ps_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data);
+    static void APIENTRY vs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data);
+    static void APIENTRY gs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data);
+    static void APIENTRY hs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data);
+    static void APIENTRY ds_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data);
+    static void APIENTRY cs_set_shader_with_ifaces(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader,
+        UINT num_class_instances, const UINT* ifaces, const D3D11DDIARG_POINTERDATA* pointer_data);
+    static void APIENTRY create_compute_shader(D3D10DDI_HDEVICE device, const UINT* code,
+        D3D10DDI_HSHADER shader, D3D10DDI_HRTSHADER rt_shader);
+    static void APIENTRY cs_set_shader(D3D10DDI_HDEVICE device, D3D10DDI_HSHADER shader);
+    static void APIENTRY cs_set_shader_resources(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D10DDI_HSHADERRESOURCEVIEW* shader_resource_views);
+    static void APIENTRY cs_set_samplers(D3D10DDI_HDEVICE device, UINT offset, UINT num_samplers,
+        const D3D10DDI_HSAMPLER* samplers);
+    static void APIENTRY cs_set_constant_buffers(D3D10DDI_HDEVICE device, UINT start_buffer, UINT num_buffers,
+        const D3D10DDI_HRESOURCE* buffers);
+    static SIZE_T APIENTRY calc_private_unordered_access_view_size(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEUNORDEREDACCESSVIEW* create_unordered_access_view);
 
     // TODO
 
