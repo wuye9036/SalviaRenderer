@@ -278,6 +278,32 @@ public:
         const D3D10DDI_HRESOURCE* buffers);
     static SIZE_T APIENTRY calc_private_unordered_access_view_size(D3D10DDI_HDEVICE device,
         const D3D11DDIARG_CREATEUNORDEREDACCESSVIEW* create_unordered_access_view);
+    static void APIENTRY create_unordered_access_view(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEUNORDEREDACCESSVIEW* create_unordered_access_view,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view, D3D11DDI_HRTUNORDEREDACCESSVIEW rt_unordered_access_view);
+    static void APIENTRY destroy_unordered_access_view(D3D10DDI_HDEVICE device,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view);
+    static void APIENTRY clear_unordered_access_view_uint(D3D10DDI_HDEVICE device,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view, const UINT uints[4]);
+    static void APIENTRY clear_unordered_access_view_float(D3D10DDI_HDEVICE device,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view, const FLOAT floats[4]);
+    static void APIENTRY cs_set_unordered_access_views(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D11DDI_HUNORDEREDACCESSVIEW* unordered_access_view, const UINT* uav_initial_counts);
+    static void APIENTRY dispatch(D3D10DDI_HDEVICE device, UINT thread_group_count_x,
+        UINT thread_group_count_y, UINT thread_group_count_z);
+    static void APIENTRY dispatch_indirect(D3D10DDI_HDEVICE device,
+        D3D10DDI_HRESOURCE buffer_for_args, UINT aligned_byte_offset_for_args);
+    static void APIENTRY set_resource_min_lod(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource,
+        FLOAT min_lod);
+    static void APIENTRY copy_structure_count(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE dst_buffer,
+        UINT dst_aligned_byte_offset, D3D11DDI_HUNORDEREDACCESSVIEW src_view);
+    static void APIENTRY recycle_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list);
+    static HRESULT APIENTRY recycle_create_command_list(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATECOMMANDLIST* create_command_list, D3D11DDI_HCOMMANDLIST command_list,
+        D3D11DDI_HRTCOMMANDLIST rt_command_list);
+    static HRESULT APIENTRY recycle_create_deferred_context(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEFERREDCONTEXT* create_deferred_context);
+    static void APIENTRY recycle_destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list);
 
     // TODO
 

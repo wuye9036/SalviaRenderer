@@ -167,21 +167,21 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
         d3d11_device_funcs_->pfnCsSetSamplers = cs_set_samplers;
         d3d11_device_funcs_->pfnCsSetConstantBuffers = cs_set_constant_buffers;
         d3d11_device_funcs_->pfnCalcPrivateUnorderedAccessViewSize = calc_private_unordered_access_view_size;
-        d3d11_device_funcs_->pfnCreateUnorderedAccessView = nullptr;
-        d3d11_device_funcs_->pfnDestroyUnorderedAccessView = nullptr;
-        d3d11_device_funcs_->pfnClearUnorderedAccessViewUint = nullptr;
-        d3d11_device_funcs_->pfnClearUnorderedAccessViewFloat = nullptr;
-        d3d11_device_funcs_->pfnCsSetUnorderedAccessViews = nullptr;
-        d3d11_device_funcs_->pfnDispatch = nullptr;
-        d3d11_device_funcs_->pfnDispatchIndirect = nullptr;
-        d3d11_device_funcs_->pfnSetResourceMinLOD = nullptr;
-        d3d11_device_funcs_->pfnCopyStructureCount = nullptr;
+        d3d11_device_funcs_->pfnCreateUnorderedAccessView = create_unordered_access_view;
+        d3d11_device_funcs_->pfnDestroyUnorderedAccessView = destroy_unordered_access_view;
+        d3d11_device_funcs_->pfnClearUnorderedAccessViewUint = clear_unordered_access_view_uint;
+        d3d11_device_funcs_->pfnClearUnorderedAccessViewFloat = clear_unordered_access_view_float;
+        d3d11_device_funcs_->pfnCsSetUnorderedAccessViews = cs_set_unordered_access_views;
+        d3d11_device_funcs_->pfnDispatch = dispatch;
+        d3d11_device_funcs_->pfnDispatchIndirect = dispatch_indirect;
+        d3d11_device_funcs_->pfnSetResourceMinLOD = set_resource_min_lod;
+        d3d11_device_funcs_->pfnCopyStructureCount = copy_structure_count;
 
         // D3D11_0_*DDI_BUILD_VERSION == 2
-        d3d11_device_funcs_->pfnRecycleCommandList = nullptr;
-        d3d11_device_funcs_->pfnRecycleCreateCommandList = nullptr;
-        d3d11_device_funcs_->pfnRecycleCreateDeferredContext = nullptr;
-        d3d11_device_funcs_->pfnRecycleDestroyCommandList = nullptr;
+        d3d11_device_funcs_->pfnRecycleCommandList = recycle_command_list;
+        d3d11_device_funcs_->pfnRecycleCreateCommandList = recycle_create_command_list;
+        d3d11_device_funcs_->pfnRecycleCreateDeferredContext = recycle_create_deferred_context;
+        d3d11_device_funcs_->pfnRecycleDestroyCommandList = recycle_destroy_command_list;
         break;
 
 #if D3D11DDI_MINOR_HEADER_VERSION >= 3
@@ -1454,4 +1454,114 @@ SIZE_T umd_device::calc_private_unordered_access_view_size(D3D10DDI_HDEVICE devi
     UNREFERENCED_PARAMETER(create_unordered_access_view);
 
     return 0;
+}
+
+void umd_device::create_unordered_access_view(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEUNORDEREDACCESSVIEW* create_unordered_access_view,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view, D3D11DDI_HRTUNORDEREDACCESSVIEW rt_unordered_access_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_unordered_access_view);
+    UNREFERENCED_PARAMETER(unordered_access_view);
+    UNREFERENCED_PARAMETER(rt_unordered_access_view);
+}
+
+void umd_device::destroy_unordered_access_view(D3D10DDI_HDEVICE device,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(unordered_access_view);
+}
+
+void umd_device::clear_unordered_access_view_uint(D3D10DDI_HDEVICE device,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view, const UINT uints[4])
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(unordered_access_view);
+    UNREFERENCED_PARAMETER(uints);
+}
+
+void umd_device::clear_unordered_access_view_float(D3D10DDI_HDEVICE device,
+        D3D11DDI_HUNORDEREDACCESSVIEW unordered_access_view, const FLOAT floats[4])
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(unordered_access_view);
+    UNREFERENCED_PARAMETER(floats);
+}
+
+void umd_device::cs_set_unordered_access_views(D3D10DDI_HDEVICE device, UINT offset, UINT num_views,
+        const D3D11DDI_HUNORDEREDACCESSVIEW* unordered_access_view, const UINT* uav_initial_counts)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(num_views);
+    UNREFERENCED_PARAMETER(unordered_access_view);
+    UNREFERENCED_PARAMETER(uav_initial_counts);
+}
+
+void umd_device::dispatch(D3D10DDI_HDEVICE device, UINT thread_group_count_x,
+        UINT thread_group_count_y, UINT thread_group_count_z)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(thread_group_count_x);
+    UNREFERENCED_PARAMETER(thread_group_count_y);
+    UNREFERENCED_PARAMETER(thread_group_count_z);
+}
+
+void umd_device::dispatch_indirect(D3D10DDI_HDEVICE device,
+        D3D10DDI_HRESOURCE buffer_for_args, UINT aligned_byte_offset_for_args)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(buffer_for_args);
+    UNREFERENCED_PARAMETER(aligned_byte_offset_for_args);
+}
+
+void umd_device::set_resource_min_lod(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource,
+        FLOAT min_lod)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(resource);
+    UNREFERENCED_PARAMETER(min_lod);
+}
+
+void umd_device::copy_structure_count(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE dst_buffer,
+        UINT dst_aligned_byte_offset, D3D11DDI_HUNORDEREDACCESSVIEW src_view)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(dst_buffer);
+    UNREFERENCED_PARAMETER(dst_aligned_byte_offset);
+    UNREFERENCED_PARAMETER(src_view);
+}
+
+void umd_device::recycle_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(command_list);
+}
+
+HRESULT umd_device::recycle_create_command_list(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATECOMMANDLIST* create_command_list, D3D11DDI_HCOMMANDLIST command_list,
+        D3D11DDI_HRTCOMMANDLIST rt_command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_command_list);
+    UNREFERENCED_PARAMETER(command_list);
+    UNREFERENCED_PARAMETER(rt_command_list);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::recycle_create_deferred_context(D3D10DDI_HDEVICE device,
+        const D3D11DDIARG_CREATEDEFERREDCONTEXT* create_deferred_context)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(create_deferred_context);
+
+    return E_NOTIMPL;
+}
+
+void umd_device::recycle_destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_HCOMMANDLIST command_list)
+{
+    UNREFERENCED_PARAMETER(device);
+    UNREFERENCED_PARAMETER(command_list);
 }
