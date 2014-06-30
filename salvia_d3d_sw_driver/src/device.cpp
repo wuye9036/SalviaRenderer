@@ -12,7 +12,7 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
         d3d_device_cb_(args->pKTCallbacks), d3d_core_layer_device_cb_(args->pUMCallbacks),
         d3d_cb_context_(nullptr)
 {
-    *args->ppfnRetrieveSubObject = nullptr;
+    *args->ppfnRetrieveSubObject = retrieve_sub_object;
 
     switch (args->Interface)
     {
@@ -253,6 +253,20 @@ void umd_device::destroy()
 void umd_device::set_d3d_error(HRESULT hr)
 {
     (*d3d_core_layer_device_cb_->pfnSetErrorCb)(d3d_rt_core_layer_, hr);
+}
+
+HRESULT umd_device::retrieve_sub_object(D3D10DDI_HDEVICE device, UINT32 sub_device_id,
+    SIZE_T param_size, void* params, SIZE_T output_param_size, void* output_params_buffer)
+{
+    UNREFERENCED_PARAMETER(sub_device_id);
+    UNREFERENCED_PARAMETER(param_size);
+    UNREFERENCED_PARAMETER(params);
+    UNREFERENCED_PARAMETER(output_param_size);
+    UNREFERENCED_PARAMETER(output_params_buffer);
+
+    umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+    dev->set_d3d_error(D3DDDIERR_NOTAVAILABLE);
+    return E_FAIL;
 }
 
 void umd_device::default_constant_buffer_update_subresource_up(D3D10DDI_HDEVICE device,

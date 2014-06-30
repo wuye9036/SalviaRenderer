@@ -10,6 +10,9 @@ public:
 
     void set_d3d_error(HRESULT hr);
 
+    static HRESULT APIENTRY retrieve_sub_object(D3D10DDI_HDEVICE device, UINT32 sub_device_id,
+        SIZE_T param_size, void* params, SIZE_T output_param_size, void* output_params_buffer);
+
     static void APIENTRY default_constant_buffer_update_subresource_up(D3D10DDI_HDEVICE device,
         D3D10DDI_HRESOURCE dst_resource, UINT dst_subresource, const D3D10_DDI_BOX* dst_box,
         const void* sys_mem_up, UINT row_pitch, UINT depth_pitch);
