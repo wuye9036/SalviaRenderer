@@ -208,13 +208,13 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
     dxgi_ddi_funcs->pfnBlt = blt_dxgi;
     dxgi_ddi_funcs->pfnResolveSharedResource = resolve_shared_resource_dxgi;
 #if (D3D_UMD_INTERFACE_VERSION >= D3D_UMD_INTERFACE_VERSION_WIN8)
-    dxgi_ddi_funcs->pfnBlt1 = nullptr;
-    dxgi_ddi_funcs->pfnOfferResources = nullptr;
-    dxgi_ddi_funcs->pfnReclaimResources = nullptr;
-    dxgi_ddi_funcs->pfnGetMultiPlaneOverlayCaps = nullptr;
+    dxgi_ddi_funcs->pfnBlt1 = blt1_dxgi;
+    dxgi_ddi_funcs->pfnOfferResources = offer_resources;
+    dxgi_ddi_funcs->pfnReclaimResources = reclaim_resources;
+    dxgi_ddi_funcs->pfnGetMultiPlaneOverlayCaps = get_multi_plane_overlay_caps;
     dxgi_ddi_funcs->pfnGetMultiPlaneOverlayFilterRange = nullptr;
-    dxgi_ddi_funcs->pfnCheckMultiPlaneOverlaySupport = nullptr;
-    dxgi_ddi_funcs->pfnPresentMultiPlaneOverlay = nullptr;
+    dxgi_ddi_funcs->pfnCheckMultiPlaneOverlaySupport = check_multi_plane_overlay_support;
+    dxgi_ddi_funcs->pfnPresentMultiPlaneOverlay = present_multi_plane_overlay;
 #endif
 
     D3DDDICB_CREATECONTEXT d3d_cb_create_context;
@@ -1618,6 +1618,48 @@ HRESULT umd_device::blt_dxgi(DXGI_DDI_ARG_BLT* blt_data)
 HRESULT umd_device::resolve_shared_resource_dxgi(DXGI_DDI_ARG_RESOLVESHAREDRESOURCE* resource_data)
 {
     UNREFERENCED_PARAMETER(resource_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::blt1_dxgi(DXGI_DDI_ARG_BLT1* blt1_data)
+{
+    UNREFERENCED_PARAMETER(blt1_data);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::offer_resources(DXGI_DDI_ARG_OFFERRESOURCES* resources)
+{
+    UNREFERENCED_PARAMETER(resources);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::reclaim_resources(DXGI_DDI_ARG_RECLAIMRESOURCES* resources)
+{
+    UNREFERENCED_PARAMETER(resources);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::get_multi_plane_overlay_caps(DXGI_DDI_ARG_GETMULTIPLANEOVERLAYCAPS* caps)
+{
+    UNREFERENCED_PARAMETER(caps);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::check_multi_plane_overlay_support(DXGI_DDI_ARG_CHECKMULTIPLANEOVERLAYSUPPORT* support)
+{
+    UNREFERENCED_PARAMETER(support);
+
+    return E_NOTIMPL;
+}
+
+HRESULT umd_device::present_multi_plane_overlay(DXGI_DDI_ARG_PRESENTMULTIPLANEOVERLAY* present_dxgi)
+{
+    UNREFERENCED_PARAMETER(present_dxgi);
 
     return E_NOTIMPL;
 }

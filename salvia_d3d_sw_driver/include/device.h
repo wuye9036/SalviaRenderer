@@ -314,6 +314,13 @@ public:
     static HRESULT APIENTRY blt_dxgi(DXGI_DDI_ARG_BLT* blt_data);
     static HRESULT APIENTRY resolve_shared_resource_dxgi(DXGI_DDI_ARG_RESOLVESHAREDRESOURCE* resource_data);
 
+    static HRESULT APIENTRY blt1_dxgi(DXGI_DDI_ARG_BLT1* blt1_data);
+    static HRESULT APIENTRY offer_resources(DXGI_DDI_ARG_OFFERRESOURCES* resources);
+    static HRESULT APIENTRY reclaim_resources(DXGI_DDI_ARG_RECLAIMRESOURCES* resources);
+    static HRESULT APIENTRY get_multi_plane_overlay_caps(DXGI_DDI_ARG_GETMULTIPLANEOVERLAYCAPS* caps);
+    static HRESULT APIENTRY check_multi_plane_overlay_support(DXGI_DDI_ARG_CHECKMULTIPLANEOVERLAYSUPPORT* support);
+    static HRESULT APIENTRY present_multi_plane_overlay(DXGI_DDI_ARG_PRESENTMULTIPLANEOVERLAY* present_dxgi);
+
     // TODO
 
 private:
