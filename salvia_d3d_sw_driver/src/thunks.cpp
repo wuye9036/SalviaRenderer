@@ -1,6 +1,35 @@
 #define INITGUID
 #include "common.h"
 
+#include <salvia_d3d_sw_driver/include/display.h>
+#include <salvia_d3d_sw_driver/include/kmd_adapter.h>
+#include <salvia_d3d_sw_driver/include/kmd_device.h>
+#include <salvia_d3d_sw_driver/include/kmd_context.h>
+
+boost::mutex g_km_mutex;
+std::list<kmd_adapter*> g_kmd_adapters;
+std::list<kmd_device*> g_kmd_devices;
+std::list<kmd_context*> g_kmd_contexts;
+
+void km_destroy()
+{
+	boost::mutex::scoped_lock lock(g_km_mutex);
+
+	for (auto iter = g_kmd_adapters.begin(); iter != g_kmd_adapters.end(); ++ iter)
+	{
+		delete *iter;
+	}
+	for (auto iter = g_kmd_devices.begin(); iter != g_kmd_devices.end(); ++ iter)
+	{
+		delete *iter;
+	}
+	for (auto iter = g_kmd_contexts.begin(); iter != g_kmd_contexts.end(); ++ iter)
+	{
+		delete *iter;
+	}
+}
+
+
 NTSTATUS APIENTRY D3DKMTCreateAllocation(D3DKMT_CREATEALLOCATION* pData)
 {
 	UNREFERENCED_PARAMETER(pData);
@@ -39,14 +68,38 @@ NTSTATUS APIENTRY D3DKMTQueryAllocationResidency(const D3DKMT_QUERYALLOCATIONRES
 
 NTSTATUS APIENTRY D3DKMTCreateDevice(D3DKMT_CREATEDEVICE* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_adapters.begin(), g_kmd_adapters.end(), reinterpret_cast<kmd_adapter*>(pData->hAdapter));
+	if (iter == g_kmd_adapters.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		status = (*iter)->create_device(pData);
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTDestroyDevice(const D3DKMT_DESTROYDEVICE* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_devices.begin(), g_kmd_devices.end(), reinterpret_cast<kmd_device*>(pData->hDevice));
+	if (iter == g_kmd_devices.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		delete *iter;
+		g_kmd_devices.erase(iter);
+		status = STATUS_SUCCESS;
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTLock(D3DKMT_LOCK* pData)
@@ -99,26 +152,111 @@ NTSTATUS APIENTRY D3DKMTGetRuntimeData(const D3DKMT_GETRUNTIMEDATA* pData)
 
 NTSTATUS APIENTRY D3DKMTQueryAdapterInfo(const D3DKMT_QUERYADAPTERINFO* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_adapters.begin(), g_kmd_adapters.end(), reinterpret_cast<kmd_adapter*>(pData->hAdapter));
+	if (iter == g_kmd_adapters.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		status = (*iter)->query_adapter_info(pData);
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTOpenAdapterFromGdiDisplayName(D3DKMT_OPENADAPTERFROMGDIDISPLAYNAME* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	boost::shared_ptr<display_mgr> disp_mgr = display_mgr::instance();
+	kmd_adapter* adapter = new (std::nothrow) kmd_adapter;
+	if (nullptr == adapter)
+	{
+		status = STATUS_NO_MEMORY;
+	}
+	else
+	{
+		status = adapter->create(disp_mgr, pData);
+		if (STATUS_SUCCESS == status)
+		{
+			g_kmd_adapters.push_back(adapter);
+		}
+		else
+		{
+			delete adapter;
+		}
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTOpenAdapterFromDeviceName(D3DKMT_OPENADAPTERFROMDEVICENAME* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	boost::shared_ptr<display_mgr> disp_mgr = display_mgr::instance();
+
+	D3DKMT_OPENADAPTERFROMGDIDISPLAYNAME adapter_from_gdi;
+	bool remoting = false;
+	for (uint32_t index = 0; index < disp_mgr->num_displays(); ++ index)
+	{
+		display* disp = disp_mgr->get_display(index);
+		assert(disp != nullptr);
+
+		uint32_t flags = disp->state_flags();
+		if ((flags & DISPLAY_DEVICE_REMOTE) && (flags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)
+			&& (flags & DISPLAY_DEVICE_PRIMARY_DEVICE))
+		{
+			memcpy(adapter_from_gdi.DeviceName, disp->name().c_str(), disp->name().size() * sizeof(wchar_t));
+			remoting = true;
+		}
+	}
+
+	NTSTATUS status;
+
+	kmd_adapter* adapter = new (std::nothrow) kmd_adapter;
+	if (nullptr == adapter)
+	{
+		status = STATUS_NO_MEMORY;
+	}
+	else
+	{
+		if (!remoting)
+		{
+			status = adapter->create(&pData->hAdapter, &pData->AdapterLuid);
+		}
+		else
+		{
+			status = adapter->create(disp_mgr, &adapter_from_gdi);
+
+			pData->hAdapter = adapter_from_gdi.hAdapter;
+			pData->AdapterLuid = adapter_from_gdi.AdapterLuid;
+		}
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTCloseAdapter(const D3DKMT_CLOSEADAPTER* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	boost::mutex::scoped_lock lock(g_km_mutex);
+
+	auto iter = std::find(g_kmd_adapters.begin(), g_kmd_adapters.end(), reinterpret_cast<kmd_adapter*>(pData->hAdapter));
+	if (iter == g_kmd_adapters.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		delete *iter;
+		g_kmd_adapters.erase(iter);
+		status = STATUS_SUCCESS;
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTGetSharedPrimaryHandle(D3DKMT_GETSHAREDPRIMARYHANDLE* pData)
@@ -172,14 +310,38 @@ NTSTATUS APIENTRY D3DKMTGetContextSchedulingPriority(D3DKMT_GETCONTEXTSCHEDULING
 
 NTSTATUS APIENTRY D3DKMTCreateContext(D3DKMT_CREATECONTEXT* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_devices.begin(), g_kmd_devices.end(), reinterpret_cast<kmd_device*>(pData->hDevice));
+	if (iter == g_kmd_devices.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		status = (*iter)->create_context(pData);
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTDestroyContext(const D3DKMT_DESTROYCONTEXT* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_contexts.begin(), g_kmd_contexts.end(), reinterpret_cast<kmd_context*>(pData->hContext));
+	if (iter == g_kmd_contexts.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		delete *iter;
+		g_kmd_contexts.erase(iter);
+		status = STATUS_SUCCESS;
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTCreateSynchronizationObject(D3DKMT_CREATESYNCHRONIZATIONOBJECT* pData)
