@@ -6,6 +6,10 @@
 #include <salvia_d3d_sw_driver/include/umd_adapter.h>
 #include <salvia_d3d_sw_driver/include/umd_device.h>
 
+#include <salviar/include/texture.h>
+
+using namespace salviar;
+
 umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* args)
 	: adapter_(adapter), 
 		d3d_rt_device_(args->hRTDevice), d3d_rt_core_layer_(args->hRTCoreLayer),
@@ -224,7 +228,7 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
 	{
 		d3d_cb_context_ = d3d_cb_create_context.hContext;
 
-		// TODO: Create SALVIA device here
+		sa_renderer_ = create_software_renderer();
 	}
 
 	if (FAILED(hr))
@@ -241,6 +245,8 @@ umd_device::~umd_device()
 
 void umd_device::destroy()
 {
+	sa_renderer_.reset();
+
 	if (d3d_cb_context_ != nullptr)
 	{
 		D3DDDICB_DESTROYCONTEXT d3d_cb_destroy_context;
@@ -549,9 +555,7 @@ void umd_device::set_render_targets(D3D10DDI_HDEVICE device,
 		D3D10DDI_HDEPTHSTENCILVIEW depth_stencil_view, const D3D11DDI_HUNORDEREDACCESSVIEW* unordered_access_view,
 		const UINT* uav_initial_counts, UINT uav_index, UINT num_uavs, UINT uav_first_to_set, UINT uav_number_updated)
 {
-	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(render_target_view);
-	UNREFERENCED_PARAMETER(num_rtvs);
 	UNREFERENCED_PARAMETER(rtv_number_to_unbind);
 	UNREFERENCED_PARAMETER(depth_stencil_view);
 	UNREFERENCED_PARAMETER(unordered_access_view);
@@ -560,6 +564,14 @@ void umd_device::set_render_targets(D3D10DDI_HDEVICE device,
 	UNREFERENCED_PARAMETER(num_uavs);
 	UNREFERENCED_PARAMETER(uav_first_to_set);
 	UNREFERENCED_PARAMETER(uav_number_updated);
+
+	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+	std::vector<surface_ptr> rtvs(num_rtvs);
+	for (size_t i = 0; i < num_rtvs; ++ i)
+	{
+		rtvs[i] = *static_cast<surface_ptr*>(render_target_view[i].pDrvPrivate);
+	}
+	dev->sa_renderer_->set_render_targets(num_rtvs, num_rtvs > 0 ? &rtvs[0] : nullptr, nullptr);
 }
 
 void APIENTRY umd_device::shader_resource_view_read_after_write_hazard(D3D10DDI_HDEVICE device,
@@ -654,10 +666,21 @@ void APIENTRY umd_device::draw_auto(D3D10DDI_HDEVICE device)
 void APIENTRY umd_device::set_viewports(D3D10DDI_HDEVICE device, UINT num_viewports, UINT clear_viewports,
 		const D3D10_DDI_VIEWPORT* viewports)
 {
-	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(num_viewports);
 	UNREFERENCED_PARAMETER(clear_viewports);
-	UNREFERENCED_PARAMETER(viewports);
+
+	// TODO
+	assert(1 == num_viewports);
+
+	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+	viewport vp;
+	vp.w = viewports[0].Width;
+	vp.h = viewports[0].Height;
+	vp.x = viewports[0].TopLeftX;
+	vp.y = viewports[0].TopLeftY;
+	vp.minz = viewports[0].MinDepth;
+	vp.maxz = viewports[0].MaxDepth;
+	dev->sa_renderer_->set_viewport(vp);
 }
 
 void APIENTRY umd_device::set_scissor_rects(D3D10DDI_HDEVICE device, UINT num_scissor_rects, UINT clear_scissor_rects,
@@ -672,18 +695,26 @@ void APIENTRY umd_device::set_scissor_rects(D3D10DDI_HDEVICE device, UINT num_sc
 void APIENTRY umd_device::clear_render_target_view(D3D10DDI_HDEVICE device, D3D10DDI_HRENDERTARGETVIEW render_target_view,
 		FLOAT color_rgba[4])
 {
-	UNREFERENCED_PARAMETER(device);
-	UNREFERENCED_PARAMETER(render_target_view);
-	UNREFERENCED_PARAMETER(color_rgba);
+	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+	surface_ptr surf = *static_cast<surface_ptr*>(render_target_view.pDrvPrivate);
+	dev->sa_renderer_->clear_color(surf, color_rgba32f(color_rgba));
 }
+
 void APIENTRY umd_device::clear_depth_stencil_view(D3D10DDI_HDEVICE device, D3D10DDI_HDEPTHSTENCILVIEW depth_stencil_view,
 		UINT flags, FLOAT depth, UINT8 stencil)
 {
-	UNREFERENCED_PARAMETER(device);
-	UNREFERENCED_PARAMETER(depth_stencil_view);
-	UNREFERENCED_PARAMETER(flags);
-	UNREFERENCED_PARAMETER(depth);
-	UNREFERENCED_PARAMETER(stencil);
+	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+	surface_ptr surf = *static_cast<surface_ptr*>(depth_stencil_view.pDrvPrivate);
+	uint32_t f = 0;
+	if (flags & D3D10_DDI_CLEAR_DEPTH)
+	{
+		f |= clear_depth;
+	}
+	if (flags & D3D10_DDI_CLEAR_STENCIL)
+	{
+		f |= clear_stencil;
+	}
+	dev->sa_renderer_->clear_depth_stencil(surf, f, depth, stencil);
 }
 
 void APIENTRY umd_device::set_predication(D3D10DDI_HDEVICE device, D3D10DDI_HQUERY query, BOOL predicate_value)
@@ -770,7 +801,7 @@ SIZE_T umd_device::calc_private_resource_size(D3D10DDI_HDEVICE device, const D3D
 	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(create_resource);
 
-	return 0;
+	return sizeof(texture_ptr);
 }
 
 SIZE_T umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource)
@@ -784,10 +815,51 @@ SIZE_T umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE device, co
 void umd_device::create_resource(D3D10DDI_HDEVICE device, const D3D11DDIARG_CREATERESOURCE* create_resource,
 		D3D10DDI_HRESOURCE resource, D3D10DDI_HRTRESOURCE rt_resource)
 {
-	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(create_resource);
 	UNREFERENCED_PARAMETER(resource);
 	UNREFERENCED_PARAMETER(rt_resource);
+
+	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+	// TODO: support other types of resources
+	texture_ptr* tex = static_cast<texture_ptr*>(resource.pDrvPrivate);
+	new (tex) texture_ptr;
+	assert(D3D10DDIRESOURCE_TEXTURE2D == create_resource->ResourceDimension);
+
+	pixel_format fmt;
+	switch (create_resource->Format)
+	{
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+		fmt = pixel_format_color_rgba32f;
+		break;
+	case DXGI_FORMAT_R32G32B32_FLOAT:
+		fmt = pixel_format_color_rgb32f;
+		break;
+	case DXGI_FORMAT_B8G8R8A8_UNORM:
+		fmt = pixel_format_color_bgra8;
+		break;
+	case DXGI_FORMAT_R8G8B8A8_UNORM:
+		fmt = pixel_format_color_rgba8;
+		break;
+	case DXGI_FORMAT_R32_FLOAT:
+		fmt = pixel_format_color_r32f;
+		break;
+	case DXGI_FORMAT_R32G32_FLOAT:
+		fmt = pixel_format_color_rg32f;
+		break;
+	case DXGI_FORMAT_R32_SINT:
+		fmt = pixel_format_color_r32i;
+		break;
+
+	default:
+		assert(false);
+		fmt = pixel_format_color_rgba8;
+		break;
+	}
+
+	*tex = dev->sa_renderer_->create_tex2d(create_resource->pMipInfoList[0].TexelWidth,
+		create_resource->pMipInfoList[0].TexelHeight,
+		create_resource->SampleDesc.Count,
+		fmt);
 }
 
 void umd_device::open_resource(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource,
@@ -802,7 +874,10 @@ void umd_device::open_resource(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRE
 void umd_device::destroy_resource(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE resource)
 {
 	UNREFERENCED_PARAMETER(device);
-	UNREFERENCED_PARAMETER(resource);
+
+	// TODO: support other types of resources
+	texture_ptr* tex = static_cast<texture_ptr*>(resource.pDrvPrivate);
+	tex->reset();
 }
 
 SIZE_T umd_device::calc_private_shader_resource_view_size(D3D10DDI_HDEVICE device,
@@ -837,7 +912,7 @@ SIZE_T umd_device::calc_private_render_target_view_size(D3D10DDI_HDEVICE device,
 	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(create_render_target_view);
 
-	return 0;
+	return sizeof(surface_ptr);
 }
 
 void umd_device::create_render_target_view(D3D10DDI_HDEVICE device,
@@ -846,14 +921,22 @@ void umd_device::create_render_target_view(D3D10DDI_HDEVICE device,
 {
 	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(create_render_target_view);
-	UNREFERENCED_PARAMETER(render_target_view);
 	UNREFERENCED_PARAMETER(rt_render_target_view);
+
+	// TODO: support other types of resources
+	surface_ptr* surf = static_cast<surface_ptr*>(render_target_view.pDrvPrivate);
+	new (surf) surface_ptr;
+	texture_ptr tex = *static_cast<texture_ptr*>(create_render_target_view->hDrvResource.pDrvPrivate);
+	*surf = tex->subresource(create_render_target_view->Tex2D.MipSlice);
 }
 
 void umd_device::destroy_render_target_view(D3D10DDI_HDEVICE device, D3D10DDI_HRENDERTARGETVIEW render_target_view)
 {
 	UNREFERENCED_PARAMETER(device);
-	UNREFERENCED_PARAMETER(render_target_view);
+
+	// TODO: support other types of resources
+	surface_ptr* surf = static_cast<surface_ptr*>(render_target_view.pDrvPrivate);
+	surf->reset();
 }
 
 SIZE_T umd_device::calc_private_depth_stencil_view_size(D3D10DDI_HDEVICE device,

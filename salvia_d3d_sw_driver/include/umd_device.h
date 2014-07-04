@@ -1,5 +1,7 @@
 #pragma once
 
+#include <salviar/include/renderer.h>
+
 class umd_device
 {
 public:
@@ -338,4 +340,6 @@ private:
 	const D3D10DDI_CORELAYER_DEVICECALLBACKS* d3d_core_layer_device_cb_;
 
 	HANDLE d3d_cb_context_;
+
+	salviar::renderer_ptr sa_renderer_;
 };
