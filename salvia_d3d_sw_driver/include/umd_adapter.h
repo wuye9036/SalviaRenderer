@@ -8,6 +8,11 @@ public:
 	HRESULT open_adapter_10(D3D10DDIARG_OPENADAPTER* args);
 	HRESULT open_adapter_10_2(D3D10DDIARG_OPENADAPTER* args);
 
+	D3D10DDI_HRTADAPTER rt_adapter() const
+	{
+		return rt_adapter_;
+	}
+
 private:
 	static SIZE_T APIENTRY calc_private_device_size(D3D10DDI_HADAPTER ddi_adapter, const D3D10DDIARG_CALCPRIVATEDEVICESIZE* args);
 	static HRESULT APIENTRY create_device(D3D10DDI_HADAPTER ddi_adapter, D3D10DDIARG_CREATEDEVICE* args);

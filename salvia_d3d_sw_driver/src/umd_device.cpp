@@ -14,6 +14,7 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
 	: adapter_(adapter), 
 		d3d_rt_device_(args->hRTDevice), d3d_rt_core_layer_(args->hRTCoreLayer),
 		d3d_device_cb_(args->pKTCallbacks), d3d_core_layer_device_cb_(args->pUMCallbacks),
+		dxgi_base_cb_(args->DXGIBaseDDI.pDXGIBaseCallbacks),
 		d3d_cb_context_(nullptr)
 {
 	*args->ppfnRetrieveSubObject = retrieve_sub_object;
@@ -229,6 +230,20 @@ umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* arg
 		d3d_cb_context_ = d3d_cb_create_context.hContext;
 
 		sa_renderer_ = create_software_renderer();
+
+		umd_device* ptr = this;
+		D3DDDICB_ESCAPE esc;
+		ZeroMemory(&esc, sizeof(esc));
+		esc.hDevice = d3d_rt_device_.handle,
+		esc.pPrivateDriverData = &ptr;
+		esc.PrivateDriverDataSize = sizeof(ptr);
+		d3d_device_cb_->pfnEscapeCb(adapter_->rt_adapter().handle, &esc);
+
+		dc_from_mem_.hBitmap = nullptr;
+		dc_from_mem_.hDc = nullptr;
+		dc_from_mem_.pMemory = nullptr;
+		dc_from_mem_.Width = 0;
+		dc_from_mem_.Height = 0;
 	}
 
 	if (FAILED(hr))
@@ -666,21 +681,23 @@ void APIENTRY umd_device::draw_auto(D3D10DDI_HDEVICE device)
 void APIENTRY umd_device::set_viewports(D3D10DDI_HDEVICE device, UINT num_viewports, UINT clear_viewports,
 		const D3D10_DDI_VIEWPORT* viewports)
 {
-	UNREFERENCED_PARAMETER(num_viewports);
 	UNREFERENCED_PARAMETER(clear_viewports);
 
-	// TODO
-	assert(1 == num_viewports);
+	if (num_viewports > 0)
+	{
+		// TODO
+		assert(1 == num_viewports);
 
-	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
-	viewport vp;
-	vp.w = viewports[0].Width;
-	vp.h = viewports[0].Height;
-	vp.x = viewports[0].TopLeftX;
-	vp.y = viewports[0].TopLeftY;
-	vp.minz = viewports[0].MinDepth;
-	vp.maxz = viewports[0].MaxDepth;
-	dev->sa_renderer_->set_viewport(vp);
+		umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
+		viewport vp;
+		vp.w = viewports[0].Width;
+		vp.h = viewports[0].Height;
+		vp.x = viewports[0].TopLeftX;
+		vp.y = viewports[0].TopLeftY;
+		vp.minz = viewports[0].MinDepth;
+		vp.maxz = viewports[0].MaxDepth;
+		dev->sa_renderer_->set_viewport(vp);
+	}
 }
 
 void APIENTRY umd_device::set_scissor_rects(D3D10DDI_HDEVICE device, UINT num_scissor_rects, UINT clear_scissor_rects,
@@ -1665,9 +1682,25 @@ void umd_device::recycle_destroy_command_list(D3D10DDI_HDEVICE device, D3D11DDI_
 
 HRESULT umd_device::present_dxgi(DXGI_DDI_ARG_PRESENT* present_data)
 {
-	UNREFERENCED_PARAMETER(present_data);
+	umd_device* dev = reinterpret_cast<umd_device*>(present_data->hDevice);
+	dev->sa_renderer_->flush();
 
-	return E_NOTIMPL;
+	texture_ptr src_tex = *reinterpret_cast<texture_ptr*>(present_data->hSurfaceToPresent);
+	surface_ptr src_surf = src_tex->subresource(0);
+	if (!dev->resolved_surf_
+		|| (dev->resolved_surf_->width() != src_surf->width())
+		|| (dev->resolved_surf_->height() != src_surf->height()))
+	{
+		dev->resolved_surf_ = dev->sa_renderer_->create_tex2d(src_surf->width(), src_surf->height(),
+			1, pixel_format_color_bgra8)->subresource(0);
+	}
+	src_surf->resolve(*dev->resolved_surf_);
+
+	DXGIDDICB_PRESENT args;
+	ZeroMemory( &args, sizeof( args ) );
+	args.pDXGIContext = present_data->pDXGIContext;
+	args.hContext = dev->d3d_cb_context_;
+	return dev->dxgi_base_cb_->pfnPresentCb(dev->d3d_rt_device_.handle, &args);
 }
 
 HRESULT umd_device::get_gamma_caps_dxgi(DXGI_DDI_ARG_GET_GAMMA_CONTROL_CAPS* gamma_data)

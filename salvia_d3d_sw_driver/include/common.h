@@ -17,10 +17,14 @@
 
 #include <list>
 #include <boost/thread/mutex.hpp>
+#include <boost/shared_ptr.hpp>
 
+class umd_adapter;
+class umd_device;
 class kmd_adapter;
 class kmd_device;
 class kmd_context;
+class display_mgr;
 
 extern HMODULE g_dll;
 extern boost::mutex g_km_mutex;

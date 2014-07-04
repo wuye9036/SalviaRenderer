@@ -1,9 +1,5 @@
 #pragma once
 
-#include <boost/shared_ptr.hpp>
-
-class display_mgr;
-
 class kmd_adapter
 {
 public:
@@ -12,6 +8,7 @@ public:
 
 	NTSTATUS query_adapter_info(const D3DKMT_QUERYADAPTERINFO* query_ai);
 	NTSTATUS create_device(D3DKMT_CREATEDEVICE* cd);
+	NTSTATUS escape(const D3DKMT_ESCAPE* esc);
 
 private:
 	D3DKMT_HANDLE adapter_;

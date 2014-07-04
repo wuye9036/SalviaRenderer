@@ -12,6 +12,16 @@ public:
 
 	void set_d3d_error(HRESULT hr);
 
+	D3DKMT_CREATEDCFROMMEMORY& dc_from_mem()
+	{
+		return dc_from_mem_;
+	}
+	const salviar::surface_ptr& resolved_surf() const
+	{
+		return resolved_surf_;
+	}
+
+private:
 	static HRESULT APIENTRY retrieve_sub_object(D3D10DDI_HDEVICE device, UINT32 sub_device_id,
 		SIZE_T param_size, void* params, SIZE_T output_param_size, void* output_params_buffer);
 
@@ -338,8 +348,12 @@ private:
 
 	const D3DDDI_DEVICECALLBACKS* d3d_device_cb_;
 	const D3D10DDI_CORELAYER_DEVICECALLBACKS* d3d_core_layer_device_cb_;
+	const DXGI_DDI_BASE_CALLBACKS* dxgi_base_cb_;
 
 	HANDLE d3d_cb_context_;
 
+	D3DKMT_CREATEDCFROMMEMORY dc_from_mem_;
+
 	salviar::renderer_ptr sa_renderer_;
+	salviar::surface_ptr resolved_surf_;
 };

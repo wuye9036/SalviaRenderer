@@ -185,3 +185,34 @@ NTSTATUS kmd_adapter::create_device(D3DKMT_CREATEDEVICE* cd)
 
 	return status;
 }
+
+NTSTATUS kmd_adapter::escape(const D3DKMT_ESCAPE* esc)
+{
+	NTSTATUS status;
+
+	if ((esc->Type != D3DKMT_ESCAPE_DRIVERPRIVATE) || (esc->hContext != 0))
+	{
+		status = STATUS_NOT_SUPPORTED;
+	}
+	else
+	{
+		if (esc->hDevice != 0)
+		{
+			auto iter = std::find(g_kmd_devices.begin(), g_kmd_devices.end(), reinterpret_cast<kmd_device*>(esc->hDevice));
+			if (iter == g_kmd_devices.end())
+			{
+				status = STATUS_INVALID_PARAMETER;
+			}
+			else
+			{
+				status = (*iter)->escape(esc);
+			}
+		}
+		else
+		{
+			status = STATUS_NOT_IMPLEMENTED;
+		}
+	}
+
+	return status;
+}

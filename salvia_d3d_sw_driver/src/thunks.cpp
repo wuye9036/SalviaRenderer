@@ -5,6 +5,11 @@
 #include <salvia_d3d_sw_driver/include/kmd_adapter.h>
 #include <salvia_d3d_sw_driver/include/kmd_device.h>
 #include <salvia_d3d_sw_driver/include/kmd_context.h>
+#include <salvia_d3d_sw_driver/include/umd_device.h>
+
+#include <salviar/include/texture.h>
+
+using namespace salviar;
 
 boost::mutex g_km_mutex;
 std::list<kmd_adapter*> g_kmd_adapters;
@@ -13,6 +18,8 @@ std::list<kmd_context*> g_kmd_contexts;
 
 void km_destroy()
 {
+	display_mgr::destroy();
+
 	boost::mutex::scoped_lock lock(g_km_mutex);
 
 	for (auto iter = g_kmd_adapters.begin(); iter != g_kmd_adapters.end(); ++ iter)
@@ -134,8 +141,86 @@ NTSTATUS APIENTRY D3DKMTGetMultisampleMethodList(D3DKMT_GETMULTISAMPLEMETHODLIST
 
 NTSTATUS APIENTRY D3DKMTPresent(const D3DKMT_PRESENT* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_contexts.begin(), g_kmd_contexts.end(), reinterpret_cast<kmd_context*>(pData->hContext));
+	if (iter == g_kmd_contexts.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		kmd_device* km_dev = (*iter)->device();
+		assert(km_dev != nullptr);
+
+		umd_device* um_dev = km_dev->get_umd_device();
+		assert(um_dev != nullptr);
+
+		if (pData->BroadcastContextCount != 0)
+		{
+			status = STATUS_NOT_SUPPORTED;
+		}
+		else
+		{
+			surface_ptr surf = um_dev->resolved_surf();
+
+			HWND wnd = pData->hWindow;
+			RECT src_rc = pData->SrcRect;
+			RECT dst_rc;
+
+			if (pData->Flags.Blt)
+			{
+				if (pData->Flags.DstRectValid)
+				{
+					dst_rc = pData->DstRect;
+				}
+				else
+				{
+					GetClientRect(wnd, &dst_rc);
+				}
+
+				void* fb = surf->texel_address(0, 0, 0);
+				D3DKMT_CREATEDCFROMMEMORY& dc_from_mem = um_dev->dc_from_mem();
+				if ((static_cast<int>(dc_from_mem.Width) != surf->width())
+						|| (static_cast<int>(dc_from_mem.Height) != surf->height())
+						|| (dc_from_mem.pMemory != fb))
+				{
+					if ((dc_from_mem.hDc != nullptr) || (dc_from_mem.hBitmap != nullptr))
+					{
+						D3DKMT_DESTROYDCFROMMEMORY ddcfm;
+						ddcfm.hDc = um_dev->dc_from_mem().hDc;
+						ddcfm.hBitmap = um_dev->dc_from_mem().hBitmap;
+						D3DKMTDestroyDCFromMemory(&ddcfm);
+					}
+
+					dc_from_mem.pMemory = fb;
+					dc_from_mem.Format = D3DDDIFMT_A8R8G8B8;
+					dc_from_mem.Width = surf->width();
+					dc_from_mem.Height = surf->height();
+					dc_from_mem.Pitch = static_cast<UINT>(surf->pitch());
+					dc_from_mem.hDeviceDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+					dc_from_mem.pColorTable = NULL;
+					D3DKMTCreateDCFromMemory(&dc_from_mem);
+
+					DeleteDC(dc_from_mem.hDeviceDc);
+				}
+
+				HDC dst_dc = GetDC(wnd);
+				BitBlt(dst_dc, dst_rc.left, dst_rc.top, dst_rc.right - dst_rc.left, dst_rc.bottom - dst_rc.top,
+					dc_from_mem.hDc, src_rc.left, src_rc.top, SRCCOPY);
+				ReleaseDC(wnd, dst_dc);
+
+				status = STATUS_SUCCESS;
+			}
+			else
+			{
+				// TODO: Support more flags
+				status = STATUS_NOT_SUPPORTED;
+			}
+		}
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTRender(D3DKMT_RENDER* pData)
@@ -267,8 +352,19 @@ NTSTATUS APIENTRY D3DKMTGetSharedPrimaryHandle(D3DKMT_GETSHAREDPRIMARYHANDLE* pD
 
 NTSTATUS APIENTRY D3DKMTEscape(const D3DKMT_ESCAPE* pData)
 {
-	UNREFERENCED_PARAMETER(pData);
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS status;
+
+	auto iter = std::find(g_kmd_adapters.begin(), g_kmd_adapters.end(), reinterpret_cast<kmd_adapter*>(pData->hAdapter));
+	if (iter == g_kmd_adapters.end())
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		status = (*iter)->escape(pData);
+	}
+
+	return status;
 }
 
 NTSTATUS APIENTRY D3DKMTSetVidPnSourceOwner(const D3DKMT_SETVIDPNSOURCEOWNER* pData)

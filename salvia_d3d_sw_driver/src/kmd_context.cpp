@@ -6,7 +6,7 @@
 #include <salvia_d3d_sw_driver/include/kmd_device.h>
 #include <salvia_d3d_sw_driver/include/kmd_context.h>
 
-NTSTATUS kmd_context::create(D3DKMT_CREATECONTEXT* cc)
+NTSTATUS kmd_context::create(D3DKMT_CREATECONTEXT* cc, kmd_device* dev)
 {
 	NTSTATUS status;
 
@@ -30,6 +30,8 @@ NTSTATUS kmd_context::create(D3DKMT_CREATECONTEXT* cc)
 
 		context_ = reinterpret_cast<D3DKMT_HANDLE>(this);
 		cc->hContext = context_;
+
+		device_ = dev;
 
 		status = STATUS_SUCCESS;
 	}

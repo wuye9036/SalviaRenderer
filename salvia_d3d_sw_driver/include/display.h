@@ -2,10 +2,6 @@
 
 #include <vector>
 #include <string>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
-
-class umd_device;
 
 class display
 {

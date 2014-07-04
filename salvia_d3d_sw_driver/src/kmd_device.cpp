@@ -34,7 +34,7 @@ NTSTATUS kmd_device::create_context(D3DKMT_CREATECONTEXT* cd)
 		}
 		else
 		{
-			status = context->create(cd);
+			status = context->create(cd, this);
 			if (STATUS_SUCCESS == status)
 			{
 				g_kmd_contexts.push_back(context);
@@ -44,6 +44,23 @@ NTSTATUS kmd_device::create_context(D3DKMT_CREATECONTEXT* cd)
 				delete context;
 			}			
 		}
+	}
+
+	return status;
+}
+
+NTSTATUS kmd_device::escape(const D3DKMT_ESCAPE* esc)
+{
+	NTSTATUS status;
+
+	if ((nullptr == esc->pPrivateDriverData) || (esc->PrivateDriverDataSize != sizeof(void*)))
+	{
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		umd_device_ = *static_cast<umd_device**>(esc->pPrivateDriverData);
+		status = STATUS_SUCCESS;
 	}
 
 	return status;
