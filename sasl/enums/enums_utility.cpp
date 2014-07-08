@@ -168,7 +168,7 @@ namespace sasl{
 			{
 				return vector_count(btc) * comp_size * 4;
 			}
-			else( is_vector(btc) )
+			else if( is_vector(btc) )
 			{
 				return vector_size(btc) * comp_size;
 			}

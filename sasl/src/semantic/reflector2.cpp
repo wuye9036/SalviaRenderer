@@ -368,7 +368,7 @@ public:
 	{
 	}
 
-	reflector2(module_semantic* sem)	: sem_(sem), current_entry_(NULL), reflection_(NULL)
+	reflector2(module_semantic* sem) : sem_(sem), current_entry_(NULL), reflection_(NULL)
 	{
 	}
 
