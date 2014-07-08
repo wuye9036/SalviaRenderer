@@ -16,23 +16,37 @@ IF(WDK_DIR)
 		include
 	)
 
+	LINK_DIRECTORIES(
+		${SALVIA_LIBS}
+		${SALVIA_BOOST_LIB_DIR}
+	)
+
 	set (HEADER_FILES
-		include/adapter.h
 		include/common.h
-		include/device.h
+		include/display.h
+		include/kmd_adapter.h
+		include/kmd_context.h
+		include/kmd_device.h
+		include/umd_adapter.h
+		include/umd_device.h
 	)
 
 	set (SOURCE_FILES
-		src/adapter.cpp
-		src/device.cpp
+		src/display.cpp
+		src/kmd_adapter.cpp
+		src/kmd_context.cpp
+		src/kmd_device.cpp
+		src/main.cpp
 		src/thunks.cpp
+		src/umd_adapter.cpp
+		src/umd_device.cpp
 		
 		src/d3d_sw_driver.def
 	)
 
 	ADD_LIBRARY( salvia_d3d_sw_driver SHARED
 		${HEADER_FILES}	${SOURCE_FILES} )
-	TARGET_LINK_LIBRARIES(salvia_d3d_sw_driver EFLIB)
+	TARGET_LINK_LIBRARIES(salvia_d3d_sw_driver salviar EFLIB)
 	SET_TARGET_PROPERTIES(salvia_d3d_sw_driver PROPERTIES FOLDER "SALVIA Renderer")
 	SALVIA_CONFIG_OUTPUT_PATHS(salvia_d3d_sw_driver)
 ENDIF(WDK_DIR)
