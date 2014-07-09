@@ -7,7 +7,6 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/reflector.h
 	${SASL_HOME_DIR}/sasl/include/semantic/reflector2.h
 	${SASL_HOME_DIR}/sasl/include/semantic/reflection_impl.h
-	${SASL_HOME_DIR}/sasl/include/semantic/reflection_impl2.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_api.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_diags.h
@@ -21,7 +20,6 @@ set( SOURCE_FILES
 	reflector.cpp
 	reflector2.cpp
 	reflection_impl.cpp
-	reflection_impl2.cpp
 	semantic_analyser.cpp
 	semantic_api.cpp
 	semantic_diags.cpp
