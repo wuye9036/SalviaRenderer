@@ -457,7 +457,7 @@ symbol::symbol_array symbol::find_overloads_impl(
 	// Gather candidates.
 	if( !candidates.empty() )
 	{
-		auto partition_fn = [&candidates, &deprecated](symbol* sym)
+		auto partition_fn = [&candidates, &deprecated](symbol* const& sym)
 		{
 			return get_deprecated_and_next(sym, boost::addressof(candidates[0]), deprecated);
 		};
