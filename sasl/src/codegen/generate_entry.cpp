@@ -13,10 +13,6 @@
 #include <llvm/IR/Module.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
 
 using sasl::semantic::reflection_impl;
@@ -77,10 +73,13 @@ void sort_struct_members(
 	sort(layout_ty_pairs.begin(), layout_ty_pairs.end(), compare_layout);
 
 	sorted_layouts.clear();
-	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_layouts), boost::bind(&pair<sv_layout*, Type*>::first, _1) );
-
 	sorted_tys.clear();
-	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_tys), boost::bind(&pair<sv_layout*, Type*>::second, _1) );
+
+	for(auto const& layout_ty_pair: layout_ty_pairs)
+	{
+		sorted_layouts.push_back(layout_ty_pair.first);
+		sorted_tys.push_back(layout_ty_pair.second);
+	}
 }
 
 Type* generate_parameter_type(

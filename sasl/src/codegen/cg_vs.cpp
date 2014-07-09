@@ -24,10 +24,6 @@
 #include <llvm/IR/DataLayout.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #define SASL_VISITOR_TYPE_NAME cg_vs
 
 using salviar::sv_usage;
@@ -49,7 +45,6 @@ using namespace llvm;
 using namespace sasl::utility;
 
 using boost::any;
-using boost::bind;
 using boost::shared_ptr;
 
 using std::vector;
@@ -60,7 +55,7 @@ using std::make_pair;
 
 #define FUNCTION_SCOPE( fn ) \
 	push_fn( (fn) );	\
-	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cgs_sisd::pop_fn, this ) );
+	scope_guard<void> pop_fn_on_exit##__LINE__( [this]() { pop_fn(); } );
 
 BEGIN_NS_SASL_CODEGEN();
 

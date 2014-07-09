@@ -27,12 +27,10 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/format.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/scope_exit.hpp>
-#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace llvm;
@@ -49,7 +47,6 @@ using eflib::scoped_value;
 
 using boost::addressof;
 using boost::any_cast;
-using boost::bind;
 using boost::weak_ptr;
 
 using std::vector;

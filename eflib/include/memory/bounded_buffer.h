@@ -8,7 +8,6 @@
 #include <boost/thread/thread.hpp>
 #include <boost/call_traits.hpp>
 #include <boost/progress.hpp>
-#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 namespace eflib
@@ -28,7 +27,7 @@ namespace eflib
 			// param_type represents the "best" way to pass a parameter of type value_type to a method
 
 			boost::mutex::scoped_lock lock(m_mutex);
-			m_not_full.wait(lock, boost::bind(&bounded_buffer<value_type>::is_not_full, this));
+			m_not_full.wait(lock, [this]() -> bool {return this->is_not_full();});
 			m_container.push_front(item);
 			++m_unread;
 			lock.unlock();
@@ -37,7 +36,7 @@ namespace eflib
 
 		void pop_back(value_type* pItem) {
 			boost::mutex::scoped_lock lock(m_mutex);
-			m_not_empty.wait(lock, boost::bind(&bounded_buffer<value_type>::is_not_empty, this));
+			m_not_empty.wait(lock, [this]() -> bool {return this->is_not_empty();});
 			*pItem = m_container[--m_unread];
 			lock.unlock();
 			m_not_full.notify_one();

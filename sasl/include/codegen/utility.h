@@ -18,7 +18,7 @@ namespace llvm
 
 #define CGS_FUNCTION_SCOPE( fn ) \
 	service()->push_fn( (fn) );	\
-	cg_scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cg_service::pop_fn, service() ) );
+	cg_scope_guard<void> pop_fn_on_exit##__LINE__( [this]() { service()->pop_fn(); } );
 
 #define SEMANTIC_MODE_SCOPE( new_semantic_mode ) \
 	scoped_value<bool> __sasl_semantic_mode_scope_##__LINE__( semantic_mode_, (new_semantic_mode) );

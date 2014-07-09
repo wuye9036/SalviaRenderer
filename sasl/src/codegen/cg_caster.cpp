@@ -9,11 +9,6 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/unref_declarator.h>
 
@@ -37,8 +32,6 @@ using sasl::syntax_tree::create_builtin_type;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
 
-using boost::bind;
-using boost::function;
 using boost::make_shared;
 using boost::dynamic_pointer_cast;
 using boost::shared_ptr;

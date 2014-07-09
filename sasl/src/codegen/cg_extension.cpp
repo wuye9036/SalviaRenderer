@@ -15,10 +15,6 @@
 #include <llvm/IR/Intrinsics.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
 
 using sasl::utility::vector_of;
@@ -158,44 +154,43 @@ Value* cg_extension::call_unary_intrin( Type* ret_ty, Value* v, unary_intrin_fun
 }
 
 unary_intrin_functor cg_extension::bind_to_unary( Function* fn )
-{
-	typedef CallInst* (DefaultIRBuilder::*call_fn)(Value*, Value*, Twine const&);
-	return boost::bind( static_cast<call_fn>(&DefaultIRBuilder::CreateCall), builder_, fn, _1, "" );
+{ 
+	return [this, fn](Value* v) -> CallInst* { return builder_->CreateCall(fn, v); };
 }
 
 binary_intrin_functor cg_extension::bind_to_binary( Function* fn )
 {
-	return boost::bind(&DefaultIRBuilder::CreateCall2, builder_, fn, _1, _2, "");
+	return [this, fn](Value* v0, Value* v1) -> CallInst* { return builder_->CreateCall2(fn, v0, v1); };
 }
 
 unary_intrin_functor cg_extension::bind_external_to_unary( Function* fn )
 {
-	return boost::bind( &cg_extension::call_external_1, this, fn, _1 );
+	return [this, fn](Value* v) -> Value* { return call_external_1(fn, v); };
 }
 
 binary_intrin_functor cg_extension::bind_external_to_binary( Function* fn )
 {
-	return boost::bind(&cg_extension::call_external_2, this, fn, _1, _2);
+	return [this, fn](Value* v0, Value* v1) -> Value* { return call_external_2(fn, v0, v1); };
 }
 
 binary_intrin_functor cg_extension::bind_external_to_binary( externals::id id )
 {
-	return boost::bind(&cg_extension::call_external_2, this, externals_[id], _1, _2);
+	return bind_external_to_binary(externals_[id]);
 }
 
 unary_intrin_functor cg_extension::bind_cast_sv( Type* elem_ty, cast_ops::id op )
 {
-	return boost::bind( &cg_extension::cast_sv, this, _1, elem_ty, op );
+	return [this, elem_ty, op] (Value* v) -> Value* { return cast_sv(v, elem_ty, op); };
 }
 
 unary_intrin_functor cg_extension::promote_to_unary_sv( unary_intrin_functor sfn, unary_intrin_functor vfn, unary_intrin_functor simd_fn )
 {
-	return boost::bind(&cg_extension::promote_to_unary_sv_impl, this, _1, sfn, vfn, simd_fn);
+	return [this, sfn, vfn, simd_fn] (Value* v) -> Value* { return promote_to_unary_sv_impl(v, sfn, vfn, simd_fn); };
 }
 
 binary_intrin_functor cg_extension::promote_to_binary_sv( binary_intrin_functor sfn, binary_intrin_functor vfn, binary_intrin_functor simd_fn )
 {
-	return boost::bind(&cg_extension::promote_to_binary_sv_impl, this, _1, _2, sfn, vfn, simd_fn);
+	return [this, sfn, vfn, simd_fn] (Value* v0, Value* v1) -> Value* { return promote_to_binary_sv_impl(v0, v1, sfn, vfn, simd_fn); };
 }
 
 Function* cg_extension::vm_intrin( int intrin_id )

@@ -26,8 +26,6 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/std/vector.hpp>
-#include <boost/bind.hpp>
-#include <boost/bind/apply.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -1326,7 +1324,7 @@ SASL_VISIT_DEF( program ){
 
 	register_builtin_types();
 	initialize_casts();
-	caster->set_function_get_tynode( boost::bind( &pety_t::get_proto, module_semantic_->pety(), _1) );
+	caster->set_function_get_tynode( [this](tid_t tid) { return module_semantic_->pety()->get_proto(tid); } );
 	register_builtin_functions2();
 
 	program_ptr dup_prog = duplicate( v.as_handle() )->as_handle<program>();
@@ -1391,7 +1389,7 @@ void semantic_analyser::initialize_casts(){
 	builtin_types bool_bt	= builtin_types::_boolean;
 
 	// default conversation will do nothing.
-	caster_t::cast_t default_conv = bind(&semantic_analyser::empty_caster, this, _1, _2);
+	caster_t::cast_t default_conv = [this](node* n0, node* n1) { empty_caster(n0, n1); };
 
 	add_svm_casters( caster, caster_t::imp, sint8_bt, sint16_bt, default_conv, pety );
 	add_svm_casters( caster, caster_t::imp, sint8_bt, sint32_bt, default_conv, pety );

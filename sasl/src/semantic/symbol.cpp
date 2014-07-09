@@ -19,12 +19,10 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
 
-using boost::bind;
 using eflib::polymorphic_cast;
 using eflib::fixed_string;
 using namespace std;
@@ -459,8 +457,11 @@ symbol::symbol_array symbol::find_overloads_impl(
 	// Gather candidates.
 	if( !candidates.empty() )
 	{
-		symbol_array::iterator it
-			= partition( candidates.begin(), candidates.end(), boost::bind( get_deprecated_and_next, _1, boost::addressof(candidates[0]), boost::cref(deprecated) ) );
+		auto partition_fn = [&candidates, &deprecated](symbol* sym)
+		{
+			return get_deprecated_and_next(sym, boost::addressof(candidates[0]), deprecated);
+		};
+		auto it = partition(candidates.begin(), candidates.end(), partition_fn);
 
 		symbol_array ret( candidates.begin(), it ); 
 		candidates.resize( distance(candidates.begin(), it) );

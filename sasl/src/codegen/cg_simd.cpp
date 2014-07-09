@@ -24,10 +24,6 @@
 #include <llvm/IR/Function.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 using sasl::utility::to_builtin_types;
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
@@ -47,7 +43,6 @@ using llvm::StructLayout;
 using llvm::PointerType;
 using llvm::FunctionType;
 using llvm::Function;
-using boost::bind;
 using boost::shared_ptr;
 using std::vector;
 

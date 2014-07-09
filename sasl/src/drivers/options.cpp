@@ -2,7 +2,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using boost::to_lower;

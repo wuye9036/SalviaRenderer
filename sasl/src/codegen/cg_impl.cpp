@@ -27,7 +27,6 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/utility.hpp>
 #include <boost/format.hpp>
@@ -45,7 +44,6 @@ using eflib::polymorphic_cast;
 using eflib::scoped_value;
 using eflib::fixed_string;
 
-using boost::bind;
 using boost::addressof;
 using boost::format;
 
@@ -600,20 +598,9 @@ SASL_VISIT_DEF( program )
 
 	service()->initialize( vmcode_.get(), ctxt_.get(), sem_.get() );
 
-	typedef node_context* (get_context_native_fn) (node const*);
-	boost::function<get_context_native_fn> get_context
-		= boost::bind(&module_context::get_node_context, ctxt_.get(), _1);
-
-	typedef tynode* (get_proto_native_fn)(tid_t);
-	boost::function<get_proto_native_fn> get_proto
-		= boost::bind(&pety_t::get_proto, sem_->pety(), _1);
-
-	typedef node_semantic* (get_semantic_native_fn)(node const*);
-	typedef node_semantic* (module_semantic::*get_semantic_mem_fn)(node const*) const;
-	boost::function<get_semantic_native_fn> get_semantic
-		= boost::bind(
-			static_cast<get_semantic_mem_fn>(&module_semantic::get_semantic),
-			sem_.get(), _1 );
+	get_context_fn	get_context = [this] (node const* n) { return ctxt_->get_node_context(n); };
+	get_tynode_fn	get_proto	= [this] (tid_t tid) { return sem_->pety()->get_proto(tid); };
+	get_semantic_fn get_semantic= [this] (node const* n) { return sem_->get_semantic(n); };
 
 	caster = create_cg_caster( get_context, get_semantic, get_proto, service() );
 	add_builtin_casts( caster, sem_->pety() );
@@ -862,7 +849,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		assert( intrinsic_ctxt );
 
 		service()->push_fn(intrinsic_ctxt->function_scope);
-		cg_scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
+		cg_scope_guard<void> pop_fn_on_exit( [this]() { service()->pop_fn(); } );
 
 		service()->fn().allocation_block( service()->new_block(".alloc", true) );
 

@@ -21,7 +21,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
