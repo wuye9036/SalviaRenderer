@@ -15,7 +15,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -67,7 +66,7 @@ void sort_struct_members(
 	layout_ty_pairs.reserve( layouts_count );
 
 	vector<sv_layout*>::const_iterator layout_it = layouts.begin();
-	BOOST_FOREACH( Type* ty, tys )
+	for( Type* ty: tys )
 	{
 		size_t sz = (size_t)dataLayout->getTypeStoreSize(ty);
 		(*layout_it)->size = sz;
@@ -92,7 +91,7 @@ Type* generate_parameter_type(
 	vector<Type*>			sem_tys;
 	vector<builtin_types>	tycodes;
 
-	BOOST_FOREACH(sv_layout* svl, svls)
+	for(sv_layout* svl: svls)
 	{
 		builtin_types value_bt = to_builtin_types(svl->value_type);
 		tycodes.push_back(value_bt);

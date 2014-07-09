@@ -25,7 +25,6 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -472,7 +471,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 	}
 	
 	// Update globals
-	BOOST_FOREACH( symbol* gsym, sem_->global_vars() ){
+	for( symbol* gsym: sem_->global_vars() ){
 		node_semantic* pssi = sem_->get_semantic( gsym->associated_node() );
 
 		// Global is filled by offset value with null parent.
@@ -509,10 +508,10 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 		} else {
 			shared_ptr<struct_type> ret_struct = service()->fn().fn_def->type->result_type->as_handle<struct_type>();
 			size_t member_index = 0;
-			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){
+			for( shared_ptr<declaration> const& child: ret_struct->decls ){
 				if( child->node_class() == node_ids::variable_declaration ){
 					shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
-					BOOST_FOREACH( shared_ptr<declarator> const& decl, vardecl->declarators ){
+					for( shared_ptr<declarator> const& decl: vardecl->declarators ){
 						node_semantic* decl_ssi = sem_->get_semantic(decl);
 						sv_layout* decl_si = abii->output_sv_layout( decl_ssi->semantic_value_ref() );
 						assert( decl_si );

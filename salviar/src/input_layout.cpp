@@ -1,7 +1,6 @@
 #include <salviar/include/input_layout.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/functional/hash.hpp>
@@ -17,7 +16,8 @@ void input_layout::slot_range( size_t& min_slot, size_t& max_slot ) const{
 	min_slot = std::numeric_limits<size_t>::max();
 	max_slot = 0;
 
-	BOOST_FOREACH( input_element_desc const& elem_desc, descs ){
+	for(input_element_desc const& elem_desc: descs )
+	{
 		min_slot = std::min<size_t>( min_slot, elem_desc.input_slot );
 		max_slot = std::max<size_t>( max_slot, elem_desc.input_slot );
 	}

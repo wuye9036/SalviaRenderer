@@ -1,5 +1,3 @@
-#if 1
-
 #include <sasl/include/semantic/reflector2.h>
 
 #include <sasl/include/semantic/semantics.h>
@@ -14,7 +12,6 @@
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/icl/interval_map.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -233,6 +230,15 @@ public:
 		, entry_point_(entry)
 		, entry_point_name_(entry->mangled_name())
 	{
+		for(size_t i_cat = 0; i_cat < static_cast<uint32_t>(reg_categories::count); ++i_cat)
+		{
+			auto& cat_rfiles = rfiles_[i_cat];
+			rfile_start_addr_[i_cat].resize(REG_CATEGORY_REGFILE_COUNTS[i_cat], 0);
+			for(size_t i_rf = 0; i_rf < REG_CATEGORY_REGFILE_COUNTS[i_cat]; ++i_rf)
+			{
+				cat_rfiles.push_back( reg_file(static_cast<reg_categories>(i_cat), i_rf) );
+			}
+		}
 	}
 
 	virtual languages language() const
@@ -395,7 +401,7 @@ public:
 		{
 			symbol*					candidate = NULL;
 			reflection_impl2_ptr	candidate_reflection;
-			BOOST_FOREACH( symbol* fn_sym, sem_->functions() )
+			for( symbol* fn_sym: sem_->functions() )
 			{
 				current_entry_ = fn_sym;
 				candidate_reflection = do_reflect();
@@ -686,5 +692,3 @@ salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, eflib::
 }
 
 END_NS_SASL_SEMANTIC();
-
-#endif

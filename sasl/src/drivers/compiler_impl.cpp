@@ -24,7 +24,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
-#include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -79,7 +78,7 @@ bool compiler_impl::parse( ParserT& parser )
 
 		if( !unrecg.empty() ){
 			cout << "Warning: options ";
-			BOOST_FOREACH( std::string const & str, unrecg ){
+			for( std::string const & str: unrecg ){
 				cout << str << " ";
 			}
 			cout << "are invalid. They were ignored." << endl;

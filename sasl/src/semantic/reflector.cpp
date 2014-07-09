@@ -11,7 +11,6 @@
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/utility/addressof.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -157,7 +156,7 @@ public:
 		{
 			symbol*				candidate = NULL;
 			reflection_impl_ptr	candidate_reflection;
-			BOOST_FOREACH( symbol* fn_sym, sem_->functions() )
+			for( symbol* fn_sym: sem_->functions() )
 			{
 				current_entry_ = fn_sym;
 				candidate_reflection = do_reflect();
@@ -210,7 +209,7 @@ private:
 				return ret;
 			}
 
-			BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
+			for( shared_ptr<parameter> const& param: entry_fn->params )
 			{
 				if( !add_semantic(param, false, false, lang, false) )
 				{
@@ -220,7 +219,7 @@ private:
 			}
 
 			// Process global variables.
-			BOOST_FOREACH( symbol* gvar_sym, sem_->global_vars() ){
+			for( symbol* gvar_sym: sem_->global_vars() ){
 				shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
 				assert(gvar);
 
@@ -288,11 +287,11 @@ private:
 			// TODO: do not support nested aggregated variable. 
 			struct_type* pstructspec = dynamic_cast<struct_type*>( ptspec );
 			assert( pstructspec );
-			BOOST_FOREACH( shared_ptr<declaration> const& decl, pstructspec->decls )
+			for( shared_ptr<declaration> const& decl: pstructspec->decls )
 			{
 				if ( decl->node_class() == node_ids::variable_declaration ){
 					shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-					BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
+					for( shared_ptr<declarator> const& dclr: vardecl->declarators ){
 						if ( !add_semantic( dclr, true, enable_nested, lang, is_output_semantic ) ){
 							assert( false );
 							return false;

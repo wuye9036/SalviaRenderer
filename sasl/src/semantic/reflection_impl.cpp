@@ -9,10 +9,6 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/math.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 using namespace sasl::utility;
 
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, array_type);
@@ -219,7 +215,7 @@ std::vector<sv_layout*> reflection_impl::layouts(sv_usage usage) const{
 
 	// Process output
 	if(usage == su_buffer_out || usage == su_stream_out){
-		BOOST_FOREACH(salviar::semantic_value const& sem, semantic_outputs_)
+		for(salviar::semantic_value const& sem: semantic_outputs_)
 		{
 			sv_layout* svl = output_sv_layout( sem );
 			if ( svl->usage == usage ){
@@ -241,7 +237,7 @@ std::vector<sv_layout*> reflection_impl::layouts(sv_usage usage) const{
 
 	if (usage == su_buffer_in)
 	{
-		BOOST_FOREACH(symbol* sym, uniform_inputs_)
+		for(symbol* sym: uniform_inputs_)
 		{
 			ret.push_back( const_cast<sv_layout*>( addressof(uniform_input_layouts_.find(sym)->second) ) );
 		}

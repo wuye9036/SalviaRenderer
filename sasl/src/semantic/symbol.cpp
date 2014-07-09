@@ -19,7 +19,6 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/foreach.hpp>
 #include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -114,7 +113,7 @@ symbol::symbol_array symbol::find_assign_overloads(const fixed_string& unmangled
 	symbol_array candidates = find_overloads_impl(unmangled, conv, args);
 	tid_t lhs_arg_tid = owner_->get_semantic( args.back() )->tid();
 	symbol_array ret;
-	BOOST_FOREACH( symbol* proto, candidates )
+	for( symbol* proto: candidates )
 	{
 		function_def* proto_fn = dynamic_cast<function_def*>( proto->associated_node() );
 		tid_t lhs_par_tid = owner_->get_semantic( proto_fn->params.back() )->tid();
@@ -324,12 +323,12 @@ void symbol::collapse_vector1_overloads( symbol_array& candidates ) const
 {
 	symbol_array ret;
 
-	BOOST_FOREACH(symbol* cand, candidates)
+	for(symbol* cand: candidates)
 	{
 		shared_ptr<function_def> cand_fn = cand->associated_node()->as_handle<function_def>();
 
 		bool matched = false;
-		BOOST_FOREACH(symbol* filterated, ret)
+		for(symbol* filterated: ret)
 		{
 			shared_ptr<function_def> filterated_fn = filterated->associated_node()->as_handle<function_def>();
 			size_t param_count = filterated_fn->params.size();
@@ -369,7 +368,7 @@ symbol::symbol_array symbol::find_overloads_impl(
 	// Extract type info of args
 	vector<tid_t> arg_tids;
 	vector<node_semantic*> arg_sems; 
-	BOOST_FOREACH(expression* arg, args)
+	for(expression* arg: args)
 	{
 		arg_sems.push_back( owner_->get_semantic(arg) );
 		if( !arg_sems.back() )

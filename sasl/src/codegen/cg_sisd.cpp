@@ -29,7 +29,6 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/scope_exit.hpp>
@@ -405,12 +404,12 @@ SASL_VISIT_DEF( switch_statement ){
 	assert( ssi );
 
 	insert_point_t default_beg = switch_end;
-	BOOST_FOREACH( weak_ptr<labeled_statement> const& weak_lbl_stmt, ssi->labeled_statements() ){
+	for( weak_ptr<labeled_statement> const& weak_lbl_stmt: ssi->labeled_statements() ){
 		shared_ptr<labeled_statement> lbl_stmt = weak_lbl_stmt.lock();
 		assert( lbl_stmt );
 
 		insert_point_t stmt_ip = node_ctxt(lbl_stmt)->label_position; 
-		BOOST_FOREACH( shared_ptr<label> const& lbl, lbl_stmt->labels ){
+		for( shared_ptr<label> const& lbl: lbl_stmt->labels ){
 			assert( lbl->node_class() == node_ids::case_label );
 			shared_ptr<case_label> case_lbl = lbl->as_handle<case_label>();
 			if( case_lbl->expr ){
@@ -439,7 +438,7 @@ SASL_VISIT_DEF( switch_statement ){
 SASL_VISIT_DEF( labeled_statement ){
 	EFLIB_UNREF_DECLARATOR(data);
 
-	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
+	for( shared_ptr<label> const& lbl: v.labels ){
 		// Constant expression, no instruction was generated.
 		visit_child( lbl );
 	}

@@ -4,9 +4,6 @@
 
 #include <sasl/enums/enums_utility.h>
 #include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
-#include <eflib/include/platform/boost_end.h>
 
 #include <sstream>
 

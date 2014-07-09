@@ -11,7 +11,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -104,7 +103,7 @@ vector<char> repack_source(salviar::format& fmt, size_t& stride_in_bytes, dae_so
 	size_t offset	= accessor->offset;
 
 	vector<int> pattern;
-	BOOST_FOREACH( dae_param_ptr const& par, accessor->params )
+	for( dae_param_ptr const& par: accessor->params )
 	{
 		pattern.push_back( par->index_xyzw_stpq() );
 	}
@@ -195,15 +194,15 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 
 	// Collect used sources.
 	set<dae_source*> used_sources_set;
-	BOOST_FOREACH( dae_triangles_ptr tri, m->triangle_sets )
+	for( dae_triangles_ptr tri: m->triangle_sets )
 	{
-		BOOST_FOREACH( dae_input_ptr input, tri->inputs )
+		for( dae_input_ptr input: tri->inputs )
 		{
 			if( !input->source ) { continue; }
 			
 			dae_verts_ptr  pverts  = m->node_by_id<dae_verts>( *input->source );
 			if( pverts ) {
-				BOOST_FOREACH( dae_input_ptr const& input, pverts->inputs )
+				for( dae_input_ptr const& input: pverts->inputs )
 				{
 					if( !input->source ) { continue; }
 					dae_source* psource = pverts->node_by_id<dae_source>(*input->source).get();
@@ -224,7 +223,7 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 	unordered_map<dae_source*, salviar::format>	fmts;
 	unordered_map<dae_source*, size_t>			strides;
 
-	BOOST_FOREACH( dae_source* src, used_sources_set )
+	for( dae_source* src: used_sources_set )
 	{
 		salviar::format fmt = salviar::format_unknown;
 		size_t stride = 0;
@@ -235,14 +234,14 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 	}
 
 	// Build Triangles
-	BOOST_FOREACH( dae_triangles_ptr const& triangles, m->triangle_sets )
+	for( dae_triangles_ptr const& triangles: m->triangle_sets )
 	{
 		// Extract vertices to sources.
 		vector<dae_input_ptr>	inputs;
 		vector<size_t>			offsets;
 		size_t					vertex_index_offset = 0;
 		size_t					index_stride = triangles->inputs.size();
-		BOOST_FOREACH( dae_input_ptr const& input, triangles->inputs )
+		for( dae_input_ptr const& input: triangles->inputs )
 		{
 			dae_node_ptr input_source = input->source_node();
 			if( input->semantic
@@ -427,7 +426,7 @@ skin_info_ptr build_skin_info( dae_skin_ptr skin )
 	ret->bind_matrix = skin->bind_shape_mat;
 	ret->source = skin->unqualified_source_name();
 
-	BOOST_FOREACH( dae_input_ptr const& joint_fmt, skin->joint_formats )
+	for( dae_input_ptr const& joint_fmt: skin->joint_formats )
 	{
 		if(!joint_fmt->semantic) { continue; }
 		if(*(joint_fmt->semantic) == "JOINT"){
@@ -457,7 +456,7 @@ skin_info_ptr build_skin_info( dae_skin_ptr skin )
 	size_t joint_offset = 0;
 	size_t weight_offset = 0;
 	size_t weight_index_stride = 0;
-	BOOST_FOREACH( dae_input_ptr const& weight_input, skin->weights->inputs )
+	for( dae_input_ptr const& weight_input: skin->weights->inputs )
 	{
 		if(!weight_input->semantic) { continue; }
 		if( *weight_input->semantic == "JOINT" )
@@ -504,7 +503,7 @@ scene_node_ptr build_scene_node(
 	ret->name = *(scene->id);
 	dae_node_to_joints.insert( make_pair(scene, ret) );
 
-	BOOST_FOREACH(dae_scene_node_ptr const& child, scene->children){
+	for(dae_scene_node_ptr const& child: scene->children){
 		scene_node_ptr child_scene = build_scene_node(child, dae_node_to_joints, dae_node_to_matrix);
 		child_scene->parent = ret.get();
 		ret->children.push_back(child_scene);
@@ -532,7 +531,7 @@ vector<animation_player_ptr> build_animations(
 {
 	vector<animation_player_ptr> ret;
 
-	BOOST_FOREACH(dae_animation_ptr const& anim, animations->anims)
+	for(dae_animation_ptr const& anim: animations->anims)
 	{
 		// Get channel
 		dae_sampler* samp = anim->channel->source_node()->as<dae_sampler>();
@@ -611,7 +610,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	
 	// Build skin infos.
 	unordered_map<string, skin_info_ptr> skin_infos;
-	BOOST_FOREACH( ptree::value_type& ctrl_child, controllers_root.get() ){
+	for( ptree::value_type& ctrl_child: controllers_root.get() ){
 		if( ctrl_child.first == "controller" ){
 			dae_controller_ptr ctrl_node = pdom->load_node<dae_controller>(ctrl_child.second, NULL);
 			skin_info_ptr skinfo = build_skin_info(ctrl_node->skin);
@@ -620,7 +619,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	}
 
 	// Build mesh.
-	BOOST_FOREACH( ptree::value_type& geom_child, geometries_root.get() )
+	for( ptree::value_type& geom_child: geometries_root.get() )
 	{
 		if( geom_child.first == "geometry" )
 		{
@@ -645,13 +644,13 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	unordered_map<dae_matrix_ptr, mat44*>				dae_matrix_to_matrix;
 	{
 		dae_visual_scenes_ptr scenes = pdom->load_node<dae_visual_scenes>(*scenes_root, NULL);
-		BOOST_FOREACH( dae_scene_node_ptr const& child, scenes->scenes )
+		for( dae_scene_node_ptr const& child: scenes->scenes )
 		{
 			ret->roots.push_back( build_scene_node(child, dae_scene_node_to_scene_node, dae_matrix_to_matrix) );
 		}
 
 		typedef unordered_map<dae_scene_node_ptr, scene_node_ptr>::value_type item_type;
-		BOOST_FOREACH(item_type const& item, dae_scene_node_to_scene_node)
+		for(item_type const& item: dae_scene_node_to_scene_node)
 		{
 			if( item.first->id )
 			{
@@ -688,7 +687,7 @@ vector<mesh_ptr> build_mesh_from_file(renderer* render, std::string const& file_
 	if( !geometries_root ) return ret;
 
 	// Build mesh.
-	BOOST_FOREACH( ptree::value_type& geom_child, geometries_root.get() )
+	for( ptree::value_type& geom_child: geometries_root.get() )
 	{
 		if( geom_child.first == "geometry" )
 		{
@@ -754,11 +753,11 @@ mesh_ptr merge_mesh_for_morphing( mesh_ptr lm, mesh_ptr rm )
 	size_t slot_counter = 0;
 	vector<input_element_desc> merged_mesh_ieds;
 
-	BOOST_FOREACH( input_element_desc& left_ied, left_mesh->elem_descs_ )
+	for( input_element_desc& left_ied: left_mesh->elem_descs_ )
 	{
 		semantic_value lsv(left_ied.semantic_name, left_ied.semantic_index);
 
-		BOOST_FOREACH( input_element_desc& right_ied, right_mesh->elem_descs_ )
+		for( input_element_desc& right_ied: right_mesh->elem_descs_ )
 		{
 			semantic_value rsv( right_ied.semantic_name, right_ied.semantic_index );
 			if(lsv == rsv)

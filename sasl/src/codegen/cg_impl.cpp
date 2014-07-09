@@ -29,7 +29,6 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/foreach.hpp>
 #include <boost/utility.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -470,7 +469,7 @@ SASL_VISIT_DEF(struct_type){
 
 	// Init data.
 	STRUCT_SCOPE(ctxt);
-	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+	for( shared_ptr<declaration> const& decl: v.decls ){
 		visit_child(decl);
 	}
 
@@ -512,7 +511,7 @@ SASL_VISIT_DEF( variable_declaration ){
 	node_context* ctxt = node_ctxt(v, true);
 	
 	TYPE_SCOPE(ty_ctxt->ty);
-	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators )
+	for( shared_ptr<declarator> const& dclr: v.declarators )
 	{
 		visit_child(dclr);
 	}
@@ -560,7 +559,7 @@ SASL_VISIT_DEF( expression_statement )
 SASL_VISIT_DEF( declaration_statement ){
 	EFLIB_UNREF_DECLARATOR(data);
 
-	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls )
+	for( shared_ptr<declaration> const& decl: v.decls )
 	{
 		visit_child( decl );
 	}
@@ -717,7 +716,7 @@ SASL_SPECIFIC_VISIT_DEF(create_fnargs, function_def)
 
 	service()->fn().return_name( ".ret" );
 	size_t i_arg = 0;
-	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
+	for( shared_ptr<parameter> const& par: v.params )
 	{
 		node_context* par_ctxt = node_ctxt( par );
 		service()->fn().arg_name( i_arg, sem_->get_symbol( par.get() )->unmangled_name() );
@@ -849,7 +848,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 	vector<symbol*> const& intrinsics = sem_->intrinsics();
 
-	BOOST_FOREACH(symbol* intr, intrinsics)
+	for(symbol* intr: intrinsics)
 	{
 		function_def* intr_fn = polymorphic_cast<function_def*>( intr->associated_node() );
 		node_semantic* intrin_ssi = sem_->get_semantic(intr_fn);
@@ -875,7 +874,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		vector<builtin_types> par_tycodes;
 		vector<node_context*> par_ctxts;
 
-		BOOST_FOREACH( shared_ptr<parameter> const& par, intr_fn->params )
+		for( shared_ptr<parameter> const& par: intr_fn->params )
 		{
 			par_tys.push_back( sem_->get_semantic(par)->ty_proto() );
 			assert( par_tys.back() );

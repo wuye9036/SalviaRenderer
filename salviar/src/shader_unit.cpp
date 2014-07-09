@@ -10,7 +10,6 @@
 #include <eflib/include/math/math.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -122,7 +121,7 @@ void pixel_shader_unit::update( vs_output* inputs, shader_reflection const* vs_a
 
 	size_t register_index = 0;
 
-	BOOST_FOREACH( sv_layout* info, infos )
+	for(sv_layout* info: infos)
 	{
 		size_t pixel_data_size = info->total_size();
 		if( info->sv == semantic_value(sv_position) )
@@ -171,7 +170,7 @@ void pixel_shader_unit::execute(ps_output* outs, float* depths)
 	shader_reflection const* abii = code->get_reflection();
 	vector<sv_layout*> infos = abii->layouts( su_stream_out );
 
-	BOOST_FOREACH(sv_layout* info, infos)
+	for(sv_layout* info: infos)
 	{
 		if( info->sv == semantic_value(sv_target) )
 		{

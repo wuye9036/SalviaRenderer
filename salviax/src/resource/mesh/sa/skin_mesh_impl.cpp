@@ -2,10 +2,6 @@
 
 #include <eflib/include/math/math.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 using eflib::mat44;
 using std::vector;
 using std::string;
@@ -36,7 +32,7 @@ void scene_node::update_world_matrix()
 void scene_node::update_world_matrix_recursive()
 {
 	update_world_matrix();
-	BOOST_FOREACH(scene_node_ptr const& child, children)
+	for(scene_node_ptr const& child: children)
 	{
 		child->update_world_matrix_recursive();
 	}
@@ -51,7 +47,7 @@ void scene_node::reset_world_matrix()
 void scene_node::reset_world_matrix_recursive()
 {
 	reset_world_matrix();
-	BOOST_FOREACH(scene_node_ptr const& child, children)
+	for(scene_node_ptr const& child: children)
 	{
 		child->reset_world_matrix_recursive();
 	}
@@ -73,7 +69,7 @@ vector<mat44> skin_mesh_impl::joint_matrices()
 		}
 	}
 
-	BOOST_FOREACH(scene_node_ptr const& pnode, roots)
+	for(scene_node_ptr const& pnode: roots)
 	{
 		pnode->update_world_matrix_recursive();
 	}
@@ -92,7 +88,7 @@ vector<mat44> skin_mesh_impl::joint_matrices()
 
 void skin_mesh_impl::update_time( float t )
 {
-	BOOST_FOREACH( animation_player_ptr const& anim_player, anims )
+	for( animation_player_ptr const& anim_player: anims )
 	{
 		anim_player->update_play_time(t);
 	}
@@ -100,7 +96,7 @@ void skin_mesh_impl::update_time( float t )
 
 void skin_mesh_impl::set_time( float t )
 {
-	BOOST_FOREACH( animation_player_ptr const& anim_player, anims )
+	for( animation_player_ptr const& anim_player: anims )
 	{
 		anim_player->set_play_time(t);
 	}

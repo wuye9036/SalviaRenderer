@@ -1,7 +1,6 @@
 #include <salviax/include/resource/mesh/sa/collada.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -63,7 +62,7 @@ bool dae_accessor::parse(ptree& root)
 	stride = root.get( "<xmlattr>.stride", size_t(0) );
 	count  = root.get( "<xmlattr>.count" , size_t(0) );
 
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "param" )
 		{
@@ -76,7 +75,7 @@ bool dae_accessor::parse(ptree& root)
 
 bool dae_mesh::parse(ptree& root)
 {
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "<xmlattr>" ) { continue; }
 
@@ -97,7 +96,7 @@ bool dae_mesh::parse(ptree& root)
 bool dae_source::parse(ptree& root)
 {
 
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "<xmlattr>" ) { continue; }
 
@@ -123,7 +122,7 @@ bool dae_source::parse(ptree& root)
 
 bool dae_verts::parse(ptree& root)
 {
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "<xmlattr>" )
 		{
@@ -141,7 +140,7 @@ bool dae_verts::parse(ptree& root)
 
 bool dae_triangles::parse(ptree& root)
 {
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "<xmlattr>" )
 		{
@@ -276,7 +275,7 @@ bool dae_skin::parse(ptree& root)
 {
 	bind_shape_mat = mat44::identity();
 
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if(child.first == "bind_shape_matrix")
 		{
@@ -291,7 +290,7 @@ bool dae_skin::parse(ptree& root)
 		}
 		else if(child.first == "joints")
 		{
-			BOOST_FOREACH( ptree::value_type& joint_input, child.second )
+			for(ptree::value_type& joint_input: child.second)
 			{
 				if(joint_input.first == "input")
 				{
@@ -311,7 +310,7 @@ bool dae_skin::parse(ptree& root)
 bool dae_vertex_weights::parse(ptree& root)
 {
 	count = root.get("<xmlattr>.count", (size_t)0);
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "input" )
 		{
@@ -333,7 +332,7 @@ bool dae_vertex_weights::parse(ptree& root)
 
 bool dae_visual_scenes::parse(ptree& root)
 {
-	BOOST_FOREACH( ptree::value_type& child, root )
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "visual_scene" )
 		{
@@ -347,7 +346,7 @@ bool dae_scene_node::parse(ptree& root)
 {
 	type_name = root.get_optional<string>("<xmlattr>.type");
 
-	BOOST_FOREACH(ptree::value_type& child, root)
+	for(ptree::value_type& child: root)
 	{
 		if( child.first == "matrix")
 		{
@@ -364,7 +363,7 @@ bool dae_scene_node::parse(ptree& root)
 
 bool dae_animations::parse(ptree& root)
 {
-	BOOST_FOREACH(ptree::value_type& child, root)
+	for(ptree::value_type& child: root)
 	{
 		if(child.first == "animation")
 		{
@@ -384,7 +383,7 @@ bool dae_animation::parse(ptree& root)
 		real_root = &root.get_child("animation");
 	}
 
-	BOOST_FOREACH(ptree::value_type& child, *real_root)
+	for(ptree::value_type& child: *real_root)
 	{
 		if(child.first == "source")
 		{
@@ -405,7 +404,7 @@ bool dae_animation::parse(ptree& root)
 
 bool dae_sampler::parse(ptree& root)
 {
-	BOOST_FOREACH(ptree::value_type& child, root)
+	for(ptree::value_type& child: root)
 	{
 		if(child.first == "input")
 		{

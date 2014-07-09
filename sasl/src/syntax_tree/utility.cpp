@@ -11,7 +11,6 @@
 #include <eflib/include/utility/enable_if.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/preprocessor.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/type_traits/is_base_of.hpp>
@@ -395,7 +394,7 @@ public:
 	// If value is "value semantic", copy it as raw data.
 	template <typename NodeT> void visit( vector< shared_ptr<NodeT> > & v, boost::any* data ){
 		vector< shared_ptr<NodeT> > out_v(v.size());
-		BOOST_FOREACH( shared_ptr<NodeT> item, v ){
+		for( shared_ptr<NodeT> item: v ){
 			boost::any cloned;
 			visit( item, &cloned );
 			out_v.push_back( dynamic_pointer_cast<NodeT>( boost::any_cast< shared_ptr<node> > (cloned) ) );

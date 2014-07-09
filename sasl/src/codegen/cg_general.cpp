@@ -22,7 +22,6 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign/std/vector.hpp>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 

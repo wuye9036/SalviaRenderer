@@ -26,7 +26,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #define SASL_VISITOR_TYPE_NAME cg_vs
@@ -262,11 +261,11 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 			if( param_type->node_class() == node_ids::struct_type )
 			{
 				struct_type* param_struct = static_cast<struct_type*>(param_type);
-				BOOST_FOREACH(shared_ptr<declaration> const& decl, param_struct->decls)
+				for(shared_ptr<declaration> const& decl: param_struct->decls)
 				{
 					shared_ptr<variable_declaration> var_decl = decl->as_handle<variable_declaration>();
 					if(!var_decl) { continue; }
-					BOOST_FOREACH(shared_ptr<declarator> const& dclr, var_decl->declarators)
+					for(shared_ptr<declarator> const& dclr: var_decl->declarators)
 					{
 						node_semantic* dclr_sem = sem_->get_semantic(dclr);
 						dclr_sem->semantic_value_ref() ;
@@ -285,7 +284,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 	}
 	
 	// Get globals address to node context.
-	BOOST_FOREACH( symbol* gsym, sem_->global_vars() ){
+	for( symbol* gsym: sem_->global_vars() ){
 		node_semantic* pssi = sem_->get_semantic( gsym->associated_node() );
 
 		// Global is filled by offset value with null parent.
@@ -327,10 +326,10 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 			// Struct: Copy member-by-member.
 			shared_ptr<struct_type> ret_struct = service()->fn().fn_def->type->result_type->as_handle<struct_type>();
 			size_t member_index = 0;
-			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){
+			for( shared_ptr<declaration> const& child: ret_struct->decls ){
 				if( child->node_class() == node_ids::variable_declaration ){
 					shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
-					BOOST_FOREACH( shared_ptr<declarator> const& decl, vardecl->declarators ){
+					for( shared_ptr<declarator> const& decl: vardecl->declarators ){
 						node_semantic* decl_ssi = sem_->get_semantic(decl);
 						sv_layout* decl_si = abii->output_sv_layout( decl_ssi->semantic_value_ref() );
 						assert( decl_si );

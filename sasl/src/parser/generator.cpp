@@ -10,7 +10,6 @@
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/preprocessor.hpp>
@@ -345,7 +344,7 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 	int idx = 0;
 
 	// Visit branch and return succeed branch.
-	BOOST_FOREACH( shared_ptr<parser> const& p, branches() )
+	for( shared_ptr<parser> const& p: branches() )
 	{
 		token_iterator start_iter = iter;
 
@@ -402,7 +401,7 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 shared_ptr<parser> selector::clone() const
 {
 	shared_ptr<selector> ret = make_shared<selector>();
-	BOOST_FOREACH( shared_ptr<parser> p, branches() )
+	for( shared_ptr<parser> p: branches() )
 	{
 		ret->add_branch(p);
 	}
@@ -469,7 +468,7 @@ parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_pt
 	shared_ptr<attribute> out;
 	parse_results final_result = parse_results::succeed;
 
-	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
+	for( shared_ptr<parser> p: exprlst ){
 		out.reset();
 		token_iterator cur_iter = iter;
 
@@ -730,7 +729,7 @@ selector operator | ( selector const & expr0, parser const& expr1 ){
 
 selector operator | ( selector const & expr0, selector const & expr1 ){
 	selector ret(expr0);
-	BOOST_FOREACH( shared_ptr<parser> expr, expr1.branches() ){
+	for( shared_ptr<parser> expr: expr1.branches() ){
 		ret.add_branch(expr);
 	}
 	return ret;

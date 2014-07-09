@@ -28,7 +28,6 @@
 #include <boost/assign/std/vector.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/apply.hpp>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -493,7 +492,7 @@ SASL_VISIT_DEF( call_expression )
 	dup_callexpr->expr = visit_child(v.expr);
 
 	dup_callexpr->args.clear();
-	BOOST_FOREACH( shared_ptr<expression> arg_expr, v.args )
+	for( shared_ptr<expression> arg_expr: v.args )
 	{
 		dup_callexpr->args.push_back( visit_child(arg_expr) );
 	}
@@ -509,7 +508,7 @@ SASL_VISIT_DEF( call_expression )
 	} else {
 		// Overload
 		vector<expression*> args;
-		BOOST_FOREACH( shared_ptr<expression> const& arg, dup_callexpr->args )
+		for( shared_ptr<expression> const& arg: dup_callexpr->args )
 		{
 			args.push_back( arg.get() );
 		}
@@ -810,7 +809,7 @@ SASL_VISIT_DEF( variable_declaration )
 		DECLARATION_TID_SCOPE(decl_tid);
 		VARIABLE_TO_INIT_SCOPE(dup_vdecl);
 
-		BOOST_FOREACH( shared_ptr<declarator> decl, v.declarators ){
+		for( shared_ptr<declarator> decl: v.declarators ){
 			shared_ptr<declarator> gen_decl = visit_child(decl);
 			assert(gen_decl);
 			dup_vdecl->declarators.push_back(gen_decl);
@@ -900,7 +899,7 @@ SASL_VISIT_DEF( struct_type ){
 		MEMBER_COUNTER_SCOPE();
 
 		dup_struct->has_body = true;
-		BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+		for( shared_ptr<declaration> const& decl: v.decls ){
 			dup_struct->decls.push_back( visit_child(decl) );
 		}
 	}
@@ -1067,7 +1066,7 @@ SASL_VISIT_DEF( declaration_statement )
 	shared_ptr<declaration_statement> dup_declstmt = duplicate( v.as_handle() )->as_handle<declaration_statement>();
 
 	dup_declstmt->decls.clear();
-	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls )
+	for( shared_ptr<declaration> const& decl: v.decls )
 	{
 		shared_ptr<declaration> dup_decl = visit_child(decl);
 		if( dup_decl ){ dup_declstmt->decls.push_back(dup_decl); }
@@ -1159,7 +1158,7 @@ SASL_VISIT_DEF( labeled_statement ){
 	assert( label_list );
 
 	dup_lbl_stmt->labels.clear();
-	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
+	for( shared_ptr<label> const& lbl: v.labels ){
 		shared_ptr<label> dup_lbl = visit_child(lbl);
 		if( dup_lbl )
 		{
@@ -1529,7 +1528,7 @@ void semantic_analyser::initialize_casts(){
 	scalar_bts.push_back( builtin_types::_double );
 	scalar_bts.push_back( builtin_types::_boolean );
 
-	BOOST_FOREACH( builtin_types bt, scalar_bts ){
+	for( builtin_types bt: scalar_bts ){
 		builtin_types v1bt = vector_of( bt, 1 );
 		tid_t bt_tid = pety->get( bt );
 		tid_t v1bt_tid = pety->get( v1bt );
@@ -2251,7 +2250,7 @@ void semantic_analyser::register_constructor2(
 }
 
 void semantic_analyser::register_builtin_types(){
-	BOOST_FOREACH( builtin_types const & btc, list_of_builtin_types() ){
+	for( builtin_types const & btc: list_of_builtin_types() ){
 		if( module_semantic_->pety()->get( btc ) == -1 ){
 			assert( !"Register builtin type failed!" );
 		}

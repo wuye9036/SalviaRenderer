@@ -11,7 +11,7 @@
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace sasl::utility;
@@ -142,7 +142,7 @@ shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > att
 	if( typed_attr ){
 		ret = create_node<program>("prog");
 
-		BOOST_FOREACH( shared_ptr<attribute> decl_attr, typed_attr->attrs ){
+		for( shared_ptr<attribute> decl_attr: typed_attr->attrs ){
 			vector< shared_ptr<declaration> > decls = build_decl( decl_attr );
 			ret->decls.insert( ret->decls.end(), decls.begin(), decls.end() );
 		}
@@ -262,7 +262,7 @@ shared_ptr<function_full_def> syntax_tree_builder::build_fndecl( shared_ptr<attr
 
 		// Follows
 		SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follow_params_attr, params_attr->child(1) );
-		BOOST_FOREACH( shared_ptr<attribute> comma_param_attr, follow_params_attr->attrs )
+		for( shared_ptr<attribute> comma_param_attr: follow_params_attr->attrs )
 		{
 			ret->params.push_back(
 				build_param( comma_param_attr->child(1) )
@@ -327,7 +327,7 @@ void syntax_tree_builder::build_struct_body( shared_ptr<attribute> attr, shared_
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, decls_attr, typed_attr->attrs[1] );
 
 	out->has_body = true;
-	BOOST_FOREACH( shared_ptr<attribute> const& decl_attr, decls_attr->attrs )
+	for( shared_ptr<attribute> const& decl_attr: decls_attr->attrs )
 	{
 		vector< shared_ptr<declaration> > decls = build_decl(decl_attr);
 		out->decls.insert( out->decls.end(), decls.begin(), decls.end() );
@@ -353,7 +353,7 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 	ret->exprs.push_back( build_assignexpr( typed_attr->attrs[0] ) );
 
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
+	for( shared_ptr<attribute> follow_pair: follows->attrs ){
 		SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
 		ret->exprs.push_back( build_assignexpr( typed_follow_pair->attrs[1] ) );
 	}
@@ -428,7 +428,7 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 
 	exprs.push_back( build_rhsexpr( attr->child(0) ) );
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, attr->child(1) );
-	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
+	for( shared_ptr<attribute> follow_pair: follows->attrs ){
 		exprs.push_back( 
 			build_rhsexpr( follow_pair->child(1) )
 			);
@@ -441,10 +441,14 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 	// Build tree
 	shared_ptr<expression> root;
 
-	BOOST_REVERSE_FOREACH( shared_ptr<expression> const& expr, exprs ){
-		if( !root ){
+	for (auto const& expr: boost::adaptors::reverse(exprs))
+	{
+		if( !root )
+		{
 			root = expr;
-		} else {
+		}
+		else
+		{
 			shared_ptr<binary_expression> new_root
 				= create_node<binary_expression>( expr->token_begin(), root->token_end() );
 			new_root->left_expr = root;
@@ -467,7 +471,7 @@ shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribu
 
 	shared_ptr<binary_expression> binexpr;
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
+	for( shared_ptr<attribute> follow_pair: follows->attrs ){
 		assert( dynamic_cast<queuer_attribute*>(follow_pair.get()) != NULL );
 		binexpr = create_node<binary_expression>( lexpr->token_begin(), follow_pair->child(1)->token_end() );
 		binexpr->left_expr = lexpr;
@@ -621,7 +625,7 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 	shared_ptr<expression> ret = build_pmexpr( attr->child(0) );
 
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, postfix_attrs, attr->child(1) );
-	BOOST_FOREACH( shared_ptr<attribute> postfix_attr, postfix_attrs->attrs ){
+	for( shared_ptr<attribute> postfix_attr: postfix_attrs->attrs ){
 		shared_ptr<attribute> expr_attr = postfix_attr->child(0);
 		SASL_SWITCH_RULE( expr_attr )
 			SASL_CASE_RULE( idxexpr ){
@@ -753,7 +757,7 @@ vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators(
 	build_initdecl(typed_attr->attrs[0], tyn, ret, decls);
 
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> follow_attr, follows->attrs ){
+	for( shared_ptr<attribute> follow_attr: follows->attrs ){
 		SASL_DYNCAST_ATTRIBUTE( queuer_attribute, follow_pair, follow_attr );
 		build_initdecl(follow_pair->attrs[1], tyn, ret, decls);
 	}
@@ -795,7 +799,7 @@ shared_ptr<tynode> syntax_tree_builder::build_prequaledtype( shared_ptr<attribut
 	shared_ptr<tynode> ret_type = build_unqualedtype( typed_attr->attrs[1] );
 
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[0] );
-	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
+	for( shared_ptr<attribute> qual_attr: quals_attr->attrs ){
 		ret_type = bind_typequal( attr, ret_type );
 	}
 
@@ -808,7 +812,7 @@ shared_ptr<tynode> syntax_tree_builder::build_postqualedtype( shared_ptr<attribu
 	shared_ptr<tynode> ret_type = build_prequaledtype( typed_attr->attrs[0] );
 
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
+	for( shared_ptr<attribute> qual_attr: quals_attr->attrs ){
 		ret_type = bind_typequal( ret_type, attr );
 	}
 
@@ -889,7 +893,7 @@ shared_ptr<compound_statement> syntax_tree_builder::build_stmt_compound( shared_
 		= create_node<compound_statement>( attr->token_beg(), attr->token_end() );
 	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, stmts_attr, typed_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> stmt_attr, stmts_attr->attrs ){
+	for( shared_ptr<attribute> stmt_attr: stmts_attr->attrs ){
 		ret->stmts.push_back( build_stmt(stmt_attr) );
 	}
 	return ret;

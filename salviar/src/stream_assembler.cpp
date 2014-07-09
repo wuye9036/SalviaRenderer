@@ -9,7 +9,6 @@
 #include <salviar/include/stream_state.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <eflib/include/platform/boost_end.h>
 

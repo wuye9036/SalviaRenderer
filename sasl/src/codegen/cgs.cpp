@@ -25,7 +25,6 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -268,7 +267,7 @@ cg_type* cg_service::create_ty(tynode* tyn)
 			vector<Type*> c_member_types;
 			vector<Type*> llvm_member_types;
 
-			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_tyn->decls){
+			for( shared_ptr<declaration> const& decl: struct_tyn->decls){
 				if( decl->node_class() == node_ids::variable_declaration ){
 					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
 					cg_type* decl_cgty = create_ty( sem_->get_semantic(decl_tyn->type_info)->ty_proto() );
@@ -309,7 +308,7 @@ cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 		shared_ptr<struct_type> struct_sty = agg->tyn_ptr()->as_handle<struct_type>();
 
 		size_t var_index = 0;
-		BOOST_FOREACH( shared_ptr<declaration> const& child, struct_sty->decls ){
+		for( shared_ptr<declaration> const& child: struct_sty->decls ){
 			if( child->node_class() == node_ids::variable_declaration ){
 				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
 				var_index += vardecl->declarators.size();
@@ -381,7 +380,7 @@ void cg_service::clean_empty_blocks()
 		}
 	}
 
-	BOOST_FOREACH( BasicBlock* bb, useless_blocks ){
+	for( BasicBlock* bb: useless_blocks ){
 		bb->removeFromParent();
 	}
 

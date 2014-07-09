@@ -9,7 +9,6 @@
 #include <sasl/include/codegen/cg_api.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -36,10 +35,10 @@ void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_
 
 	FunctionPassManager fpm(mod);
 
-	BOOST_FOREACH( optimization_options opt_option, opt_options ){
+	for( optimization_options opt_option: opt_options ){
 		switch ( opt_option ){
 			case opt_verify:
-				BOOST_FOREACH( Function& f, mod->getFunctionList() ){
+				for( Function& f: mod->getFunctionList() ){
 					if(!f.empty()){
 						verifyFunction(f, PrintMessageAction);
 					}
@@ -53,7 +52,7 @@ void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_
 
 	fpm.doInitialization();
 
-	BOOST_FOREACH( Function& f, mod->getFunctionList() ){
+	for( Function& f: mod->getFunctionList() ){
 		if(!f.empty()){
 			fpm.run(f);
 		}
