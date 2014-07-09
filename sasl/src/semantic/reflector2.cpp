@@ -1,4 +1,6 @@
-#if 0
+#if 1
+
+#include <sasl/include/semantic/reflector2.h>
 
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
@@ -51,7 +53,9 @@ enum class alloc_result: uint32_t
 class struct_layout
 {
 public:
-	struct_layout();
+	struct_layout(): total_size_(0)
+	{
+	}
 
 	size_t add_member(size_t sz)
 	{
@@ -236,7 +240,10 @@ public:
 		return module_sem_->get_language();
 	}
 
-	virtual eflib::fixed_string	entry_name() const override;
+	virtual eflib::fixed_string	entry_name() const override
+	{
+		return entry_point_name_;
+	}
 	
 	virtual std::vector<semantic_value> varying_semantics() const override
 	{
@@ -666,13 +673,13 @@ private:
 	reflection_impl2*	reflection_;
 };
 
-reflection_impl2_ptr reflect2(module_semantic_ptr const& sem)
+salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem)
 {
 	reflector2 rfl( sem.get() );
 	return rfl.reflect();
 }
 
-reflection_impl2_ptr reflect2(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
+salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
 {
 	reflector2 rfl( sem.get(), entry_name );
 	return rfl.reflect();

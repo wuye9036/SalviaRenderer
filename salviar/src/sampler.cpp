@@ -764,7 +764,7 @@ color_rgba32f sampler::sample_cube(
 	return sample_impl<true>(major_dir, s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
-float sampler::calc_lod_2d(eflib::vec2& ddx, eflib::vec2& ddy) const
+float sampler::calc_lod_2d(eflib::vec2 const& ddx, eflib::vec2 const& ddy) const
 {
 	int4 size = tex_->isize();
 

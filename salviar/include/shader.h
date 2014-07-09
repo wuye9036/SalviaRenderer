@@ -66,10 +66,13 @@ enum system_values
 
 class semantic_value{
 public:
-	static std::string lower_copy( std::string const& name ){
+	static std::string lower_copy( std::string const& name )
+	{
 		std::string ret(name);
-		for( size_t i = 0; i < ret.size(); ++i ){
-			if( 'A' <= ret[i] && ret[i] <= 'Z' ){
+		for( size_t i = 0; i < ret.size(); ++i )
+		{
+			if( 'A' <= ret[i] && ret[i] <= 'Z' )
+			{
 				ret[i] = ret[i] - ('A' - 'a');
 			}
 		}
@@ -78,7 +81,8 @@ public:
 
 	semantic_value(): sv(sv_none), index(0){}
 
-	explicit semantic_value( std::string const& name, uint32_t index = 0 ){
+	explicit semantic_value( std::string const& name, uint32_t index = 0 )
+{
 		assert( !name.empty() );
 
 		std::string lower_name = lower_copy(name);

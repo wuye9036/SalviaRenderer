@@ -15,6 +15,11 @@
 #include <vector>
 #include <string>
 
+namespace salviar
+{
+	EFLIB_DECLARE_CLASS_SHARED_PTR(shader_reflection2);
+}
+
 namespace sasl
 {
 	namespace common

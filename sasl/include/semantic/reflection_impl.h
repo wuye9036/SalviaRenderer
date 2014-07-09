@@ -1,5 +1,4 @@
-#ifndef SASL_SEMANTIC_ABI_INFO_H
-#define SASL_SEMANTIC_ABI_INFO_H
+#pragma once
 
 #include <sasl/include/semantic/semantic_forward.h>
 
@@ -104,5 +103,3 @@ private:
 };
 
 END_NS_SASL_SEMANTIC();
-
-#endif

@@ -41,7 +41,8 @@ using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem ){
+bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem )
+{
 	switch( sem.get_system_value() ){
 
 	case salviar::sv_none:

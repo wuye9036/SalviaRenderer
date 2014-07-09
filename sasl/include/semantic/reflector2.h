@@ -19,13 +19,17 @@ namespace sasl
 	}
 }
 
+namespace salviar
+{
+	EFLIB_DECLARE_CLASS_SHARED_PTR(shader_reflection2);
+}
+
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
-EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
 
-reflection_impl_ptr reflect(module_semantic_ptr const& sem);
-reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name);
+salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem);
+salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name);
 
 END_NS_SASL_SEMANTIC();

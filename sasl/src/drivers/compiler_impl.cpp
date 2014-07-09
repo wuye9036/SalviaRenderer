@@ -7,6 +7,7 @@
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/reflector.h>
+#include <sasl/include/semantic/reflector2.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/parser/parse_api.h>
@@ -272,6 +273,8 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ compiler_impl");
 
 			mreflection = reflect(msem);
+			// mreflection2 = reflect2(msem);
+
 			if(!mreflection)
 			{
 				if ( lang != salviar::lang_general )

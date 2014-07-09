@@ -1,5 +1,4 @@
-#ifndef SASL_DRIVER_DRIVER_IMPL_H
-#define SASL_DRIVER_DRIVER_IMPL_H
+#pragma once
 
 #include <sasl/include/drivers/drivers_forward.h>
 
@@ -129,6 +128,7 @@ private:
 	sasl::codegen::module_vmcode_ptr		mvmc;
 	sasl::syntax_tree::node_ptr				mroot;
 	sasl::semantic::reflection_impl_ptr		mreflection;
+	salviar::shader_reflection2_ptr			mreflection2;
 	
 	// Options
 	options_global			opt_global;
@@ -159,5 +159,3 @@ private:
 };
 
 END_NS_SASL_DRIVERS();
-
-#endif
