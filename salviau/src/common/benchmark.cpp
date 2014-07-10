@@ -63,8 +63,6 @@ void benchmark::begin_frame()
 
 void benchmark::profiling(std::string const& stage_name, std::function<void()> const& fn)
 {
-	// std::cout << "[PROFILING] " << stage_name << std::endl;
-
 	prof_.start(stage_name, 0);
 	fn();
 	prof_.end(stage_name);

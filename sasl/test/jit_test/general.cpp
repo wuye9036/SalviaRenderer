@@ -64,7 +64,9 @@ vec3 faceforward(vec3 n, vec3 i, vec3 ng)
 }
 BOOST_AUTO_TEST_SUITE( jit )
 
-BOOST_AUTO_TEST_CASE( detect_cpu_features ){
+BOOST_AUTO_TEST_CASE( detect_cpu_features )
+{
+	/*
 	cout << endl << "================================================" << endl << endl;
 	cout << "Detecting CPU Features... " << endl;
 
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	}
 
 	cout << endl << "================================================" << endl << endl;
-
+	*/
 	BOOST_CHECK(true);
 }
 
@@ -115,19 +117,19 @@ BOOST_AUTO_TEST_CASE( test_profiler )
 		}
 	}
 
-	print_profiler(&prof, 3);
+	// print_profiler(&prof, 3);
 }
 #endif
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
-	init_g( "./repo/question/v1a1/empty.ss" );
+	init_g( "repo/empty.ss" );
 }
 #endif
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
-	init_g( "./repo/question/v1a1/comments.ss" );
+	init_g( "repo/comments.ss" );
 	jit_function<int(int)> fn;
 	function( fn, "foo" );
 
@@ -139,7 +141,7 @@ BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
-	init_g( "./repo/question/v1a1/preprocessors.ss" );
+	init_g( "repo/preprocessors.ss" );
 
 	jit_function<int()> fn;
 	function( fn, "main" );
@@ -158,7 +160,7 @@ int fib_ref(int i)
 }
 
 BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
-	init_g( "./repo/question/v1a1/function.ss" );
+	init_g( "repo/function.ss" );
 
 	jit_function<int(int)> foo;
 	function( foo, "foo" );
@@ -184,7 +186,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 #if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
-	init_g("./repo/question/v1a1/intrinsics.ss");
+	init_g("repo/intrinsics.ss");
 #if ALL_TESTS_ENABLED
 	JIT_FUNCTION(float (vec3*, vec3*), test_dot_f3);
 	JIT_FUNCTION(vec4 (mat44*, vec4*), test_mul_m44v4);
@@ -815,7 +817,7 @@ struct intrinsics_vs_bin{
 };
 
 BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
-	init_vs("./repo/question/v1a1/intrinsics.svs");
+	init_vs("repo/intrinsics.svs");
 
 	intrinsics_vs_data data;
 	intrinsics_vs_sin sin;
@@ -893,7 +895,7 @@ void tex2Dlod_vs(vec4* out, void* s, vec4* in)
 int tex2d_vs_bin::ph = 335;
 
 BOOST_FIXTURE_TEST_CASE( tex_vs, jit_fixture ){
-	init_vs("./repo/question/v1a1/tex.svs");
+	init_vs("repo/tex.svs");
 
 	set_raw_function( (void*)&tex2Dlod_vs, "sasl.vs.tex2d.lod" );
 
@@ -927,7 +929,7 @@ BOOST_FIXTURE_TEST_CASE( tex_vs, jit_fixture ){
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
-	init_g("./repo/question/v1a1/branches.ss");
+	init_g("repo/branches.ss");
 
 	jit_function<float (int)> test_if;
 	function( test_if, "test_if" );
@@ -979,7 +981,7 @@ bool test_short_ref(int i, int j, int k){
 
 BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/bool.ss" );
+	init_g( "repo/bool.ss" );
 
 	jit_function<int(int, int)> test_max, test_min;
 	jit_function<bool(int, int)> test_le;
@@ -1092,7 +1094,7 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/unary_operators.ss" );
+	init_g( "repo/unary_operators.ss" );
 
 	jit_function<int(int)> test_pre_inc, test_pre_dec, test_post_inc, test_post_dec;
 	jit_function<int4(int3,int)>		test_neg_i;
@@ -1186,7 +1188,7 @@ BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
-	init_g( "./repo/question/v1a1/initializer.ss" );
+	init_g( "repo/initializer.ss" );
 
 	jit_function<int()> test_exprinit;
 	jit_function<float(float,float)> test_exprinit2;
@@ -1205,7 +1207,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
-	init_g( "./repo/question/v1a1/casts.ss" );
+	init_g( "repo/casts.ss" );
 
 	JIT_FUNCTION( int(int),					test_implicit_cast_i32_b );
 	JIT_FUNCTION( float(int),				test_implicit_cast_i32_f32 );
@@ -1331,7 +1333,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
-	init_ps( "./repo/question/v1a1/scalar.sps" );
+	init_ps( "repo/scalar.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> ps_main;
 	function( ps_main, "ps_main" );
@@ -1340,7 +1342,7 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
-	init_ps( "./repo/question/v1a1/arithmetic.sps" );
+	init_ps( "repo/arithmetic.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1375,7 +1377,7 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 {
-	init_g("./repo/question/v1a1/swizzle.ss");
+	init_g("repo/swizzle.ss");
 
 	jit_function<int3 (int4 x, int2 y)> fn;
 	function(fn, "fn");
@@ -1402,7 +1404,7 @@ BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 {
-	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );
+	init_ps( "repo/swizzle_and_wm.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1468,7 +1470,7 @@ struct intrinsic_ps_out
 
 BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 {
-	init_ps( "./repo/question/v1a1/intrinsics.sps" );
+	init_ps( "repo/intrinsics.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1527,7 +1529,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
-	init_ps( "./repo/question/v1a1/branches.sps" );
+	init_ps( "repo/branches.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1629,7 +1631,7 @@ void get_ddy(T* out, T const* in, MemberPtr ptr)
 }
 
 BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
-	init_ps( "./repo/question/v1a1/ddx_ddy.sps" );
+	init_ps( "repo/ddx_ddy.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1723,7 +1725,7 @@ void tex2Dlod_ps(vec4* ret, uint32_t /*mask*/, sampler_t* s, vec4* t)
 
 BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 {
-	init_ps( "./repo/question/v1a1/tex.sps" );
+	init_ps( "repo/tex.sps" );
 
 	set_raw_function( (void*)&tex2Dlod_ps, "sasl.ps.tex2d.lod" );
 
@@ -1770,7 +1772,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
-	init_ps( "./repo/question/v1a1/for_loop.sps" );
+	init_ps( "repo/for_loop.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1813,7 +1815,7 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
-	init_ps( "./repo/question/v1a1/while.sps" );
+	init_ps( "repo/while.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1859,7 +1861,7 @@ BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
-	init_ps( "./repo/question/v1a1/do_while.sps" );
+	init_ps( "repo/do_while.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1904,7 +1906,7 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 #if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
-	init_g( "./repo/question/v1a1/constructors.ss" );
+	init_g( "repo/constructors.ss" );
 
 	jit_function<int2()> get_int2;
 	function( get_int2, "get_int2" );
@@ -1956,7 +1958,7 @@ BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
-	init_g( "./repo/question/v1a1/local_var.ss" );
+	init_g( "repo/local_var.ss" );
 
 	jit_function<int(int, int)> get_sum;
 	function( get_sum, "get_sum" );
@@ -1972,7 +1974,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/arithmetic.ss" );
+	init_g( "repo/arithmetic.ss" );
 
 	JIT_FUNCTION( vec4(vec4),					test_float_arith );
 	JIT_FUNCTION( int3(int3),					test_int_arith );
@@ -2085,7 +2087,7 @@ struct uint4
 
 BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/bit_ops.ss" );
+	init_g( "repo/bit_ops.ss" );
 
 	jit_function<uint32_t(uint4, uint32_t)> test_bitwise_ops;
 	function( test_bitwise_ops, "test_bitwise_ops" );
@@ -2117,7 +2119,7 @@ int do_bit_assign(int v0, int v1)
 
 BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/assigns.ss" );
+	init_g( "repo/assigns.ss" );
 
 	JIT_FUNCTION( int2x3(int2x3,int2x3), test_arith_assign );
 	JIT_FUNCTION( int2x3(int2x3,int2x3), test_bit_assign );
@@ -2158,7 +2160,7 @@ BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/array_and_index.ss" );
+	init_g( "repo/array_and_index.ss" );
 
 	JIT_FUNCTION( vec4(float3x4),  test_mat_index );
 	JIT_FUNCTION( float(float3x4), test_vec_index );
@@ -2238,7 +2240,7 @@ vec4 my_transform(mat44& m, vec4& v)
 
 BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 {
-	init_vs( "./repo/question/v1a1/array.svs" );
+	init_vs( "repo/array.svs" );
 	JIT_FUNCTION( void(array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn );
 
 	srand(887);
@@ -2289,7 +2291,7 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture)
 {
-	init_vs("./repo/question/v1a1/input_assigned.svs");
+	init_vs("repo/input_assigned.svs");
 
 	JIT_FUNCTION( void(vec4**, float*, void*, vec4*), fn );
 

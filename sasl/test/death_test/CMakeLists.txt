@@ -13,8 +13,8 @@ LINK_DIRECTORIES(
 	${SALVIA_LLVM_LIB_DIR}
 )
 
-set( SASL_TEST_PROJECT_DIR robust_test )
-set( SASL_TEST_PROJECT_NAME sasl_test_robust )
+set( SASL_TEST_PROJECT_DIR death_test )
+set( SASL_TEST_PROJECT_NAME sasl_test_death )
 
 configure_file(
 	${SASL_HOME_DIR}/sasl/test/test_resources/test_main.cpp.in
@@ -22,13 +22,13 @@ configure_file(
 	@ONLY
 )
 
-set( HEADER_FILES ${SASL_ROBUST_TEST_HEADERS} )
-set( SOURCE_FILES test_main.cpp ${SASL_ROBUST_TEST_SOURCES} )
+set( HEADER_FILES ${SASL_DEATH_TEST_HEADERS} )
+set( SOURCE_FILES test_main.cpp ${SASL_DEATH_TEST_SOURCES} )
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	sasl_drivers sasl_enums sasl_common
-	${SASL_ROBUST_TEST_LIBS}
+	${SASL_DEATH_TEST_LIBS}
 	${SALVIA_BOOST_LIBS}
 )
 

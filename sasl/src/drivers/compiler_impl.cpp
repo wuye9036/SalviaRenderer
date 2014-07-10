@@ -303,7 +303,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 		}
 	}
 
-	eflib::print_profiler(&prof, 3);
+	// eflib::print_profiler(&prof, 3);
 
 	if( opt_io.fmt == options_io::llvm_ir )
 	{

@@ -1,2 +1,0 @@
-bin_path="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@"
-build_config = "debug"

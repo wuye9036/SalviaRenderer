@@ -1,8 +1,0 @@
-Verify auto test cases.
-Test file: .\v1a1\decl.ss ... PASSED
-Test file: .\v1a1\empty.ss ... PASSED
-Test file: .\v1a1\function.ss ... PASSED
-Test file: .\v1a1\null.ss ... PASSED
-Test file: .\v1a1\semantic.ss ... IGNORED, answer is not exists.
-
-Test: 4 passed, 0 failed, 1 skipped

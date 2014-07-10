@@ -69,7 +69,7 @@ void jit_fixture::set_raw_function( void* fn, string const& mangled_name )
 	vmc->inject_function(fn, mangled_name);
 }
 
-void jit_fixture::init( string const& file_name, string const& options )
+void jit_fixture::init(string const& file_name, string const& options)
 {
 	diags = diag_chat::create();
 	diags->add_report_raised_handler( print_diagnostic );

@@ -51,7 +51,7 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 
-BOOST_AUTO_TEST_SUITE( robust )
+BOOST_AUTO_TEST_SUITE( death )
 
 string make_command( string const& file_name, string const& options)
 {
@@ -70,7 +70,8 @@ bool print_diagnostic( diag_chat*, diag_item* item )
 }
 
 
-struct jit_fixture {
+struct jit_fixture 
+{
 	jit_fixture() {}
 
 	void init_g( string const& file_name ){
@@ -110,55 +111,49 @@ struct jit_fixture {
 		diag_chat::merge(diags.get(), results.get(), true);
 
 		BOOST_REQUIRE( drv->get_root() );
-		BOOST_REQUIRE( drv->get_semantic() );
-		BOOST_REQUIRE( drv->get_vmcode() );
-
-		root_sym = drv->get_semantic()->root_symbol();
-
-		module_vmcode_ptr vmcode = drv->get_vmcode();
-		fstream dump_file( ( dump_file_name + "_ir.ll" ).c_str(), std::ios::out );
-		vmcode->dump_ir(dump_file);
-		dump_file.close();
-
-		bool jit_enabled = drv->get_vmcode()->enable_jit();
-		BOOST_REQUIRE(jit_enabled);
+		if( drv->get_semantic() )
+		{
+			root_sym = drv->get_semantic()->root_symbol();
+		}
+		BOOST_REQUIRE( !drv->get_vmcode() );
 	}
 	~jit_fixture(){}
 
-	shared_ptr<compiler>		drv;
-	symbol*					root_sym;
-	shared_ptr<diag_chat>	diags;
-	vector< pair<char const*, char const*> > vfiles;
+	shared_ptr<compiler>						drv;
+	symbol*										root_sym;
+	shared_ptr<diag_chat>						diags;
+	vector< pair<char const*, char const*> >	vfiles;
 };
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( incomplete, jit_fixture ){
-	init_g( "./repo/question/v1a1/incomplete.ss" );
+	init_g( "repo/incomplete.ss" );
 }
 #endif
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( semantic_errors, jit_fixture )
 {
-	init_g( "./repo/question/v1a1/semantic_errors.ss" );
+	init_g( "repo/semantic_errors.ss" );
 }
 #endif
 
 #if ALL_TESTS_ENABLED
-BOOST_FIXTURE_TEST_CASE( include_test, jit_fixture ){
+BOOST_FIXTURE_TEST_CASE( include_test, jit_fixture )
+{
 	const char* virtual_include_content = 
 		"float virtual_include_add(float a, float b){ \r\n"
 		"	return a+b; \r\n"
 		"} \r\n";
 	add_virtual_file( "virtual_include.ss", virtual_include_content );
-	init_g( "./repo/question/v1a1/include_main.ss" );
+	init_g( "repo/include_main.ss" );
 }
 #endif
 
 #if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( include_dir_test, jit_fixture ){
-	fs::path include_path = fs::current_path() / "./repo/question/v1a1/include";
-	fs::path sysincl_path = fs::current_path() / "./repo/question/v1a1/sysincl";
+	fs::path include_path = fs::current_path() / "repo/include";
+	fs::path sysincl_path = fs::current_path() / "repo/sysincl";
 
 	BOOST_REQUIRE( fs::is_directory(include_path) && fs::is_directory(sysincl_path) );
 
@@ -170,8 +165,8 @@ BOOST_FIXTURE_TEST_CASE( include_dir_test, jit_fixture ){
 
 #if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( include_dir_test_need_failed, jit_fixture ){
-	fs::path include_path = fs::current_path() / "./repo/question/v1a1/include";
-	fs::path sysincl_path = fs::current_path() / "./repo/question/v1a1/sysincl";
+	fs::path include_path = fs::current_path() / "repo/include";
+	fs::path sysincl_path = fs::current_path() / "repo/sysincl";
 
 	BOOST_REQUIRE( fs::is_directory(include_path) && fs::is_directory(sysincl_path) );
 

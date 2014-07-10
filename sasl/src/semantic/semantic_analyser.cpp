@@ -1014,11 +1014,15 @@ SASL_VISIT_DEF( function_full_def )
 			node_semantic* param_sem = NULL;
 			shared_ptr<parameter> param = visit_child<parameter>(v.params[i_param], &param_sem);
 			def_node->params.push_back(param);
-			fn_tids.push_back( param_sem->tid() );
-
+			
 			if( !param_sem || param_sem->tid() == -1 )
 			{
+				fn_tids.push_back(-1);
 				successful = false;
+			}
+			else
+			{
+				fn_tids.push_back( param_sem->tid() );
 			}
 		}
 
