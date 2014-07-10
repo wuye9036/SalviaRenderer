@@ -492,6 +492,11 @@ reflection_impl_ptr compiler_impl::get_reflection() const
 	return mreflection;
 }
 
+salviar::shader_reflection2_ptr compiler_impl::get_reflection2() const
+{
+	return mreflection2;
+}
+
 void compiler_impl::inject_function(void* pfn, fixed_string const& fn_name, bool is_raw_name )
 {
 	eflib::fixed_string raw_name;

@@ -109,6 +109,7 @@ public:
 	virtual sasl::codegen::module_vmcode_ptr	get_vmcode() const;
 	virtual sasl::syntax_tree::node_ptr			get_root() const;
 	virtual sasl::semantic::reflection_impl_ptr	get_reflection() const;
+	virtual salviar::shader_reflection2_ptr		get_reflection2() const override;
 
 	boost::program_options::variables_map const &	variables() const;
 	options_display_info const &					display_info() const;

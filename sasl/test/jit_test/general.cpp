@@ -97,30 +97,6 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features )
 	BOOST_CHECK(true);
 }
 
-#if 1
-BOOST_AUTO_TEST_CASE( test_profiler )
-{
-	profiler prof;
-
-	{
-		profiling_scope ps(&prof, "A");
-		{
-			{
-				profiling_scope ps(&prof, "B");
-			}
-			{
-				profiling_scope ps(&prof, "SooooooooooooooooooooooooooooooooooooooooLoooooooooooooooooooooooongName");
-			}
-			{
-				profiling_scope ps(&prof, "C");
-			}
-		}
-	}
-
-	// print_profiler(&prof, 3);
-}
-#endif
-
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "repo/empty.ss" );

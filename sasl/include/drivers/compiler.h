@@ -76,6 +76,7 @@ public:
 	virtual sasl::codegen::module_vmcode_ptr		get_vmcode() const		= 0;
 	virtual sasl::syntax_tree::node_ptr				get_root() const		= 0;
 	virtual sasl::semantic::reflection_impl_ptr		get_reflection() const	= 0;
+	virtual salviar::shader_reflection2_ptr			get_reflection2() const = 0;
 
 	virtual ~compiler(){}
 };

@@ -92,10 +92,10 @@ struct jit_fixture
 	}
 
 	void init( string const& file_name, string const& options ){
-		init_cmd( make_command(file_name, options), file_name );
+		init_cmd( make_command(file_name, options) );
 	}
 
-	void init_cmd( string const& cmd, string const& dump_file_name )
+	void init_cmd( string const& cmd )
 	{
 		diags = diag_chat::create();
 		diags->add_report_raised_handler( print_diagnostic );
@@ -157,9 +157,9 @@ BOOST_FIXTURE_TEST_CASE( include_dir_test, jit_fixture ){
 
 	BOOST_REQUIRE( fs::is_directory(include_path) && fs::is_directory(sysincl_path) );
 
-	std::string file_name(".\\repo\\question/v1a1/include_search_path.ss");
+	std::string file_name("repo/include_search_path.ss");
 	std::string cmd = make_command( include_path.string(), sysincl_path.string(), file_name, "--lang=g" );
-	init_cmd( cmd, file_name );
+	init_cmd(cmd);
 }
 #endif
 
@@ -170,9 +170,9 @@ BOOST_FIXTURE_TEST_CASE( include_dir_test_need_failed, jit_fixture ){
 
 	BOOST_REQUIRE( fs::is_directory(include_path) && fs::is_directory(sysincl_path) );
 
-	std::string file_name(".\\repo\\question/v1a1/include_search_path.ss");
+	std::string file_name("repo/include_search_path.ss");
 	std::string cmd = make_command( sysincl_path.string(),  include_path.string(), file_name, "--lang=g" );
-	init_cmd( cmd, file_name );
+	init_cmd(cmd);
 }
 #endif
 
