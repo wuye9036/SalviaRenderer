@@ -21,6 +21,9 @@ BOOST_AUTO_TEST_SUITE(death);
 BOOST_FIXTURE_TEST_CASE(smoke, abi_test_fixture)
 {
 	init_vs("repo/semantic_fn.svs");
+
+	auto reflection2 = drv->get_reflection2();
+	BOOST_REQUIRE(reflection2);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -81,6 +81,11 @@ private:
 
 struct reg_handle
 {
+	reg_handle()
+		: rfile(nullptr), v(0)
+	{
+	}
+
 	reg_file*	rfile;
 	size_t		v;
 };
@@ -508,7 +513,7 @@ private:
 		bool				is_global
 		)
 	{
-		bool const is_member = (parent_info == nullptr);
+		bool const is_member = (parent_info != nullptr);
 		var_infos_.push_back( variable_info() );
 		variable_info* minfo  = &var_infos_.back();
 		minfo->initialize();

@@ -274,6 +274,7 @@ struct reg_name
 // Shader reflection for register-based shader.
 class shader_reflection2
 {
+public:
 	virtual languages			language()								const = 0;
 	virtual eflib::fixed_string	entry_name()							const = 0;
 	virtual std::vector<semantic_value>
