@@ -69,7 +69,6 @@ bool print_diagnostic( diag_chat*, diag_item* item )
 	return true;
 }
 
-
 struct jit_fixture 
 {
 	jit_fixture() {}

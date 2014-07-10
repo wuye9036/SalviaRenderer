@@ -9,8 +9,10 @@
 #include <boost/mpl/identity.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-namespace eflib{
-	class dynamic_lib{
+namespace eflib
+{
+	class dynamic_lib
+	{
 	public:
 		static boost::shared_ptr<dynamic_lib> load( std::string const& name );
 
@@ -32,11 +34,24 @@ namespace eflib{
 	private:
 		virtual void* get_function( std::string const& name ) const = 0;
 	};
-
 }
 
 #define EFLIB_IMPORT_DLL_FUNCTION( fn_type, fn_name, dy_lib, sym_name )	\
 	boost::mpl::identity<fn_type>::type fn_name = NULL;	\
 	(dy_lib)->get_function( (fn_name), #sym_name );
+
+#if defined(EFLIB_WINDOWS)
+#	define EFLIB_DYNAMIC_LIB_EXT ".dll"
+#elif defined(EFLIB_LINUX)
+#	define EFLIB_DYNAMIC_LIB_EXT ".so"
+#endif
+
+#if defined(EFLIB_DEBUG)
+#	define EFLIB_DYNAMIC_LIB_SUFFIX "_d"
+#else
+#	define EFLIB_DYNAMIC_LIB_SUFFIX ""
+#endif
+
+#define EFLIB_DYNAMIC_LIB_NAME( lib_basic_name ) lib_basic_name EFLIB_DYNAMIC_LIB_SUFFIX EFLIB_DYNAMIC_LIB_EXT
 
 #endif

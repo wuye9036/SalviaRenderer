@@ -9,11 +9,10 @@ INCLUDE_DIRECTORIES(
 
 LINK_DIRECTORIES(
 	${SALVIA_BOOST_LIB_DIR}
-	${SALVIA_LLVM_LIB_DIR}
 )
 
-set( SASL_TEST_PROJECT_DIR death_test )
-set( SASL_TEST_PROJECT_NAME sasl_test_death )
+set( SASL_TEST_PROJECT_DIR abi_test )
+set( SASL_TEST_PROJECT_NAME sasl_test_abi )
 
 configure_file(
 	${SASL_HOME_DIR}/sasl/test/test_resources/test_main.cpp.in
@@ -21,15 +20,18 @@ configure_file(
 	@ONLY
 )
 
-set( HEADER_FILES ${SASL_DEATH_TEST_HEADERS} )
-set( SOURCE_FILES test_main.cpp ${SASL_DEATH_TEST_SOURCES} )
+set( HEADER_FILES ${SASL_ABI_TEST_HEADERS} )
+set( SOURCE_FILES test_main.cpp ${SASL_ABI_TEST_SOURCES} )
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
-	sasl_drivers sasl_enums sasl_common
-	${SASL_DEATH_TEST_LIBS}
+	sasl_semantic sasl_syntaxtree
+	sasl_parser
+	sasl_enums sasl_common
+	${SASL_ABI_TEST_LIBS}
 	${SALVIA_BOOST_LIBS}
 )
+ADD_DEPENDENCIES(${SASL_TEST_PROJECT_NAME} sasl_test_repo)
 
 SET_TARGET_PROPERTIES( ${SASL_TEST_PROJECT_NAME} PROPERTIES FOLDER "Shader Tests")
 SALVIA_CONFIG_OUTPUT_PATHS( ${SASL_TEST_PROJECT_NAME} )
