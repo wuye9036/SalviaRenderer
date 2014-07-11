@@ -215,6 +215,11 @@ struct rfile_name
 		return rfile_name(reg_categories::varying, 0);
 	}
 
+	static rfile_name outputs()
+	{
+		return rfile_name(reg_categories::outputs, 0);
+	}
+
 	reg_categories	cat;
 	uint32_t		index;
 };

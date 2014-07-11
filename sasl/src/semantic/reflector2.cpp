@@ -27,11 +27,16 @@ using eflib::fixed_string;
 using boost::addressof;
 using boost::make_shared;
 using boost::shared_ptr;
+using boost::icl::interval_set;
+using boost::icl::continuous_interval;
 
 using std::lower_bound;
 using std::string;
 using std::vector;
+using std::map;
+using std::pair;
 using std::make_pair;
+using std::deque;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -92,11 +97,6 @@ struct reg_handle
 
 class reg_file
 {
-private:
-	typedef boost::icl::interval_map<reg_name, uint32_t /*physical_reg*/>
-		reg_addr_map;
-	typedef reg_addr_map::interval_type	reg_interval;
-
 public:
 	reg_file(reg_categories cat, uint32_t index)
 		: uid_(cat, index), total_reg_count_(0)
@@ -172,9 +172,9 @@ public:
 		total_reg_count_ = 0;
 		for(auto& range_addr: used_regs_)
 		{
-			auto& reg_range = range_addr.first;
+			auto& reg_range = range_addr;
 			uint32_t reg_count = reg_range.upper().reg_index - reg_range.lower().reg_index;
-			range_addr.second = total_reg_count_;
+			reg_addr_.insert( make_pair(reg_range.lower().reg_index, total_reg_count_) );
 			total_reg_count_ += reg_count;
 		}
 	}
@@ -191,14 +191,14 @@ public:
 		{
 			return static_cast<uint32_t>(-1);
 		}
-		return iter->second + (rname.reg_index - iter->first.lower().reg_index);
+		return reg_addr_.at(iter->lower().reg_index) + (rname.reg_index - iter->lower().reg_index);
 	}
 
 private:
 	alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz)
 	{
 		auto& slot_used_regs = used_regs_;
-		beg = slot_used_regs.empty() ? reg_name(uid_, 0, 0) : slot_used_regs.rbegin()->first.upper().advance(1);
+		beg = slot_used_regs.empty() ? reg_name(uid_, 0, 0) : slot_used_regs.rbegin()->upper().advance(1);
 		return alloc_reg(end, beg, sz);
 	}
 
@@ -209,22 +209,23 @@ private:
 			return alloc_result::out_of_reg_bound;
 		}
 		end = beg.advance( eflib::round_up(sz, 16) / 16 );
-		used_regs_.add( std::make_pair(reg_interval::right_open(beg, end), 0) );
+		used_regs_.add( continuous_interval<reg_name>::right_open(beg, end) );
 		return alloc_result::ok;
 	}
 
-	rfile_name							uid_;
-	uint32_t							total_reg_count_;
+	rfile_name						uid_;
+	uint32_t						total_reg_count_;
 
-	reg_addr_map						used_regs_;
-	std::map<node_semantic*, reg_name>	var_regs_;
-	std::vector<uint32_t /*reg size*/>	auto_alloc_sizes_;
-	std::vector<reg_name>				auto_alloc_regs_;
+	interval_set<reg_name>			used_regs_;
+	map<uint32_t /*reg index*/, uint32_t /*addr*/>
+									reg_addr_;
 
-	std::map<semantic_value, reg_name>	sv_reg_;
-	std::map<reg_name, semantic_value>	reg_sv_;
-	std::map<uint32_t /*reg index*/, uint32_t /*addr*/>
-										reg_addr_;
+	map<node_semantic*, reg_name>	var_regs_;
+	vector<uint32_t /*reg size*/>	auto_alloc_sizes_;
+	vector<reg_name>				auto_alloc_regs_;
+
+	map<semantic_value, reg_name>	sv_reg_;
+	map<reg_name, semantic_value>	reg_sv_;
 };
 
 class reflection_impl2: public shader_reflection2
@@ -254,14 +255,14 @@ public:
 		return module_sem_->get_language();
 	}
 
-	virtual eflib::fixed_string	entry_name() const override
+	virtual fixed_string entry_name() const override
 	{
 		return entry_fn_name_;
 	}
 	
-	virtual std::vector<semantic_value> varying_semantics() const override
+	virtual vector<semantic_value> varying_semantics() const override
 	{
-		std::vector<semantic_value> ret;
+		vector<semantic_value> ret;
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return ret;
 	}
@@ -349,6 +350,7 @@ public:
 
 			for(auto& rfile: cat_rfiles)
 			{
+				rfile.update_addr();
 				cat_rfiles_addr.push_back(total);
 				total += rfile.used_reg_count();
 			}
@@ -374,11 +376,11 @@ private:
 	symbol*					entry_fn_;
 	eflib::fixed_string		entry_fn_name_;
 
-	std::vector<reg_file>	rfiles_				[static_cast<uint32_t>(reg_categories::count)];
+	vector<reg_file>	rfiles_				[static_cast<uint32_t>(reg_categories::count)];
 	uint32_t				used_reg_count_		[static_cast<uint32_t>(reg_categories::count)];
-	std::vector<uint32_t>	rfile_start_addr_	[static_cast<uint32_t>(reg_categories::count)];
+	vector<uint32_t>	rfile_start_addr_	[static_cast<uint32_t>(reg_categories::count)];
 
-	std::vector< std::pair<node_semantic const*, reg_handle> >
+	vector< pair<node_semantic const*, reg_handle> >
 							var_auto_regs_;
 	boost::unordered_map<node_semantic const*, reg_name>
 							input_var_regs_;
@@ -464,8 +466,9 @@ private:
 				// Process parameters
 				for(auto& param: entry_fn->params)
 				{
-					if( !process_entry_inputs(nullptr, param, false) )
+					if( !process_entry_inputs(nullptr, param, input_types::param) )
 					{
+						//TODO: It an semantic error need to be reported.
 						ret.reset();
 						return ret;
 					}
@@ -475,12 +478,20 @@ private:
 				for(symbol* gvar_sym: sem_->global_vars())
 				{
 					auto gvar = gvar_sym->associated_node()->as_handle<declarator>();
-					if( !process_entry_inputs(nullptr, gvar, true) )
+					if( !process_entry_inputs(nullptr, gvar, input_types::global) )
 					{
 						//TODO: It an semantic error need to be reported.
 						ret.reset();
 						return ret;
 					}
+				}
+
+				// Process function output
+				if( !process_entry_inputs(nullptr, entry_fn, input_types::output) )
+				{
+					//TODO: It an semantic error need to be reported.
+					ret.reset();
+					return ret;
 				}
 
 				reflection_->update_auto_alloc_regs();
@@ -514,10 +525,17 @@ private:
 		}
 	};
 
+	enum class input_types
+	{
+		global,
+		param,
+		output
+	};
+
 	bool process_entry_inputs(
 		variable_info*		parent_info,		// in and out
 		node_ptr const&		v,
-		bool				is_global
+		input_types			input_type
 		)
 	{
 		bool const is_member = (parent_info != nullptr);
@@ -530,12 +548,25 @@ private:
 		node_semantic*	node_sem	= sem_->get_semantic( v.get() );
 		tynode*			ty			= node_sem->ty_proto();
 
-		reg_file* rfile =
-			reflection_->rfile(
-			is_global
-			? rfile_name::global() 
-			: ty->is_uniform() ? rfile_name::params() : rfile_name::varyings()
-			);
+		rfile_name rf_name;
+
+		switch(input_type)
+		{
+		case input_types::global:
+			rf_name = rfile_name::global();
+			break;
+		case input_types::output:
+			rf_name = rfile_name::outputs();
+			break;
+		case input_types::param:
+			rf_name = ty->is_uniform() ? rfile_name::params() : rfile_name::varyings();
+			break;
+		default:
+			EFLIB_ASSERT(false, "Invalid input type.");
+			break;
+		}
+
+		reg_file* rfile = reflection_->rfile(rf_name);
 
 		bool		use_parent_sv	= false;
 		auto const* node_sv			= node_sem->semantic_value();
@@ -575,7 +606,7 @@ private:
 		if( ty->is_builtin() )
 		{
 			// no-semantic bounded varying variables check
-			if(node_sv == nullptr && !is_global)
+			if(node_sv == nullptr && input_type != input_types::global)
 			{
 				// TODO: error: no semantic bound on varying.
 				return false;
@@ -610,7 +641,7 @@ private:
 				auto vardecl = decl->as_handle<variable_declaration>();
 				for(auto const& dclr: vardecl->declarators)
 				{
-					process_entry_inputs(minfo, dclr, is_global);
+					process_entry_inputs(minfo, dclr, input_type);
 					size_t offset = layout.add_member(minfo->last_child->size);
 					minfo->last_child->offset = offset;
 					sem_->get_semantic(dclr)->member_offset(offset);
@@ -683,7 +714,7 @@ private:
 		}
 	}
 
-	std::deque<variable_info>
+	deque<variable_info>
 						var_infos_;
 	module_semantic*	sem_;
 	fixed_string		entry_name_;
