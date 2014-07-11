@@ -140,14 +140,17 @@ public:
 	void assign_semantic(reg_name const& beg, size_t sz, semantic_value const& sv_beg)
 	{
 		reg_sv_[beg] = sv_beg;
+		sv_reg_[sv_beg] = beg;
 
 		if(sz > REGISTER_SIZE)
 		{
 			size_t reg_count = sz / REGISTER_SIZE;
 			for(size_t reg_dist = 1; reg_dist < reg_count; ++reg_dist)
 			{
-				auto rname = beg.advance(reg_dist);
-				reg_sv_[rname] = sv_beg.advance_index(reg_dist);
+				auto rname  = beg.advance(reg_dist);
+				auto cur_sv = sv_beg.advance_index(reg_dist);
+				reg_sv_[rname]  = cur_sv;
+				sv_reg_[cur_sv] = rname;
 			}
 		}
 	}
@@ -194,6 +197,15 @@ public:
 		return reg_addr_.at(iter->lower().reg_index) + (rname.reg_index - iter->lower().reg_index);
 	}
 
+	vector<semantic_value> semantics() const
+	{
+		vector<semantic_value> ret;
+		for(auto const& sv_reg: sv_reg_)
+		{
+			ret.push_back(sv_reg.first);
+		}
+		return ret;
+	}
 private:
 	alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz)
 	{
@@ -262,9 +274,7 @@ public:
 	
 	virtual vector<semantic_value> varying_semantics() const override
 	{
-		vector<semantic_value> ret;
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return ret;
+		return rfile( rfile_name::varyings() )->semantics();
 	}
 
 	virtual size_t available_reg_count(reg_categories cat) const override
@@ -277,9 +287,14 @@ public:
 		switch(cat)
 		{
 		case reg_categories::uniforms:
+			// NOTE:
+			//	only GLOBAL uniforms can bind to semantic for now,
+			//	Will try: uniform parameters, cbuffer/vars in cbuffer, samplers/textures, 	
 			return rfile( rfile_name::global() )->find_reg(sv);
 		case reg_categories::varying:
 			return rfile( rfile_name::varyings() )->find_reg(sv);
+		case reg_categories::outputs:
+			return rfile( rfile_name::outputs() )->find_reg(sv);
 		default:
 			return reg_name();
 		}
@@ -371,19 +386,19 @@ public:
 	bool is_entry(symbol*) const;
 
 private:
-	module_semantic*		module_sem_;
+	module_semantic*	module_sem_;
 
-	symbol*					entry_fn_;
-	eflib::fixed_string		entry_fn_name_;
+	symbol*				entry_fn_;
+	eflib::fixed_string	entry_fn_name_;
 
 	vector<reg_file>	rfiles_				[static_cast<uint32_t>(reg_categories::count)];
-	uint32_t				used_reg_count_		[static_cast<uint32_t>(reg_categories::count)];
+	uint32_t			used_reg_count_		[static_cast<uint32_t>(reg_categories::count)];
 	vector<uint32_t>	rfile_start_addr_	[static_cast<uint32_t>(reg_categories::count)];
 
 	vector< pair<node_semantic const*, reg_handle> >
-							var_auto_regs_;
+						var_auto_regs_;
 	boost::unordered_map<node_semantic const*, reg_name>
-							input_var_regs_;
+						input_var_regs_;
 };
 
 class reflector2
@@ -602,6 +617,8 @@ private:
 			}
 		}
 
+		minfo->sv = *node_sv;
+
 		// For builtin type
 		if( ty->is_builtin() )
 		{
@@ -615,13 +632,10 @@ private:
 			minfo->size = reg_storage_size(ty->tycode);
 
 			size_t reg_count = eflib::round_up(minfo->size, REGISTER_SIZE) / 16;
-			if(is_member)
+
+			if(use_parent_sv)
 			{
-				minfo->sv = *node_sv;
-				if(use_parent_sv)
-				{
-					parent_info->sv = node_sv->advance_index(reg_count);
-				}
+				parent_info->sv = minfo->sv.advance_index(reg_count);
 			}
 		}
 

@@ -29,11 +29,19 @@ BOOST_FIXTURE_TEST_CASE(semantic_fn_svs, abi_test_fixture)
 
 	BOOST_CHECK_EQUAL(reflection2->language(), salviar::lang_vertex_shader);
 	BOOST_CHECK_EQUAL(reflection2->entry_name(), "Mfn@@");
-	BOOST_CHECK_EQUAL(reflection2->available_reg_count(salviar::reg_categories::unknown), 0);
-	BOOST_CHECK_EQUAL(reflection2->available_reg_count(salviar::reg_categories::offset), 0);
-	BOOST_CHECK_EQUAL(reflection2->available_reg_count(salviar::reg_categories::outputs), 1);
-	BOOST_CHECK_EQUAL(reflection2->available_reg_count(salviar::reg_categories::uniforms), 2);
-	BOOST_CHECK_EQUAL(reflection2->available_reg_count(salviar::reg_categories::varying), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::unknown), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::offset), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::outputs), 1);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::uniforms), 2);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::varying), 0);
+
+	BOOST_CHECK( reflection2->varying_semantics().empty() );
+
+	auto out_pos_reg = reflection2->find_reg( reg_categories::outputs, semantic_value("SV_Position", 0) );
+	BOOST_CHECK( out_pos_reg.valid() );
+	BOOST_CHECK(out_pos_reg.rfile.cat == reg_categories::outputs);
+	BOOST_CHECK_EQUAL(out_pos_reg.rfile.index, 0);
+	BOOST_CHECK_EQUAL(reflection2->reg_addr(out_pos_reg), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
