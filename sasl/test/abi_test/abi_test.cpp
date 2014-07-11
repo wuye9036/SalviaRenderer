@@ -12,6 +12,8 @@
 
 #include <fstream>
 
+using namespace salviar;
+
 void (*compiler_loader::create_compiler)( shared_ptr<compiler>& );
 
 BOOST_GLOBAL_FIXTURE(compiler_loader);
@@ -24,6 +26,10 @@ BOOST_FIXTURE_TEST_CASE(smoke, abi_test_fixture)
 
 	auto reflection2 = drv->get_reflection2();
 	BOOST_REQUIRE(reflection2);
+
+	BOOST_CHECK_EQUAL(reflection2->language(), salviar::lang_vertex_shader);
+	BOOST_CHECK_EQUAL(reflection2->entry_name(), "fn");
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(salviar::reg_categories::unknown), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
