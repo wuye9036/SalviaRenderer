@@ -42,6 +42,15 @@ BOOST_FIXTURE_TEST_CASE(semantic_fn_svs, abi_test_fixture)
 	BOOST_CHECK(out_pos_reg.rfile.cat == reg_categories::outputs);
 	BOOST_CHECK_EQUAL(out_pos_reg.rfile.index, 0);
 	BOOST_CHECK_EQUAL(reflection2->reg_addr(out_pos_reg), 0);
+
+	auto in_pos_reg = reflection2->find_reg( reg_categories::varying, semantic_value("SV_Position", 0) );
+	BOOST_CHECK( !in_pos_reg.valid() );
+
+	auto global_pos_reg = reflection2->find_reg( reg_categories::uniforms, semantic_value("SV_Position", 0) );
+	BOOST_CHECK( global_pos_reg.valid() );
+	BOOST_CHECK(global_pos_reg.rfile.cat == reg_categories::uniforms);
+	BOOST_CHECK_EQUAL(global_pos_reg.rfile.index, rfile_name::global().index);
+	BOOST_CHECK_EQUAL(reflection2->reg_addr(global_pos_reg), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
