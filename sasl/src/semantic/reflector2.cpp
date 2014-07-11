@@ -122,6 +122,7 @@ public:
 	{
 		auto_alloc_sizes_.push_back( static_cast<uint32_t>(sz) );
 		reg_handle ret;
+		ret.rfile = this;
 		ret.v = auto_alloc_sizes_.size() - 1;
 		return ret;
 	}
@@ -232,17 +233,19 @@ public:
 	// Impl specific members
 	reflection_impl2(module_semantic* mod_sem, symbol* entry)
 		: module_sem_(mod_sem)
-		, entry_point_(entry)
-		, entry_point_name_(entry->mangled_name())
+		, entry_fn_(entry)
+		, entry_fn_name_(entry->mangled_name())
 	{
 		for(size_t i_cat = 0; i_cat < static_cast<uint32_t>(reg_categories::count); ++i_cat)
 		{
 			auto& cat_rfiles = rfiles_[i_cat];
 			rfile_start_addr_[i_cat].resize(REG_CATEGORY_REGFILE_COUNTS[i_cat], 0);
-			for(size_t i_rf = 0; i_rf < REG_CATEGORY_REGFILE_COUNTS[i_cat]; ++i_rf)
+			for(uint32_t i_rf = 0; i_rf < REG_CATEGORY_REGFILE_COUNTS[i_cat]; ++i_rf)
 			{
 				cat_rfiles.push_back( reg_file(static_cast<reg_categories>(i_cat), i_rf) );
 			}
+
+			used_reg_count_[i_cat] = 0;
 		}
 	}
 
@@ -253,7 +256,7 @@ public:
 
 	virtual eflib::fixed_string	entry_name() const override
 	{
-		return entry_point_name_;
+		return entry_fn_name_;
 	}
 	
 	virtual std::vector<semantic_value> varying_semantics() const override
@@ -336,17 +339,20 @@ public:
 
 	void update_reg_address()
 	{
-		for(uint32_t cat = static_cast<uint32_t>(reg_categories::unknown); cat = static_cast<uint32_t>(reg_categories::count); ++cat)
+		for(uint32_t cat = static_cast<uint32_t>(reg_categories::unknown); cat < static_cast<uint32_t>(reg_categories::count); ++cat)
 		{
-			auto& rfile			= rfiles_[cat];
-			auto& rfiles_addr	= rfile_start_addr_[cat];
-
+			auto& cat_rfiles		= rfiles_[cat];
+			auto& cat_rfiles_addr	= rfile_start_addr_[cat];
+			
+			cat_rfiles_addr.clear();
 			uint32_t total = 0;
-			for(auto& rfile: rfile)
+
+			for(auto& rfile: cat_rfiles)
 			{
-				rfiles_addr.push_back(total);
+				cat_rfiles_addr.push_back(total);
 				total += rfile.used_reg_count();
 			}
+
 			used_reg_count_[cat] = total;
 		}
 	}
@@ -365,8 +371,8 @@ public:
 private:
 	module_semantic*		module_sem_;
 
-	symbol*					entry_point_;
-	eflib::fixed_string		entry_point_name_;
+	symbol*					entry_fn_;
+	eflib::fixed_string		entry_fn_name_;
 
 	std::vector<reg_file>	rfiles_				[static_cast<uint32_t>(reg_categories::count)];
 	uint32_t				used_reg_count_		[static_cast<uint32_t>(reg_categories::count)];
@@ -479,6 +485,7 @@ private:
 
 				reflection_->update_auto_alloc_regs();
 				assign_semantics();
+				reflection_->update_reg_address();
 			}
 		default:
 			return ret;

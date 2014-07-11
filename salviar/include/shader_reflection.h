@@ -259,7 +259,7 @@ struct reg_name
 	
 	bool valid() const
 	{
-		return rfile.cat == reg_categories::unknown;
+		return rfile.cat != reg_categories::unknown;
 	}
 
 	bool operator < (reg_name const& rhs) const
