@@ -53,4 +53,37 @@ BOOST_FIXTURE_TEST_CASE(semantic_fn_svs, abi_test_fixture)
 	BOOST_CHECK_EQUAL(reflection2->reg_addr(global_pos_reg), 0);
 }
 
+BOOST_FIXTURE_TEST_CASE(semfn_par_svs, abi_test_fixture)
+{
+	init_vs("repo/semfn_par.svs");
+
+	auto reflection2 = drv->get_reflection2();
+	BOOST_REQUIRE(reflection2);
+
+	BOOST_CHECK_EQUAL(reflection2->language(), salviar::lang_vertex_shader);
+	BOOST_CHECK_EQUAL(reflection2->entry_name(), "Mfn@@QBF@@");
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::unknown), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::offset), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::outputs), 1);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::uniforms), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::varying), 1);
+
+	BOOST_CHECK_EQUAL( reflection2->varying_semantics().size(), 1 );
+
+	auto out_pos_reg = reflection2->find_reg( reg_categories::outputs, semantic_value("SV_Position", 0) );
+	BOOST_CHECK( out_pos_reg.valid() );
+	BOOST_CHECK(out_pos_reg.rfile.cat == reg_categories::outputs);
+	BOOST_CHECK_EQUAL(out_pos_reg.rfile.index, 0);
+	BOOST_CHECK_EQUAL(reflection2->reg_addr(out_pos_reg), 0);
+
+	auto global_pos_reg = reflection2->find_reg( reg_categories::uniforms, semantic_value("SV_Position", 0) );
+	BOOST_CHECK( !global_pos_reg.valid() );
+
+	auto in_pos_reg = reflection2->find_reg( reg_categories::varying, semantic_value("SV_Position", 0) );
+	BOOST_CHECK( in_pos_reg.valid() );
+	BOOST_CHECK(in_pos_reg.rfile.cat == reg_categories::varying);
+	BOOST_CHECK_EQUAL(in_pos_reg.rfile.index, rfile_name::varyings().index);
+	BOOST_CHECK_EQUAL(reflection2->reg_addr(in_pos_reg), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END();
