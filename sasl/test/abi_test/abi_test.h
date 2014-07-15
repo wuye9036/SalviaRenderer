@@ -89,9 +89,11 @@ bool print_diagnostic( diag_chat*, diag_item* item )
 	{
 	case diag_levels::dl_error:
 	case diag_levels::dl_fatal_error:
-		BOOST_ERROR( sasl::common::str(item) );
+		BOOST_MESSAGE( sasl::common::str(item).raw_string() );
+		break;
 	default:
-		BOOST_MESSAGE( sasl::common::str(item) );
+		// BOOST_MESSAGE( sasl::common::str(item).raw_string() );
+		break;
 	}
 	
 	return true;

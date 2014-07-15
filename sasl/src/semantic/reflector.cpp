@@ -20,6 +20,7 @@
 
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
+using namespace sasl::common;
 
 using salviar::languages;
 using salviar::sv_usage;
@@ -133,12 +134,13 @@ sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::seman
 class reflector
 {
 public:
-	reflector(module_semantic* sem, eflib::fixed_string const& entry_name)
-		: sem_(sem), current_entry_(NULL), reflection_(NULL), entry_name_(entry_name)
+	reflector(module_semantic* sem, eflib::fixed_string const& entry_name, diag_chat* diags)
+		: sem_(sem), current_entry_(NULL), reflection_(NULL), entry_name_(entry_name), diags_(diags)
 	{
 	}
 
-	reflector(module_semantic* sem)	: sem_(sem), current_entry_(NULL), reflection_(NULL)
+	reflector(module_semantic* sem, diag_chat* diags)
+		: sem_(sem), current_entry_(NULL), reflection_(NULL), diags_(diags)
 	{
 	}
 
@@ -282,14 +284,15 @@ private:
 			}
 			else
 			{
-				sem_->diags()->report(not_support_auto_semantic)
+				diags_->report(not_support_auto_semantic)
 					->token_range(*v->token_begin(), *v->token_end());
 				return false;
 			}
 		}
 		else if( ptspec->node_class() == node_ids::struct_type )
 		{
-			if( is_member && !enable_nested ){
+			if( is_member && !enable_nested )
+			{
 				return false;
 			}
 
@@ -317,21 +320,25 @@ private:
 		return false;
 	}
 
+	diag_chat*			diags_;
 	module_semantic*	sem_;
 	fixed_string		entry_name_;
 	symbol*				current_entry_;
 	reflection_impl*	reflection_;
 };
 
-reflection_impl_ptr reflect(module_semantic_ptr const& sem)
+reflection_impl_ptr reflect(module_semantic_ptr const& sem, diag_chat* diags)
 {
-	reflector rfl( sem.get() );
+	reflector rfl(sem.get(), diags);
 	return rfl.reflect();
 }
 
-reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
+reflection_impl_ptr reflect(
+	module_semantic_ptr const& sem,
+	eflib::fixed_string const& entry_name,
+	diag_chat* diags )
 {
-	reflector rfl( sem.get(), entry_name );
+	reflector rfl(sem.get(), entry_name, diags);
 	return rfl.reflect();
 }
 

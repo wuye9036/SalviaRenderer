@@ -13,6 +13,11 @@
 
 namespace sasl
 {
+	namespace common
+	{
+		class diag_chat;
+	}
+
 	namespace syntax_tree
 	{
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
@@ -25,7 +30,15 @@ class symbol;
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
 
-reflection_impl_ptr reflect(module_semantic_ptr const& sem);
-reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name);
+reflection_impl_ptr reflect(
+	module_semantic_ptr const& sem,
+	sasl::common::diag_chat* diags
+	);
+
+reflection_impl_ptr reflect(
+	module_semantic_ptr const& sem,
+	eflib::fixed_string const& entry_name,
+	sasl::common::diag_chat* diags
+	);
 
 END_NS_SASL_SEMANTIC();

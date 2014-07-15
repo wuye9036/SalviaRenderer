@@ -271,7 +271,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 		{
 			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ compiler_impl");
 
-			mreflection = reflect(msem);
+			mreflection = reflect(msem, diags.get());
 			mreflection2 = reflect2(msem);
 
 			if(!mreflection)
