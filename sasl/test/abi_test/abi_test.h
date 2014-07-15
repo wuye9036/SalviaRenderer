@@ -4,6 +4,7 @@
 #include <sasl/include/drivers/drivers_api.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_chat.h>
+#include <sasl/include/common/diag_item.h>
 #include <sasl/include/common/diag_formatter.h>
 
 #include <eflib/include/math/vector.h>
@@ -45,6 +46,7 @@ namespace sasl
 using sasl::drivers::compiler;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
+using sasl::common::diag_levels;
 using sasl::semantic::symbol;
 
 using eflib::vector_;
@@ -83,7 +85,15 @@ string make_command( string const& inc, string const& sysinc, string const& file
 
 bool print_diagnostic( diag_chat*, diag_item* item )
 {
-	BOOST_MESSAGE( sasl::common::str(item) );
+	switch( item->level() )
+	{
+	case diag_levels::dl_error:
+	case diag_levels::dl_fatal_error:
+		BOOST_ERROR( sasl::common::str(item) );
+	default:
+		BOOST_MESSAGE( sasl::common::str(item) );
+	}
+	
 	return true;
 }
 

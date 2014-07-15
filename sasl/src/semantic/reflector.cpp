@@ -3,7 +3,9 @@
 #include <sasl/include/semantic/reflection_impl.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/semantic_diags.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/common/diag_chat.h>
 
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
@@ -260,10 +262,11 @@ private:
 		if( ptspec->is_builtin() )
 		{
 			builtin_types btc = ptspec->tycode;
-			if ( verify_semantic_type( btc, node_sem ) ) {
+			if ( verify_semantic_type( btc, node_sem ) )
+			{
 				sv_usage sem_s = semantic_usage( lang, is_output_semantic, node_sem );
-				switch( sem_s ){
-
+				switch( sem_s )
+				{
 				case su_stream_in:
 					return reflection_->add_input_semantic( node_sem, btc, true );
 				case su_buffer_in:
@@ -275,6 +278,12 @@ private:
 				}
 
 				assert( false );
+				return false;
+			}
+			else
+			{
+				sem_->diags()->report(not_support_auto_semantic)
+					->token_range(*v->token_begin(), *v->token_end());
 				return false;
 			}
 		}
@@ -289,11 +298,13 @@ private:
 			assert( pstructspec );
 			for( shared_ptr<declaration> const& decl: pstructspec->decls )
 			{
-				if ( decl->node_class() == node_ids::variable_declaration ){
+				if ( decl->node_class() == node_ids::variable_declaration )
+				{
 					shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-					for( shared_ptr<declarator> const& dclr: vardecl->declarators ){
-						if ( !add_semantic( dclr, true, enable_nested, lang, is_output_semantic ) ){
-							assert( false );
+					for( shared_ptr<declarator> const& dclr: vardecl->declarators )
+					{
+						if ( !add_semantic( dclr, true, enable_nested, lang, is_output_semantic ) )
+						{
 							return false;
 						}
 					}

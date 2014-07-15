@@ -49,6 +49,7 @@ diag_template not_an_acceptable_operator(dl_error, "binary '%s': '%s' is not acc
 diag_template subscript_not_integral(dl_error, "subscript is not of integral type");
 diag_template left_operand_must_be_lvalue(dl_error, "'%s': left operand must be l-value");
 diag_template operator_needs_lvalue(dl_error, "'%s' needs l-value");
+diag_template not_support_auto_semantic(dl_error, "Semantic verified failed. Note: Current version didn't support semantics propagates from parent to members");
 
 char const* scalar_nick_name( builtin_types btcode )
 {

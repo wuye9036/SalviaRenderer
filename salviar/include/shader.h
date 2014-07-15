@@ -57,6 +57,7 @@ enum system_values
 
 	sv_blend_indices,
 	sv_blend_weights,
+	sv_psize,
 
 	sv_target,
 	sv_depth,
@@ -101,6 +102,8 @@ public:
 			sv = sv_blend_indices;
 		} else if ( lower_name == "blend_weights" ){
 			sv = sv_blend_weights;
+		} else if ( lower_name == "psize" ){
+			sv = sv_psize;
 		} else {
 			sv = sv_customized;
 			this->name = lower_name;

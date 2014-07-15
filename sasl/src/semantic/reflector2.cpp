@@ -61,12 +61,8 @@ public:
 
 	size_t add_member(size_t sz)
 	{
-		size_t offset = 0;
-		if(total_size_ % 16 == 0)
-		{
-			offset = total_size_;
-		}
-		else if ( total_size_ + sz >= eflib::round_up(total_size_, REGISTER_SIZE) )
+		size_t offset = total_size_;
+		if ( total_size_ + sz >= eflib::round_up(total_size_, REGISTER_SIZE) )
 		{
 			offset = eflib::round_up(total_size_, 16);
 		}
@@ -144,11 +140,10 @@ public:
 
 		if(sz > REGISTER_SIZE)
 		{
-			size_t reg_count = sz / REGISTER_SIZE;
-			for(size_t reg_dist = 1; reg_dist < reg_count; ++reg_dist)
+			for(size_t reg_offset = REGISTER_SIZE; reg_offset < sz; reg_offset += REGISTER_SIZE)
 			{
-				auto rname  = beg.advance(reg_dist);
-				auto cur_sv = sv_beg.advance_index(reg_dist);
+				auto rname  = beg.advance(reg_offset);
+				auto cur_sv = sv_beg.advance_index(reg_offset);
 				reg_sv_[rname]  = cur_sv;
 				sv_reg_[cur_sv] = rname;
 			}
@@ -170,14 +165,14 @@ public:
 		return auto_alloc_regs_[rh.v];
 	}
 
-	void update_addr()
+	void compute_reg_addr()
 	{
 		total_reg_count_ = 0;
 		for(auto& range_addr: used_regs_)
 		{
 			auto& reg_range = range_addr;
-			uint32_t reg_count = reg_range.upper().reg_index - reg_range.lower().reg_index;
-			reg_addr_.insert( make_pair(reg_range.lower().reg_index, total_reg_count_) );
+			uint32_t reg_count = reg_range.upper() - reg_range.lower();
+			reg_addr_.insert( make_pair(reg_range.lower(), total_reg_count_) );
 			total_reg_count_ += reg_count;
 		}
 	}
@@ -189,12 +184,12 @@ public:
 
 	uint32_t reg_addr(reg_name const& rname) const
 	{
-		auto iter = used_regs_.find(rname);
-		if( iter == used_regs_.end() )
+		auto iter = used_elems_.find(rname);
+		if( iter == used_elems_.end() )
 		{
 			return static_cast<uint32_t>(-1);
 		}
-		return reg_addr_.at(iter->lower().reg_index) + (rname.reg_index - iter->lower().reg_index);
+		return ( reg_addr_.at(iter->lower().reg_index) + (rname.reg_index - iter->lower().reg_index) ) * 16 + rname.elem * 4;
 	}
 
 	vector<semantic_value> semantics() const
@@ -209,26 +204,34 @@ public:
 private:
 	alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz)
 	{
-		auto& slot_used_regs = used_regs_;
-		beg = slot_used_regs.empty() ? reg_name(uid_, 0, 0) : slot_used_regs.rbegin()->upper().advance(1);
+		auto& slot_used_regs = used_elems_;
+		beg = slot_used_regs.empty() ? reg_name(uid_, 0, 0) : slot_used_regs.rbegin()->upper().align_up_to_reg();
 		return alloc_reg(end, beg, sz);
 	}
 
 	alloc_result alloc_reg(reg_name& end, reg_name const& beg, size_t sz)
 	{
-		if( 4 - beg.elem < sz / 4 )
+		if( beg.elem != 0 && 4 - beg.elem < sz / 4 )
 		{
 			return alloc_result::out_of_reg_bound;
 		}
-		end = beg.advance( eflib::round_up(sz, 16) / 16 );
-		used_regs_.add( continuous_interval<reg_name>::right_open(beg, end) );
+
+		end = beg.advance(sz);
+		auto reg_range = continuous_interval<reg_name>::right_open(beg, end);
+		if( intersects(used_elems_, reg_range) )
+		{
+			return alloc_result::register_has_been_allocated;
+		}
+		used_elems_.add(reg_range);
+		used_regs_.add( interval_set<uint32_t>::interval_type::right_open(beg.reg_index, end.align_up_to_reg().reg_index) );
 		return alloc_result::ok;
 	}
 
 	rfile_name						uid_;
 	uint32_t						total_reg_count_;
 
-	interval_set<reg_name>			used_regs_;
+	interval_set<uint32_t>			used_regs_;
+	interval_set<reg_name>			used_elems_;
 	map<uint32_t /*reg index*/, uint32_t /*addr*/>
 									reg_addr_;
 
@@ -365,7 +368,7 @@ public:
 
 			for(auto& rfile: cat_rfiles)
 			{
-				rfile.update_addr();
+				rfile.compute_reg_addr();
 				cat_rfiles_addr.push_back(total);
 				total += rfile.used_reg_count();
 			}
@@ -584,7 +587,7 @@ private:
 		reg_file* rfile = reflection_->rfile(rf_name);
 
 		bool		use_parent_sv	= false;
-		auto const* node_sv			= node_sem->semantic_value();
+		auto const* node_sv			= &node_sem->semantic_value_ref();
 		auto		user_reg		= rfile->absolute_reg( node_sem->user_defined_reg() );
 
 		// Member-special check: for register and semantic overwrite

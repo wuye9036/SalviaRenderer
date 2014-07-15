@@ -18,7 +18,7 @@ void (*compiler_loader::create_compiler)( shared_ptr<compiler>& );
 
 BOOST_GLOBAL_FIXTURE(compiler_loader);
 
-BOOST_AUTO_TEST_SUITE(death);
+BOOST_AUTO_TEST_SUITE(abi_test);
 
 BOOST_FIXTURE_TEST_CASE(semantic_fn_svs, abi_test_fixture)
 {
@@ -84,6 +84,74 @@ BOOST_FIXTURE_TEST_CASE(semfn_par_svs, abi_test_fixture)
 	BOOST_CHECK(in_pos_reg.rfile.cat == reg_categories::varying);
 	BOOST_CHECK_EQUAL(in_pos_reg.rfile.index, rfile_name::varyings().index);
 	BOOST_CHECK_EQUAL(reflection2->reg_addr(in_pos_reg), 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(auto_semantic_svs, abi_test_fixture)
+{
+	init_vs("repo/auto_semantic.svs");
+
+	auto reflection2 = drv->get_reflection2();
+	BOOST_REQUIRE(reflection2);
+
+	BOOST_CHECK_EQUAL( reflection2->entry_name(), "Mfn@@QSVSInput@@");
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::unknown),  0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::offset),   0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::outputs),  2);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::uniforms), 0);
+	BOOST_CHECK_EQUAL(reflection2->available_reg_count(reg_categories::varying),  5);
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 0) );
+		BOOST_CHECK( in_psize_reg.valid() );
+		BOOST_CHECK(in_psize_reg.rfile.cat == reg_categories::varying);
+		BOOST_CHECK_EQUAL(in_psize_reg.rfile.index, rfile_name::varyings().index);
+		BOOST_CHECK_EQUAL(reflection2->reg_addr(in_psize_reg), 0);
+	}
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 1) );
+		BOOST_CHECK( in_psize_reg.valid() );
+		BOOST_CHECK(in_psize_reg.rfile.cat == reg_categories::varying);
+		BOOST_CHECK_EQUAL(in_psize_reg.rfile.index, rfile_name::varyings().index);
+		BOOST_CHECK_EQUAL(reflection2->reg_addr(in_psize_reg), 16);
+	}
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 2) );
+		BOOST_CHECK( in_psize_reg.valid() );
+		BOOST_CHECK(in_psize_reg.rfile.cat == reg_categories::varying);
+		BOOST_CHECK_EQUAL(in_psize_reg.rfile.index, rfile_name::varyings().index);
+		BOOST_CHECK_EQUAL(reflection2->reg_addr(in_psize_reg), 32);
+	}
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 3) );
+		BOOST_CHECK( in_psize_reg.valid() );
+		BOOST_CHECK(in_psize_reg.rfile.cat == reg_categories::varying);
+		BOOST_CHECK_EQUAL(in_psize_reg.rfile.index, rfile_name::varyings().index);
+		BOOST_CHECK_EQUAL(reflection2->reg_addr(in_psize_reg), 48);
+	}
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 4) );
+		BOOST_CHECK( in_psize_reg.valid() );
+		BOOST_CHECK(in_psize_reg.rfile.cat == reg_categories::varying);
+		BOOST_CHECK_EQUAL(in_psize_reg.rfile.index, rfile_name::varyings().index);
+		BOOST_CHECK_EQUAL(reflection2->reg_addr(in_psize_reg), 52);
+	}
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 5) );
+		BOOST_CHECK( in_psize_reg.valid() );
+		BOOST_CHECK(in_psize_reg.rfile.cat == reg_categories::varying);
+		BOOST_CHECK_EQUAL(in_psize_reg.rfile.index, rfile_name::varyings().index);
+		BOOST_CHECK_EQUAL(reflection2->reg_addr(in_psize_reg), 64);
+	}
+
+	{
+		auto in_psize_reg = reflection2->find_reg( reg_categories::varying, semantic_value("PSIZE", 6) );
+		BOOST_CHECK( !in_psize_reg.valid() );
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END();

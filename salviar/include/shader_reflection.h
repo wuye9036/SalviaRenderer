@@ -257,11 +257,24 @@ struct reg_name
 		return *this;
 	}
 	
-	reg_name advance(size_t distance) const
+	reg_name advance(size_t byte_offsets) const
 	{
-		return reg_name(rfile, static_cast<uint32_t>(reg_index + distance), 0);
+		assert(byte_offsets >= 0);
+		size_t adv_elem_count = (byte_offsets / 4) % 4;
+		size_t adv_reg_count = byte_offsets / REGISTER_SIZE;
+	
+		return reg_name(
+			rfile,
+			static_cast<uint32_t>(reg_index + adv_reg_count + (adv_elem_count + elem) / 4),
+			static_cast<uint32_t>( (adv_elem_count + elem) % 4 )
+			);
 	}
 	
+	reg_name align_up_to_reg() const
+	{
+		return reg_name(rfile, elem > 0 ? reg_index + 1 : reg_index, 0);
+	}
+
 	bool valid() const
 	{
 		return rfile.cat != reg_categories::unknown;

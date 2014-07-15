@@ -1,0 +1,13 @@
+struct VSInput
+{
+	float3x4	v0;
+	float		v1;
+	float2		v2;
+	float3		v3;
+};
+
+float2x3 fn(VSInput vsi: PSIZE): TEXCOORD
+{
+	float2x3 ret;
+	return ret;
+}
