@@ -59,6 +59,8 @@ public:
 	{
 	}
 
+	// Pack rules:
+	//	If variable should cross register boundary, just allocate it on new register.
 	size_t add_member(size_t sz)
 	{
 		size_t offset = total_size_;
@@ -73,7 +75,7 @@ public:
 
 	size_t size() const
 	{
-		return eflib::round_up(total_size_, 16);
+		return total_size_;
 	}
 
 private:
@@ -133,6 +135,8 @@ public:
 		}
 	}
 
+	// Correspond register (w/ elem) and semantic value.
+	// If variable is cross register boundary, more than one register should be allocated.
 	void assign_semantic(reg_name const& beg, size_t sz, semantic_value const& sv_beg)
 	{
 		reg_sv_[beg] = sv_beg;
@@ -140,10 +144,11 @@ public:
 
 		if(sz > REGISTER_SIZE)
 		{
+			auto cur_sv = sv_beg;
 			for(size_t reg_offset = REGISTER_SIZE; reg_offset < sz; reg_offset += REGISTER_SIZE)
 			{
 				auto rname  = beg.advance(reg_offset);
-				auto cur_sv = sv_beg.advance_index(reg_offset);
+				cur_sv = cur_sv.advance_index(1);
 				reg_sv_[rname]  = cur_sv;
 				sv_reg_[cur_sv] = rname;
 			}
@@ -202,13 +207,28 @@ public:
 		return ret;
 	}
 private:
+	reg_name first_free_reg() const
+	{
+		if( used_elems_.empty() )
+		{
+			return reg_name(uid_, 0, 0);
+		}
+		else
+		{
+			return used_elems_.rbegin()->upper().align_up_to_reg();
+		}
+	}
+
+	// 1. Automatic allocated registers are always at the tail of register file.
+	// 2. The variable is always allocated on new register, even it could be packed into former variable.
 	alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz)
 	{
-		auto& slot_used_regs = used_elems_;
-		beg = slot_used_regs.empty() ? reg_name(uid_, 0, 0) : slot_used_regs.rbegin()->upper().align_up_to_reg();
+		beg = first_free_reg();
 		return alloc_reg(end, beg, sz);
 	}
 
+	// Allocated register at specified location
+	// NOTE: register cannot be shared with more than one variables.
 	alloc_result alloc_reg(reg_name& end, reg_name const& beg, size_t sz)
 	{
 		if( beg.elem != 0 && 4 - beg.elem < sz / 4 )
