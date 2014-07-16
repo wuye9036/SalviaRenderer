@@ -14,6 +14,8 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/utility/string_ref.hpp>
+#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <map>
@@ -21,27 +23,29 @@
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
+
 using boost::unordered_map;
 using boost::unordered_set;
 using boost::shared_ptr;
+using boost::make_shared;
+using boost::string_ref;
+
 using std::vector;
 using std::string;
 using std::make_pair;
 using std::map;
 
-string split_integer_literal_suffix( string const& str, bool& is_unsigned, bool& is_long ){
+string_ref split_integer_literal_suffix(string_ref str, bool& is_unsigned, bool& is_long)
+{
 	is_unsigned = false;
 	is_long = false;
 
-	string::const_reverse_iterator ch_it = str.rbegin();
-	char ch[2] = {'\0', '\0'};
-	ch[0] = *ch_it;
-	++ch_it;
-	ch[1] = (ch_it == str.rend() ? '\0' : *ch_it);
-
-	int tail_count = 0;
-	for ( int i = 0; i < 2; ++i ){
-		switch (ch[i]){
+	size_t tail_count = 0;
+	for(auto ch_it = str.rbegin(); ch_it != str.rend(); ++ch_it)
+	{
+		bool suffix_done = false;
+		switch (*ch_it)
+		{
 		case 'u':
 		case 'U':
 			is_unsigned = true;
@@ -53,13 +57,15 @@ string split_integer_literal_suffix( string const& str, bool& is_unsigned, bool&
 			++tail_count;
 			break;
 		default:
-			// do nothing
+			suffix_done = true;
 			break;
 		}
+
+		if(suffix_done) break;
 	}
 	
 	// remove suffix for lexical casting.
-	return string( str.begin(), str.end()-tail_count );
+	return str.substr(str.length() - tail_count);
 }
 
 string split_real_literal_suffix(string const& str, bool& is_single)
@@ -67,7 +73,8 @@ string split_real_literal_suffix(string const& str, bool& is_single)
 	is_single = false;
 
 	string::const_reverse_iterator ch_it = str.rbegin();
-	if ( *ch_it == 'F' || *ch_it == 'f' ){
+	if ( *ch_it == 'F' || *ch_it == 'f' )
+	{
 		is_single = true;
 	}
 
@@ -382,7 +389,7 @@ node_semantic::~node_semantic()
 
 void node_semantic::const_value(string const& lit, literal_classifications lit_class)
 {
-	string nosuffix_litstr;
+	string_ref nosuffix_litstr;
 	builtin_types value_btc(builtin_types::none);
 
 	if (lit_class == literal_classifications::integer )
@@ -511,7 +518,7 @@ void node_semantic::internal_tid( int v, tynode* proto )
 
 module_semantic_ptr module_semantic::create()
 {
-	return module_semantic_ptr( new module_semantic_impl() );
+	return make_shared<module_semantic_impl>();
 }
 
 END_NS_SASL_SEMANTIC();
