@@ -206,7 +206,7 @@ private:
 			shared_ptr<function_def> entry_fn = current_entry_->associated_node()->as_handle<function_def>();
 			assert( entry_fn );
 
-			if( !add_semantic(entry_fn, false, false, lang, true) )
+			if( !add_semantic(entry_fn, false, false, false, lang, true) )
 			{
 				assert( false );
 				ret.reset();
@@ -215,7 +215,7 @@ private:
 
 			for( shared_ptr<parameter> const& param: entry_fn->params )
 			{
-				if( !add_semantic(param, false, false, lang, false) )
+				if( !add_semantic(param, false, false, false, lang, false) )
 				{
 					ret.reset();
 					return ret;
@@ -227,9 +227,9 @@ private:
 				shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
 				assert(gvar);
 
-				// is_member is set to true for preventing aggregated variable.
 				// And global variable only be treated as input.
-				if( !add_semantic(gvar, true, false, lang, false) ){
+				if( !add_semantic(gvar, true, false, false, lang, false) )
+				{
 					// If it is not attached to an valid semantic, it should be uniform variable.
 
 					// Check the data type of global. Now global variables only support built-in types.
@@ -251,7 +251,7 @@ private:
 		return ret;
 	}
 
-	bool add_semantic(node_ptr const& v, bool is_member, bool enable_nested, languages lang, bool is_output_semantic)
+	bool add_semantic(node_ptr const& v, bool is_global, bool is_member, bool enable_nested, languages lang, bool is_output_semantic)
 	{
 		assert(reflection_);
 		node_semantic* pssi = sem_->get_semantic( v.get() );
@@ -282,7 +282,7 @@ private:
 				assert( false );
 				return false;
 			}
-			else
+			else if (is_member)
 			{
 				diags_->report(not_support_auto_semantic)
 					->token_range(*v->token_begin(), *v->token_end());
@@ -291,7 +291,7 @@ private:
 		}
 		else if( ptspec->node_class() == node_ids::struct_type )
 		{
-			if( is_member && !enable_nested )
+			if( (is_member || is_global) && !enable_nested )
 			{
 				return false;
 			}
@@ -306,7 +306,7 @@ private:
 					shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 					for( shared_ptr<declarator> const& dclr: vardecl->declarators )
 					{
-						if ( !add_semantic( dclr, true, enable_nested, lang, is_output_semantic ) )
+						if ( !add_semantic( dclr, is_global, true, enable_nested, lang, is_output_semantic ) )
 						{
 							return false;
 						}

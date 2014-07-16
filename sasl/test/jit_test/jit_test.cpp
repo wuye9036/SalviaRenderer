@@ -83,7 +83,7 @@ void jit_fixture::init(string const& file_name, string const& options)
 	{
 		for(auto const& diag_item: diags->diag_items())
 		{
-			BOOST_ERROR( sasl::common::str(diag_item) );
+			BOOST_ERROR( sasl::common::str(diag_item).c_str() );
 		}
 	}
 

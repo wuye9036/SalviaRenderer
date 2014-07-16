@@ -49,19 +49,19 @@ namespace eflib{
 		fixed_basic_string(string_type const& content)
 		{
 			content_ = boost::make_shared<string_type>(content);
-			hash_ = boost::hash_value(content);
+			hash_ = boost::hash_value(*content_);
 		}
 
 		fixed_basic_string(const_pointer content)
 		{
 			content_ = boost::make_shared<string_type>(content);
-			hash_ = boost::hash_value(content);
+			hash_ = boost::hash_value(*content_);
 		}
 
 		fixed_basic_string(string_type&& content)
 		{
 			content_ = boost::make_shared<string_type>( std::move(content) );
-			hash_ = boost::hash_value(content);
+			hash_ = boost::hash_value(*content_);
 		}
 
 		fixed_basic_string(fixed_basic_string const& rhs)
@@ -83,8 +83,11 @@ namespace eflib{
 
 		fixed_basic_string& operator = (fixed_basic_string const& rhs)
 		{
-			hash_ = rhs.hash_;
-			content_ = rhs.content_;
+			if(&rhs != this)
+			{
+				hash_ = rhs.hash_;
+				content_ = rhs.content_;
+			}
 			return *this;
 		}
 
@@ -99,12 +102,12 @@ namespace eflib{
 				content_ = boost::make_shared<string_type>( std::move(content) );
 			}
 
-			hash_ = boost::hash_value(content);
+			hash_ = boost::hash_value(*content_);
 			return *this;
 		}
 
 		template <typename IndexT>
-		CharT operator [] (IndexT index) const
+		value_type operator [] (IndexT index) const
 		{
 			return (*content_)[index];
 		}
@@ -165,10 +168,43 @@ namespace eflib{
 				content_ = boost::make_shared<string_type>( std::move(content) );
 			}
 
-			hash_ = boost::hash_value(content);
+			hash_ = boost::hash_value(*content_);
 		}
 
-		CharT const* c_str() const
+		void append(const_pointer content)
+		{
+			if( !content_.unique() )
+			{
+				content_ = boost::make_shared<string_type>(content_);
+			}
+
+			content_->append(content);
+			hash_ = boost::hash_value(*content_);
+		}
+
+		void append(string_type const& content)
+		{
+			if( !content_.unique() )
+			{
+				content_ = boost::make_shared<string_type>(content_);
+			}
+
+			content_->append(content);
+			hash_ = boost::hash_value(*content_);
+		}
+
+		void append(this_type const& content)
+		{
+			if( !content_.unique() )
+			{
+				content_ = boost::make_shared<string_type>( content.raw_string() );
+			}
+
+			content_->append(content.raw_string());
+			hash_ = boost::hash_value(*content_);
+		}
+
+		const_pointer c_str() const
 		{
 			return content_->c_str();
 		}
