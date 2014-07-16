@@ -8,6 +8,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -15,7 +16,8 @@
 namespace eflib{
 
 	template <typename CharT>
-	class fixed_basic_string{
+	class fixed_basic_string
+	{
 	public:
 		typedef std::basic_string<
 			CharT, std::char_traits<CharT>, std::allocator<CharT>
@@ -34,250 +36,157 @@ namespace eflib{
 		typedef typename string_type::value_type		value_type;
 
 	private:
-		struct content_data
-		{
-			content_data()
-				: hash_code(0)
-			{
-			}
-
-			template <typename IteratorT>
-			content_data(IteratorT const& begin, IteratorT const& end)
-				: hash_code(0)
-				, content(begin, end)
-				// , begin( content.begin() ), end( content.end() )
-			{
-			}
-
-			content_data(CharT const* str)
-				: hash_code(0)
-				, content(str)
-				// , begin( content.begin() ), end( content.end() )
-			{
-			}
-
-			content_data(std::string const& content)
-				: hash_code(0)
-				, content(content)
-				// , begin( content.begin() ), end( content.end() )
-			{
-			}
-
-			void lock() const
-			{
-				write_mutex.lock();
-			}
-
-			void unlock() const
-			{
-				write_mutex.unlock();
-			}
-
-			mutable spinlock	write_mutex;
-			size_t				hash_code;
-			string_type			content;
-			/*
-			const_iterator				begin;
-			const_iterator				end;
-			*/
-		};
-
-		mutable boost::shared_ptr<content_data> data_;
-
-		static boost::shared_ptr<content_data> null_data;
-
+		size_t							hash_;
+		boost::shared_ptr<string_type>	content_;
 
 	public:
 		fixed_basic_string()
 		{
+			content_ = boost::make_shared<string_type>();
+			hash_ = boost::hash_value(*content_);
 		}
 
-		fixed_basic_string(int /*for initialize static.*/)
+		fixed_basic_string(string_type const& content)
+		{
+			content_ = boost::make_shared<string_type>(content);
+			hash_ = boost::hash_value(content);
+		}
+
+		fixed_basic_string(const_pointer content)
+		{
+			content_ = boost::make_shared<string_type>(content);
+			hash_ = boost::hash_value(content);
+		}
+
+		fixed_basic_string(string_type&& content)
+		{
+			content_ = boost::make_shared<string_type>( std::move(content) );
+			hash_ = boost::hash_value(content);
+		}
+
+		fixed_basic_string(fixed_basic_string const& rhs)
+			: hash_(rhs.hash_), content_(rhs.content_)
 		{
 		}
 
-		fixed_basic_string(std::string const& content)
+		operator string_type const& () const
 		{
-			 data_.reset( new content_data(content) );
-		}
-
-		fixed_basic_string(CharT const* str)
-		{
-			if( str[0] != CharT(0) )
-			{
-				data_.reset( new content_data(str) );
-			}
-		}
-
-		fixed_basic_string(const fixed_basic_string& rhs)
-			: data_(rhs.data_)
-		{
+			return *content_;
 		}
 
 		template <typename IteratorT>
 		fixed_basic_string(IteratorT const& begin, IteratorT const& end)
 		{
-			data_.reset( new content_data(begin, end) );
+			content_ = boost::make_shared<string_type>(begin, end);
+			hash_ = boost::hash_value(*content_);
 		}
 
-		fixed_basic_string& operator = (const fixed_basic_string& rhs)
+		fixed_basic_string& operator = (fixed_basic_string const& rhs)
 		{
-			data_ = rhs.data_;
+			hash_ = rhs.hash_;
+			content_ = rhs.content_;
 			return *this;
 		}
 
-		fixed_basic_string& operator = (const CharT* str)
+		fixed_basic_string& operator = (string_type&& content)
 		{
-			data_.reset( new content_data(str) );
+			if( content_.unique() )
+			{
+				content_->assign( std::move(content) );
+			}
+			else
+			{
+				content_ = boost::make_shared<string_type>( std::move(content) );
+			}
+
+			hash_ = boost::hash_value(content);
 			return *this;
 		}
 
 		template <typename IndexT>
 		CharT operator [] (IndexT index) const
 		{
-			return data_->content[index];
-		}
-
-		fixed_basic_string& operator = (string_type const& str)
-		{
-			data_.reset( new content_data(str) );
-			return *this;
-		}
-
-		operator std::string const&() const
-		{
-			return raw_string();
+			return (*content_)[index];
 		}
 
 		const_iterator begin() const
 		{
-			if(!data_)
-			{
-				data_.reset( new content_data() );
-			}
-			return data_->content.begin();
+			return content_->begin();
 		}
 
 		const_iterator end() const
 		{
-			if(!data_)
-			{
-				data_.reset( new content_data() );
-			}
-			return data_->content.end();
+			return content_->end();
 		}
 
 		const_reverse_iterator rbegin() const
 		{
-			if(!data_)
-			{
-				data_.reset( new content_data() );
-			}
-			return data_->content.rbegin();
+			return content_->rbegin();
 		}
 
 		const_reverse_iterator rend() const
 		{
-			if(!data_)
-			{
-				data_.reset( new content_data() );
-			}
-			return data_->content.rend();
+			return content_->rend();
 		}
 
 		bool empty() const
 		{
-			return !data_ || data_->content.empty();
+			return content_->empty();
 		}
 
-		std::string const& raw_string() const
+		string_type const& raw_string() const
 		{
-			return data_->content;
-		}
-
-		std::string& mutable_raw_string()
-		{
-			if( !data_ )
-			{
-				data_.reset( new content_data() );
-				return data_->content;
-			}
-
-			if( data_.use_count() == 1 )
-			{
-				data_->hash_code = 0;
-				return data_->content;
-			}
-
-			data_->lock();
-			content_data* new_content = new content_data(data_->content);
-			data_->unlock();
-			data_.reset(new_content);
-			return data_->content;
-		}
-
-		size_t compute_hash() const
-		{
-			size_t hc = data_->hash_code;
-			if(hc == 0)
-			{
-				hc = boost::hash_value(data_->content);
-				if( !data_->content.empty() )
-				{
-					assert(hc != 0);
-				}
-				data_->hash_code = hc;
-			}
-			return hc;
+			return *content_;
 		}
 
 		template <typename IteratorT>
 		void assign(IteratorT const& begin, IteratorT const& end)
 		{
-			data_.reset( new content_data(begin, end) );
+			if( content_.unique() )
+			{
+				content_->assign(begin, end);
+			}
+			else
+			{
+				content_ = boost::make_shared<string_type>(begin, end);
+			}
+			
+			hash_ = boost::hash_value(*content_);
 		}
 
-		void assign(CharT const* v)
+		void assign (string_type&& content)
 		{
-			data_.reset( new content_data(v) );
+			if( content_.unique() )
+			{
+				content_->assign( std::move(content) );
+			}
+			else
+			{
+				content_ = boost::make_shared<string_type>( std::move(content) );
+			}
+
+			hash_ = boost::hash_value(content);
 		}
 
 		CharT const* c_str() const
 		{
-			data_->lock();
-			CharT const* ret = data_->content.c_str();
-			data_->unlock();
-			return ret;
+			return content_->c_str();
 		}
 
-		void append(CharT const* str)
+		size_t hash() const
 		{
-			// Copy on write
-			if( data_.use_count() == 1 )
-			{
-				data_->content.append(str);
-			}
-			else
-			{
-				data_->lock();
-				content_data* new_content = new content_data(data_->content);
-				data_->unlock();
-				data_.reset(new_content);
-				data_->content.append(str);
-			}
-			data_->hash_code = 0;
+			return hash_;
 		}
 
-		template <typename CharU> friend bool operator == (
-			fixed_basic_string<CharU> const& lhs, fixed_basic_string<CharU> const& rhs
-			);
+		template <typename CharU> 
+		friend bool operator == (fixed_basic_string<CharU> const& lhs, fixed_basic_string<CharU> const& rhs);
 	};
 
 
 	template <typename CharT>
 	size_t hash_value(fixed_basic_string<CharT> const& v)
 	{
-		return v.compute_hash();
+		return v.hash();
 	}
 
 	template <typename CharT>
@@ -288,8 +197,8 @@ namespace eflib{
 	{
 		return
 			&lhs == &rhs ||
-			lhs.data_ == rhs.data_ ||
-			lhs.compute_hash() == rhs.compute_hash() ||
+			lhs.content_ == rhs.content_ ||
+			lhs.hash() == rhs.hash() ||
 			lhs.raw_string() == rhs.raw_string()
 			;
 	}

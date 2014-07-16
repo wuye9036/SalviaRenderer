@@ -100,7 +100,7 @@ public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
 	boost::shared_ptr<attribute> attr;
-	int selected_idx;
+	int							 selected_idx;
 };
 
 // rule0 >> rule1

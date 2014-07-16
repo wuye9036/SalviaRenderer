@@ -158,7 +158,7 @@ public:
 
 		// start char
 		fixed_string ret;
-		string& mangled_name( ret.mutable_raw_string() );
+		string mangled_name;
 		mangled_name.reserve(64);
 		mangled_name = "M";
 
@@ -167,8 +167,8 @@ public:
 		append_params_mangling(mangled_name, param_tids_cache_[tid]);
 
 		// TODO calling convention
-
-		return ret;
+		
+		return  fixed_string( std::move(mangled_name) );
 	}
 
 	fixed_string operator_name(operators const& op)
@@ -178,10 +178,11 @@ public:
 		{
 			return it->second;
 		}
-		fixed_string opname("0");
-		opname.mutable_raw_string().append( op.name() );
-		opname_cache_.insert( make_pair(op, opname) );
-		return opname;
+		string opname("0");
+		opname.append( op.name() );
+		fixed_string fs_opname( std::move(opname) );
+		opname_cache_.insert( make_pair(op, fs_opname) );
+		return fs_opname;
 	}
 
 	~pety_impl(){}
@@ -247,28 +248,26 @@ private:
 		mangling_cache::iterator it = mangling_cache_.find(param_tids);
 		if (it != mangling_cache_.end() )
 		{
-			name.append( it->second.raw_string() );
+			name.append(it->second);
 		}
 		else
 		{
-			fixed_string ret;
-
-			string& mangling( ret.mutable_raw_string() );
+			string mangling;
 			tynode* param0_type = type_items_[ param_tids[0] ].stored.get();
 			append_mangling(mangling, param0_type);
 			mangling.append("@@");
 			vector<tid_t> tails( param_tids.begin() + 1, param_tids.end() );
 			append_params_mangling(mangling, tails);
 
-			mangling_cache_.insert( make_pair(param_tids, ret) );
 			name.append(mangling);
+			mangling_cache_.insert( make_pair( param_tids, std::move(mangling) ) );
 		}
 	}
 
 	typedef unordered_map<builtin_types, tid_t>			bt_dict;
 	typedef unordered_map<tynode*,		 tid_t>			tynode_dict;
 	typedef unordered_map<vector<tid_t>, tid_t>			function_dict;
-	typedef unordered_map<vector<tid_t>, fixed_string>	mangling_cache;
+	typedef unordered_map<vector<tid_t>, std::string>	mangling_cache;
 	typedef	unordered_map< tid_t, vector<tid_t> >		param_tids_cache;
 	typedef unordered_map<operators, fixed_string>		opname_cache;
 

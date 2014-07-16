@@ -2142,8 +2142,8 @@ void semantic_analyser::register_builtin_functions2()
 
 			for(size_t scalar_count = 2; scalar_count <= 4; ++scalar_count)
 			{
-				fixed_string constructor_name(scalar_bts[i_scalar].second);
-				constructor_name.mutable_raw_string().append( 1, static_cast<char>('0' + scalar_count) );
+				string constructor_name(scalar_bts[i_scalar].second);
+				constructor_name.append( 1, static_cast<char>('0' + scalar_count) );
 				constructor_fns.clear();
 
 				// Enumerate all constructor paramters.
@@ -2173,7 +2173,8 @@ void semantic_analyser::register_builtin_functions2()
 					}
 				}
 
-				register_constructor2( constructor_name, constructor_fns, protos.protos() );
+				fixed_string fs_contructor_name( std::move(constructor_name) );
+				register_constructor2( fs_contructor_name, constructor_fns, protos.protos() );
 			}
 		}
 	}
