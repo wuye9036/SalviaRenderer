@@ -77,8 +77,7 @@ fixed_string reflection_impl::entry_name() const
 
 bool reflection_impl::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
 {
-	vector<salviar::semantic_value>::iterator it =
-		std::lower_bound(semantic_inputs_.begin(), semantic_inputs_.end(), sem);
+	auto it = std::lower_bound(semantic_inputs_.begin(), semantic_inputs_.end(), sem);
 
 	if(it != semantic_inputs_.end() && *it == sem)
 	{
@@ -87,7 +86,7 @@ bool reflection_impl::add_input_semantic( salviar::semantic_value const& sem, bu
 
 	sv_layout* si = alloc_input_layout( sem );
 	si->value_type		= to_lvt( btc );
-	si->agg_type			= salviar::aggt_none;
+	si->agg_type		= salviar::aggt_none;
 	si->internal_type	= -1;
 	si->usage			= is_stream ? su_stream_in : su_buffer_in;
 	si->sv				= sem;
@@ -102,7 +101,7 @@ bool reflection_impl::add_input_semantic( salviar::semantic_value const& sem, bu
 bool reflection_impl::add_output_semantic(salviar::semantic_value const& sem, builtin_types btc, bool is_stream)
 {
 	// semantic_outputs_ is ordered array.
-	vector<salviar::semantic_value>::iterator it = std::lower_bound(semantic_outputs_.begin(), semantic_outputs_.end(), sem);
+	auto it = std::lower_bound(semantic_outputs_.begin(), semantic_outputs_.end(), sem);
 	if(it != semantic_outputs_.end() && *it == sem)
 	{
 		return false;
@@ -110,7 +109,7 @@ bool reflection_impl::add_output_semantic(salviar::semantic_value const& sem, bu
 
 	sv_layout* si = alloc_output_layout(sem);
 	si->value_type		= to_lvt(btc);
-	si->agg_type			= salviar::aggt_none;
+	si->agg_type		= salviar::aggt_none;
 	si->internal_type	= -1;
 	si->usage			= is_stream ? su_stream_out : su_buffer_out;
 	si->sv				= sem;
@@ -157,7 +156,7 @@ void reflection_impl::add_global_var(symbol* v, tynode_ptr tyn)
 
 sv_layout* reflection_impl::input_sv_layout( salviar::semantic_value const& sem ) const
 {
-	semantic_layout_dict::const_iterator it = semantic_input_layouts_.find( sem );
+	auto it = semantic_input_layouts_.find( sem );
 	if ( it == semantic_input_layouts_.end() )
 	{
 		return NULL;
@@ -165,13 +164,14 @@ sv_layout* reflection_impl::input_sv_layout( salviar::semantic_value const& sem 
 	return const_cast<sv_layout*>( addressof(it->second) );
 }
 
-sv_layout* reflection_impl::alloc_input_layout( salviar::semantic_value const& sem ){
+sv_layout* reflection_impl::alloc_input_layout( salviar::semantic_value const& sem )
+{
 	return addressof( semantic_input_layouts_[sem] );
 }
 
 sv_layout* reflection_impl::input_sv_layout( symbol* v ) const
 {
-	symbol_layout_dict::const_iterator it = uniform_input_layouts_.find(v);
+	auto it = uniform_input_layouts_.find(v);
 	if ( it == uniform_input_layouts_.end() )
 	{
 		return NULL;
@@ -181,20 +181,21 @@ sv_layout* reflection_impl::input_sv_layout( symbol* v ) const
 
 sv_layout* reflection_impl::input_sv_layout(fixed_string const& name) const
 {
-	name_layout_dict::const_iterator it = name_layouts_.find(name);
+	auto it = name_layouts_.find(name);
 	if( it == name_layouts_.end() )
 	{
 		return NULL;
 	}
 	return it->second;
 }
+
 sv_layout* reflection_impl::alloc_input_layout( symbol* v )
 {
 	return addressof( uniform_input_layouts_[v] );
 }
 
 sv_layout* reflection_impl::output_sv_layout( salviar::semantic_value const& sem ) const{
-	semantic_layout_dict::const_iterator it = semantic_output_layouts_.find( sem );
+	auto it = semantic_output_layouts_.find(sem);
 	if ( it == semantic_output_layouts_.end() ){
 		return NULL;
 	}
@@ -210,11 +211,13 @@ sv_layout* reflection_impl::alloc_output_layout( salviar::semantic_value const& 
 	return addressof(semantic_output_layouts_[sem]);
 }
 
-std::vector<sv_layout*> reflection_impl::layouts(sv_usage usage) const{
+std::vector<sv_layout*> reflection_impl::layouts(sv_usage usage) const
+{
 	std::vector<sv_layout*> ret;
 
 	// Process output
-	if(usage == su_buffer_out || usage == su_stream_out){
+	if(usage == su_buffer_out || usage == su_stream_out)
+	{
 		for(salviar::semantic_value const& sem: semantic_outputs_)
 		{
 			sv_layout* svl = output_sv_layout( sem );

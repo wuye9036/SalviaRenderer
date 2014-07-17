@@ -19,7 +19,8 @@ BEGIN_NS_SALVIAR();
 #define SALVIA_LVT_VECTOR_OF( scalar, length )
 #define SALVIA_LVT_MATRIX_OF( scalar, vector_size, vector_count )
 
-namespace details{
+namespace details
+{
 	uint32_t const dimension_field_offset		= 28;
 	uint32_t const classification_field_offset	= 24;
 	uint32_t const sign_field_offset			= 20;
@@ -83,7 +84,8 @@ enum aggregation_types
 	aggt_array
 };
 
-enum sv_usage{
+enum sv_usage
+{
 	su_none = 0,
 
 	su_stream_in,
@@ -124,7 +126,8 @@ struct sv_layout{
 		, agg_type(aggt_none)
 	{}
 
-	size_t total_size() const{
+	size_t total_size() const
+	{
 		return size + padding;
 	}
 
