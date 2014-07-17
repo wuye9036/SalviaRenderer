@@ -568,18 +568,15 @@ void append_mangling(std::string& str, struct_type* stype){
 	str.append( stype->name->str );
 }
 
-void append_mangling(std::string& str, array_type* atype){
-	for ( size_t i_dim = 0; i_dim < atype->array_lens.size(); ++i_dim ){
-		str.append("A");
-		// str.append( atype->array_lens[i_dim] );
-		// if ( i_dim < atype->array_lens.size() - 1 ){
-		//	str.append("Q");
-		// }
-	}
+// Mangling array. Cannot distinguish between int[] & int[][].
+void append_mangling(std::string& str, array_type* atype)
+{
+	str.append("A");
 	append_mangling( str, atype->elem_type.get() );
 }
 
-void append_mangling(std::string& str, tynode* typespec){
+void append_mangling(std::string& str, tynode* typespec)
+{
 	append_mangling(str, typespec->qual);
 	node_ids node_cls = typespec->node_class();
 	if (node_cls == node_ids::builtin_type)
