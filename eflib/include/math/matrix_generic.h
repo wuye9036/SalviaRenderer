@@ -42,7 +42,7 @@ namespace eflib
 	template <typename ScalarT, int ColumnSize, int RowSize>
 	struct matrix_data
 	{
-		ScalarT data_[RowSize][ColumnSize];
+		ScalarT data_[RowSize][4];
 
 		template <typename IndexT>
 		vector_<ScalarT, RowSize> get_column(IndexT i) const

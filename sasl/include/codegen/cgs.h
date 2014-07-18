@@ -54,11 +54,6 @@ public:
 	virtual value_array	 load_ref(multi_value const&);
 	virtual value_array	 load_ref(multi_value const& v, abis::id abi);
 
-	/*virtual llvm::Value* load(multi_value const&, size_t index);
-	virtual llvm::Value* load(multi_value const&, size_t index, abis::id abi);
-	virtual llvm::Value* load_ref(multi_value const&, size_t index);
-	virtual llvm::Value* load_ref(multi_value const& v, size_t index, abis::id abi);*/
-
 	virtual void store( multi_value& lhs, multi_value const& rhs ) = 0;
 	/// @}
 
