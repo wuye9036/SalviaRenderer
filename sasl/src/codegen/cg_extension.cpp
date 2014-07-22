@@ -766,7 +766,7 @@ value_array cg_extension::extract_value(value_array const& agg, uint32_t index)
 	value_array ret(agg.size(), NULL);
 	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
 	{
-		ret[value_index] = builder_->CreateExtractValue(	agg[value_index], index);
+		ret[value_index] = builder_->CreateExtractValue(agg[value_index], index);
 	}
 	return ret;
 }

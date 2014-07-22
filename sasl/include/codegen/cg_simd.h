@@ -63,7 +63,7 @@ public:
 
 protected:
 	cgs_simd*	service() const;
-	abis::id	local_abi( bool is_c_compatible ) const;
+	abis	local_abi( bool is_c_compatible ) const;
 
 	multi_value	layout_to_value( salviar::sv_layout* svl );
 

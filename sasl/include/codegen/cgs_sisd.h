@@ -102,7 +102,7 @@ public:
 	/// @name Emit statement
 	/// @{
 	void emit_return();
-	void emit_return( multi_value const&, abis::id abi );
+	void emit_return( multi_value const&, abis abi );
 	/// @}
 
 	/// @name Emit assignment
@@ -113,11 +113,11 @@ public:
 	/// @name Emit values
 	/// @{
 	template <typename T>
-	multi_value create_constant_vector( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
-	multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi );
+	multi_value create_constant_vector( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	multi_value create_vector( std::vector<multi_value> const& scalars, abis abi );
 
 	template <typename T>
-	multi_value create_constant_matrix( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	multi_value create_constant_matrix( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}
 
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;

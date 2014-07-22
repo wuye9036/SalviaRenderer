@@ -1,9 +1,11 @@
-#ifndef SASL_ENUM_BASE_H
-#define SASL_ENUM_BASE_H
+#pragma once
+
+#include <eflib/include/platform/typedefs.h>
 
 #include <functional>
 #include <string>
-#include <eflib/include/platform/typedefs.h>
+#include <utility>
+#include <type_traits>
 
 template <typename DerivedT, typename StorageT> class enum_base;
 
@@ -116,5 +118,42 @@ protected:
 	}
 };
 
+template <typename T>
+typename std::enable_if<std::is_enum<T>::value && !std::is_convertible<T, int64_t>::value, T>::type 
+	operator | (T lhs, T rhs)
+{
+	typedef typename std::underlying_type<T>::type underlying;
+	auto lhs_v = static_cast<underlying>(lhs);
+	auto rhs_v = static_cast<underlying>(rhs);
+	return static_cast<T>(lhs_v | rhs_v);
+}
 
-#endif
+template <typename T>
+typename std::enable_if<std::is_enum<T>::value && !std::is_convertible<T, int64_t>::value, T>::type 
+	operator & (T lhs, T rhs)
+{
+	typedef typename std::underlying_type<T>::type underlying;
+	auto lhs_v = static_cast<underlying>(lhs);
+	auto rhs_v = static_cast<underlying>(rhs);
+	return static_cast<T>(lhs_v & rhs_v);
+}
+
+template <typename T>
+typename std::enable_if<std::is_enum<T>::value && !std::is_convertible<T, int64_t>::value, T>::type 
+	operator ^ (T lhs, T rhs)
+{
+	typedef typename std::underlying_type<T>::type underlying;
+	auto lhs_v = static_cast<underlying>(lhs);
+	auto rhs_v = static_cast<underlying>(rhs);
+	return static_cast<T>(lhs_v ^ rhs_v);
+}
+
+template <typename T>
+typename std::enable_if<std::is_enum<T>::value && !std::is_convertible<T, int64_t>::value, T>::type 
+	operator ~ (T lhs)
+{
+	typedef typename std::underlying_type<T>::type underlying;
+	auto lhs_v = static_cast<underlying>(lhs);
+	return static_cast<T>(~lhs_v);
+}
+

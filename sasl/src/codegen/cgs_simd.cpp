@@ -97,7 +97,7 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 
 	value_array selected_value;
 	value_array address(selected_value.size(), NULL);
-	value_kinds::id kind = lhs.kind();
+	value_kinds kind = lhs.kind();
 	Value* mask = exec_masks.back();
 
 	if( kind == value_kinds::reference )
@@ -221,7 +221,7 @@ multi_value cgs_simd::cast_f2b( multi_value const& v )
 	return multi_value();
 }
 
-multi_value cgs_simd::create_vector( vector<multi_value> const& scalars, abis::id abi )
+multi_value cgs_simd::create_vector( vector<multi_value> const& scalars, abis abi )
 {
 	EFLIB_UNREF_DECLARATOR(scalars);
 	EFLIB_UNREF_DECLARATOR(abi);
@@ -235,7 +235,7 @@ void cgs_simd::emit_return()
 	builder().CreateRetVoid();
 }
 
-void cgs_simd::emit_return( multi_value const& ret_v, abis::id abi )
+void cgs_simd::emit_return( multi_value const& ret_v, abis abi )
 {
 	if( abi == abis::unknown ){ abi = fn().abi(); }
 

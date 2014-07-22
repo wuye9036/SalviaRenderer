@@ -25,12 +25,12 @@ public:
 	virtual multi_value cast_f2b ( multi_value const& v );
 
 	void emit_return();
-	void emit_return( multi_value const&, abis::id abi );
+	void emit_return( multi_value const&, abis abi );
 	
 	virtual multi_value emit_ddx( multi_value const& v );
 	virtual multi_value emit_ddy( multi_value const& v );
 	
-	virtual multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi );
+	virtual multi_value create_vector( std::vector<multi_value> const& scalars, abis abi );
 
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }

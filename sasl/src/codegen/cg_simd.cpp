@@ -550,7 +550,7 @@ multi_value cg_simd::layout_to_value( sv_layout* svl )
 	return ret;
 }
 
-abis::id cg_simd::local_abi( bool /*is_c_compatible*/ ) const
+abis cg_simd::local_abi( bool /*is_c_compatible*/ ) const
 {
 	return abis::llvm;
 }

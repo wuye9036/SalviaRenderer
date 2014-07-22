@@ -133,7 +133,7 @@ void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 	value_array src(parallel_factor_, NULL);
 	value_array address(parallel_factor_, NULL);
 
-	value_kinds::id kind = lhs.kind();
+	value_kinds kind = lhs.kind();
 
 	if( kind == value_kinds::reference ){	
 		src = rhs.load( lhs.abi() );
@@ -228,7 +228,7 @@ multi_value cgs_sisd::cast_f2f( multi_value const& v, cg_type* dest_tyi )
 	return multi_value();
 }
 
-multi_value cgs_sisd::create_vector( std::vector<multi_value> const& scalars, abis::id abi ){
+multi_value cgs_sisd::create_vector( std::vector<multi_value> const& scalars, abis abi ){
 	builtin_types scalar_hint = scalars[0].hint();
 	builtin_types hint = vector_of(scalar_hint, scalars.size());
 
@@ -244,7 +244,7 @@ void cgs_sisd::emit_return(){
 	builder().CreateRetVoid();
 }
 
-void cgs_sisd::emit_return( multi_value const& ret_v, abis::id abi ){
+void cgs_sisd::emit_return( multi_value const& ret_v, abis abi ){
 	if( abi == abis::unknown ){ abi = fn().abi(); }
 
 	if( fn().return_via_arg() )

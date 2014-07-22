@@ -64,7 +64,7 @@ public:
 
 protected:
 	virtual cgs_sisd*	service() const;
-	abis::id	local_abi( bool is_c_compatible ) const;
+	abis	local_abi( bool is_c_compatible ) const;
 
 	// Called by function_full_def visitor.
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement );

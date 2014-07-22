@@ -124,7 +124,7 @@ cg_function* cg_service::fetch_function(function_def* fn_node){
 	ret->ret_void			= (fn_node->type->result_type->tycode == builtin_types::_void);
 	ret->cg					= this;
 
-	abis::id abi = param_abi( ret->c_compatible );
+	abis abi = param_abi( ret->c_compatible );
 
 	// Create function signature.
 	vector<Type*> par_tys;
@@ -200,7 +200,7 @@ cg_function* cg_service::fetch_function(function_def* fn_node){
 	return ret;
 }
 
-multi_value cg_service::null_value( cg_type* tyinfo, abis::id abi )
+multi_value cg_service::null_value( cg_type* tyinfo, abis abi )
 {
 	assert( tyinfo && abi != abis::unknown );
 	Type* value_type = tyinfo->ty(abi);
@@ -210,7 +210,7 @@ multi_value cg_service::null_value( cg_type* tyinfo, abis::id abi )
 	return val;
 }
 
-multi_value cg_service::null_value( builtin_types bt, abis::id abi )
+multi_value cg_service::null_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
 	Type* value_type = type_( bt, abi );
@@ -226,19 +226,19 @@ value_array cg_service::invalid_value_array()
 
 multi_value cg_service::create_value(
 	cg_type* tyinfo, value_array const& values,
-	value_kinds::id k, abis::id abi)
+	value_kinds k, abis abi)
 {
 	return multi_value( tyinfo, values, k, abi, this );
 }
 
 multi_value cg_service::create_value(
 	builtin_types hint, value_array const& values,
-	value_kinds::id k, abis::id abi)
+	value_kinds k, abis abi)
 {
 	return multi_value( hint, values, k, abi, this );
 }
 
-multi_value cg_service::create_value( cg_type* tyinfo, builtin_types hint, value_array const& values, value_kinds::id k, abis::id abi )
+multi_value cg_service::create_value( cg_type* tyinfo, builtin_types hint, value_array const& values, value_kinds k, abis abi )
 {
 	if( tyinfo ){
 		return create_value(tyinfo, values, k, abi);
@@ -256,10 +256,14 @@ cg_type* cg_service::create_ty(tynode* tyn)
 	cg_type* ret= ctxt_->create_cg_type();
 	ret->tyn		= tyn;
 
-	if( tyn->is_builtin() ){
-		ret->tys[abis::c]			= type_(tyn->tycode, abis::c);
-		ret->tys[abis::llvm]		= type_(tyn->tycode, abis::llvm);
-	} else {
+	if( tyn->is_builtin() )
+	{
+		ret->vm_type( abis::c,		type_(tyn->tycode, abis::c)    );
+		ret->vm_type( abis::llvm,	type_(tyn->tycode, abis::llvm) );
+		ret->vm_type( abis::regs,	type_(tyn->tycode, abis::regs) );
+	}
+	else
+	{
 		if( tyn->is_struct() )
 		{
 			shared_ptr<struct_type> struct_tyn = tyn->as_handle<struct_type>();
@@ -280,16 +284,16 @@ cg_type* cg_service::create_ty(tynode* tyn)
 			StructType* ty_c	= StructType::create( c_member_types,	struct_tyn->name->str.raw_string() + ".abi.c" );
 			StructType* ty_llvm	= StructType::create( llvm_member_types,struct_tyn->name->str.raw_string() + ".abi.llvm" );
 
-			ret->tys[abis::c]	= ty_c;
-			ret->tys[abis::llvm]	= ty_llvm;
+			ret->vm_type(abis::c,	 ty_c);
+			ret->vm_type(abis::llvm, ty_llvm);
 		}
 		else if( tyn->is_array() )
 		{
 			array_type*	array_tyn	= polymorphic_cast<array_type*>(tyn);
 			cg_type*	elem_ti		= create_ty( array_tyn->elem_type.get() );
 
-			ret->tys[abis::c]		= PointerType::getUnqual( elem_ti->ty(abis::c) );
-			ret->tys[abis::llvm]		= PointerType::getUnqual( elem_ti->ty(abis::llvm) );
+			ret->vm_type( abis::c,	  PointerType::getUnqual( elem_ti->ty(abis::c)    ) );
+			ret->vm_type( abis::llvm, PointerType::getUnqual( elem_ti->ty(abis::llvm) ) );
 		}
 		else
 		{
@@ -302,31 +306,39 @@ cg_type* cg_service::create_ty(tynode* tyn)
 
 cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 {
-	if( !agg ){
+	if( !agg )
+	{
 		return NULL;
-	} else if ( agg->tyn_ptr()->is_struct() ){
+	} 
+	else if ( agg->tyn_ptr()->is_struct() )
+	{
 		shared_ptr<struct_type> struct_sty = agg->tyn_ptr()->as_handle<struct_type>();
 
 		size_t var_index = 0;
-		for( shared_ptr<declaration> const& child: struct_sty->decls ){
-			if( child->node_class() == node_ids::variable_declaration ){
-				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
+		for(auto const& child: struct_sty->decls)
+		{
+			if( child->node_class() == node_ids::variable_declaration )
+			{
+				auto vardecl = child->as_handle<variable_declaration>();
 				var_index += vardecl->declarators.size();
-				if( index < var_index ){
+				if( index < var_index )
+				{
 					return const_cast<cg_service*>(this)->ctxt_->get_node_context( vardecl.get() )->ty;
 				}
 			}
 		}
 
 		assert(!"Out of struct bound.");
-	} else {
+	}
+	else
+	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
 	return NULL;
 }
 
-multi_value cg_service::create_variable( builtin_types bt, abis::id abi, std::string const& name )
+multi_value cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* vty = type_( bt, abi );
 	value_array values(parallel_factor_, NULL);
@@ -337,7 +349,7 @@ multi_value cg_service::create_variable( builtin_types bt, abis::id abi, std::st
 	return create_value( bt, values, value_kinds::reference, abi );
 }
 
-multi_value cg_service::create_variable( cg_type const* ty, abis::id abi, std::string const& name )
+multi_value cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
 {
 	Type* vty = type_( ty, abi );
 	value_array values(parallel_factor_, NULL);
@@ -437,13 +449,13 @@ insert_point_t cg_service::insert_point() const
 	return ret;
 }
 
-Type* cg_service::type_(builtin_types bt, abis::id abi)
+Type* cg_service::type_(builtin_types bt, abis abi)
 {
 	assert( abi != abis::unknown );
 	return get_llvm_type( context(), bt, abi );
 }
 
-Type* cg_service::type_(cg_type const* ty, abis::id abi)
+Type* cg_service::type_(cg_type const* ty, abis abi)
 {
 	assert( ty->ty(abi) );
 	return ty->ty(abi);
@@ -451,7 +463,7 @@ Type* cg_service::type_(cg_type const* ty, abis::id abi)
 
 value_array cg_service::load(multi_value const& v)
 {
-	value_kinds::id kind = v.kind();
+	value_kinds kind = v.kind();
 	value_array		raw = v.raw();
 	elem_indexes	mem_indexes = v.indexes();
 	value_array		ret = value_array(v.value_count(), NULL);
@@ -473,7 +485,7 @@ value_array cg_service::load(multi_value const& v)
 				ret = emit_extract_val(v.parent()->to_rvalue(), mem_indexes[0]).load();
 			} else {
 				// Multi-members must be swizzle/writemask.
-				assert( (kind & value_kinds::reference) == 0 );
+				assert( (kind & value_kinds::reference) == value_kinds::unknown );
 				multi_value resolved = emit_extract_elem_mask(v.parent()->to_rvalue(), mem_indexes);
 				return resolved.load( v.abi() );
 			}
@@ -488,7 +500,8 @@ value_array cg_service::load(multi_value const& v)
 	}
 
 	// Resolve reference
-	if( kind & value_kinds::reference ){
+	if( (kind & value_kinds::reference) != value_kinds::unknown )
+	{
 		for(size_t i = 0; i < v.value_count(); ++i)
 		{
 			ret[i] = builder().CreateLoad(ret[i]);
@@ -498,14 +511,14 @@ value_array cg_service::load(multi_value const& v)
 	return ret;
 }
 
-value_array cg_service::load( multi_value const& v, abis::id abi )
+value_array cg_service::load( multi_value const& v, abis abi )
 {
 	return load_as(v, abi);
 }
 
 value_array cg_service::load_ref( multi_value const& v )
 {
-	value_kinds::id kind = v.kind();
+	value_kinds kind = v.kind();
 
 	switch( static_cast<int>(kind) )
 	{
@@ -513,7 +526,7 @@ value_array cg_service::load_ref( multi_value const& v )
 		{
 			return v.raw();
 		}
-	case static_cast<int>(value_kinds::elements|value_kinds::reference):
+	case static_cast<int>(value_kinds::elements) | static_cast<int>(value_kinds::reference):
 		{
 			multi_value non_ref( v );
 			non_ref.kind( value_kinds::elements );
@@ -529,7 +542,7 @@ value_array cg_service::load_ref( multi_value const& v )
 	return value_array(parallel_factor_, NULL);
 }
 
-value_array cg_service::load_ref( multi_value const& v, abis::id abi )
+value_array cg_service::load_ref( multi_value const& v, abis abi )
 {
 	if( v.abi() == abi || v.hint() == builtin_types::_sampler )
 	{
@@ -541,7 +554,7 @@ value_array cg_service::load_ref( multi_value const& v, abis::id abi )
 	}
 }
 
-value_array cg_service::load_as( multi_value const& v, abis::id abi )
+value_array cg_service::load_as( multi_value const& v, abis abi )
 {
 	assert( abi != abis::unknown );
 
@@ -565,7 +578,7 @@ value_array cg_service::load_as( multi_value const& v, abis::id abi )
 	return value_array(parallel_factor_, NULL);
 }
 
-value_array cg_service::load_as_llvm_c(multi_value const& v, abis::id abi)
+value_array cg_service::load_as_llvm_c(multi_value const& v, abis abi)
 {
 	builtin_types hint = v.hint();
 
@@ -627,7 +640,7 @@ multi_value cg_service::emit_insert_val( multi_value const& lhs, multi_value con
 	return create_value( lhs.ty(), lhs.hint(), new_value, value_kinds::value, lhs.abi() );
 }
 
-multi_value cg_service::emit_insert_val(multi_value const& lhs, int index, multi_value const& elem_value)
+multi_value cg_service::emit_insert_val(multi_value const& lhs, size_t index, multi_value const& elem_value)
 {
 	assert(index >= 0);
 
@@ -645,7 +658,7 @@ multi_value cg_service::emit_insert_val(multi_value const& lhs, int index, multi
 		}
 		else if ( value_type->isVectorTy() )
 		{
-			Value* vm_index = ext_->get_int(index);
+			Value* vm_index = ext_->get_int( static_cast<int>(index) );
 			value_array index_vm_values(parallel_factor_, vm_index);
 			multi_value index_value = create_value(
 				builtin_types::_sint32, index_vm_values, value_kinds::value, abis::llvm
@@ -658,7 +671,7 @@ multi_value cg_service::emit_insert_val(multi_value const& lhs, int index, multi
 	return create_value( lhs.ty(), lhs.hint(), new_value, value_kinds::value, lhs.abi() );
 }
 
-abis::id cg_service::promote_abi( abis::id abi0, abis::id abi1 )
+abis cg_service::promote_abi( abis abi0, abis abi1 )
 {
 	if( abi0 == abis::c ){ return abi1; }
 	if( abi1 == abis::c ){ return abi0; }
@@ -667,7 +680,7 @@ abis::id cg_service::promote_abi( abis::id abi0, abis::id abi1 )
 	return abi0;
 }
 
-abis::id cg_service::promote_abi( abis::id abi0, abis::id abi1, abis::id abi2 )
+abis cg_service::promote_abi( abis abi0, abis abi1, abis abi2 )
 {
 	return promote_abi(promote_abi(abi0, abi1), abi2);
 }
@@ -830,7 +843,7 @@ multi_value cg_service::emit_cross( multi_value const& lhs, multi_value const& r
 	return emit_sub( emit_mul_comp(lvec_a, rvec_b), emit_mul_comp(lvec_b, rvec_a) );
 }
 
-multi_value cg_service::emit_extract_ref( multi_value const& lhs, int idx )
+multi_value cg_service::emit_extract_ref( multi_value const& lhs, size_t idx )
 {
 	assert( lhs.storable() );
 
@@ -873,7 +886,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, multi_value co
 {
 	assert( lhs.storable() );
 
-	abis::id promoted_abi = promote_abi( lhs.abi(), idx.abi() );
+	abis promoted_abi = promote_abi( lhs.abi(), idx.abi() );
 	builtin_types agg_hint = lhs.hint();
 
 	if( is_vector(agg_hint) )
@@ -939,12 +952,12 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, multi_value co
 	return multi_value();
 }
 
-multi_value cg_service::emit_extract_val( multi_value const& lhs, int idx )
+multi_value cg_service::emit_extract_val( multi_value const& lhs, size_t idx )
 {
 	builtin_types agg_hint = lhs.hint();
 	value_array val = lhs.load();
 	value_array elem_val(parallel_factor_, NULL);
-	abis::id abi = abis::unknown;
+	abis abi = abis::unknown;
 	builtin_types elem_hint = builtin_types::none;
 	cg_type* elem_tyi = NULL;
 
@@ -964,7 +977,7 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, int idx )
 			break;
 		case abis::llvm:
 			{
-				Value* vm_index = ext_->get_int(idx);
+				Value* vm_index = ext_->get_int<int>( static_cast<int>(idx) );
 				for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 				{
 					elem_val[value_index] = builder().CreateExtractElement(
@@ -994,7 +1007,7 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, multi_value co
 	builtin_types agg_hint = lhs.hint();
 
 	value_array elem_val(parallel_factor_, NULL);
-	abis::id abi = promote_abi(lhs.abi(), idx.abi());
+	abis abi = promote_abi(lhs.abi(), idx.abi());
 
 	builtin_types elem_hint = builtin_types::none;
 	cg_type* elem_tyi = NULL;
@@ -1127,7 +1140,7 @@ multi_value cg_service::emit_extract_col( multi_value const& lhs, size_t index )
 
 multi_value cg_service::emit_dot_vv( multi_value const& lhs, multi_value const& rhs )
 {
-	abis::id promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
+	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
 	// assert( promoted_abi == abis::llvm );
 
 	size_t vec_size = vector_size( lhs.hint() );
@@ -1192,7 +1205,7 @@ multi_value cg_service::emit_mul_mm( multi_value const& lhs, multi_value const& 
 
 	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
 	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
-	abis::id out_abi = lhs.abi();
+	abis out_abi = lhs.abi();
 
 	vector<multi_value> out_cells(out_v*out_r);
 	out_cells.resize( out_v*out_r );
@@ -1224,7 +1237,7 @@ multi_value cg_service::emit_abs( multi_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
-	abis::id arg_abi = arg_value.abi();
+	abis arg_abi = arg_value.abi();
 
 	value_array v = arg_value.load(arg_abi);
 	value_array ret_v = ext_->call_unary_intrin( v[0]->getType(), v, boost::bind(&cg_extension::abs_sv, ext_.get(), _1) );
@@ -1235,7 +1248,7 @@ multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
-	abis::id arg_abi = arg_value.abi();
+	abis arg_abi = arg_value.abi();
 
 	value_array v = arg_value.load(arg_abi);
 
@@ -1256,7 +1269,7 @@ multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 	}
 }
 
-multi_value cg_service::undef_value( builtin_types bt, abis::id abi )
+multi_value cg_service::undef_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = type_( bt, abi );
@@ -1290,7 +1303,7 @@ Mask Value       |         N/A         |       N/A       |        uint32_t      
 */
 multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args, Value* exec_mask )
 {
-	abis::id arg_abi = fn.c_compatible ? abis::c : abis::llvm;
+	abis arg_abi = fn.c_compatible ? abis::c : abis::llvm;
 
 	vector<Value*>	arg_multi_values(fn.physical_args_count(), NULL);
 	vector<Value*>	physical_args   (fn.physical_args_count(), NULL);
@@ -1384,7 +1397,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 		ret_value_array[0] = ret_value;
 	}
 
-	abis::id ret_abi = arg_abi;
+	abis ret_abi = arg_abi;
 	return create_value(fn.result_type(), ret_value_array, value_kinds::value, ret_abi);
 }
 
@@ -1406,7 +1419,7 @@ multi_value cg_service::cast_v2s( multi_value const& v )
 
 multi_value cg_service::cast_bits( multi_value const& v, cg_type* dest_tyi )
 {
-	abis::id abi = promote_abi(v.abi(), abis::llvm);
+	abis abi = promote_abi(v.abi(), abis::llvm);
 
 	Type* ty = dest_tyi->ty(abi);
 	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
@@ -1568,7 +1581,7 @@ multi_value cg_service::emit_cmp( multi_value const& lhs, multi_value const& rhs
 	assert( hint == rhs.hint() );
 	assert( is_scalar(scalar_hint) );
 
-	abis::id promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
+	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
 
 	value_array lhs_v = lhs.load(promoted_abi);
 	value_array rhs_v = rhs.load(promoted_abi);
@@ -1629,8 +1642,8 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 	value_array ret(parallel_factor_, NULL);
 
 	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
-	abis::id promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
-	abis::id internal_abi = promote_abi( promoted_abi, abis::llvm );
+	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
+	abis internal_abi = promote_abi( promoted_abi, abis::llvm );
 
 	value_array lhs_v = lhs.load(internal_abi);
 	value_array rhs_v = rhs.load(internal_abi);
@@ -1666,7 +1679,7 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 	}
 
 	multi_value retval = create_value(hint, ret, value_kinds::value, internal_abi);
-	abis::id ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
+	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
 	return create_value(hint, retval.load(ret_abi), value_kinds::value, ret_abi);
 }
 
@@ -1706,7 +1719,7 @@ multi_value cg_service::emit_tex2Dproj( multi_value const& samp, multi_value con
 	return emit_tex_proj_impl(samp, coord, externals::tex2dproj_ps);
 }
 
-multi_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v )
+multi_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v )
 {
 	builtin_types hint = tyinfo ? tyinfo->hint() : bt;
 	builtin_types scalar_hint = scalar_of(hint);
@@ -1739,7 +1752,7 @@ multi_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_i
 
 	builtin_types hint = v0.hint();
 	assert( hint == v1.hint() );
-	abis::id abi = promote_abi( v0.abi(), v1.abi() );
+	abis abi = promote_abi( v0.abi(), v1.abi() );
 
 	binary_intrin_functor intrin_sv = ext_->promote_to_binary_sv(
 		ext_->bind_external_to_binary(scalar_intrin), null_binary, null_binary
@@ -1822,7 +1835,7 @@ multi_value cg_service::emit_bin_es_ta_sva( multi_value const& lhs, multi_value 
 multi_value cg_service::emit_tex_lod_impl( multi_value const& samp, multi_value const& coord, externals::id vs_intrin, externals::id ps_intrin )
 {
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
-	abis::id abi = param_abi(false);
+	abis abi = param_abi(false);
 	assert(abi == abis::llvm);
 
 	Type* ret_ty = type_(v4f32_hint, abi);
@@ -1856,7 +1869,7 @@ multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value
 	builtin_types coord_hint = coord.hint();
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 
-	abis::id abi = param_abi(false);
+	abis abi = param_abi(false);
 
 	Type* ret_ty = type_( v4f32_hint, abi );
 	value_array ret_ptr = ext_->stack_alloc(ret_ty, parallel_factor_, "ret.tmp");
@@ -1897,7 +1910,7 @@ multi_value cg_service::emit_tex_proj_impl( multi_value const& samp, multi_value
 
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 
-	abis::id abi = param_abi(false);
+	abis abi = param_abi(false);
 
 	Type* ret_ty = type_( v4f32_hint, abi );
 	value_array ret_ptr = ext_->stack_alloc( ret_ty, parallel_factor_, "ret.tmp" );
@@ -1956,7 +1969,7 @@ node_semantic* cg_service::get_node_semantic( sasl::syntax_tree::node* v )
 
 multi_value cg_service::emit_select( multi_value const& flag, multi_value const& v0, multi_value const& v1 )
 {
-	abis::id promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
+	abis promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
 
 	value_array flag_v = flag.load(promoted_abi);
 	value_array v0_v = v0.load(promoted_abi);
@@ -2106,7 +2119,7 @@ multi_value cg_service::create_scalar(Value* val, cg_type* tyinfo, builtin_types
 	return create_value( tyinfo, hint, value_array(parallel_factor_, val), value_kinds::value, abis::llvm );
 }
 
-abis::id cg_service::param_abi( bool is_c_compatible ) const
+abis cg_service::param_abi( bool is_c_compatible ) const
 {
 	return is_c_compatible ? abis::c : abis::llvm;
 }

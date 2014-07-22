@@ -19,22 +19,22 @@ BEGIN_NS_SASL_CODEGEN();
 
 class ty_cache_t{
 public:
-	Type* type( LLVMContext& ctxt, builtin_types bt, abis::id abi );
-	std::string const& name( builtin_types bt, abis::id abi );
+	Type* type( LLVMContext& ctxt, builtin_types bt, abis abi );
+	std::string const& name( builtin_types bt, abis abi );
 	void initialize( LLVMContext& ctxt );
 private:
-	Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis::id abi );
-	Type* create_c_or_llvm_ty( LLVMContext& ctxt, builtin_types bt, abis::id abi );
+	Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
+	Type* create_abi_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
 
 	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> >	cache[abis::count];
 	unordered_map<builtin_types, std::string>							ty_name[abis::count];
 };
 
-Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis::id abi )
+Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis abi )
 {
 	if( abi == abis::unknown ) { return NULL; }
 
-	unordered_map<builtin_types, Type*>& ty_table = cache[abi][&ctxt];
+	unordered_map<builtin_types, Type*>& ty_table = cache[static_cast<int>(abi)][&ctxt];
 	unordered_map<builtin_types, Type*>::iterator ty_table_it = ty_table.find( bt );
 	
 	if ( ty_table_it != ty_table.end() ){
@@ -43,19 +43,20 @@ Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis::id abi )
 
 	Type*& found_ty = ty_table[bt];
 	found_ty = create_ty( ctxt, bt, abi );
-	if( is_sampler(bt) ){
-		cache[abis::c][&ctxt][bt]
-		= cache[abis::llvm][&ctxt][bt]
+	if( is_sampler(bt) )
+	{
+		  cache[static_cast<int>(abis::c)][&ctxt][bt]
+		= cache[static_cast<int>(abis::llvm)][&ctxt][bt]
 		= found_ty;
 	}
 
 	return found_ty;
 }
 
-std::string const& ty_cache_t::name( builtin_types bt, abis::id abi )
+std::string const& ty_cache_t::name( builtin_types bt, abis abi )
 {
-	std::string& ret_name = ty_name[abi][bt];
-	char const* suffix = NULL;
+	std::string& ret_name = ty_name[static_cast<int>(abi)][bt];
+	char const* suffix = nullptr;
 	switch( abi )
 	{
 	case abis::c:
@@ -63,6 +64,9 @@ std::string const& ty_cache_t::name( builtin_types bt, abis::id abi )
 		break;
 	case abis::llvm:
 		suffix = ".l";
+		break;
+	case abis::regs:
+		suffix = ".r";
 		break;
 	default:
 		assert(false);
@@ -114,7 +118,7 @@ std::string const& ty_cache_t::name( builtin_types bt, abis::id abi )
 	return ret_name;
 }
 
-Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis::id abi )
+Type* ty_cache_t::create_ty(LLVMContext& ctxt, builtin_types bt, abis abi)
 {
 	if ( is_void( bt ) )
 	{
@@ -130,33 +134,38 @@ Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis::id abi )
 	{
 	case abis::c:
 	case abis::llvm:
-		return create_c_or_llvm_ty(ctxt, bt, abi);
+	case abis::regs:
+		return create_abi_ty(ctxt, bt, abi);
+	default:
+		assert(false);
+		return nullptr;
 	}
-	
-	assert(false);
-	return NULL;
 }
 
 void ty_cache_t::initialize( LLVMContext& ctxt )
 {
-	cache[abis::c			].erase(&ctxt);
-	cache[abis::llvm		].erase(&ctxt);
+	cache[static_cast<int>(abis::c)]	.erase(&ctxt);
+	cache[static_cast<int>(abis::llvm)]	.erase(&ctxt);
 }
 
-Type* ty_cache_t::create_c_or_llvm_ty( LLVMContext& ctxt, builtin_types bt, abis::id abi )
+Type* ty_cache_t::create_abi_ty(LLVMContext& ctxt, builtin_types bt, abis abi)
 {
 	if( is_scalar(bt) )
 	{
-		if( bt == builtin_types::_boolean ){
+		if( bt == builtin_types::_boolean )
+		{
 			return IntegerType::get( ctxt, 8 );
 		}
-		if( is_integer(bt) ){
+		if( is_integer(bt) )
+		{
 			return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
 		}
-		if ( bt == builtin_types::_float ){
+		if ( bt == builtin_types::_float )
+		{
 			return Type::getFloatTy( ctxt );
 		}
-		if ( bt == builtin_types::_double ){
+		if ( bt == builtin_types::_double )
+		{
 			return Type::getDoubleTy( ctxt );
 		}
 	}
@@ -165,11 +174,19 @@ Type* ty_cache_t::create_c_or_llvm_ty( LLVMContext& ctxt, builtin_types bt, abis
 	{
 		Type* elem_ty = type(ctxt, scalar_of(bt), abi );
 		size_t vec_size = vector_size(bt);
-		if( abi == abis::c ){
-			vector<Type*> elem_tys(vec_size, elem_ty);
-			return StructType::create( elem_tys, name(bt, abi), true );
-		} else {
+		switch(abi)
+		{
+		case abis::c:
+			{
+				vector<Type*> elem_tys(vec_size, elem_ty);
+				return StructType::create(elem_tys, name(bt, abi), true);
+			}
+		case abis::llvm:
 			return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
+		case abis::regs:
+			return ArrayType::get(elem_ty, vec_size);
+		default:
+			return nullptr;
 		}
 	}
 
@@ -184,7 +201,7 @@ Type* ty_cache_t::create_c_or_llvm_ty( LLVMContext& ctxt, builtin_types bt, abis
 }
 
 ty_cache_t cache;
-Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis::id abi )
+Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi )
 {
 	return cache.type(ctxt, bt, abi);
 }

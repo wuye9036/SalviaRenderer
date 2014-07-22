@@ -33,8 +33,8 @@ BEGIN_NS_SASL_CODEGEN();
 cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm)
 	: tyn(tyn)
 {
-	tys[abis::c]		= ty_c;
-	tys[abis::llvm]		= ty_llvm;
+	tys[static_cast<int>(abis::c)]		= ty_c;
+	tys[static_cast<int>(abis::llvm)]	= ty_llvm;
 }
 
 cg_type::cg_type(): tyn(NULL)
@@ -42,19 +42,28 @@ cg_type::cg_type(): tyn(NULL)
 	memset( tys, 0, sizeof(tys) );
 }
 
-builtin_types cg_type::hint() const{
-	if( !tyn || !tyn->is_builtin() ){
+builtin_types cg_type::hint() const
+{
+	if( !tyn || !tyn->is_builtin() )
+	{
 		return builtin_types::none;
 	}
 	return tyn->tycode;
 }
 
-tynode* cg_type::tyn_ptr() const{
+tynode* cg_type::tyn_ptr() const
+{
 	return tyn;
 }
 
-llvm::Type* cg_type::ty(abis::id abi) const{
-	return tys[abi];
+llvm::Type* cg_type::ty(abis abi) const
+{
+	return tys[static_cast<int>(abi)];
+}
+
+void cg_type::vm_type(abis abi, Type* t)
+{
+	tys[static_cast<int>(abi)] = t;
 }
 
 multi_value::multi_value(size_t num_value)
@@ -66,7 +75,7 @@ multi_value::multi_value(size_t num_value)
 
 multi_value::multi_value(
 	cg_type* ty, value_array const& val,
-	value_kinds::id k, abis::id abi, cg_service* cg)
+	value_kinds k, abis abi, cg_service* cg)
 	: ty_(ty), val_(val)
 	, cg_(cg), kind_(k)
 	, builtin_ty_(builtin_types::none), abi_(abi)
@@ -75,7 +84,7 @@ multi_value::multi_value(
 
 multi_value::multi_value(
 	builtin_types hint, value_array const& val,
-	value_kinds::id k, abis::id abi, cg_service* cg)
+	value_kinds k, abis abi, cg_service* cg)
 	: ty_(NULL), val_(val)
 	, builtin_ty_(hint), abi_(abi)
 	, kind_(k), cg_(cg)
@@ -91,7 +100,7 @@ multi_value::multi_value(multi_value const& rhs)
 	index(rhs.index_.get());
 }
 
-abis::id multi_value::abi() const{
+abis multi_value::abi() const{
 	return abi_;
 }
 
@@ -119,7 +128,7 @@ builtin_types multi_value::hint() const
 	return ty_ ? ty_->hint() : builtin_ty_;
 }
 
-value_array multi_value::load(abis::id abi) const{
+value_array multi_value::load(abis abi) const{
 	return cg_->load(*this, abi);
 }
 
@@ -127,7 +136,7 @@ value_array multi_value::load() const{
 	return cg_->load(*this);
 }
 
-value_kinds::id multi_value::kind() const{
+value_kinds multi_value::kind() const{
 	return kind_;
 }
 
@@ -168,7 +177,7 @@ bool multi_value::valid() const
 		;
 }
 
-void multi_value::emplace(value_array const& v, value_kinds::id k, abis::id abi)
+void multi_value::emplace(value_array const& v, value_kinds k, abis abi)
 {
 	val_ = v;
 	kind_ = k;
@@ -238,7 +247,7 @@ multi_value multi_value::as_ref() const
 		ret.kind_ = value_kinds::reference;
 		break;
 	case value_kinds::elements:
-		ret.kind_ = (value_kinds::id)( value_kinds::elements | value_kinds::reference );
+		ret.kind_ = value_kinds::elements | value_kinds::reference;
 		break;
 	}
 
@@ -259,11 +268,11 @@ cg_type*		multi_value::ty() const		{ return ty_; }
 void			multi_value::ty(cg_type* v)	{ ty_ = v; }
 
 void			multi_value::hint( builtin_types bt ){ builtin_ty_ = bt; }
-void			multi_value::abi( abis::id abi ){ this->abi_ = abi; }
+void			multi_value::abi( abis abi ){ this->abi_ = abi; }
 elem_indexes	multi_value::indexes() const{ return elem_indexes_; }
 void			multi_value::indexes(elem_indexes const& v){ elem_indexes_ = v; }
 
-void			multi_value::kind( value_kinds::id vkind ) { kind_ = vkind; }
+void			multi_value::kind( value_kinds vkind ) { kind_ = vkind; }
 void			multi_value::parent( multi_value const& v ){ parent_.reset( new multi_value(v) ); }
 void			multi_value::parent( multi_value const* v ){ if(v){ parent(*v); } }
 multi_value*	multi_value::parent() const { return parent_.get(); }
@@ -358,7 +367,7 @@ multi_value cg_function::arg(size_t index) const
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
 	std::advance(it, logical_arg_offset() + index);
-	abis::id arg_abi = cg->param_abi(c_compatible);
+	abis arg_abi = cg->param_abi(c_compatible);
 
 	Value* physical_arg_value = &(*it);
 	value_array physical_multi_value;
@@ -379,7 +388,7 @@ multi_value cg_function::arg(size_t index) const
 		physical_multi_value.push_back(physical_arg_value);
 	}
 	
-	value_kinds::id vkind = value_arg_as_ref(index) ? value_kinds::reference : value_kinds::value;
+	value_kinds vkind = value_arg_as_ref(index) ? value_kinds::reference : value_kinds::value;
 	return cg->create_value(par_ty, physical_multi_value, vkind, arg_abi);
 }
 
@@ -423,7 +432,7 @@ bool cg_function::multi_value_args() const
 	return cg->parallel_factor() > 1;
 }
 
-abis::id cg_function::abi() const
+abis cg_function::abi() const
 {
 	return cg->param_abi( c_compatible );
 }

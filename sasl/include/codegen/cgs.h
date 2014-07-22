@@ -50,9 +50,9 @@ public:
 	/// @name Value Operators
 	/// @{
 	virtual value_array	 load(multi_value const&);
-	virtual value_array	 load(multi_value const&, abis::id abi);
+	virtual value_array	 load(multi_value const&, abis abi);
 	virtual value_array	 load_ref(multi_value const&);
-	virtual value_array	 load_ref(multi_value const& v, abis::id abi);
+	virtual value_array	 load_ref(multi_value const& v, abis abi);
 
 	virtual void store( multi_value& lhs, multi_value const& rhs ) = 0;
 	/// @}
@@ -94,11 +94,11 @@ public:
 	/// @name Emit element extraction
 	/// @{
 	virtual multi_value emit_insert_val( multi_value const& lhs, multi_value const& idx, multi_value const& elem_value );
-	virtual multi_value emit_insert_val( multi_value const& lhs, int index, multi_value const& elem_value );
+	virtual multi_value emit_insert_val( multi_value const& lhs, size_t index, multi_value const& elem_value );
 
-	virtual multi_value emit_extract_val( multi_value const& lhs, int idx );
+	virtual multi_value emit_extract_val( multi_value const& lhs, size_t idx );
 	virtual multi_value emit_extract_val( multi_value const& lhs, multi_value const& idx );
-	virtual multi_value emit_extract_ref( multi_value const& lhs, int idx );
+	virtual multi_value emit_extract_ref( multi_value const& lhs, size_t idx );
 	virtual multi_value emit_extract_ref( multi_value const& lhs, multi_value const& idx );
 	virtual multi_value emit_extract_elem_mask(multi_value const& vec, elem_indexes const& indexes);
 	multi_value emit_extract_col( multi_value const& lhs, size_t index );
@@ -168,7 +168,7 @@ public:
 	/// @name Emit statement
 	/// @{
 	virtual void emit_return() = 0;
-	virtual void emit_return( multi_value const&, abis::id abi ) = 0;
+	virtual void emit_return( multi_value const&, abis abi ) = 0;
 	/// @}
 
 	/// @name Context switch hooks
@@ -253,9 +253,9 @@ public:
 	}
 	virtual multi_value create_scalar(llvm::Value* val, cg_type* tyinfo, builtin_types hint);
 
-	multi_value  null_value		(cg_type* tyinfo, abis::id abi);
-	multi_value  null_value		(builtin_types bt, abis::id abi);
-	multi_value  undef_value	(builtin_types bt, abis::id abi);
+	multi_value  null_value		(cg_type* tyinfo, abis abi);
+	multi_value  null_value		(builtin_types bt, abis abi);
+	multi_value  undef_value	(builtin_types bt, abis abi);
 	multi_value  one_value		(multi_value const& proto);
 	multi_value  numeric_value	(multi_value const& proto, double fp, uint64_t ui);
 	llvm::Value* get_mask_flag	(llvm::Value* mask, size_t index);
@@ -263,21 +263,21 @@ public:
 	llvm::Value* combine_flags	(value_array const& flags);
 	value_array  split_mask		(llvm::Value* mask);
 
-	multi_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v );
+	multi_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v );
 
 	value_array invalid_value_array();
 
 	multi_value create_value( cg_type* tyinfo
-		, value_array const& v, value_kinds::id k, abis::id abi );
+		, value_array const& v, value_kinds k, abis abi );
 	multi_value create_value( builtin_types hint
-		, value_array const& v, value_kinds::id k, abis::id abi );
+		, value_array const& v, value_kinds k, abis abi );
 	multi_value create_value( cg_type* tyinfo, builtin_types hint
-		, value_array const& v, value_kinds::id k, abis::id abi );
+		, value_array const& v, value_kinds k, abis abi );
 
-	multi_value create_variable( cg_type const*, abis::id abi, std::string const& name );
-	multi_value create_variable( builtin_types bt, abis::id abi, std::string const& name );
+	multi_value create_variable( cg_type const*, abis abi, std::string const& name );
+	multi_value create_variable( builtin_types bt, abis abi, std::string const& name );
 
-	virtual multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi ) = 0;
+	virtual multi_value create_vector( std::vector<multi_value> const& scalars, abis abi ) = 0;
 	virtual multi_value create_value_by_scalar( multi_value const& scalar, cg_type* tyinfo, builtin_types hint );
 	/// @}
 
@@ -302,10 +302,10 @@ public:
 
 	/// @name Bridges
 	/// @{
-	llvm::Type*	 type_(builtin_types bt, abis::id abi);
-	llvm::Type*  type_(cg_type const*, abis::id abi);
+	llvm::Type*	 type_(builtin_types bt, abis abi);
+	llvm::Type*  type_(cg_type const*, abis abi);
 
-	value_array  load_as( multi_value const& v, abis::id abi );
+	value_array  load_as( multi_value const& v, abis abi );
 	llvm::Value* restore(llvm::Value* v);
 	value_array  restore(value_array const& v);
 	/// @}
@@ -319,9 +319,9 @@ public:
 	virtual bool			prefer_scalar_code() const	= 0;
 	virtual size_t			parallel_factor() const;
 
-	virtual abis::id		param_abi( bool is_c_compatible ) const;
-			abis::id		promote_abi( abis::id abi0, abis::id abi1 );
-			abis::id		promote_abi( abis::id abi0, abis::id abi1, abis::id abi2 );
+	virtual abis		param_abi( bool is_c_compatible ) const;
+			abis		promote_abi( abis abi0, abis abi1 );
+			abis		promote_abi( abis abi0, abis abi1, abis abi2 );
 
 	node_context*			get_node_context( sasl::syntax_tree::node* );
 	node_context*			get_or_create_node_context( sasl::syntax_tree::node* );
@@ -431,7 +431,7 @@ protected:
 
 protected:
 	boost::scoped_ptr<cg_extension> ext_;
-	value_array load_as_llvm_c(multi_value const& v, abis::id abi);
+	value_array load_as_llvm_c(multi_value const& v, abis abi);
 };
 
 END_NS_SASL_CODEGEN();

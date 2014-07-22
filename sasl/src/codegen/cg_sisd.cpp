@@ -119,7 +119,7 @@ multi_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 	service()->set_insert_point(merge_ip);
 	multi_value result_value;
 	Value*		merged = service()->phi_(yes_ip_end.block, yes_v[0], no_ip_end.block, no_v[0]);
-	value_kinds::id	vkind = ( valid_all(yes_ref) && valid_all(no_ref) )
+	value_kinds	vkind = ( valid_all(yes_ref) && valid_all(no_ref) )
 		? value_kinds::reference
 		: value_kinds::value;
 	result_value = service()->create_value(
@@ -541,7 +541,7 @@ cgs_sisd* cg_sisd::service() const
 	return static_cast<cgs_sisd*>(service_);
 }
 
-abis::id cg_sisd::local_abi( bool is_c_compatible ) const
+abis cg_sisd::local_abi( bool is_c_compatible ) const
 {
 	return is_c_compatible ? abis::c : abis::llvm;
 }

@@ -61,45 +61,42 @@ BEGIN_NS_SASL_CODEGEN();
 class  module_context;
 using  sasl::semantic::elem_indexes;
 
-namespace abis
+enum class abis
 {
-	enum id{
-		unknown,
-		c,
-		llvm,
-		count
-	};
-}
-
-namespace value_kinds
-{
-	enum id
-	{
-		unknown = 0,
-		ty_only = 1,
-		elements = 2,
-
-		value = 4,
-		/// \brief Does treat type as reference if ABI is C compatible.
-		///
-		/// An important fact is LLVM's ABI is not same as C API.
-		/// If structure was passed into function by value,
-		/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
-		/// But LLVM will push the instance to stack.
-		/// So this variable will qualify the type of arguments/parameters indicates the compiler.
-		/// For e.g. we have a prototype:
-		///		void foo( struct S );
-		/// If is only called by LLVM code, the IR signature will be
-		///		def foo( %S %arg );
-		/// But if it maybe called by external function as convention as "C" code,
-		/// The IR signature will be generated as following:
-		///		def foo( %S* %arg );
-		/// And 'kind' the parameter/argument 'arg' is set to 'value_kinds::id::reference'.
-		reference = 8
-	};
+	unknown,
+	c,
+	llvm,
+	regs,
+	count
 };
 
-class cg_type{
+enum class value_kinds
+{
+	unknown = 0,
+	ty_only = 1,
+	elements = 2,
+
+	value = 4,
+	/// \brief Does treat type as reference if ABI is C compatible.
+	///
+	/// An important fact is LLVM's ABI is not same as C API.
+	/// If structure was passed into function by value,
+	/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
+	/// But LLVM will push the instance to stack.
+	/// So this variable will qualify the type of arguments/parameters indicates the compiler.
+	/// For e.g. we have a prototype:
+	///		void foo( struct S );
+	/// If is only called by LLVM code, the IR signature will be
+	///		def foo( %S %arg );
+	/// But if it maybe called by external function as convention as "C" code,
+	/// The IR signature will be generated as following:
+	///		def foo( %S* %arg );
+	/// And 'kind' the parameter/argument 'arg' is set to 'value_kinds::reference'.
+	reference = 8
+};
+
+class cg_type
+{
 public:
 	friend class cg_service;
 
@@ -115,9 +112,10 @@ public:
 	cg_type& operator = ( cg_type const& );
 
 	sasl::syntax_tree::tynode*
-		tyn_ptr() const;
+					tyn_ptr() const;
 	builtin_types	hint() const;
-	llvm::Type*		ty( abis::id abi ) const;
+	llvm::Type*		ty( abis abi ) const;
+	void			vm_type(abis abi, llvm::Type* t);
 
 protected:
 	llvm::Type*					tys[abis::count];
@@ -145,7 +143,7 @@ public:
 
 	/// Load llvm value from multi_value.
 	value_array		raw() const;
-	value_array		load    (abis::id abi) const;
+	value_array		load    (abis abi) const;
 	value_array		load    () const;
 	value_array		load_i1 () const;
 	value_array		load_ref() const;
@@ -153,7 +151,7 @@ public:
 	/// Store llvm value to multi_value
 	void			store	(multi_value const&) const;
 	void			emplace	(multi_value const&);
-	void			emplace	(value_array const& v, value_kinds::id k, abis::id abi);
+	void			emplace	(value_array const& v, value_kinds k, abis abi);
 
 	size_t			value_count() const;
 	bool			storable () const;
@@ -168,15 +166,15 @@ public:
 	builtin_types	hint() const;			///< Get type hint. if type is not built-in type it returns builtin_type::none.
 	void			hint(builtin_types bt);	///< Set type hint.
 
-	value_kinds::id	kind() const;					///< Get kind.
-	void			kind(value_kinds::id vkind);	///< Set kind.
+	value_kinds	kind() const;					///< Get kind.
+	void			kind(value_kinds vkind);	///< Set kind.
 
 	multi_value*	parent() const;					///< Get parent. If value is not a member of aggragation, it return NULL.
 	void			parent(multi_value const& v);
 	void			parent(multi_value const* v);
 
-	abis::id		abi() const;				///< Get ABI.
-	void			abi( abis::id abi );		///< Set ABI
+	abis		abi() const;				///< Get ABI.
+	void			abi( abis abi );		///< Set ABI
 
 	multi_value*	index() const;
 	void			index( multi_value const& );
@@ -200,12 +198,12 @@ protected:
 	/// @{
 	multi_value(cg_type* ty
 		, std::vector<llvm::Value*> const& val
-		, value_kinds::id k, abis::id abi
+		, value_kinds k, abis abi
 		, cg_service* cg);
 
 	multi_value(builtin_types hint
 		, std::vector<llvm::Value*> const& val
-		, value_kinds::id k, abis::id abi
+		, value_kinds k, abis abi
 		, cg_service* cg);
 	/// @}
 
@@ -225,8 +223,8 @@ protected:
 	builtin_types					builtin_ty_;
 
 	// Kind and ABI
-	value_kinds::id					kind_;
-	abis::id						abi_;
+	value_kinds					kind_;
+	abis						abi_;
 
 	// Owner
 	cg_service*						cg_;
@@ -292,7 +290,7 @@ struct cg_function{
 	bool return_via_arg			() const;
 
 	/// Get ABI
-	abis::id abi() const;
+	abis abi() const;
 	/// Get return address value.
 	value_array return_address() const;
 	/// Get Execution Mask.

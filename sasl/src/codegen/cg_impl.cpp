@@ -1527,7 +1527,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			values.push_back(diffuse);
 			values.push_back(specular);
 			values.push_back(one);
-			abis::id promoted_abi = service()->promote_abi(one.abi(), diffuse.abi(), specular.abi() );
+			abis promoted_abi = service()->promote_abi(one.abi(), diffuse.abi(), specular.abi() );
 			multi_value lit_packed = service()->create_vector( values, promoted_abi );
 
 			service()->emit_return( lit_packed, service()->param_abi(false) );
