@@ -1,70 +1,47 @@
+#pragma once
 
-#ifndef SASL_ENUMS_BUILTIN_TYPES_H
-#define SASL_ENUMS_BUILTIN_TYPES_H
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/enum.h>
+#include <functional>
 
-#include "../enums/enum_base.h" 
-
-struct builtin_types :
-	public enum_base< builtin_types, uint32_t >
-	, public bitwise_op< builtin_types >, public equal_op< builtin_types >, public value_op< builtin_types, uint32_t >
+enum class builtin_types: uint32_t
 {
-	friend struct enum_hasher;
-private:
-	builtin_types( const storage_type& val, const std::string& name );
-	builtin_types( const storage_type& val ): base_type(val){}
-public:
-	static void force_initialize();
-	
-	builtin_types( const this_type& rhs )
-		:base_type(rhs.val_)
-	{}
-	
-	this_type& operator = ( const this_type& rhs){
-		val_ = rhs.val_;
-		return *this;
-	}
-
-	const static this_type _unsigned;
-	const static this_type _sint32;
-	const static this_type _c_int;
-	const static this_type _sint16;
-	const static this_type _generic_type_field_shift;
-	const static this_type _scalar_type_mask;
-	const static this_type _sign_mask;
-	const static this_type _dim1_mask;
-	const static this_type _boolean;
-	const static this_type _generic_type_mask;
-	const static this_type _sint8;
-	const static this_type _scalar;
-	const static this_type _sign_field_shift;
-	const static this_type _sampler;
-	const static this_type _float;
-	const static this_type _dim0_field_shift;
-	const static this_type _void;
-	const static this_type _uint16;
-	const static this_type _dimension_mask;
-	const static this_type _dim1_field_shift;
-	const static this_type _dimension_field_shift;
-	const static this_type _double;
-	const static this_type _matrix;
-	const static this_type _sint64;
-	const static this_type _real;
-	const static this_type _scalar_field_shift;
-	const static this_type _uint8;
-	const static this_type _signed;
-	const static this_type _vector;
-	const static this_type none;
-	const static this_type _uint32;
-	const static this_type _precision_field_shift;
-	const static this_type _uint64;
-	const static this_type _dim0_mask;
-	const static this_type _integer;
-
-
-	static std::string to_name( const this_type& enum_val );
-	static this_type from_name( const std::string& name );
-	std::string name() const;
-
+	_unsigned = UINT32_C( 34603008 ),
+	_sint32 = UINT32_C( 35848192 ),
+	_c_int = UINT32_C( 35979264 ),
+	_sint16 = UINT32_C( 35782656 ),
+	_generic_type_field_shift = UINT32_C( 24 ),
+	_scalar_type_mask = UINT32_C( 268369920 ),
+	_sign_mask = UINT32_C( 267386880 ),
+	_dim1_mask = UINT32_C( 255 ),
+	_boolean = UINT32_C( 50331648 ),
+	_generic_type_mask = UINT32_C( 251658240 ),
+	_sint8 = UINT32_C( 35717120 ),
+	_scalar = UINT32_C( 0 ),
+	_sign_field_shift = UINT32_C( 20 ),
+	_sampler = UINT32_C( 83886080 ),
+	_float = UINT32_C( 16842752 ),
+	_dim0_field_shift = UINT32_C( 8 ),
+	_void = UINT32_C( 67108864 ),
+	_uint16 = UINT32_C( 34734080 ),
+	_dimension_mask = UINT32_C( 4026531840 ),
+	_dim1_field_shift = UINT32_C( 0 ),
+	_dimension_field_shift = UINT32_C( 28 ),
+	_double = UINT32_C( 16908288 ),
+	_matrix = UINT32_C( 536870912 ),
+	_sint64 = UINT32_C( 35913728 ),
+	_real = UINT32_C( 16777216 ),
+	_scalar_field_shift = UINT32_C( 16 ),
+	_uint8 = UINT32_C( 34668544 ),
+	_signed = UINT32_C( 35651584 ),
+	_vector = UINT32_C( 268435456 ),
+	none = UINT32_C( 0 ),
+	_uint32 = UINT32_C( 34799616 ),
+	_precision_field_shift = UINT32_C( 16 ),
+	_uint64 = UINT32_C( 34865152 ),
+	_dim0_mask = UINT32_C( 65280 ),
+	_integer = UINT32_C( 33554432 )
 };
 
-#endif
+void register_enum_name( std::function<void (char const*, builtin_types)> const& reg_fn );
+

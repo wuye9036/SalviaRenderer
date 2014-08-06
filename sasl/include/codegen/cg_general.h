@@ -38,7 +38,7 @@ namespace llvm{
 	class Constant;
 }
 
-struct builtin_types;
+enum class builtin_types: uint32_t;
 
 BEGIN_NS_SASL_CODEGEN();
 

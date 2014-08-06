@@ -1,7 +1,6 @@
 #include <sasl/include/codegen/ty_cache.h>
 
 #include <sasl/enums/enums_utility.h>
-#include <sasl/enums/default_hasher.h>
 
 #include <eflib/include/diagnostics/assert.h>
 

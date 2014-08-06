@@ -5,7 +5,6 @@
 #include <sasl/include/syntax_tree/visitor.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/enums/operators.h>
-#include <sasl/enums/default_hasher.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/string/ustring.h>

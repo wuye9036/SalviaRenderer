@@ -1,81 +1,58 @@
+#pragma once
 
-#ifndef SASL_ENUMS_NODE_IDS_H
-#define SASL_ENUMS_NODE_IDS_H
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/enum.h>
+#include <functional>
 
-#include "../enums/enum_base.h" 
-
-struct node_ids :
-	public enum_base< node_ids, uint64_t >
-	, public bitwise_op< node_ids >, public equal_op< node_ids >, public value_op< node_ids, uint64_t >
+enum class node_ids: uint64_t
 {
-	friend struct enum_hasher;
-private:
-	node_ids( const storage_type& val, const std::string& name );
-	node_ids( const storage_type& val ): base_type(val){}
-public:
-	static void force_initialize();
-	
-	node_ids( const this_type& rhs )
-		:base_type(rhs.val_)
-	{}
-	
-	this_type& operator = ( const this_type& rhs){
-		val_ = rhs.val_;
-		return *this;
-	}
-
-	const static this_type expression_statement;
-	const static this_type member_expression;
-	const static this_type tynode;
-	const static this_type unary_expression;
-	const static this_type for_statement;
-	const static this_type initializer;
-	const static this_type function_type;
-	const static this_type variable_declaration;
-	const static this_type cond_expression;
-	const static this_type case_label;
-	const static this_type compound_statement;
-	const static this_type typedef_definition;
-	const static this_type struct_type;
-	const static this_type label;
-	const static this_type function_full_def;
-	const static this_type while_statement;
-	const static this_type program;
-	const static this_type builtin_type;
-	const static this_type switch_statement;
-	const static this_type statement;
-	const static this_type expression_initializer;
-	const static this_type cast_expression;
-	const static this_type if_statement;
-	const static this_type parameter;
-	const static this_type constant_expression;
-	const static this_type node;
-	const static this_type variable_expression;
-	const static this_type dowhile_statement;
-	const static this_type function_def;
-	const static this_type parameter_full;
-	const static this_type ident_label;
-	const static this_type declaration;
-	const static this_type array_type;
-	const static this_type jump_statement;
-	const static this_type alias_type;
-	const static this_type binary_expression;
-	const static this_type expression_list;
-	const static this_type member_initializer;
-	const static this_type labeled_statement;
-	const static this_type declaration_statement;
-	const static this_type index_expression;
-	const static this_type declarator;
-	const static this_type null_declaration;
-	const static this_type identifier;
-	const static this_type expression;
-	const static this_type call_expression;
-
-
-	static std::string to_name( const this_type& enum_val );
-	static this_type from_name( const std::string& name );
-	std::string name() const;
-
+	expression_statement = UINT64_C( 1125899906842631 ),
+	member_expression = UINT64_C( 562949953421322 ),
+	tynode = UINT64_C( 281479271677952 ),
+	unary_expression = UINT64_C( 562949953421315 ),
+	for_statement = UINT64_C( 1125899906842633 ),
+	initializer = UINT64_C( 2251799813685248 ),
+	function_type = UINT64_C( 281479271677956 ),
+	variable_declaration = UINT64_C( 281474976710657 ),
+	cond_expression = UINT64_C( 562949953421319 ),
+	case_label = UINT64_C( 18014398509481986 ),
+	compound_statement = UINT64_C( 1125899906842630 ),
+	typedef_definition = UINT64_C( 281474976710658 ),
+	struct_type = UINT64_C( 281479271677955 ),
+	label = UINT64_C( 18014398509481984 ),
+	function_full_def = UINT64_C( 281474976710662 ),
+	while_statement = UINT64_C( 1125899906842627 ),
+	program = UINT64_C( 9007199254740992 ),
+	builtin_type = UINT64_C( 281479271677953 ),
+	switch_statement = UINT64_C( 1125899906842629 ),
+	statement = UINT64_C( 1125899906842624 ),
+	expression_initializer = UINT64_C( 2251799813685249 ),
+	cast_expression = UINT64_C( 562949953421316 ),
+	if_statement = UINT64_C( 1125899906842626 ),
+	parameter = UINT64_C( 281474976710660 ),
+	constant_expression = UINT64_C( 562949953421313 ),
+	node = UINT64_C( 0 ),
+	variable_expression = UINT64_C( 562949953421314 ),
+	dowhile_statement = UINT64_C( 1125899906842628 ),
+	function_def = UINT64_C( 281474976710661 ),
+	parameter_full = UINT64_C( 281474976710659 ),
+	ident_label = UINT64_C( 18014398509481985 ),
+	declaration = UINT64_C( 281474976710656 ),
+	array_type = UINT64_C( 281479271677954 ),
+	jump_statement = UINT64_C( 1125899906842632 ),
+	alias_type = UINT64_C( 281479271677957 ),
+	binary_expression = UINT64_C( 562949953421317 ),
+	expression_list = UINT64_C( 562949953421318 ),
+	member_initializer = UINT64_C( 2251799813685250 ),
+	labeled_statement = UINT64_C( 1125899906842634 ),
+	declaration_statement = UINT64_C( 1125899906842625 ),
+	index_expression = UINT64_C( 562949953421320 ),
+	declarator = UINT64_C( 281474976710664 ),
+	null_declaration = UINT64_C( 281474976710663 ),
+	identifier = UINT64_C( 4503599627370496 ),
+	expression = UINT64_C( 562949953421312 ),
+	call_expression = UINT64_C( 562949953421321 )
 };
 
-#endif
+void register_enum_name( std::function<void (char const*, node_ids)> const& reg_fn );
+

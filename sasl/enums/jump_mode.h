@@ -1,39 +1,16 @@
+#pragma once
 
-#ifndef SASL_ENUMS_JUMP_MODE_H
-#define SASL_ENUMS_JUMP_MODE_H
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/enum.h>
+#include <functional>
 
-#include "../enums/enum_base.h" 
-
-struct jump_mode :
-	public enum_base< jump_mode, uint32_t >
-	, public equal_op< jump_mode >
+enum class jump_mode: uint32_t
 {
-	friend struct enum_hasher;
-private:
-	jump_mode( const storage_type& val, const std::string& name );
-	jump_mode( const storage_type& val ): base_type(val){}
-public:
-	static void force_initialize();
-	
-	jump_mode( const this_type& rhs )
-		:base_type(rhs.val_)
-	{}
-	
-	this_type& operator = ( const this_type& rhs){
-		val_ = rhs.val_;
-		return *this;
-	}
-
-	const static this_type _return;
-	const static this_type none;
-	const static this_type _continue;
-	const static this_type _break;
-
-
-	static std::string to_name( const this_type& enum_val );
-	static this_type from_name( const std::string& name );
-	std::string name() const;
-
+	_return = UINT32_C( 3 ),
+	none = UINT32_C( 0 ),
+	_continue = UINT32_C( 2 ),
+	_break = UINT32_C( 1 )
 };
 
-#endif
+void register_enum_name( std::function<void (char const*, jump_mode)> const& reg_fn );
+

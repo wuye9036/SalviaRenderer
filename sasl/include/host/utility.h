@@ -7,15 +7,15 @@
 namespace sasl{
 	namespace utility{
 		inline
-		builtin_types to_builtin_types( salviar::language_value_types v ){
-			builtin_types ret( builtin_types::none );
-			ret.from_value( static_cast<builtin_types::storage_type>(v) );
-			return ret;
+		builtin_types to_builtin_types( salviar::language_value_types v )
+		{
+			return static_cast<builtin_types>(v);;
 		}
 		
 		inline
-		salviar::language_value_types to_lvt( builtin_types v ){
-			return static_cast<salviar::language_value_types>( v.to_value() );
+		salviar::language_value_types to_lvt(builtin_types v)
+		{
+			return static_cast<salviar::language_value_types>(v);
 		}
 		
 		namespace ops{

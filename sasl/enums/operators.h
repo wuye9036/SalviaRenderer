@@ -1,73 +1,50 @@
+#pragma once
 
-#ifndef SASL_ENUMS_OPERATORS_H
-#define SASL_ENUMS_OPERATORS_H
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/enum.h>
+#include <functional>
 
-#include "../enums/enum_base.h" 
-
-struct operators :
-	public enum_base< operators, uint32_t >
-	, public bitwise_op< operators >, public equal_op< operators >
+enum class operators: uint32_t
 {
-	friend struct enum_hasher;
-private:
-	operators( const storage_type& val, const std::string& name );
-	operators( const storage_type& val ): base_type(val){}
-public:
-	static void force_initialize();
-	
-	operators( const this_type& rhs )
-		:base_type(rhs.val_)
-	{}
-	
-	this_type& operator = ( const this_type& rhs){
-		val_ = rhs.val_;
-		return *this;
-	}
-
-	const static this_type sub_assign;
-	const static this_type less;
-	const static this_type bit_and;
-	const static this_type bit_or_assign;
-	const static this_type prefix_incr;
-	const static this_type logic_and;
-	const static this_type postfix_incr;
-	const static this_type lshift_assign;
-	const static this_type mul_assign;
-	const static this_type prefix_decr;
-	const static this_type bit_xor_assign;
-	const static this_type sub;
-	const static this_type positive;
-	const static this_type rshift_assign;
-	const static this_type negative;
-	const static this_type logic_not;
-	const static this_type add;
-	const static this_type right_shift;
-	const static this_type mul;
-	const static this_type bit_and_assign;
-	const static this_type mod_assign;
-	const static this_type greater;
-	const static this_type bit_or;
-	const static this_type bit_not;
-	const static this_type bit_xor;
-	const static this_type add_assign;
-	const static this_type mod;
-	const static this_type none;
-	const static this_type not_equal;
-	const static this_type logic_or;
-	const static this_type greater_equal;
-	const static this_type left_shift;
-	const static this_type equal;
-	const static this_type postfix_decr;
-	const static this_type div_assign;
-	const static this_type less_equal;
-	const static this_type div;
-	const static this_type assign;
-
-
-	static std::string to_name( const this_type& enum_val );
-	static this_type from_name( const std::string& name );
-	std::string name() const;
-
+	sub_assign = UINT32_C( 8 ),
+	less = UINT32_C( 19 ),
+	bit_and = UINT32_C( 34 ),
+	bit_or_assign = UINT32_C( 13 ),
+	prefix_incr = UINT32_C( 25 ),
+	logic_and = UINT32_C( 32 ),
+	postfix_incr = UINT32_C( 27 ),
+	lshift_assign = UINT32_C( 15 ),
+	mul_assign = UINT32_C( 9 ),
+	prefix_decr = UINT32_C( 26 ),
+	bit_xor_assign = UINT32_C( 14 ),
+	sub = UINT32_C( 2 ),
+	positive = UINT32_C( 29 ),
+	rshift_assign = UINT32_C( 16 ),
+	negative = UINT32_C( 30 ),
+	logic_not = UINT32_C( 33 ),
+	add = UINT32_C( 1 ),
+	right_shift = UINT32_C( 24 ),
+	mul = UINT32_C( 3 ),
+	bit_and_assign = UINT32_C( 12 ),
+	mod_assign = UINT32_C( 11 ),
+	greater = UINT32_C( 21 ),
+	bit_or = UINT32_C( 35 ),
+	bit_not = UINT32_C( 37 ),
+	bit_xor = UINT32_C( 36 ),
+	add_assign = UINT32_C( 7 ),
+	mod = UINT32_C( 5 ),
+	none = UINT32_C( 0 ),
+	not_equal = UINT32_C( 18 ),
+	logic_or = UINT32_C( 31 ),
+	greater_equal = UINT32_C( 22 ),
+	left_shift = UINT32_C( 23 ),
+	equal = UINT32_C( 17 ),
+	postfix_decr = UINT32_C( 28 ),
+	div_assign = UINT32_C( 10 ),
+	less_equal = UINT32_C( 20 ),
+	div = UINT32_C( 4 ),
+	assign = UINT32_C( 6 )
 };
 
-#endif
+void register_enum_name( std::function<void (char const*, operators)> const& reg_fn );
+

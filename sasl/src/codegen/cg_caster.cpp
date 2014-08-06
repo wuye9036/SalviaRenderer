@@ -57,14 +57,20 @@ public:
 		node_context* src_ctxt = get_context(src);
 		node_context* dest_ctxt = get_context(dest);
 
-		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
+		if(to_underlying(dest->node_class() & node_ids::tynode) != 0)
+		{
 			// Overwrite source.
 			src_ctxt->node_value = v;
-		} else {
+		}
+		else 
+		{
 			// Store to dest.
-			if( dest_ctxt->node_value.storable() ){
+			if( dest_ctxt->node_value.storable() )
+			{
 				dest_ctxt->node_value.store(v);
-			} else {
+			}
+			else
+			{
 				dest_ctxt->node_value = v;
 			}
 		}

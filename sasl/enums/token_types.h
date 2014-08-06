@@ -1,43 +1,20 @@
+#pragma once
 
-#ifndef SASL_ENUMS_TOKEN_TYPES_H
-#define SASL_ENUMS_TOKEN_TYPES_H
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/enum.h>
+#include <functional>
 
-#include "../enums/enum_base.h" 
-
-struct token_types :
-	public enum_base< token_types, uint32_t >
-	, public equal_op< token_types >, public value_op< token_types, uint32_t >
+enum class token_types: uint32_t
 {
-	friend struct enum_hasher;
-private:
-	token_types( const storage_type& val, const std::string& name );
-	token_types( const storage_type& val ): base_type(val){}
-public:
-	static void force_initialize();
-	
-	token_types( const this_type& rhs )
-		:base_type(rhs.val_)
-	{}
-	
-	this_type& operator = ( const this_type& rhs){
-		val_ = rhs.val_;
-		return *this;
-	}
-
-	const static this_type _comment;
-	const static this_type _preprocessor;
-	const static this_type _operator;
-	const static this_type _whitespace;
-	const static this_type _constant;
-	const static this_type _newline;
-	const static this_type _identifier;
-	const static this_type _keyword;
-
-
-	static std::string to_name( const this_type& enum_val );
-	static this_type from_name( const std::string& name );
-	std::string name() const;
-
+	_comment = UINT32_C( 7 ),
+	_preprocessor = UINT32_C( 6 ),
+	_operator = UINT32_C( 4 ),
+	_whitespace = UINT32_C( 5 ),
+	_constant = UINT32_C( 3 ),
+	_newline = UINT32_C( 8 ),
+	_identifier = UINT32_C( 2 ),
+	_keyword = UINT32_C( 1 )
 };
 
-#endif
+void register_enum_name( std::function<void (char const*, token_types)> const& reg_fn );
+

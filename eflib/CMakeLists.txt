@@ -29,6 +29,7 @@ set (HEADER_FILES
 	include/utility/polymorphic_cast.h
 	include/utility/scoped_value.h
 	include/utility/shared_declaration.h
+	include/utility/enum.h
 	include/platform/config.h
 	include/platform/constant.h
 	include/platform/disable_warnings.h

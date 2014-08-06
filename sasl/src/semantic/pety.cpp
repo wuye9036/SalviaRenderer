@@ -9,7 +9,6 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
-#include <sasl/enums/default_hasher.h>
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/polymorphic_cast.h>
 
@@ -18,7 +17,6 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -59,7 +57,7 @@ public:
 // Internal functions
 node_semantic*	assign_tid_to_node	(module_semantic* msem, tynode* node, tynode* proto, tid_t tid);
 tynode_ptr		duplicate_tynode	(tynode_ptr const& typespec);
-fixed_string	builtin_type_name	(builtin_types btc);
+fixed_string	builtin_type_name	(builtin_types btc, unordered_map<builtin_types, char const*> const& scalar_type_names);
 
 void			init_builtin_short_name();
 void			append_mangling		(string&, tynode*);
@@ -69,6 +67,24 @@ class pety_impl: public pety_t
 {
 public:
 	friend class pety_t;
+
+	pety_impl()
+	{
+		std::function<void (char const*, operators)>
+			op_name_inserter = [this](char const* name, operators v)
+		{
+			op_names_.insert( make_pair(v, name) );
+		};
+		register_enum_name(op_name_inserter);
+
+		std::function<void (char const*, builtin_types)>
+			bt_name_inserter = [this](char const* name, builtin_types v)
+		{
+			bt_names_.insert( make_pair(v, name) );
+		};
+		register_enum_name(bt_name_inserter);
+	}
+
 	void root_symbol( symbol* sym )
 	{
 		root_symbol_ = sym;
@@ -78,7 +94,7 @@ public:
 	tid_t get(builtin_types const& btc)
 	{
 		// If it is existed, return it.
-		bt_dict::iterator it = bt_dict_.find(btc);
+		auto it = bt_dict_.find(btc);
 		if( it != bt_dict_.end() )
 		{
 			return it->second;
@@ -107,7 +123,7 @@ public:
 	}
 	tid_t	get_function_type(vector<tid_t> const& fn_tids)
 	{
-		function_dict::iterator iter = fn_dict_.find(fn_tids);
+		auto iter = fn_dict_.find(fn_tids);
 		if( iter != fn_dict_.end() )
 		{
 			return iter->second;
@@ -173,13 +189,13 @@ public:
 
 	fixed_string operator_name(operators const& op)
 	{
-		opname_cache::iterator it = opname_cache_.find(op);
+		auto it = opname_cache_.find(op);
 		if( it != opname_cache_.end() )
 		{
 			return it->second;
 		}
 		string opname("0");
-		opname.append( op.name() );
+		opname.append( op_names_[op] );
 		fixed_string fs_opname( std::move(opname) );
 		opname_cache_.insert( make_pair(op, fs_opname) );
 		return fs_opname;
@@ -220,7 +236,7 @@ private:
 	/// Add builtin type to pety.
 	void register_builtin_type(builtin_types btc, node_semantic** out_sem, tid_t* out_tid)
 	{
-		std::string name = builtin_type_name(btc);
+		std::string name = builtin_type_name(btc, bt_names_);
 
 #ifdef EFLIB_DEBUG
 		symbol* sym = root_symbol_->find(name);
@@ -245,7 +261,7 @@ private:
 			return;
 		}
 
-		mangling_cache::iterator it = mangling_cache_.find(param_tids);
+		auto it = mangling_cache_.find(param_tids);
 		if (it != mangling_cache_.end() )
 		{
 			name.append(it->second);
@@ -264,22 +280,19 @@ private:
 		}
 	}
 
-	typedef unordered_map<builtin_types, tid_t>			bt_dict;
-	typedef unordered_map<tynode*,		 tid_t>			tynode_dict;
-	typedef unordered_map<vector<tid_t>, tid_t>			function_dict;
-	typedef unordered_map<vector<tid_t>, std::string>	mangling_cache;
-	typedef	unordered_map< tid_t, vector<tid_t> >		param_tids_cache;
-	typedef unordered_map<operators, fixed_string>		opname_cache;
+	unordered_map<builtin_types, tid_t>			bt_dict_;
+	unordered_map<tynode*,		 tid_t>			tynode_dict_;
+	unordered_map<vector<tid_t>, tid_t>			fn_dict_;
+	vector<type_item>							type_items_;
+	unordered_map<vector<tid_t>, std::string>	mangling_cache_;
+	unordered_map< tid_t, vector<tid_t> >		param_tids_cache_;
+	unordered_map<operators, fixed_string>		opname_cache_;
 
-	bt_dict				bt_dict_;
-	tynode_dict			tynode_dict_;
-	function_dict		fn_dict_;
-	vector<type_item>	type_items_;
-	symbol*				root_symbol_;
-	module_semantic*	owner_;
-	mangling_cache		mangling_cache_;
-	param_tids_cache	param_tids_cache_;
-	opname_cache		opname_cache_;
+	symbol*										root_symbol_;
+	module_semantic*							owner_;
+
+	unordered_map<builtin_types, char const*>	bt_names_;
+	unordered_map<operators, char const*>		op_names_;
 };
 
 shared_ptr<pety_t> pety_t::create(module_semantic* owner)
@@ -311,8 +324,10 @@ tid_t get_symbol_tid( unordered_map<tynode*, tid_t> const& dict, symbol* sym ){
 }
 
 unordered_map<builtin_types, fixed_string> builtins_name;
-fixed_string builtin_type_name( builtin_types btc ){
-	unordered_map<builtin_types, fixed_string>::iterator it = builtins_name.find(btc);
+
+fixed_string builtin_type_name(builtin_types btc, unordered_map<builtin_types, char const*> const& scalar_type_names)
+{
+	auto it = builtins_name.find(btc);
 	if( it != builtins_name.end() )
 	{
 		return it->second;
@@ -323,8 +338,8 @@ fixed_string builtin_type_name( builtin_types btc ){
 	{
 		ret =
 			( boost::format("%1%_%2%")
-			% builtin_type_name( scalar_of(btc) )
-			% vector_size( btc )
+			% builtin_type_name(scalar_of(btc), scalar_type_names)
+			% vector_size(btc)
 			).str();
 
 	}
@@ -332,15 +347,15 @@ fixed_string builtin_type_name( builtin_types btc ){
 	{
 		ret =
 			( boost::format("%1%_%2%x%3%")
-			% builtin_type_name( scalar_of(btc) )
-			% vector_size( btc )
-			% vector_count( btc )
+			% builtin_type_name(scalar_of(btc), scalar_type_names)
+			% vector_size(btc)
+			% vector_count(btc)
 			).str();
 
 	}
 	else
 	{
-		ret = ( boost::format("0%1%") % btc.name() ).str();
+		ret = ( boost::format("0%1%") % scalar_type_names.at(btc) ).str();
 	}
 
 	builtins_name.insert( make_pair(btc, ret) );
@@ -389,7 +404,7 @@ tynode_ptr duplicate_tynode(tynode_ptr const& typespec){
 	}
 }
 
-fixed_string name_of_unqualified_type(module_semantic* /*sem*/, tynode* typespec)
+fixed_string name_of_unqualified_type(module_semantic* /*sem*/, tynode* typespec, unordered_map<builtin_types, char const*> const& scalar_type_names)
 {
 	// Only build in, struct and function are potential unqualified type.
 	// Array type is qualified type.
@@ -402,7 +417,7 @@ fixed_string name_of_unqualified_type(module_semantic* /*sem*/, tynode* typespec
 	}
 	else if(node_cls == node_ids::builtin_type)
 	{
-		return builtin_type_name(typespec->tycode);
+		return builtin_type_name(typespec->tycode, scalar_type_names);
 	}
 	else if(node_cls == node_ids::function_full_def)
 	{
@@ -451,7 +466,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 		// Here type specifier is a unqualified type.
 		// Look up the name of type in symbol.
 		// If it did not exist, throw an error or add it into symbol(as an swallow copy).
-		fixed_string name = name_of_unqualified_type(scope->owner(), v);
+		fixed_string name = name_of_unqualified_type(scope->owner(), v, bt_names_);
 		symbol* sym = name.empty() ? NULL : scope->find(name);
 		if(sym)
 		{
@@ -474,7 +489,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 					assert(tid != -1);
 					tids.push_back(tid);
 				}
-				function_dict::iterator iter = fn_dict_.find(tids);
+				auto iter = fn_dict_.find(tids);
 				if(iter != fn_dict_.end())
 				{
 					return iter->second;
@@ -557,7 +572,8 @@ void append_mangling(string& str, builtin_types btc, bool as_comp)
 }
 
 void append_mangling(std::string& str, type_qualifiers qual){
-	if ( qual.included( type_qualifiers::_uniform ) ){
+	if ( to_underlying(qual & type_qualifiers::_uniform) != 0 )
+	{
 		str.append("U");
 	}
 	str.append("Q");

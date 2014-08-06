@@ -5,6 +5,8 @@
 
 #include <sasl/include/syntax_tree/visitor.h>
 #include <sasl/include/codegen/cgs_sisd.h>
+#include <sasl/enums/operators.h>
+#include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -13,6 +15,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
+#include <unordered_map>
 
 namespace sasl{
 	namespace syntax_tree{
@@ -41,7 +44,7 @@ namespace llvm{
         DefaultIRBuilder;
 }
 
-struct builtin_types;
+enum class builtin_types: uint32_t;
 
 BEGIN_NS_SASL_CODEGEN();
 
@@ -158,6 +161,12 @@ protected:
 						current_symbol_;		///< Current symbol scope.
 	sasl::syntax_tree::node*
 						variable_to_initialize_;///< The variable which will pass in initializer to generate initialization code.
+
+	// For debugging
+	std::unordered_map<operators, char const*>
+						operator_names;
+	std::unordered_map<builtin_types, char const*>
+						bt_names;
 };
 
 END_NS_SASL_CODEGEN()

@@ -21,16 +21,16 @@ namespace sasl {
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-class operators_helper{
+class operator_traits
+{
 public:
-	static operators_helper& instance();
 	bool is_prefix( operators op );
 	bool is_binary( operators op );
 	bool is_postfix( operators op );
 	bool is_unary( operators op );
 private:
 	bool include( const std::vector<operators>&, operators );
-	operators_helper();
+	operator_traits();
 	typedef ::std::vector<operators> oplist_t;
 	oplist_t
 		prefix_ops, postfix_ops, binary_ops;

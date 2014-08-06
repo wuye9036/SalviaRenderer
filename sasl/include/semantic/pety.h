@@ -2,8 +2,11 @@
 #define SASL_SEMANTIC_TYPE_MANAGER_H
 
 #include <sasl/include/semantic/semantic_forward.h>
-#include <eflib/include/platform/typedefs.h>
 
+#include <sasl/enums/operators.h>
+#include <sasl/enums/builtin_types.h>
+
+#include <eflib/include/platform/typedefs.h>
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/string/ustring.h>
 
@@ -22,9 +25,6 @@ namespace sasl
 	}
 }
 
-struct builtin_types;
-struct operators;
-
 BEGIN_NS_SASL_SEMANTIC();
 
 class	module_semantic;
@@ -34,7 +34,8 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(pety_t);
 
 typedef int tid_t;
 
-class pety_t{
+class pety_t
+{
 public:
 	static pety_t_ptr create(module_semantic* owner);
 

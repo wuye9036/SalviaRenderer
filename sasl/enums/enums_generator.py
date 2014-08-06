@@ -5,160 +5,39 @@ import sys, os
 
 #typename, storage_typename, operator_list, constant_decl_list, enum_name_translator
 enum_decl_tmpl = \
-"""struct %(typename)s :
-	public enum_base< %(typename)s, %(storage_typename)s >
-	%(operator_list)s
+"""enum class %(typename)s: %(storage_typename)s
 {
-	friend struct enum_hasher;
-private:
-	%(typename)s( const storage_type& val, const std::string& name );
-	%(typename)s( const storage_type& val ): base_type(val){}
-public:
-	static void force_initialize();
-	
-	%(typename)s( const this_type& rhs )
-		:base_type(rhs.val_)
-	{}
-	
-	this_type& operator = ( const this_type& rhs){
-		val_ = rhs.val_;
-		return *this;
-	}
-
 %(constant_decl_list)s
-%(enum_name_translator)s
-};
-"""
-
-compare_op_tmpl = ", public compare_op< %(typename)s >"
-bitwise_op_tmpl = ", public bitwise_op< %(typename)s >"
-equal_op_tmpl = ", public equal_op< %(typename)s >"
-value_op_tmpl = ", public value_op< %(typename)s, %(storage_typename)s >"
-
-#member_name
-constant_decl_tmpl =\
-	"const static this_type %(member_name)s;"
-
-#typename, member_name, value, description
-constant_def_tmpl = \
-	"const %(typename)s %(typename)s::%(member_name)s ( %(constant_macro)s( %(value)s ), \"%(description)s\" );"
-
-item_force_init_tmpl = \
-	"\tnew ( const_cast<%(typename)s*>(&%(member_name)s) ) %(typename)s ( %(constant_macro)s( %(value)s ), \"%(description)s\" );"
-	
-#typename
-hash_op_tmpl = \
-""" 
-struct enum_hasher: public std::unary_function< %(typename)s, std::size_t> {
-	std::size_t operator()( %(typename)s const& val) const{
-		return hash_value(val.val_);
-	}
-};"""
-
-#typename
-enum_name_translator_tmpl = \
-"""
-	static std::string to_name( const this_type& enum_val );
-	static this_type from_name( const std::string& name );
-	std::string name() const;
-"""
-
-#typename, force_init_list
-enum_name_translator_impl_tmpl = \
-"""
-struct dict_wrapper_%(typename)s {
-private:
-	boost::unordered_map< %(typename)s, std::string, enum_hasher > enum_to_name;
-	boost::unordered_map< std::string, %(typename)s > name_to_enum;
-
-	dict_wrapper_%(typename)s(){}
-	
-public:
-	static dict_wrapper_%(typename)s& instance();
-	
-	void insert( %(typename)s const& val, const std::string& name ){
-		enum_to_name.insert( std::make_pair( val, name ) );
-		name_to_enum.insert( std::make_pair( name, val ) );
-	}
-	
-	std::string to_name( %(typename)s const& val ){
-		boost::unordered_map< %(typename)s, std::string >::const_iterator
-			find_result_it = enum_to_name.find(val);
-			
-		if ( find_result_it != enum_to_name.end() ){
-			return find_result_it->second;
-		}
-
-		return "__unknown_enum_val__";
-	}
-
-	%(typename)s from_name( const std::string& name){
-		boost::unordered_map< std::string, %(typename)s >::const_iterator
-			find_result_it = name_to_enum.find(name);
-			
-		if ( find_result_it != name_to_enum.end() ){
-			return find_result_it->second;
-		}
-
-		throw "unexcepted enumuration name!";
-	}
 };
 
-dict_wrapper_%(typename)s& dict_wrapper_%(typename)s::instance(){
-	static dict_wrapper_%(typename)s inst;
-	return inst;
-}
-
-std::string %(typename)s::to_name( const %(typename)s& enum_val){
-	return dict_wrapper_%(typename)s::instance().to_name(enum_val);
-}
-
-%(typename)s %(typename)s::from_name( const std::string& name){
-	return dict_wrapper_%(typename)s::instance().from_name(name);
-}
-
-std::string %(typename)s::name() const{
-	return to_name( * this );
-}
-
-void %(typename)s::force_initialize(){
-
-	static bool is_initialized = false;
-	if ( is_initialized ) return;
-	is_initialized = true;
-%(force_init_list)s
-}
+void register_enum_name( std::function<void (char const*, %(typename)s)> const& reg_fn );
 """
 
-#typename, member_name
-enum_constructor_tmpl = \
-"""
-%(typename)s::%(typename)s( const storage_type& val, const std::string& name ): %(typename)s::base_type(val){
-	%(typename)s tmp(val);
-	dict_wrapper_%(typename)s::instance().insert( tmp, name );
-}"""
+#member_name, constant_macro, value
+constant_decl_tmpl = "\t%(member_name)s = %(constant_macro)s( %(value)s )"
+
+#member_name, typename, description
+enum_item_register_tmpl = \
+	'\treg_fn("%(description)s", %(typename)s::%(member_name)s);'
 
 #hash_op, enum_name_translator_impl, constant_def_list
 enum_def_tmpl = \
 """
-%(hash_op)s
-%(enum_name_translator_impl)s
-%(enum_constructor)s
-%(constant_def_list)s
+void register_enum_name( std::function<void (char const*, %(typename)s)> const& reg_fn )
+{
+%(enum_item_register)s
+}
 """
 
-#include_guard_prefix, typename_upper, include_guard_postfix
-include_guard_tmpl = "%(include_guard_prefix)s_%(typename_upper)s_%(include_guard_postfix)s"
-
-#include_guard, pre_include_list, enum_type_declare
+#enum_type_declare
 header_file_tmpl = \
-"""
-#ifndef %(include_guard)s
-#define %(include_guard)s
+"""#pragma once
 
-%(pre_include_list)s
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/enum.h>
+#include <functional>
+
 %(enum_type_declare)s
-#endif
 """
 
 #file_full_path
@@ -168,10 +47,6 @@ include_tmpl = "#include \"%(file_full_path)s\" "
 src_file_tmpl = \
 """
 %(header)s
-#include <boost/unordered_map.hpp>
-
-using namespace boost;
-using namespace std;
 
 %(enum_type_definition)s
 """
@@ -374,110 +249,36 @@ class enum_code_generator:
 		self._set_expr_to_context(item_name, self.items_[item_name])
 		self.items_desc[item_name] = item_desc
 		pass
-
-	def _generate_operator_list(self):
-		compare_op = ""
-		if self.config_.has_compare_op:
-			compare_op = compare_op_tmpl % { "typename": self.typename }
-
-		bitwise_op = ""
-		if self.config_.has_bit_op:
-			bitwise_op = bitwise_op_tmpl % { "typename": self.typename }
-
-		equal_op = ""
-		if self.config_.has_equal_op:
-			equal_op = equal_op_tmpl % { "typename": self.typename }
-
-		value_op = ""
-		if self.config_.has_value_op:
-			value_op = value_op_tmpl % { "storage_typename": self.storage_typename, "typename": self.typename }
-                    
-		self.operator_list_ = compare_op + bitwise_op + equal_op + value_op
 		
 	def _generate_constant_list(self):
-		self.constant_list_ = ""
-		for enum_name in self.items_.keys():
-			self.constant_list_ += "\t"
-			self.constant_list_ += constant_decl_tmpl % { "member_name" : enum_name }
-			self.constant_list_ += "\n"
-	
-	def _generate_enum_name_translator(self):
-		self._generate_force_init_list()
-		if self.config_.has_enum_name_translator:
-			self.enum_name_translator_ = enum_name_translator_tmpl
-			self.enum_name_translator_impl_ = "\t\t"
-			self.enum_name_translator_impl_ += enum_name_translator_impl_tmpl % {
-				"typename" : self.typename,
-				"force_init_list" : self.force_init_list_
-			}
-			self.enum_name_translator_impl_ += "\n"
-		else:
-			self.enum_name_translator_ = ""
-			self.enum_name_translator_impl_ = ""
-			
+		gen_decl = lambda item_kv: constant_decl_tmpl % {"member_name" : item_kv[0], "constant_macro" : self.constant_macro, "value" : item_kv[1]}
+		self.constant_list_ = ',\n'.join( [gen_decl(name_val) for name_val in self.items_.iteritems()] )
+		
 	def _generate_declare(self):
-		self._generate_operator_list()
 		self._generate_constant_list()
-		self._generate_enum_name_translator()
 		
 		self.declare_ = enum_decl_tmpl % {
 			"typename" : self.typename,
 			"storage_typename" : self.storage_typename,
-			"operator_list":self.operator_list_,
-			"constant_decl_list":self.constant_list_,
-			"enum_name_translator":self.enum_name_translator_
+			"constant_decl_list":self.constant_list_
 			}
 		
-	def _generate_constant_def_list(self):
-		self.constant_def_list_ = ""
+	def _generate_enum_item_register_list(self):
+		self.enum_item_register_list_ = ""
 		for (enum_name, enum_val) in self.items_.iteritems():
-			self.constant_def_list_ += constant_def_tmpl % {
-				"typename" : self.typename,
+			self.enum_item_register_list_ += enum_item_register_tmpl % {
+				"typename"	  : self.typename,
 				"member_name" : enum_name,
-				"value" : enum_val,
-				"constant_macro" : self.constant_macro,
 				"description" : self.items_desc[enum_name]
 				}
-			self.constant_def_list_ += "\n"
-
-	def _generate_force_init_list(self):
-		self.force_init_list_ = ""
-		for (enum_name, enum_val) in self.items_.iteritems():
-			self.force_init_list_ += item_force_init_tmpl % {
-				"typename" : self.typename,
-				"member_name" : enum_name,
-				"value" : enum_val,
-				"constant_macro" : self.constant_macro,
-				"description" : self.items_desc[enum_name]
-				}
-			self.force_init_list_ += "\n"
+			self.enum_item_register_list_ += "\n"
 			
-	def _generate_hash_op(self):
-		self.hash_op_ = ""
-		if self.config_.has_enum_name_translator:
-			self.hash_op_ = hash_op_tmpl % {
-				"typename" : self.typename
-			}
-		
-	def _generate_enum_constructor(self):
-		self.enum_constructor_ = ""
-		self.enum_constructor_ += "\t\t"
-		self.enum_constructor_ += enum_constructor_tmpl % {
-			"typename" : self.typename
-			}
-		self.enum_constructor_ += "\n"
-
 	def _generate_definition(self):
-		self._generate_constant_def_list()
-		self._generate_hash_op()
-		self._generate_enum_constructor()
-		self._generate_constant_def_list()
+		self._generate_enum_item_register_list()
 		
 		self.definition_ = enum_def_tmpl % {
-			"hash_op" : self.hash_op_,
-			"enum_constructor" : self.enum_constructor_,
-			"enum_name_translator_impl" : self.enum_name_translator_impl_,
-			"constant_def_list" : self.constant_def_list_
+			"typename" : self.typename,
+			"enum_item_register" : self.enum_item_register_list_
 			}
 		pass
 
@@ -611,21 +412,12 @@ class enum_file_generator:
 			
 			header_path_in_src = os.path.join( self.config_.include_path, enum_name+".h" )
 			
-			include_guard = include_guard_tmpl % {
-				"include_guard_prefix" : self.config_.include_guard_prefix,
-				"typename_upper" : str(enum_name).upper(),
-				"include_guard_postfix" : self.config_.include_guard_postfix
-			}
-			
-			
 			header_code = header_file_tmpl % {
-				"include_guard" : include_guard,
-				"pre_include_list" : self.pre_includes,
 				"enum_type_declare" : enum_codes[0]
 			}
 			
 			src_code = src_file_tmpl % {
-				"header" : include_tmpl % { "file_full_path" : header_path_in_src },
+				"header" : '#include "%s"' % header_path_in_src,
 				"enum_type_definition" : enum_codes[1]
 			}
 				

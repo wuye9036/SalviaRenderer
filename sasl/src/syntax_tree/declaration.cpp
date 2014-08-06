@@ -71,7 +71,7 @@ bool tynode::is_alias() const{
 
 bool tynode::is_uniform() const
 {
-	return qual.included( type_qualifiers::_uniform );
+	return to_underlying(qual & type_qualifiers::_uniform) != 0;
 }
 
 builtin_type::builtin_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )

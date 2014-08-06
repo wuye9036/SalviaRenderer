@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-struct builtin_types;
-struct operators;
+enum class builtin_types: uint32_t;
+enum class operators	: uint32_t;
 
 namespace sasl
 {

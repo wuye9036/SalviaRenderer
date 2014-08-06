@@ -3,6 +3,7 @@
 #include <sasl/enums/operators.h>
 
 #include <eflib/include/math/math.h>
+#include <eflib/include/utility/enum.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
@@ -80,31 +81,24 @@ namespace sasl{
 
 		builtin_types vector_of( const builtin_types& btc, size_t len )
 		{
-			if ( !is_scalar(btc) ){
+			if ( !is_scalar(btc) )
+			{
 				return builtin_types::none;
 			}
-			builtin_types ret = ( btc | builtin_types::_vector );
-			ret.from_value(
-				builtin_types::storage_type(
-				ret.to_value() | ( len << ret._dim0_field_shift.to_value() )
-				) 
-				);
+			builtin_types ret = (btc | builtin_types::_vector) | static_cast<builtin_types>(len << builtin_types::_dim0_field_shift);
 			return ret;
 		}
 
 		builtin_types matrix_of( const builtin_types& btc, size_t vec_size, size_t vec_cnt )
 		{
-			if ( !is_scalar(btc) ){
+			if ( !is_scalar(btc) )
+			{
 				return builtin_types::none;
 			}
-			builtin_types ret( btc | builtin_types::_matrix );
-			ret.from_value(
-				builtin_types::storage_type(
-				ret.to_value()
-				| ( vec_size << ret._dim0_field_shift.to_value() )
-				| ( vec_cnt << ret._dim1_field_shift.to_value() )
-				)
-				);
+			builtin_types ret = 
+				(btc | builtin_types::_matrix)
+				| static_cast<builtin_types>(vec_size << builtin_types::_dim0_field_shift)
+				| static_cast<builtin_types>(vec_cnt << builtin_types::_dim1_field_shift);
 
 			return ret;
 		}
@@ -120,26 +114,20 @@ namespace sasl{
 
 		size_t vector_size( const builtin_types& btc )
 		{
-			if( is_sampler(btc) || is_scalar(btc) ){
+			if( is_sampler(btc) || is_scalar(btc) )
+			{
 				return 1;
 			}
-			return (size_t)
-				(
-				(btc & builtin_types::_dim0_mask).to_value()
-				>> builtin_types::_dim0_field_shift.to_value()
-				);
+			return static_cast<size_t>(btc & builtin_types::_dim0_mask) >> builtin_types::_dim0_field_shift;
 		}
 
 		size_t vector_count( const builtin_types& btc )
 		{
-			if( is_sampler(btc) || is_scalar(btc) || is_vector(btc) ){
+			if( is_sampler(btc) || is_scalar(btc) || is_vector(btc) )
+			{
 				return 1;
 			}
-			return (size_t)
-				(
-				(btc & builtin_types::_dim1_mask).to_value()
-				>> builtin_types::_dim1_field_shift.to_value()
-				);
+			return static_cast<size_t>(btc & builtin_types::_dim1_mask) >> builtin_types::_dim1_field_shift;
 		}
 
 		size_t reg_storage_size(builtin_types const& btc)

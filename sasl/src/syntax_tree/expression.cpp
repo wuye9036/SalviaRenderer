@@ -74,7 +74,7 @@ variable_expression::variable_expression( shared_ptr<token_t> const& tok_beg, sh
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( variable_expression );
 
-operators_helper::operators_helper()
+operator_traits::operator_traits()
 {
 	prefix_ops +=
 		operators::positive, operators::negative,
@@ -102,33 +102,27 @@ operators_helper::operators_helper()
 
 }
 
-bool operators_helper::is_prefix( operators op )
+bool operator_traits::is_prefix( operators op )
 {
 	return include( prefix_ops, op );
 }
 
-bool operators_helper::is_binary( operators op )
+bool operator_traits::is_binary( operators op )
 {
 	return include( binary_ops, op );
 }
 
-bool operators_helper::is_postfix( operators op )
+bool operator_traits::is_postfix( operators op )
 {
 	return include( postfix_ops, op );
 }
 
-bool operators_helper::is_unary( operators op )
+bool operator_traits::is_unary( operators op )
 {
 	return is_prefix(op) || is_postfix(op);
 }
 
-operators_helper& operators_helper::instance()
-{
-	static operators_helper op_helper;
-	return op_helper;
-}
-
-bool operators_helper::include( const std::vector<operators>& c, operators op)
+bool operator_traits::include( const std::vector<operators>& c, operators op)
 {
 	return std::find( c.begin(), c.end(), op) != c.end();
 }

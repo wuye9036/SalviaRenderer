@@ -33,6 +33,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
+#include <functional>
 
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
@@ -48,6 +49,7 @@ using boost::addressof;
 using boost::format;
 
 using std::vector;
+using std::make_pair;
 
 #define SASL_VISITOR_TYPE_NAME cg_impl
 
@@ -128,6 +130,19 @@ cg_impl::cg_impl()
 	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
 	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
 {
+	std::function<void (char const*, operators)>
+		op_name_inserter = [this](char const* name, operators v)
+	{
+		operator_names.insert( make_pair(v, name) );
+	};
+	register_enum_name(op_name_inserter);
+
+	std::function<void (char const*, builtin_types)>
+		bt_name_inserter = [this](char const* name, builtin_types v)
+	{
+		bt_names.insert( make_pair(v, name) );
+	};
+	register_enum_name(bt_name_inserter);
 }
 
 void cg_impl::visit_child( sasl::syntax_tree::node* child )
@@ -216,43 +231,60 @@ SASL_VISIT_DEF( binary_expression ){
 
 			multi_value retval;
 
-			builtin_types lbtc = p0_tsi->ty_proto()->tycode;
-			builtin_types rbtc = p1_tsi->ty_proto()->tycode;
-
-			if( v.op == operators::add ){
+			switch(v.op)
+			{
+			case operators::add:
 				retval = service()->emit_add(lval, rval);
-			} else if ( v.op == operators::mul ) {
+				break;
+			case operators::mul:
 				retval = service()->emit_mul_comp(lval, rval);
-			} else if ( v.op == operators::sub ) {
+				break;
+			case operators::sub:
 				retval = service()->emit_sub(lval, rval);
-			} else if( v.op == operators::div ){
+				break; 
+			case operators::div:
 				retval = service()->emit_div(lval, rval);
-			} else if( v.op == operators::mod ){
+				break; 
+			case operators::mod:
 				retval = service()->emit_mod(lval, rval);
-			} else if( v.op == operators::left_shift ) {
+				break; 
+			case operators::left_shift:
 				retval = service()->emit_lshift(lval, rval);
-			} else if( v.op == operators::right_shift ) {
+				break; 
+			case operators::right_shift:
 				retval = service()->emit_rshift(lval, rval);
-			} else if( v.op == operators::bit_and ) {
+				break; 
+			case operators::bit_and:
 				retval = service()->emit_bit_and(lval, rval);
-			} else if( v.op == operators::bit_or ) {
+				break; 
+			case operators::bit_or:
 				retval = service()->emit_bit_or(lval, rval);
-			} else if( v.op == operators::bit_xor ) {
+				break; 
+			case operators::bit_xor:
 				retval = service()->emit_bit_xor(lval, rval);
-			} else if( v.op == operators::less ) {
+				break; 
+			case operators::less:
 				retval = service()->emit_cmp_lt(lval, rval);
-			} else if( v.op == operators::less_equal ){
+				break; 
+			case operators::less_equal:
 				retval = service()->emit_cmp_le(lval, rval);
-			} else if( v.op == operators::equal ){
+				break; 
+			case operators::equal:
 				retval = service()->emit_cmp_eq(lval, rval);
-			} else if( v.op == operators::greater_equal ){
+				break; 
+			case operators::greater_equal:
 				retval = service()->emit_cmp_ge(lval, rval);
-			} else if( v.op == operators::greater ){
+				break; 
+			case operators::greater:
 				retval = service()->emit_cmp_gt(lval, rval);	
-			} else if( v.op == operators::not_equal ){
+				break; 
+			case operators::not_equal:
 				retval = service()->emit_cmp_ne(lval, rval);
-			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
+				break;
+			default:
+				std::string msg(operator_names[v.op]);
+				msg += " not be implemented.";
+				EFLIB_ASSERT_UNIMPLEMENTED0( msg.c_str() );
 			}
 
 			assert(retval.hint() == sem_->get_semantic(op_proto)->ty_proto()->tycode);
@@ -397,8 +429,8 @@ SASL_VISIT_DEF( builtin_type ){
 		assert( bt_tyinfo );
 		proto_ctxt->ty = bt_tyinfo;
 
-		std::string tips = v.tycode.name() + std::string(" was not supported yet.");
-		EFLIB_ASSERT_AND_IF( proto_ctxt->ty, tips.c_str() ){
+		EFLIB_ASSERT_AND_IF(proto_ctxt->ty, "Current type was not supported yet.")
+		{
 			return;
 		}
 	}
