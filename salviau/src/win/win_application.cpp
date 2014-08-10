@@ -1,7 +1,7 @@
 #include <salviau/include/win/win_application.h>
 
+#include <salviau/src/win/resource.h>
 #include <salviau/include/common/window.h>
-#include <salviau/include/win/resource.h>
 
 #include <eflib/include/platform/constant.h>
 #include <eflib/include/string/string.h>
@@ -55,7 +55,7 @@ public:
 
 	void set_title( string const& title )
 	{
-		SetWindowText( hwnd_, to_tstring(title).c_str() );
+		SetWindowText( hwnd_, eflib::to_tstring(title).c_str() );
 	}
 
 	boost::any view_handle()
@@ -87,37 +87,23 @@ private:
 		wcex.cbClsExtra		= 0;
 		wcex.cbWndExtra		= 0;
 		wcex.hInstance		= hinst;
-		wcex.hIcon			= LoadIcon(hinst, MAKEINTRESOURCE(IDI_SALVIA_WIN_APP));
+		wcex.hIcon			= LoadIcon(hinst, MAKEINTRESOURCE(IDI_APP));
 		wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 		wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_SALVIA_WIN_APP);
 		wcex.lpszClassName	= _EFLIB_T("SalviaWinApp");
-		wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+		wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
 
 		return RegisterClassEx(&wcex);
 	}
 	
 	LRESULT process_message(UINT message, WPARAM wparam, LPARAM lparam)
 	{
-		int msg_id, msg_event;
 		PAINTSTRUCT ps;
 		HDC hdc;
 
 		switch (message)
 		{
-		case WM_COMMAND:
-			msg_id = LOWORD(wparam);
-			msg_event = HIWORD(wparam);
-			// Parse the menu selections:
-			switch (msg_id)
-			{
-			case IDM_EXIT:
-				DestroyWindow(hwnd_);
-				break;
-			default:
-				return DefWindowProc(hwnd_, message, wparam, lparam);
-			}
-			break;
 		case WM_PAINT:
 			hdc = BeginPaint(hwnd_, &ps);
 			on_paint();

@@ -45,6 +45,8 @@ set( APP_WIN_SOURCES
 )
 
 set( APP_WIN_IMPLS
+	${SALVIA_HOME_DIR}/salviau/src/win/targetver.h
+	${SALVIA_HOME_DIR}/salviau/src/win/resource.h
 	${SALVIA_HOME_DIR}/salviau/src/win/salvia_win_app.rc
 )
 
