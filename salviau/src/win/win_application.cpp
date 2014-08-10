@@ -1,34 +1,56 @@
 #include <salviau/include/win/win_application.h>
 
-#include <salviau/src/win/resource.h>
+#include <salviau/include/common/window.h>
+#include <salviau/include/win/resource.h>
+
 #include <eflib/include/platform/constant.h>
+#include <eflib/include/string/string.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/signals2.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <string>
+
+#include <Windows.h>
+
+using boost::signals2::signal;
+using std::string;
 
 BEGIN_NS_SALVIAU();
 
+class win_application;
+static win_application* g_app = nullptr;
+
 class win_window: public window
 {
-	signal< void() > on_idle;
-	signal< void() > on_paint;
-	signal< void() > on_create;
-	
-	void show()
+	signal<void()> on_idle;
+	signal<void()> on_paint;
+	signal<void()> on_create;
+
+public:
+	win_window(win_application* app) : app_(app)
 	{
-		ShowWindow( SW_SHOWDEFAULT );
 	}
 
-	void set_idle_handler( idle_handler_t const& handler )
+	void show()
+	{
+		ShowWindow(hwnd_, SW_SHOWDEFAULT);
+	}
+
+	void set_idle_handler(idle_handler_t const& handler)
 	{
 		on_idle.connect( handler );
 	}
 
-	void set_draw_handler( draw_handler_t const& handler )
+	void set_draw_handler(draw_handler_t const& handler)
 	{
-		m_view.on_paint.connect( handler );
+		on_paint.connect(handler);
 	}
 
-	void set_create_handler( create_handler_t const& handler )
+	void set_create_handler(create_handler_t const& handler)
 	{
-		m_view.on_create.connect( handler );
+		on_create.connect(handler);
 	}
 
 	void set_title( string const& title )
@@ -41,27 +63,17 @@ class win_window: public window
 		return boost::any(hwnd_);
 	}
 
+	void idle()
+	{
+		on_idle();
+	}
+
 	void refresh()
 	{
-		InvalidateRect(hwnd_, nullptr);
+		InvalidateRect(hwnd_, nullptr, TRUE);
 	}
 	
-	bool create()
-	{
-		hwnd = CreateWindow("SalviaWinApp", "SalviaWinApp", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hinst, NULL);
-
-		if (!wnd)
-		{
-			return false;
-		}
-		
-		on_create();
-		
-		ShowWindow(wnd, SW_SHOW);
-		UpdateWindow(wnd);
-
-		return true;
-	}
+	bool create();
 	
 private:
 	ATOM register_window_class(HINSTANCE hinst)
@@ -74,20 +86,19 @@ private:
 		wcex.lpfnWndProc	= &win_window::win_proc;
 		wcex.cbClsExtra		= 0;
 		wcex.cbWndExtra		= 0;
-		wcex.hinst			= hinst;
+		wcex.hInstance		= hinst;
 		wcex.hIcon			= LoadIcon(hinst, MAKEINTRESOURCE(IDI_SALVIA_WIN_APP));
 		wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 		wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_SALVIA_WIN_APP);
-		wcex.lpszClassName	= szWindowClass;
-		wcex.hIconSm		= LoadIcon(wcex.hinst, MAKEINTRESOURCE(IDI_SMALL));
+		wcex.lpszClassName	= _EFLIB_T("SalviaWinApp");
+		wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
 		return RegisterClassEx(&wcex);
 	}
 	
-	static LRESULT CALLBACK win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT process_message(UINT message, WPARAM wparam, LPARAM lparam)
 	{
-		for(window_map_)
 		int msg_id, msg_event;
 		PAINTSTRUCT ps;
 		HDC hdc;
@@ -95,95 +106,151 @@ private:
 		switch (message)
 		{
 		case WM_COMMAND:
-			msg_id    = LOWORD(wparam);
+			msg_id = LOWORD(wparam);
 			msg_event = HIWORD(wparam);
 			// Parse the menu selections:
 			switch (msg_id)
 			{
 			case IDM_EXIT:
-				DestroyWindow(wnd);
+				DestroyWindow(hwnd_);
 				break;
 			default:
-				return DefWindowProc(wnd, message, wparam, lparam);
+				return DefWindowProc(hwnd_, message, wparam, lparam);
 			}
 			break;
 		case WM_PAINT:
-			hdc = BeginPaint(wnd, &ps);
-			// TODO: Add any drawing code here...
-			EndPaint(wnd, &ps);
+			hdc = BeginPaint(hwnd_, &ps);
+			on_paint();
+			EndPaint(hwnd_, &ps);
 			break;
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			break;
 		default:
-			return DefWindowProc(wnd, message, wparam, lparam);
+			return DefWindowProc(hwnd_, message, wparam, lparam);
 		}
 		return 0;
 	}
+
+	static LRESULT CALLBACK win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 	
-	ATOM	wnd_class_;
-	HWND	hwnd_;
-	
-	static 	uint32_t const MAX_WINDOW_MAP_SIZE = 16;
-	static  uint32_t current_wnd_;
-	static	std::pair<HWND, win_window*> window_map_[MAX_WINDOW_MAP_SIZE];
+	ATOM				wnd_class_;
+	HWND				hwnd_;
+	win_application*	app_;
 };
 
-class wtl_application: public application
+class win_application: public application
 {
 public:
-	wtl_application()
+	win_application()
 	{
 		::DefWindowProc(NULL, 0, 0, 0L);
-		
-		HINSTANCE hinst = GetModuleHandle(nullptr);
-		
-		register_window_class(hinst);
-		if ( !init_instance(hinst, nCmdShow) )
-		{
-			return FALSE;
-		}
+		hinst_ = GetModuleHandle(nullptr);
 	}
 
-	~wtl_application()
+	~win_application()
 	{
-		delete main_wnd;
-		delete module;
+		delete main_wnd_;
 	}
 
 	window* main_window()
 	{
-		return main_wnd;
+		return main_wnd_;
+	}
+
+	HINSTANCE instance() const
+	{
+		return hinst_;
 	}
 
 	int run()
 	{
-		module->AddMessageLoop(&msg_loop);
-		main_wnd->pmodule = module;
+		main_wnd_ = new win_window(this);
 
-		if(main_wnd->CreateEx( NULL, NULL, WS_BORDER | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU ) == NULL)
+		if( !main_wnd_->create() )
 		{
-			ATLTRACE(_T("Main window creation failed!\n"));
+			OutputDebugString( _EFLIB_T("Main window creation failed!\n") );
 			return 0;
 		}
 
 		// Message loop.
-		main_wnd->show();
-		int nRet = msg_loop.GameRun();
-
-		// Do clear while terminating.
-		module->RemoveMessageLoop();
-		module->Term();
+		main_wnd_->show();
 		
-		return nRet;
+		MSG msg;
+		for (;;)
+		{
+			if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			{
+				if (WM_QUIT == msg.message)
+				{
+					break;        // WM_QUIT, exit message loop
+				}
+
+				::TranslateMessage(&msg);
+				::DispatchMessage(&msg);
+			}
+			else
+			{
+				main_wnd_->idle();
+			}
+		}
+
+		return (int)msg.wParam;
 	}
 
 private:
+	win_window*	main_wnd_;
+	HINSTANCE	hinst_;
 };
+
+bool win_window::create()
+{
+	hwnd_ = CreateWindow(
+		_EFLIB_T("SalviaWinApp"),
+		_EFLIB_T("SalviaWinApp"),
+		WS_BORDER | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, app_->instance(), NULL
+		);
+
+	if (!hwnd_)
+	{
+		return false;
+	}
+
+	on_create();
+
+	ShowWindow(hwnd_, SW_SHOW);
+	UpdateWindow(hwnd_);
+
+	return true;
+}
+
+LRESULT CALLBACK win_window::win_proc(HWND /*hwnd*/, UINT message, WPARAM wparam, LPARAM lparam)
+{
+	return static_cast<win_window*>(g_app->main_window())
+		->process_message(message, wparam, lparam);
+}
 
 application* create_win_application()
 {
-	return new win_application;
+	if (g_app)
+	{
+		assert(false);
+		exit(1);
+	}
+	g_app = new win_application();
+	return g_app;
+}
+
+void delete_win_application(application* app)
+{
+	if (!dynamic_cast<win_application*>(app))
+	{
+		assert(false);
+		exit(1);
+	}
+	
+	delete app;
 }
 
 END_NS_SALVIAU();
