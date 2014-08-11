@@ -11,6 +11,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
+#include <sstream>
 
 #include <Windows.h>
 
@@ -29,7 +30,7 @@ class win_window: public window
 	signal<void()> on_create;
 
 public:
-	win_window(win_application* app) : app_(app)
+	win_window(win_application* app) : app_(app), hwnd_(nullptr)
 	{
 	}
 
@@ -83,16 +84,16 @@ private:
 		wcex.cbSize = sizeof(WNDCLASSEX);
 
 		wcex.style			= CS_HREDRAW | CS_VREDRAW;
-		wcex.lpfnWndProc	= &win_window::win_proc;
+		wcex.lpfnWndProc	= &win_proc;
 		wcex.cbClsExtra		= 0;
 		wcex.cbWndExtra		= 0;
-		wcex.hInstance		= hinst;
-		wcex.hIcon			= LoadIcon(hinst, MAKEINTRESOURCE(IDI_APP));
+		wcex.hInstance		= GetModuleHandle(NULL);
+		wcex.hIcon			= NULL; // LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WIN32SAMPLEPROJECT));
 		wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-		wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_SALVIA_WIN_APP);
-		wcex.lpszClassName	= _EFLIB_T("SalviaWinApp");
-		wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
+		wcex.lpszMenuName	= NULL;
+		wcex.lpszClassName	= wnd_class_name_;
+		wcex.hIconSm		= NULL; // LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
 		return RegisterClassEx(&wcex);
 	}
@@ -104,6 +105,9 @@ private:
 
 		switch (message)
 		{
+		case WM_CREATE:
+			on_create();
+			break;
 		case WM_PAINT:
 			hdc = BeginPaint(hwnd_, &ps);
 			on_paint();
@@ -118,12 +122,15 @@ private:
 		return 0;
 	}
 
-	static LRESULT CALLBACK win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
-	
-	ATOM				wnd_class_;
+	static LRESULT CALLBACK	win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
+	static ATOM					wnd_class_;
+	static std::_tchar const*	wnd_class_name_;
 	HWND				hwnd_;
 	win_application*	app_;
 };
+
+ATOM win_window::wnd_class_ = 0;
+std::_tchar const* win_window::wnd_class_name_ = _EFLIB_T("SalviaApp");
 
 class win_application: public application
 {
@@ -132,6 +139,7 @@ public:
 	{
 		::DefWindowProc(NULL, 0, 0, 0L);
 		hinst_ = GetModuleHandle(nullptr);
+		main_wnd_ = new win_window(this);
 	}
 
 	~win_application()
@@ -151,8 +159,6 @@ public:
 
 	int run()
 	{
-		main_wnd_ = new win_window(this);
-
 		if( !main_wnd_->create() )
 		{
 			OutputDebugString( _EFLIB_T("Main window creation failed!\n") );
@@ -191,19 +197,34 @@ private:
 
 bool win_window::create()
 {
-	hwnd_ = CreateWindow(
-		_EFLIB_T("SalviaWinApp"),
-		_EFLIB_T("SalviaWinApp"),
-		WS_BORDER | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, app_->instance(), NULL
-		);
-
+	if (wnd_class_ == 0)
+	{
+		wnd_class_ = register_window_class( app_->instance() );
+	}
+	hwnd_ = CreateWindow(wnd_class_name_, _EFLIB_T(""), WS_OVERLAPPEDWINDOW,
+      CW_USEDEFAULT, 0, 512, 512, NULL, NULL, app_->instance(), NULL);
 	if (!hwnd_)
 	{
+		auto err = GetLastError();
+		
+		LPTSTR lpMsgBuf;
+		FormatMessage(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			err,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPTSTR) &lpMsgBuf,
+			0, NULL );
+
+		// Display the error message and exit the process
+		std::wstringstream ss;
+		ss << L"Window created failed. Error: " << std::hex << eflib::to_wide_string( std::_tstring(lpMsgBuf) ) << ".";
+		OutputDebugStringW( ss.str().c_str() );
+		LocalFree(lpMsgBuf);
 		return false;
 	}
-
-	on_create();
 
 	ShowWindow(hwnd_, SW_SHOW);
 	UpdateWindow(hwnd_);
@@ -211,10 +232,11 @@ bool win_window::create()
 	return true;
 }
 
-LRESULT CALLBACK win_window::win_proc(HWND /*hwnd*/, UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK win_window::win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	return static_cast<win_window*>(g_app->main_window())
-		->process_message(message, wparam, lparam);
+	win_window* wnd = static_cast<win_window*>(g_app->main_window());
+	wnd->hwnd_ = hwnd;
+	return wnd->process_message(message, wparam, lparam);
 }
 
 application* create_win_application()

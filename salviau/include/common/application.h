@@ -7,13 +7,15 @@ BEGIN_NS_SALVIAU();
 
 class window;
 
-class application{
+class application
+{
 public:
 	virtual int run() = 0;
 	virtual window* main_window() = 0;
 };
 
-class SALVIAU_API quick_app{
+class SALVIAU_API quick_app
+{
 public:
 	quick_app( application* impl );
 	virtual ~quick_app();
