@@ -71,7 +71,7 @@ public:
 
 	void refresh()
 	{
-		InvalidateRect(hwnd_, nullptr, TRUE);
+		InvalidateRect(hwnd_, nullptr, FALSE);
 	}
 	
 	bool create();
@@ -88,12 +88,12 @@ private:
 		wcex.cbClsExtra		= 0;
 		wcex.cbWndExtra		= 0;
 		wcex.hInstance		= GetModuleHandle(NULL);
-		wcex.hIcon			= NULL; // LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WIN32SAMPLEPROJECT));
+		wcex.hIcon			= LoadIcon(hinst, MAKEINTRESOURCE(IDI_APP));
 		wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 		wcex.lpszMenuName	= NULL;
 		wcex.lpszClassName	= wnd_class_name_;
-		wcex.hIconSm		= NULL; // LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+		wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
 
 		return RegisterClassEx(&wcex);
 	}
@@ -183,6 +183,7 @@ public:
 			}
 			else
 			{
+				OutputDebugString( _EFLIB_T("Idle.\n") );
 				main_wnd_->idle();
 			}
 		}
