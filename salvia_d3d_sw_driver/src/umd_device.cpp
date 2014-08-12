@@ -5,6 +5,7 @@
 
 #include <salvia_d3d_sw_driver/include/umd_adapter.h>
 #include <salvia_d3d_sw_driver/include/umd_device.h>
+#include <salvia_d3d_sw_driver/include/umd_resource.h>
 
 #include <salviar/include/texture.h>
 
@@ -818,7 +819,7 @@ SIZE_T umd_device::calc_private_resource_size(D3D10DDI_HDEVICE device, const D3D
 	UNREFERENCED_PARAMETER(device);
 	UNREFERENCED_PARAMETER(create_resource);
 
-	return sizeof(texture_ptr);
+	return sizeof(umd_resource);
 }
 
 SIZE_T umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource)
@@ -832,51 +833,11 @@ SIZE_T umd_device::calc_private_opened_resource_size(D3D10DDI_HDEVICE device, co
 void umd_device::create_resource(D3D10DDI_HDEVICE device, const D3D11DDIARG_CREATERESOURCE* create_resource,
 		D3D10DDI_HRESOURCE resource, D3D10DDI_HRTRESOURCE rt_resource)
 {
-	UNREFERENCED_PARAMETER(create_resource);
-	UNREFERENCED_PARAMETER(resource);
 	UNREFERENCED_PARAMETER(rt_resource);
 
 	umd_device* dev = static_cast<umd_device*>(device.pDrvPrivate);
-	// TODO: support other types of resources
-	texture_ptr* tex = static_cast<texture_ptr*>(resource.pDrvPrivate);
-	new (tex) texture_ptr;
-	assert(D3D10DDIRESOURCE_TEXTURE2D == create_resource->ResourceDimension);
-
-	pixel_format fmt;
-	switch (create_resource->Format)
-	{
-	case DXGI_FORMAT_R32G32B32A32_FLOAT:
-		fmt = pixel_format_color_rgba32f;
-		break;
-	case DXGI_FORMAT_R32G32B32_FLOAT:
-		fmt = pixel_format_color_rgb32f;
-		break;
-	case DXGI_FORMAT_B8G8R8A8_UNORM:
-		fmt = pixel_format_color_bgra8;
-		break;
-	case DXGI_FORMAT_R8G8B8A8_UNORM:
-		fmt = pixel_format_color_rgba8;
-		break;
-	case DXGI_FORMAT_R32_FLOAT:
-		fmt = pixel_format_color_r32f;
-		break;
-	case DXGI_FORMAT_R32G32_FLOAT:
-		fmt = pixel_format_color_rg32f;
-		break;
-	case DXGI_FORMAT_R32_SINT:
-		fmt = pixel_format_color_r32i;
-		break;
-
-	default:
-		assert(false);
-		fmt = pixel_format_color_rgba8;
-		break;
-	}
-
-	*tex = dev->sa_renderer_->create_tex2d(create_resource->pMipInfoList[0].TexelWidth,
-		create_resource->pMipInfoList[0].TexelHeight,
-		create_resource->SampleDesc.Count,
-		fmt);
+	umd_resource* res = static_cast<umd_resource*>(resource.pDrvPrivate);
+	new (res) umd_resource(dev, create_resource, rt_resource);
 }
 
 void umd_device::open_resource(D3D10DDI_HDEVICE device, const D3D10DDIARG_OPENRESOURCE* open_resource,
@@ -892,9 +853,8 @@ void umd_device::destroy_resource(D3D10DDI_HDEVICE device, D3D10DDI_HRESOURCE re
 {
 	UNREFERENCED_PARAMETER(device);
 
-	// TODO: support other types of resources
-	texture_ptr* tex = static_cast<texture_ptr*>(resource.pDrvPrivate);
-	tex->reset();
+	umd_resource* res = static_cast<umd_resource*>(resource.pDrvPrivate);
+	res->destroy();
 }
 
 SIZE_T umd_device::calc_private_shader_resource_view_size(D3D10DDI_HDEVICE device,
@@ -943,7 +903,7 @@ void umd_device::create_render_target_view(D3D10DDI_HDEVICE device,
 	// TODO: support other types of resources
 	surface_ptr* surf = static_cast<surface_ptr*>(render_target_view.pDrvPrivate);
 	new (surf) surface_ptr;
-	texture_ptr tex = *static_cast<texture_ptr*>(create_render_target_view->hDrvResource.pDrvPrivate);
+	texture_ptr tex = static_cast<umd_resource*>(create_render_target_view->hDrvResource.pDrvPrivate)->texture_2d();
 	*surf = tex->subresource(create_render_target_view->Tex2D.MipSlice);
 }
 
@@ -1685,7 +1645,7 @@ HRESULT umd_device::present_dxgi(DXGI_DDI_ARG_PRESENT* present_data)
 	umd_device* dev = reinterpret_cast<umd_device*>(present_data->hDevice);
 	dev->sa_renderer_->flush();
 
-	texture_ptr src_tex = *reinterpret_cast<texture_ptr*>(present_data->hSurfaceToPresent);
+	texture_ptr src_tex = reinterpret_cast<umd_resource*>(present_data->hSurfaceToPresent)->texture_2d();
 	surface_ptr src_surf = src_tex->subresource(0);
 	if (!dev->resolved_surf_
 		|| (dev->resolved_surf_->width() != src_surf->width())
