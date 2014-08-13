@@ -15,7 +15,8 @@ typedef boost::function<void()> idle_handler_t;
 typedef boost::function<void()> draw_handler_t;
 typedef boost::function<void()> create_handler_t;
 
-class window{
+class window
+{
 public:
 	virtual void show() = 0;
 

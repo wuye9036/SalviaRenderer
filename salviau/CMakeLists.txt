@@ -36,6 +36,19 @@ set( APP_WTL_IMPLS
 	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrameView.h
 )
 
+set( APP_WIN_HEADERS
+	${SALVIA_HOME_DIR}/salviau/include/win/win_application.h
+)
+
+set( APP_WIN_SOURCES
+	${SALVIA_HOME_DIR}/salviau/src/win/win_application.cpp
+)
+
+set( APP_WIN_IMPLS
+	${SALVIA_HOME_DIR}/salviau/src/win/targetver.h
+	${SALVIA_HOME_DIR}/salviau/src/win/resource.h
+	${SALVIA_HOME_DIR}/salviau/src/win/salvia_win_app.rc
+)
 
 set( APP_COMMON_SOURCES
 	${SALVIA_HOME_DIR}/salviau/src/common/benchmark.cpp
@@ -50,6 +63,10 @@ SOURCE_GROUP( "Header Files\\WTL"					FILES ${APP_WTL_HEADERS} )
 SOURCE_GROUP( "Source Files\\WTL\\Sources"			FILES ${APP_WTL_SOURCES} )
 SOURCE_GROUP( "Source Files\\WTL\\Implementations"	FILES ${APP_WTL_IMPLS} )
 
+SOURCE_GROUP( "Header Files\\Win"					FILES ${APP_WIN_HEADERS} )
+SOURCE_GROUP( "Source Files\\Win\\Sources"			FILES ${APP_WIN_SOURCES} )
+SOURCE_GROUP( "Source Files\\Win\\Implementations"	FILES ${APP_WIN_IMPLS} )
+
 if(MSVC)
 ADD_LIBRARY( salviau SHARED
 	${APP_COMMON_HEADERS}
@@ -58,6 +75,10 @@ ADD_LIBRARY( salviau SHARED
 	${APP_WTL_HEADERS}
 	${APP_WTL_SOURCES}
 	${APP_WTL_IMPLS}
+	
+	${APP_WIN_HEADERS}
+	${APP_WIN_SOURCES}
+	${APP_WIN_IMPLS}
 )
 else(MSVC)
 ADD_LIBRARY( salviau SHARED

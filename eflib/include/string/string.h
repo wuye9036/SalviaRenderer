@@ -38,8 +38,8 @@ namespace eflib{
 		#define to_tstring(instr) to_wide_string(instr)
 		#define to_tstring2(outstr, instr) to_wide_string(outstr, instr)
 	#else
-		#define to_tstring(instr) to_ansi_string(instr)
-		#define to_tstring2(outstr, instr) to_ansi_string(outstr, instr)
+		#define to_tstring(instr) eflib::to_ansi_string(instr)
+		#define to_tstring2(outstr, instr) eflib::to_ansi_string(outstr, instr)
 	#endif
 
 	template<class Container>

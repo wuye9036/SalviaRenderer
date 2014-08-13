@@ -2,8 +2,12 @@
 
 #include <salviar/include/renderer.h>
 
+class umd_resource;
+
 class umd_device
 {
+	friend umd_resource;
+
 public:
 	umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* args);
 	~umd_device();
