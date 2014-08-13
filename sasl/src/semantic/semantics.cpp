@@ -41,7 +41,8 @@ string_ref split_integer_literal_suffix(string_ref str, bool& is_unsigned, bool&
 	is_long = false;
 
 	size_t tail_count = 0;
-	for(auto ch_it = str.rbegin(); ch_it != str.rend(); ++ch_it)
+
+	for(auto ch_it = str.rbegin(); ch_it != str.rend(); ++ch_it)	
 	{
 		bool suffix_done = false;
 		switch (*ch_it)
@@ -65,21 +66,21 @@ string_ref split_integer_literal_suffix(string_ref str, bool& is_unsigned, bool&
 	}
 	
 	// remove suffix for lexical casting.
-	return str.substr(str.length() - tail_count);
+	return str.substr(0, str.length() - tail_count);
 }
 
-string split_real_literal_suffix(string const& str, bool& is_single)
+string_ref split_real_literal_suffix(string_ref str, bool& is_single)
 {
 	is_single = false;
 
-	string::const_reverse_iterator ch_it = str.rbegin();
+	auto ch_it = str.rbegin();
 	if ( *ch_it == 'F' || *ch_it == 'f' )
 	{
 		is_single = true;
 	}
 
 	// remove suffix for lexical casting.
-	return is_single ? string(str.begin(), str.end()-1 ) : str;
+	return is_single ? str.substr(0, str.length()-1) : str;
 }
 
 BEGIN_NS_SASL_SEMANTIC();

@@ -415,7 +415,8 @@ SASL_VISIT_DEF( index_expression )
 	ret_ctxt->ty			= service()->create_ty( sem_->get_semantic(&v)->ty_proto() );
 }
 
-SASL_VISIT_DEF( builtin_type ){
+SASL_VISIT_DEF(builtin_type)
+{
 	EFLIB_UNREF_DECLARATOR(data);
 
 	node_semantic* tisi = sem_->get_semantic(&v);
