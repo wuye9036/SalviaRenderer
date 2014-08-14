@@ -17,25 +17,6 @@ set( APP_COMMON_HEADERS
 	${SALVIA_HOME_DIR}/salviau/include/common/timer.h
 )
 
-set( APP_WTL_HEADERS
-	${SALVIA_HOME_DIR}/salviau/include/wtl/wtl_application.h
-)
-
-set( APP_WTL_SOURCES
-	${SALVIA_HOME_DIR}/salviau/src/wtl/wtl_application.cpp
-)
-
-set( APP_WTL_IMPLS
-	${SALVIA_HOME_DIR}/salviau/src/wtl/AboutDlg.h
-	${SALVIA_HOME_DIR}/salviau/src/wtl/MainFrm.h
-	${SALVIA_HOME_DIR}/salviau/src/wtl/resource.h
-	${SALVIA_HOME_DIR}/salviau/src/wtl/stdafx.cpp
-	${SALVIA_HOME_DIR}/salviau/src/wtl/stdafx.h
-	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrame.h
-	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrame.rc
-	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrameView.h
-)
-
 set( APP_WIN_HEADERS
 	${SALVIA_HOME_DIR}/salviau/include/win/win_application.h
 )
@@ -58,10 +39,6 @@ set( APP_COMMON_SOURCES
 
 SOURCE_GROUP( "Header Files\\Common"	FILES ${APP_COMMON_HEADERS} )
 SOURCE_GROUP( "Source Files\\Common"	FILES ${APP_COMMON_SOURCES} )
-
-SOURCE_GROUP( "Header Files\\WTL"					FILES ${APP_WTL_HEADERS} )
-SOURCE_GROUP( "Source Files\\WTL\\Sources"			FILES ${APP_WTL_SOURCES} )
-SOURCE_GROUP( "Source Files\\WTL\\Implementations"	FILES ${APP_WTL_IMPLS} )
 
 SOURCE_GROUP( "Header Files\\Win"					FILES ${APP_WIN_HEADERS} )
 SOURCE_GROUP( "Source Files\\Win\\Sources"			FILES ${APP_WIN_SOURCES} )

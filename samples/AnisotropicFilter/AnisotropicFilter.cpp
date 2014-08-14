@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -222,7 +222,7 @@ public:
 
 class anisotropic_filter: public quick_app{
 public:
-	anisotropic_filter(): quick_app( create_wtl_application() ){}
+	anisotropic_filter(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

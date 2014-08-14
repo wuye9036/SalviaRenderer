@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -138,7 +138,7 @@ public:
 
 class obj_loader: public quick_app{
 public:
-	obj_loader(): quick_app( create_wtl_application() ){}
+	obj_loader(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

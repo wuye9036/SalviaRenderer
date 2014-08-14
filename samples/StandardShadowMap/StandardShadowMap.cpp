@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -180,7 +180,7 @@ class ssm: public quick_app
 {
 public:
 	ssm()
-		: quick_app( create_wtl_application() )
+		: quick_app( create_win_application() )
 		, fps_counter_(3.0f)
 	{}
 

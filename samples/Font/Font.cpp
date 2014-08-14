@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -242,7 +242,7 @@ public:
 
 class font_sample: public quick_app{
 public:
-	font_sample(): quick_app( create_wtl_application() ){}
+	font_sample(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

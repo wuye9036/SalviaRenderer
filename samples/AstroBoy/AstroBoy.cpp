@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -232,7 +232,7 @@ public:
 
 class astro_boy: public quick_app{
 public:
-	astro_boy(): quick_app( create_wtl_application() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
+	astro_boy(): quick_app( create_win_application() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
 
 protected:
 	/** Event handlers @{ */

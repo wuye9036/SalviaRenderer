@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -200,7 +200,7 @@ class color_disabled_bs: public cpp_blend_shader
 class stencil_mirror: public quick_app
 {
 public:
-	stencil_mirror(): quick_app( create_wtl_application() ){}
+	stencil_mirror(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

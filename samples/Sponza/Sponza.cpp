@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -174,7 +174,7 @@ public:
 
 class sponza: public quick_app{
 public:
-	sponza(): quick_app( create_wtl_application() ){}
+	sponza(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

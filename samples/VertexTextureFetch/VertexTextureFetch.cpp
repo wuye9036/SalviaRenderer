@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -150,7 +150,7 @@ public:
 
 class vertex_texture_fetch: public quick_app{
 public:
-	vertex_texture_fetch(): quick_app( create_wtl_application() ){}
+	vertex_texture_fetch(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

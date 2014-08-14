@@ -4,7 +4,7 @@
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 #include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>

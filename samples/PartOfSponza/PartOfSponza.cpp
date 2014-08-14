@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
@@ -182,7 +182,7 @@ public:
 
 class sponza: public quick_app{
 public:
-	sponza(): quick_app( create_wtl_application() ){}
+	sponza(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */

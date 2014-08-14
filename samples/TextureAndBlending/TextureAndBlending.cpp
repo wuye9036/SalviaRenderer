@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/wtl/wtl_application.h>
+#include <salviau/include/win/win_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -244,7 +244,7 @@ public:
 
 class texture_and_blending: public quick_app{
 public:
-	texture_and_blending(): quick_app( create_wtl_application() ){}
+	texture_and_blending(): quick_app( create_win_application() ){}
 
 protected:
 	/** Event handlers @{ */
