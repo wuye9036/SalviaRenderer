@@ -33,7 +33,8 @@ bool on_diag_item_reported( diag_chat*, diag_item* item )
 	return true;
 }
 
-int main (int argc, char **argv){
+int main (int argc, char **argv)
+{
 
 	shared_ptr<diag_chat> diags = diag_chat::create();
 	diags->add_report_raised_handler( report_handler_fn(on_diag_item_reported) );
@@ -44,7 +45,7 @@ int main (int argc, char **argv){
 	shared_ptr<compiler> drv;
 	pfn(drv);
 	drv->set_parameter( argc, argv );
-	shared_ptr<diag_chat> comp_diags = drv->compile(true);
+	shared_ptr<diag_chat> comp_diags = drv->compile(true, false);
 
 	diag_chat::merge(diags.get(), comp_diags.get(), true);
 

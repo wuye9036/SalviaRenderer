@@ -41,12 +41,12 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros(){}
 
-	virtual sasl::common::diag_chat_ptr compile(bool /*jit_enabled*/)
+	virtual sasl::common::diag_chat_ptr compile(bool /*enable_jit*/, bool /*enable_reflect2*/)
 	{
 		return sasl::common::diag_chat_ptr();
 	}
 
-	virtual sasl::common::diag_chat_ptr	compile(std::vector<salviar::external_function_desc> const&)
+	virtual sasl::common::diag_chat_ptr	compile(std::vector<salviar::external_function_desc> const&, bool)
 	{
 		return sasl::common::diag_chat_ptr();
 	}
@@ -72,7 +72,8 @@ public:
 	}
 };
 
-class compiler_impl: public compiler{
+class compiler_impl: public compiler
+{
 public:
 	compiler_impl();
 
@@ -102,8 +103,8 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros();
 
-	virtual sasl::common::diag_chat_ptr			compile(bool enable_jit);
-	virtual sasl::common::diag_chat_ptr			compile(std::vector<salviar::external_function_desc> const&);
+	virtual sasl::common::diag_chat_ptr			compile(bool enable_jit, bool enable_reflect2);
+	virtual sasl::common::diag_chat_ptr			compile(std::vector<salviar::external_function_desc> const&, bool enable_reflect2);
 
 	virtual sasl::semantic::module_semantic_ptr	get_semantic() const;
 	virtual sasl::codegen::module_vmcode_ptr	get_vmcode() const;
