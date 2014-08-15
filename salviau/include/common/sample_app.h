@@ -32,7 +32,7 @@ struct frame_data
 	salviar::internal_statistics internal_stat;
 	salviar::pipeline_profiles   pipeline_prof;
 };
-
+#if 0
 class SALVIAU_API sample_app
 {
 public:
@@ -41,14 +41,16 @@ public:
 
 	virtual void run();
 	
+protected:
+	size_t total_frames() const;
+	void   exit();
+
 	// Utilities
 	virtual void profiling				(std::string const& stage_name, std::function<void()> const& fn);
 	virtual void save_frame				(salvia::surface_ptr const& surf);
 	virtual void save_profiling_result	(std::string const& file_name);
 
-	size_t total_frames() const;
-	
-protected:
+	// Events
 	virtual void on_create() = 0;
 	virtual void on_frame(size_t i_frame, size_t elapsed_ms) = 0;
 	
@@ -63,6 +65,12 @@ protected:
 	salviar::async_object_ptr	pipeline_prof_obj_;
 
 	std::vector<frame_data>		frame_profs_;
-};
 
+private:
+	// timer	tm_;
+	size_t	frame_;
+	bool	exiting_;
+
+};
+#endif
 END_NS_SALVIAU();
