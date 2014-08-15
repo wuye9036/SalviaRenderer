@@ -202,8 +202,11 @@ bool win_window::create()
 	{
 		wnd_class_ = register_window_class( app_->instance() );
 	}
-	hwnd_ = CreateWindow(wnd_class_name_, _EFLIB_T(""), WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, 512, 512, NULL, NULL, app_->instance(), NULL);
+	DWORD style = WS_OVERLAPPEDWINDOW;
+	RECT rc = {0, 0, 512, 512};
+	AdjustWindowRect(&rc, style, false);
+	hwnd_ = CreateWindow(wnd_class_name_, _EFLIB_T(""), style,
+		CW_USEDEFAULT, 0, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, app_->instance(), NULL);
 	if (!hwnd_)
 	{
 		auto err = GetLastError();

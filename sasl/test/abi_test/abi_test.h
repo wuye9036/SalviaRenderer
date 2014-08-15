@@ -136,7 +136,7 @@ struct abi_test_fixture
 			drv->add_virtual_file( vfiles[i].first, vfiles[i].second, true );
 		}
 
-		shared_ptr<diag_chat> results = drv->compile(false);
+		shared_ptr<diag_chat> results = drv->compile(false, true);
 		diag_chat::merge(diags.get(), results.get(), true);
 
 		BOOST_REQUIRE( drv->get_root() );

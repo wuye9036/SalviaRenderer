@@ -132,7 +132,7 @@ compiler_impl::compiler_impl()
 	opt_includes.fill_desc(desc);
 }
 
-shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
+shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit, bool enable_reflect2)
 {
 	// Initialize env for compiling.
 	shared_ptr<diag_chat> diags = diag_chat::create();
@@ -247,7 +247,6 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 
 	{
 		// Compiling with profiling
-
 		eflib::profiling_scope prof_scope(&prof, "driver impl compiling");
 
 		{
@@ -272,7 +271,10 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ compiler_impl");
 
 			mreflection = reflect(msem, diags.get());
-			mreflection2 = reflect2(msem);
+			if(enable_reflect2)
+			{
+				mreflection2 = reflect2(msem);
+			}
 
 			if(!mreflection)
 			{
@@ -303,7 +305,9 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 		}
 	}
 
-	// eflib::print_profiler(&prof, 3);
+#if 0
+	eflib::print_profiler(&prof, 3);
+#endif
 
 	if( opt_io.fmt == options_io::llvm_ir )
 	{
@@ -316,9 +320,9 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 	return diags;
 }
 
-shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> const& external_funcs)
+shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> const& external_funcs, bool enable_reflect2)
 {
-	shared_ptr<diag_chat> results = compile(true);
+	shared_ptr<diag_chat> results = compile(true, enable_reflect2);
 	if(!mvmc)
 	{
 		return results;

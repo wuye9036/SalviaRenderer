@@ -67,10 +67,8 @@ public:
 		bool high_priority ) = 0;
 	virtual void set_include_handler( include_handler_fn inc_handler ) = 0;
 
-	virtual sasl::common::diag_chat_ptr				compile(bool enable_jit)	= 0;
-
-	/// Implicit JIT enabled.
-	virtual sasl::common::diag_chat_ptr				compile(std::vector<salviar::external_function_desc> const&) = 0;
+	virtual sasl::common::diag_chat_ptr				compile(bool enable_jit, bool enable_reflect2) = 0;
+	virtual sasl::common::diag_chat_ptr				compile(std::vector<salviar::external_function_desc> const&, bool enable_reflect2) = 0;
 
 	virtual sasl::semantic::module_semantic_ptr		get_semantic() const	= 0;
 	virtual sasl::codegen::module_vmcode_ptr		get_vmcode() const		= 0;

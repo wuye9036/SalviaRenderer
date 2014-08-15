@@ -118,6 +118,7 @@ public:
 
 	reg_handle auto_alloc_reg(size_t sz)
 	{
+		assert(sz != 0);
 		auto_alloc_sizes_.push_back( static_cast<uint32_t>(sz) );
 		reg_handle ret;
 		ret.rfile = this;
@@ -661,9 +662,8 @@ private:
 				parent_info->sv = minfo->sv.advance_index(reg_count);
 			}
 		}
-
 		// For structure
-		if( ty->node_class() == node_ids::struct_type )
+		else if( ty->node_class() == node_ids::struct_type )
 		{
 			// TODO: statistic total size, and member offset of structure via 'struct_layout'
 			struct_type*	struct_ty = dynamic_cast<struct_type*>(ty);
@@ -690,6 +690,10 @@ private:
 			{
 				parent_info->sv = minfo->sv;
 			}
+		}
+		else if (ty->node_class() == node_ids::array_type)
+		{
+			assert(false);
 		}
 
 		if(parent_info)

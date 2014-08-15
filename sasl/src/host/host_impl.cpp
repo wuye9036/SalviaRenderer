@@ -266,7 +266,7 @@ void salvia_compile_shader_impl(
 	}
 
 	drv->set_parameter(lang_name);
-	shared_ptr<diag_chat> results = drv->compile(external_funcs);
+	shared_ptr<diag_chat> results = drv->compile(external_funcs, false);
 
 	shader_log_impl_ptr log_impl = make_shared<shader_log_impl>();
 	out_logs = log_impl;
