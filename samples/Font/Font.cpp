@@ -242,7 +242,7 @@ public:
 
 class font_sample: public quick_app{
 public:
-	font_sample(): quick_app( create_win_application() ){}
+	font_sample(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

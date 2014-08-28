@@ -244,7 +244,7 @@ public:
 
 class texture_and_blending: public quick_app{
 public:
-	texture_and_blending(): quick_app( create_win_application() ){}
+	texture_and_blending(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

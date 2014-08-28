@@ -20,8 +20,8 @@ using std::string;
 
 BEGIN_NS_SALVIAU();
 
-class win_application;
-static win_application* g_app = nullptr;
+class win_gui;
+static win_gui* g_gui = nullptr;
 
 class win_window: public window
 {
@@ -30,7 +30,7 @@ class win_window: public window
 	signal<void()> on_create;
 
 public:
-	win_window(win_application* app) : app_(app), hwnd_(nullptr)
+	win_window(win_gui* app) : app_(app), hwnd_(nullptr)
 	{
 	}
 
@@ -126,23 +126,23 @@ private:
 	static ATOM					wnd_class_;
 	static std::_tchar const*	wnd_class_name_;
 	HWND				hwnd_;
-	win_application*	app_;
+	win_gui*	app_;
 };
 
 ATOM win_window::wnd_class_ = 0;
 std::_tchar const* win_window::wnd_class_name_ = _EFLIB_T("SalviaApp");
 
-class win_application: public application
+class win_gui: public gui
 {
 public:
-	win_application()
+	win_gui()
 	{
 		::DefWindowProc(NULL, 0, 0, 0L);
 		hinst_ = GetModuleHandle(nullptr);
 		main_wnd_ = new win_window(this);
 	}
 
-	~win_application()
+	~win_gui()
 	{
 		delete main_wnd_;
 	}
@@ -238,25 +238,25 @@ bool win_window::create()
 
 LRESULT CALLBACK win_window::win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	win_window* wnd = static_cast<win_window*>(g_app->main_window());
+	win_window* wnd = static_cast<win_window*>(g_gui->main_window());
 	wnd->hwnd_ = hwnd;
 	return wnd->process_message(message, wparam, lparam);
 }
 
-application* create_win_application()
+gui* create_win_gui()
 {
-	if (g_app)
+	if (g_gui)
 	{
 		assert(false);
 		exit(1);
 	}
-	g_app = new win_application();
-	return g_app;
+	g_gui = new win_gui();
+	return g_gui;
 }
 
-void delete_win_application(application* app)
+void delete_win_gui(gui* app)
 {
-	if (!dynamic_cast<win_application*>(app))
+	if (!dynamic_cast<win_gui*>(app))
 	{
 		assert(false);
 		exit(1);

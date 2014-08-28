@@ -200,7 +200,7 @@ class color_disabled_bs: public cpp_blend_shader
 class stencil_mirror: public quick_app
 {
 public:
-	stencil_mirror(): quick_app( create_win_application() ){}
+	stencil_mirror(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

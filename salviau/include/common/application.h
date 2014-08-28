@@ -7,7 +7,7 @@ BEGIN_NS_SALVIAU();
 
 class window;
 
-class application
+class gui
 {
 public:
 	virtual int run() = 0;
@@ -17,7 +17,7 @@ public:
 class SALVIAU_API quick_app
 {
 public:
-	quick_app( application* impl );
+	quick_app(gui* impl);
 	virtual ~quick_app();
 
 	virtual int run();
@@ -28,7 +28,7 @@ protected:
 	virtual void on_idle();
 
 protected:
-	application* impl;
+	gui*	impl;
 	window* main_wnd;
 };
 

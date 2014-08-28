@@ -222,7 +222,7 @@ public:
 
 class anisotropic_filter: public quick_app{
 public:
-	anisotropic_filter(): quick_app( create_win_application() ){}
+	anisotropic_filter(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

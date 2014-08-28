@@ -150,7 +150,7 @@ public:
 
 class vertex_texture_fetch: public quick_app{
 public:
-	vertex_texture_fetch(): quick_app( create_win_application() ){}
+	vertex_texture_fetch(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

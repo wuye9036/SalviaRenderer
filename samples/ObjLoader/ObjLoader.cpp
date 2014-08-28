@@ -138,7 +138,7 @@ public:
 
 class obj_loader: public quick_app{
 public:
-	obj_loader(): quick_app( create_win_application() ){}
+	obj_loader(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

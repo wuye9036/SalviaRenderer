@@ -5,7 +5,7 @@
 
 BEGIN_NS_SALVIAU();
 
-quick_app::quick_app( application* impl ): impl(impl)
+quick_app::quick_app(gui* impl): impl(impl)
 {
 	main_wnd = impl->main_window();
 	assert( main_wnd );

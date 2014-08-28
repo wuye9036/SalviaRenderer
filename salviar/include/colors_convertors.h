@@ -45,7 +45,8 @@ decl_type_fmt_pair(color_rg32f, 5);
 decl_type_fmt_pair(color_r32i, 6);
 decl_type_fmt_pair(color_max, 7);
 
-const int pixel_format_color_ub = pixel_format_color_max - 1;
+int const pixel_format_color_ub = pixel_format_color_max - 1;
+int const pixel_format_invalid = -1;
 
 // Pixel format informations
 

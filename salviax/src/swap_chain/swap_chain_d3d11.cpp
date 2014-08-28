@@ -101,7 +101,10 @@ public:
 
 	~d3d11_swap_chain()
 	{
-		d3d_imm_ctx_->ClearState();
+		if(d3d_imm_ctx_)
+		{
+			d3d_imm_ctx_->ClearState();
+		}
 
 		if (vs_){
 			vs_->Release();

@@ -298,7 +298,7 @@ class complex_mesh: public quick_app
 {
 public:
 	complex_mesh()
-		: quick_app( create_win_application() )
+		: quick_app( create_win_gui() )
 		, num_frames(0)
 		, accumulate_time(0.0f)
 		, fps(0.0f)

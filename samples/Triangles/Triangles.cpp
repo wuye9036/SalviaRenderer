@@ -101,7 +101,7 @@ public:
 
 class triangles: public quick_app{
 public:
-	triangles(): quick_app( create_win_application() ){}
+	triangles(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

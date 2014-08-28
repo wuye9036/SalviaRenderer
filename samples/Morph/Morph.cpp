@@ -219,7 +219,7 @@ public:
 
 class morph: public quick_app{
 public:
-	morph(): quick_app( create_win_application() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
+	morph(): quick_app( create_win_gui() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
 
 protected:
 	/** Event handlers @{ */

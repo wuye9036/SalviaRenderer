@@ -22,13 +22,15 @@ public:
 
 enum swap_chain_types
 {
-    swap_chain_default = 0UL,
-	swap_chain_d3d11= 1UL,
-	swap_chain_gl	= 2UL
+	swap_chain_none = 0UL,
+    swap_chain_default = 1UL,
+	swap_chain_d3d11= 2UL,
+	swap_chain_gl	= 3UL
 };
 
 enum renderer_types
 {
+	renderer_none	= 0UL,
 	renderer_async	= 1UL,
 	renderer_sync	= 2UL
 };

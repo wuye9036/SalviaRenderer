@@ -182,7 +182,7 @@ public:
 
 class sponza: public quick_app{
 public:
-	sponza(): quick_app( create_win_application() ){}
+	sponza(): quick_app( create_win_gui() ){}
 
 protected:
 	/** Event handlers @{ */

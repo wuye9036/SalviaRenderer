@@ -5,7 +5,7 @@
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
 #include <salviau/include/win/win_application.h>
-#include <salviau/include/win/win_application.h>
+#include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -125,51 +125,19 @@ public:
 
 };
 
-class colorized_triangle : public quick_app
+class colorized_triangle : public sample_app
 {
 public:
-	colorized_triangle()
-		: quick_app( create_win_application() )
-		, num_frames(0)
-		, accumulate_time(0.0f)
-		, fps(0.0f)
+	colorized_triangle(): sample_app("Colorized Triangle")
 	{
 	}
 	
-	virtual void on_create()
+	void on_init()
 	{
-		cout << "Creating window and device ..." << endl;
+		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
-		string title( "Sample: Colorized Triangle" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-		
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
+		viewport vp = {0, 0, 512, 512, 0.0f, 1.0f};
+        data_->renderer->set_viewport(vp);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -178,14 +146,10 @@ public:
 		shader_object_ptr compiled_code;
 		compiled_code = compile( vs_code, lang_vertex_shader );
 
-		renderer_->set_vertex_shader_code( compiled_code );
+		data_->renderer->set_vertex_shader_code(compiled_code);
 
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-
-		planar_mesh = create_planar(
-			renderer_.get(), 
+		mesh_ = create_planar(
+			data_->renderer.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 
 			vec3(6, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 6),
@@ -194,92 +158,57 @@ public:
 
 		pps.reset( new ps() );
 		pbs.reset( new bs() );
+
+		camera_angle = 0.0f;
 	}
 
-	void on_draw()
-    {
-		swap_chain_->present();
-	}
-
-	void on_idle()
+	void on_frame() override
 	{
-		// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
+        data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
 
-		// check if new second
-		if (accumulate_time > 1)
-		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
+		camera_angle -= static_cast<float>(data_->elapsed_sec * 60.0f * TWO_PI / 360.0f * 0.15f);
 
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
-		}
-
-		timer.restart();
-
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
-
-		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
-
-		vec3 camera(cos(s_angle) * 2.3f, 2.5f, sin(s_angle) * 2.3f);
+		vec3 camera(cos(camera_angle) * 2.3f, 2.5f, sin(camera_angle) * 2.3f);
 		mat44 world(mat44::identity()), view, proj, wvp;
 
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
-		vec4 lightPos0( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
-		vec4 lightPos1( sin(s_angle * 0.7f) * 1.9f, 0.15f, cos( -s_angle * 0.4f) * 2.5f, 0.0f );
-		vec4 lightPos2( sin(s_angle * 2.6f) * 2.3f, 0.15f, cos(s_angle * 0.6f) * 1.7f, 0.0f );
-		for(float i = 0 ; i < 1 ; i ++)
-		{
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+		vec4 lightPos0( sin(-camera_angle * 1.5f) * 2.2f, 0.15f, cos( camera_angle * 0.9f) * 1.8f, 0.0f );
+		vec4 lightPos1( sin( camera_angle * 0.7f) * 1.9f, 0.15f, cos(-camera_angle * 0.4f) * 2.5f, 0.0f );
+		vec4 lightPos2( sin( camera_angle * 2.6f) * 2.3f, 0.15f, cos( camera_angle * 0.6f) * 1.7f, 0.0f );
+		
+		mat_translate(world , -0.5f, 0, -0.5f);
+		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			renderer_->set_rasterizer_state(rs_back);
+		data_->renderer->set_rasterizer_state(rs_back);
 
-			renderer_->set_vs_variable( "wvpMatrix", &wvp );
+		data_->renderer->set_vs_variable( "wvpMatrix", &wvp );
 			
-			renderer_->set_vs_variable( "lightPos0", &lightPos0 );
-			renderer_->set_vs_variable( "lightPos1", &lightPos1 );
-			renderer_->set_vs_variable( "lightPos2", &lightPos2 );
+		data_->renderer->set_vs_variable( "lightPos0", &lightPos0 );
+		data_->renderer->set_vs_variable( "lightPos1", &lightPos1 );
+		data_->renderer->set_vs_variable( "lightPos2", &lightPos2 );
 
-			renderer_->set_pixel_shader(pps);
-			renderer_->set_blend_shader(pbs);
-			planar_mesh->render();
-		}
-
-		impl->main_window()->refresh();
+		data_->renderer->set_pixel_shader(pps);
+		data_->renderer->set_blend_shader(pbs);
+		mesh_->render();
 	}
-	
-private:
-	swap_chain_ptr			swap_chain_;
-	renderer_ptr			renderer_;
-	mesh_ptr				planar_mesh;
-    
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
 
+private:
+	mesh_ptr				mesh_;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
-
 	raster_state_ptr		rs_back;
 
-	uint32_t				num_frames;
-	float					accumulate_time;
-	float					fps;
-
-	timer					timer;
+	float					camera_angle;
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] )
+int main(int argc, TCHAR* argv[])
 {
     colorized_triangle loader;
-	return loader.run();
+	loader.init( argc, const_cast<std::_tchar const**>(argv) );
+	loader.run();
+
+	return 0;
 }

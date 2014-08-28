@@ -30,6 +30,11 @@ namespace eflib
 
 	inline void  aligned_free(void* p)
 	{
+		if(!p)
+		{
+			return;
+		}
+
 		uint16_t* p16 = reinterpret_cast<uint16_t*>(p);
 		uint8_t* org_p = reinterpret_cast<uint8_t*>(p16) - p16[-1];
 		free(org_p);

@@ -180,7 +180,7 @@ class ssm: public quick_app
 {
 public:
 	ssm()
-		: quick_app( create_win_application() )
+		: quick_app( create_win_gui() )
 		, fps_counter_(3.0f)
 	{}
 
