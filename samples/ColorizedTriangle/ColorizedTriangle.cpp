@@ -125,6 +125,9 @@ public:
 
 };
 
+int const BENCHMARK_TOTAL_FRAME_COUNT = 300;
+int const TEST_TOTAL_FRAME_COUNT = 5;
+
 class colorized_triangle : public sample_app
 {
 public:
@@ -164,10 +167,38 @@ public:
 
 	void on_frame() override
 	{
+		switch(data_->mode)
+		{
+		case salviau::app_modes::benchmark:
+			data_->quiting = (data_->frame_count == BENCHMARK_TOTAL_FRAME_COUNT);
+			break;
+		case salviau::app_modes::test:
+			data_->quiting = (data_->frame_count == TEST_TOTAL_FRAME_COUNT);
+			break;
+		}
+
+		if(data_->quiting)
+		{
+			return;
+		}
+
         data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
 
-		camera_angle -= static_cast<float>(data_->elapsed_sec * 60.0f * TWO_PI / 360.0f * 0.15f);
+		switch(data_->mode)
+		{
+		case salviau::app_modes::benchmark:
+			camera_angle -= 0.3f;
+			break;
+		case salviau::app_modes::test:
+			camera_angle -= 0.55f;
+			break;
+		case salviau::app_modes::interactive:
+			break;
+		case salviau::app_modes::replay:
+			camera_angle -= static_cast<float>(data_->elapsed_sec * 60.0f * TWO_PI / 360.0f * 0.15f);
+			break;
+		}
 
 		vec3 camera(cos(camera_angle) * 2.3f, 2.5f, sin(camera_angle) * 2.3f);
 		mat44 world(mat44::identity()), view, proj, wvp;

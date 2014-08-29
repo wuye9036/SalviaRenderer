@@ -20,7 +20,7 @@
 #include <vector>
 #include <memory>
 
-namespace salvia
+namespace salviar
 {
 	EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 }
@@ -57,6 +57,7 @@ struct sample_app_data
 	salviar::renderer_ptr		renderer;
 	salviax::swap_chain_ptr		swap_chain;
 	salviar::surface_ptr		color_target;
+	salviar::surface_ptr		resolved_color_target;
 	salviar::surface_ptr		ds_target;
 
 	double						elapsed_sec;
@@ -87,8 +88,6 @@ public:
 
 protected:
 	virtual void profiling				(std::string const& stage_name, std::function<void()> const& fn);
-	virtual void save_frame				(salvia::surface_ptr const& surf);
-	virtual void save_profiling_result	(std::string const& file_name);
 
 	void create_devices_and_targets(
 		size_t width, size_t height,
@@ -108,7 +107,9 @@ protected:
 private:
 	void init_params(int argc, std::_tchar const** argv);
 	void draw_frame();
-	void present_or_save_frame();
+	
+	virtual void save_frame				(salviar::surface_ptr const& surf);
+	virtual void save_profiling_result	();
 
 	void on_gui_idle();
 	void on_gui_draw();

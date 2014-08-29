@@ -4,6 +4,7 @@
 #	include <salviau/include/win/win_application.h>
 #endif
 #include <salviau/include/common/window.h>
+#include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviar/include/async_renderer.h>
 #include <salviar/include/sync_renderer.h>
@@ -11,12 +12,20 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#if defined(EFLIB_WINDOWS)
+#	include <Windows.h>
+#endif
 
 namespace po = boost::program_options;
 using namespace std;
+using namespace eflib;
 using namespace salviar;
 using namespace salviax;
+using namespace boost::property_tree;
 
 BEGIN_NS_SALVIAU();
 
@@ -38,8 +47,19 @@ sample_app::~sample_app()
 void sample_app::init(int argc, std::_tchar const** argv)
 {
 	init_params(argc, argv);
+
 	if(data_->runnable)
 	{
+		if(data_->mode == app_modes::benchmark)
+		{
+		#if defined(EFLIB_WINDOWS)
+			HANDLE process_handle = GetCurrentProcess();
+			SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
+		#endif
+
+			data_->prof.start(data_->benchmark_name, 0); 
+		}
+
 		on_init();
 	}
 }
@@ -118,7 +138,6 @@ void sample_app::create_devices_and_targets(
 #endif
 	};
 
-
 	void* wnd_handle = nullptr;
 	if (data_->gui)
 	{
@@ -180,6 +199,18 @@ void sample_app::create_devices_and_targets(
 			->subresource(0);
 	}
 
+	if(sample_count > 1)
+	{
+		data_->resolved_color_target = 
+			data_
+			->renderer->create_tex2d(width, height, 1, color_fmt)
+			->subresource(0);
+	}
+	else
+	{
+		data_->resolved_color_target = data_->color_target;
+	}
+
 	if(ds_format != pixel_format_invalid)
 	{
 		data_->ds_target =
@@ -199,14 +230,55 @@ void sample_app::create_devices_and_targets(
 
 void sample_app::draw_frame()
 {
+	if(data_->mode == app_modes::benchmark)
+	{
+		data_->renderer->begin(data_->pipeline_stat_obj);
+		data_->renderer->begin(data_->internal_stat_obj);
+		data_->renderer->begin(data_->pipeline_prof_obj);
+	}
+
 	data_->elapsed_sec = data_->t.elapsed();
 	data_->t.restart();
 	on_frame();
+	if(data_->mode == app_modes::benchmark)
+	{
+		data_->renderer->end(data_->pipeline_stat_obj);
+		data_->renderer->end(data_->internal_stat_obj);
+		data_->renderer->end(data_->pipeline_prof_obj);
+	}
+
+	if(data_->quiting)
+	{
+		return;
+	}
+
 	++data_->frame_count;
+
+	if(data_->mode == app_modes::benchmark)
+	{
+		frame_data frame_prof;
+
+		data_->renderer->get_data(data_->pipeline_stat_obj, &frame_prof.pipeline_stat, false);
+		data_->renderer->get_data(data_->internal_stat_obj, &frame_prof.internal_stat, false); 
+		data_->renderer->get_data(data_->pipeline_prof_obj, &frame_prof.pipeline_prof, false);
+
+		data_->frame_profs.push_back(frame_prof);
+	}
 
 	if(data_->swap_chain)
 	{
 		data_->swap_chain->present();
+	}
+
+	switch(data_->mode)
+	{
+	case app_modes::test:
+		if(data_->color_target != data_->resolved_color_target)
+		{
+			data_->color_target->resolve(*data_->resolved_color_target);
+		}
+		save_frame(data_->resolved_color_target);
+		break;
 	}
 }
 
@@ -239,6 +311,12 @@ void sample_app::run()
 			draw_frame();
 		}
 	}
+
+	if(data_->mode == app_modes::benchmark)
+	{
+		data_->prof.end(data_->benchmark_name);
+		save_profiling_result();
+	}
 }
 	
 void sample_app::quit()
@@ -249,14 +327,107 @@ void sample_app::quit()
 // Utilities
 void sample_app::profiling(std::string const& stage_name, std::function<void()> const& fn)
 {
+	if(data_->mode == app_modes::benchmark)
+	{
+		data_->prof.start(stage_name, 0);
+		fn();
+		data_->prof.end(stage_name);
+	}
+	else
+	{
+		fn();
+	}
 }
 
-void sample_app::save_frame(salvia::surface_ptr const& surf)
+void sample_app::save_frame(salviar::surface_ptr const& surf)
 {
+	stringstream ss;
+	ss << data_->benchmark_name << "_" << data_->frame_count - 1 << ".png";
+	salviax::resource::save_surface(data_->renderer.get(), surf, eflib::to_tstring( ss.str() ), pixel_format_color_bgra8);
 }
 
-void sample_app::save_profiling_result(std::string const& file_name)
+template <typename T>
+void min_max(T& in_out_min, T& in_out_max, T v)
 {
+	if(v < in_out_min)
+	{
+		in_out_min = v;
+	}
+	else if (v > in_out_max)
+	{
+		in_out_max = v;
+	}
+}
+
+template <typename ValueT, typename IterT, typename TransformT>
+void reduce_and_output(IterT beg, IterT end, TransformT trans, ptree& parent, std::string const& path)
+{
+	ValueT minv;
+	ValueT maxv;
+	ValueT total = 0;
+	ValueT avg = 0;
+
+	if(beg == end)
+	{
+		minv = maxv = total = avg = 0;
+	}
+	else
+	{
+		auto it = beg;
+		minv = maxv = total = trans(*it);
+		++it;
+
+		size_t count = 1;
+		for(; it != end; ++it)
+		{
+			auto v = trans(*it);
+			min_max(minv, maxv, v);
+			total += v;
+			++count;
+		}
+
+		avg = total / count;
+	}
+
+	ptree vnode;
+	vnode.put("min", minv);
+	vnode.put("max", maxv);
+	vnode.put("total", total);
+	vnode.put("avg", avg);
+	parent.put_child(path, vnode);
+}
+
+static int const OUTPUT_PROFILER_LEVEL = 3;
+void sample_app::save_profiling_result()
+{
+	data_->prof.merge_items();
+
+	stringstream ss;
+	ss << data_->benchmark_name << "_" << "profiling.json";
+
+	auto root = make_ptree(&data_->prof, OUTPUT_PROFILER_LEVEL);
+
+	// Statistic
+	root.put("frames", data_->frame_count);
+
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.cinvocations			;}, root, "async.pipeline_stat.cinvocations");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.cprimitives			;}, root, "async.pipeline_stat.cprimitives");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.ia_primitives		;}, root, "async.pipeline_stat.ia_primitives");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.ia_vertices			;}, root, "async.pipeline_stat.ia_vertices");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.vs_invocations		;}, root, "async.pipeline_stat.vs_invocations");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.ps_invocations		;}, root, "async.pipeline_stat.ps_invocations");
+		
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.internal_stat.backend_input_pixels	;}, root, "async.internal_stat.backend_input_pixels");
+
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.gather_vtx			;}, root, "async.pipeline_prof.gather_vtx");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.vtx_proc				;}, root, "async.pipeline_prof.vtx_proc");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.clipping				;}, root, "async.pipeline_prof.clipping");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.compact_clip			;}, root, "async.pipeline_prof.compact_clip");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.vp_trans				;}, root, "async.pipeline_prof.vp_trans");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.tri_dispatch			;}, root, "async.pipeline_prof.tri_dispatch");
+	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_prof.ras					;}, root, "async.pipeline_prof.ras");
+
+	write_json(ss.str(), root);
 }
 
 END_NS_SALVIAU();
