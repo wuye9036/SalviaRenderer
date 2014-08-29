@@ -1,19 +1,44 @@
-﻿If proj.py is existed
-	Run build_all.py
-otherwise
-	Run build_all.py to generate proj.py
-	Modify proj.py to set environments
-	Run build_all.py
+﻿Project build guide
+
+1. Requirements
+  * Windows 7 or later
+    * Visual Studio 2012 update 4 or later version.
+	* Boost 1.55 or later. Please use boost 1.56 if your compiler is Visual Studio 2013.
+	* Python 2.7.
+	* CMake 2.8.10 or later.
+  * Linux
+    * Mint 16 and Mint 17 were tested.
+	* GCC 4.7 or later.
+	* Boost 1.55 or later.
+	* Python 2.7.
+	* CMake 2.8.10 or later.
 	
+2. Build steps
+  * Run build_all.py which is located at root of project.
+  * If it is the first run of build_all.py, an configuration file "proj.py" will be generated.
+  * Edit proj.py after read the comments of the file.
+  * If build tool is visual studio, vs solution file will be generated in sub folder of 'build'.
+ 
+3. REMARK
+  * Each configuration was built once build_all.py was run. But visual studio supports multiple configuratoin in one project. You should modify proj.py and execute build_all.py with different configuration, such as RelWithDebInfo or Debug. 
+  
+If you have any questions, please contact:
+
+wuye9036 _at_ gmail _dot_ com
+
 ----------------------------
-	
+
+如果您是中国用户，您可以从OSChina的Git托管站点上下载：
+
+https://git.oschina.net/wuye9036/SALVIA.git
+
 首先请确认您的机器上具有：
 
 Windows平台：
-1. Visual Studio 2012 （建议使用 Professional 或以上版本）；
-2. Boost 1.55 或以上版本；
+1. Visual Studio 2012 Update 4；
+2. Boost 1.55 或以上版本。如果你使用Visual Studio 2013请使用Boost 1.56或以上；
 3. Python 2.7；
-4. CMake 2.8.10或以上版本；
+4. CMake 2.8.10或以上版本，如果使用Visual Studio 2013请使用对应的CMake版本；
 
 Linux平台：
 
