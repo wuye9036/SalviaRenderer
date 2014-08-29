@@ -38,10 +38,17 @@ sample_app::sample_app(std::string const& app_name):
 	data_->runnable = true;
 	data_->frame_count = 0;
 	data_->elapsed_sec = 0.0;
+	data_->gui = nullptr;
+	data_->is_sync_renderer = boost::indeterminate;
+	data_->frames_in_second = 0;
 }
 
 sample_app::~sample_app()
 {
+	if(data_->gui)
+	{
+		delete data_->gui;
+	}
 }
 
 void sample_app::init(int argc, std::_tchar const** argv)
@@ -66,6 +73,8 @@ void sample_app::init(int argc, std::_tchar const** argv)
 
 void sample_app::init_params(int argc, std::_tchar const** argv)
 {
+	cout << "Initialize with parameters ..." << endl;
+
 	po::options_description opdesc("Sample parameters");
 	opdesc.add_options()
 		("help,h", "show help message")
@@ -113,6 +122,10 @@ void sample_app::init_params(int argc, std::_tchar const** argv)
 		data_->runnable = false;
 		break;
 	}
+
+	cout << "Execution mode is " << mode_str << endl;
+
+	data_->second_timer.restart();
 }
 
 void sample_app::create_devices_and_targets(
@@ -131,6 +144,7 @@ void sample_app::create_devices_and_targets(
 	case app_modes::interactive:
 	case app_modes::replay:
 #if defined(EFLIB_WINDOWS)
+		cout << "Create GUI ..." << endl;
 		data_->gui = create_win_gui();
 		break;
 #else
@@ -142,6 +156,7 @@ void sample_app::create_devices_and_targets(
 	if (data_->gui)
 	{
 		data_->gui->create_window();
+		
 		wnd_handle = data_->gui->main_window()->view_handle_as_void();
 		if(!wnd_handle)
 		{
@@ -149,13 +164,18 @@ void sample_app::create_devices_and_targets(
 			data_->runnable = false;
 			return;
 		}
+
+		data_->gui->main_window()->set_title(data_->benchmark_name);
 	}
+	
+	cout << "Create devices and targets ..." << endl;
 
 	renderer_parameters rparams = {
 		width, height, sample_count, color_fmt, wnd_handle
 	};
 
 	renderer_types rtype = salviax::renderer_none;
+	swap_chain_types sc_type = data_->gui ? salviax::swap_chain_default : salviax::swap_chain_none;
 
 	if (data_->is_sync_renderer)
 	{
@@ -180,7 +200,7 @@ void sample_app::create_devices_and_targets(
 		}
 	}
 
-	salviax_create_swap_chain_and_renderer(data_->swap_chain, data_->renderer, &rparams, rtype);
+	salviax_create_swap_chain_and_renderer(data_->swap_chain, data_->renderer, &rparams, rtype, sc_type);
 
 	if(!data_->renderer)
 	{
@@ -226,6 +246,13 @@ void sample_app::create_devices_and_targets(
 		data_->gui->main_window()->set_idle_handler( [this]() { this->on_gui_idle(); } );
 		data_->gui->main_window()->set_draw_handler( [this]() { this->on_gui_draw(); } );
 	}
+
+	if(data_->mode == app_modes::benchmark)
+	{
+		data_->pipeline_stat_obj = data_->renderer->create_query(async_object_ids::pipeline_statistics);
+		data_->internal_stat_obj = data_->renderer->create_query(async_object_ids::internal_statistics);
+		data_->pipeline_prof_obj = data_->renderer->create_query(async_object_ids::pipeline_profiles);
+	}
 }
 
 void sample_app::draw_frame()
@@ -237,8 +264,8 @@ void sample_app::draw_frame()
 		data_->renderer->begin(data_->pipeline_prof_obj);
 	}
 
-	data_->elapsed_sec = data_->t.elapsed();
-	data_->t.restart();
+	data_->elapsed_sec = data_->frame_timer.elapsed();
+	data_->frame_timer.restart();
 	on_frame();
 	if(data_->mode == app_modes::benchmark)
 	{
@@ -252,7 +279,10 @@ void sample_app::draw_frame()
 		return;
 	}
 
-	++data_->frame_count;
+	if(data_->swap_chain)
+	{
+		data_->swap_chain->present();
+	}
 
 	if(data_->mode == app_modes::benchmark)
 	{
@@ -265,14 +295,28 @@ void sample_app::draw_frame()
 		data_->frame_profs.push_back(frame_prof);
 	}
 
-	if(data_->swap_chain)
+	++data_->frame_count;
+	++data_->frames_in_second;
+
+	double current_time = data_->second_timer.elapsed();
+	double frame_elapsed = data_->frame_timer.elapsed();
+	double estimated_next_frame_time = current_time + frame_elapsed;
+	if( (current_time >= 1.0)
+		|| (1.0 - current_time < frame_elapsed)
+		)
 	{
-		data_->swap_chain->present();
+		cout.precision(3);
+		cout << "Frame: #" << data_->frame_count << " | FPS: " << data_->frames_in_second / current_time << endl;
+		std::cout.unsetf(std::ios::floatfield); 
+
+		data_->second_timer.restart();
+		data_->frames_in_second = 0;
 	}
 
 	switch(data_->mode)
 	{
 	case app_modes::test:
+		data_->renderer->flush();
 		if(data_->color_target != data_->resolved_color_target)
 		{
 			data_->color_target->resolve(*data_->resolved_color_target);
@@ -297,6 +341,8 @@ void sample_app::run()
 	{
 		return;
 	}
+	
+	cout << "Start running ..." << endl;
 
 	data_->frame_count = 0;
 
@@ -317,10 +363,13 @@ void sample_app::run()
 		data_->prof.end(data_->benchmark_name);
 		save_profiling_result();
 	}
+
+	cout << "Running done." << endl;
 }
 	
 void sample_app::quit()
 {
+	cout << "Exiting ..." << endl;
 	data_->quiting = true;
 }
 

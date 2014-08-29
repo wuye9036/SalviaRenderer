@@ -73,7 +73,9 @@ struct sample_app_data
 
 	bool						runnable;
 	bool						quiting;
-	timer						t;
+	timer						frame_timer;
+	timer						second_timer;
+	int							frames_in_second;
 };
 
 class SALVIAU_API sample_app

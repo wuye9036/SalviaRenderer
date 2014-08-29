@@ -15,6 +15,7 @@
 
 #include <eflib/include/utility/unref_declarator.h>
 #include <eflib/include/diagnostics/profiler.h>
+#include <eflib/include/platform/main.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign.hpp>
@@ -125,8 +126,13 @@ public:
 
 };
 
-int const BENCHMARK_TOTAL_FRAME_COUNT = 300;
 int const TEST_TOTAL_FRAME_COUNT = 5;
+
+#if defined(EFLIB_DEBUG)
+	int const BENCHMARK_TOTAL_FRAME_COUNT = 3;	
+#else
+	int const BENCHMARK_TOTAL_FRAME_COUNT = 2000;
+#endif
 
 class colorized_triangle : public sample_app
 {
@@ -182,13 +188,16 @@ public:
 			return;
 		}
 
-        data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		profiling("BackBufferClearing", [this]()
+		{
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		switch(data_->mode)
 		{
 		case salviau::app_modes::benchmark:
-			camera_angle -= 0.3f;
+			camera_angle -= 0.01f;
 			break;
 		case salviau::app_modes::test:
 			camera_angle -= 0.55f;
@@ -215,15 +224,18 @@ public:
 
 		data_->renderer->set_rasterizer_state(rs_back);
 
-		data_->renderer->set_vs_variable( "wvpMatrix", &wvp );
+		profiling("Rendering", [&](){
+			data_->renderer->set_vs_variable( "wvpMatrix", &wvp );
 			
-		data_->renderer->set_vs_variable( "lightPos0", &lightPos0 );
-		data_->renderer->set_vs_variable( "lightPos1", &lightPos1 );
-		data_->renderer->set_vs_variable( "lightPos2", &lightPos2 );
+			data_->renderer->set_vs_variable( "lightPos0", &lightPos0 );
+			data_->renderer->set_vs_variable( "lightPos1", &lightPos1 );
+			data_->renderer->set_vs_variable( "lightPos2", &lightPos2 );
 
-		data_->renderer->set_pixel_shader(pps);
-		data_->renderer->set_blend_shader(pbs);
-		mesh_->render();
+			data_->renderer->set_pixel_shader(pps);
+			data_->renderer->set_blend_shader(pbs);
+
+			mesh_->render();
+		});
 	}
 
 private:
@@ -235,7 +247,7 @@ private:
 	float					camera_angle;
 };
 
-int main(int argc, TCHAR* argv[])
+EFLIB_MAIN(argc, argv)
 {
     colorized_triangle loader;
 	loader.init( argc, const_cast<std::_tchar const**>(argv) );
