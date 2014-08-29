@@ -54,6 +54,11 @@ result render_core::execute()
 
 result render_core::draw()
 {
+	if(state_->color_targets.empty() || !state_->depth_stencil_target)
+	{
+		return result::ok;
+	}
+
 	stages_.assembler->update(state_.get());
 	stages_.ras->update(state_.get());
 	stages_.vert_cache->update(state_.get());

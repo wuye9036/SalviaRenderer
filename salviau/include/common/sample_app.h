@@ -107,6 +107,7 @@ protected:
 
 private:
 	void init_params(int argc, std::_tchar const** argv);
+	void draw_frame();
 	void present_or_save_frame();
 
 	void on_gui_idle();

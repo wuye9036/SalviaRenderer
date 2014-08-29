@@ -3,6 +3,7 @@
 #if defined(EFLIB_WINDOWS)
 #	include <salviau/include/win/win_application.h>
 #endif
+#include <salviau/include/common/window.h>
 
 #include <salviar/include/async_renderer.h>
 #include <salviar/include/sync_renderer.h>
@@ -25,6 +26,9 @@ sample_app::sample_app(std::string const& app_name):
 	data_->benchmark_name = app_name;
 	data_->mode = app_modes::unknown;
 	data_->quiting = false;
+	data_->runnable = true;
+	data_->frame_count = 0;
+	data_->elapsed_sec = 0.0;
 }
 
 sample_app::~sample_app()
@@ -114,7 +118,19 @@ void sample_app::create_devices_and_targets(
 #endif
 	};
 
-	void* wnd_handle = data_->gui ? data_->gui->main_window() : nullptr;
+
+	void* wnd_handle = nullptr;
+	if (data_->gui)
+	{
+		data_->gui->create_window();
+		wnd_handle = data_->gui->main_window()->view_handle_as_void();
+		if(!wnd_handle)
+		{
+			cout << "Error: window creation is failed." << endl;
+			data_->runnable = false;
+			return;
+		}
+	}
 
 	renderer_parameters rparams = {
 		width, height, sample_count, color_fmt, wnd_handle
@@ -171,6 +187,36 @@ void sample_app::create_devices_and_targets(
 			->renderer->create_tex2d(width, height, sample_count, ds_format)
 			->subresource(0);
 	}
+
+	data_->renderer->set_render_targets(1, &data_->color_target, data_->ds_target);
+
+	if(data_->gui)
+	{
+		data_->gui->main_window()->set_idle_handler( [this]() { this->on_gui_idle(); } );
+		data_->gui->main_window()->set_draw_handler( [this]() { this->on_gui_draw(); } );
+	}
+}
+
+void sample_app::draw_frame()
+{
+	data_->elapsed_sec = data_->t.elapsed();
+	data_->t.restart();
+	on_frame();
+	++data_->frame_count;
+
+	if(data_->swap_chain)
+	{
+		data_->swap_chain->present();
+	}
+}
+
+void sample_app::on_gui_idle()
+{
+	draw_frame();
+}
+
+void sample_app::on_gui_draw()
+{
 }
 
 void sample_app::run()
@@ -182,7 +228,7 @@ void sample_app::run()
 
 	data_->frame_count = 0;
 
-	if( data_->gui )
+	if(data_->gui)
 	{
 		data_->gui->run();
 	}
@@ -190,14 +236,16 @@ void sample_app::run()
 	{	
 		while(!data_->quiting)
 		{
-			data_->elapsed_sec = data_->t.elapsed();
-			data_->t.restart();
-			on_frame();
-			++data_->frame_count;
+			draw_frame();
 		}
 	}
 }
 	
+void sample_app::quit()
+{
+	data_->quiting = true;
+}
+
 // Utilities
 void sample_app::profiling(std::string const& stage_name, std::function<void()> const& fn)
 {

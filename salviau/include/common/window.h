@@ -28,6 +28,7 @@ public:
 	/** @} */
 	
 	/** Properties @{ */
+	virtual void* view_handle_as_void() = 0;
 	virtual boost::any view_handle() = 0;
 	virtual void set_title( std::string const& ) = 0;
 	/** @} */

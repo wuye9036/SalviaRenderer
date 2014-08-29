@@ -10,7 +10,8 @@ class window;
 class gui
 {
 public:
-	virtual int run() = 0;
+	virtual int     create_window() = 0;
+	virtual int     run() = 0;
 	virtual window* main_window() = 0;
 };
 

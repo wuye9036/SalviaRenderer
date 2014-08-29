@@ -59,7 +59,12 @@ public:
 		SetWindowText( hwnd_, eflib::to_tstring(title).c_str() );
 	}
 
-	boost::any view_handle()
+	void* view_handle_as_void() override
+	{
+		return reinterpret_cast<void*>(hwnd_);
+	}
+
+	boost::any view_handle() override
 	{
 		return boost::any(hwnd_);
 	}
@@ -125,8 +130,8 @@ private:
 	static LRESULT CALLBACK	win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 	static ATOM					wnd_class_;
 	static std::_tchar const*	wnd_class_name_;
-	HWND				hwnd_;
-	win_gui*	app_;
+	HWND						hwnd_;
+	win_gui*					app_;
 };
 
 ATOM win_window::wnd_class_ = 0;
@@ -157,14 +162,18 @@ public:
 		return hinst_;
 	}
 
-	int run()
+	int create_window() override
 	{
 		if( !main_wnd_->create() )
 		{
 			OutputDebugString( _EFLIB_T("Main window creation failed!\n") );
 			return 0;
 		}
+		return 1;
+	}
 
+	int run()
+	{
 		// Message loop.
 		main_wnd_->show();
 		
@@ -183,7 +192,6 @@ public:
 			}
 			else
 			{
-				OutputDebugString( _EFLIB_T("Idle.\n") );
 				main_wnd_->idle();
 			}
 		}
