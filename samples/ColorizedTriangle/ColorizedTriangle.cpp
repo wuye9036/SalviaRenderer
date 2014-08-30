@@ -96,7 +96,7 @@ public:
 			, 0.0f, 1.0f
 			)
 			;
-
+		out.color[0][3] = 1.0f;
 		return true;
 	}
 
@@ -137,7 +137,7 @@ int const TEST_TOTAL_FRAME_COUNT = 5;
 class colorized_triangle : public sample_app
 {
 public:
-	colorized_triangle(): sample_app("Colorized Triangle")
+	colorized_triangle(): sample_app("ColorizedTriangle")
 	{
 	}
 	

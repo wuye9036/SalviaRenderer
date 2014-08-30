@@ -28,6 +28,7 @@ int quick_app::run()
 	{
 		return -1;
 	}
+	impl->create_window();
 	return impl->run();
 }
 

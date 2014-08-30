@@ -251,7 +251,13 @@ struct color_bgra8
 	}
 
 	color_bgra8& operator = (const color_bgra8& rhs){
-		r = rhs.r; g = rhs.g;	b = rhs.b; a = rhs.a;
+		r = rhs.r; g = rhs.g; b = rhs.b; a = rhs.a;
+		return *this;
+	}
+
+	color_bgra8& operator = (color_rgba8 const& rhs)
+	{
+		r = rhs.r; g = rhs.g; b = rhs.b; a = rhs.a;
 		return *this;
 	}
 

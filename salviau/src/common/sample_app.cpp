@@ -300,7 +300,6 @@ void sample_app::draw_frame()
 
 	double current_time = data_->second_timer.elapsed();
 	double frame_elapsed = data_->frame_timer.elapsed();
-	double estimated_next_frame_time = current_time + frame_elapsed;
 	if( (current_time >= 1.0)
 		|| (1.0 - current_time < frame_elapsed)
 		)
@@ -452,7 +451,7 @@ void sample_app::save_profiling_result()
 	data_->prof.merge_items();
 
 	stringstream ss;
-	ss << data_->benchmark_name << "_" << "profiling.json";
+	ss << data_->benchmark_name << "_" << "Profiling.json";
 
 	auto root = make_ptree(&data_->prof, OUTPUT_PROFILER_LEVEL);
 
