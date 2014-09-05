@@ -451,7 +451,7 @@ void sample_app::save_profiling_result()
 	data_->prof.merge_items();
 
 	stringstream ss;
-	ss << data_->benchmark_name << "_" << "profiling.json";
+	ss << data_->benchmark_name << "_" << "Profiling.json";
 
 	auto root = make_ptree(&data_->prof, OUTPUT_PROFILER_LEVEL);
 
