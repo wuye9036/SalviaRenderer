@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/win/win_application.h>
+#include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -15,12 +15,8 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/tex_io.h>
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -220,49 +216,29 @@ public:
 
 };
 
-class anisotropic_filter: public quick_app{
+#if defined(EFLIB_DEBUG)
+	int const BENCHMARK_TOTAL_FRAME_COUNT = 3;	
+#else
+	int const BENCHMARK_TOTAL_FRAME_COUNT = 600;
+#endif
+
+class anisotropic_filter: public sample_app
+{
 public:
-	anisotropic_filter(): quick_app( create_win_gui() ){}
+	anisotropic_filter(): sample_app("AnisotropicFilter")
+	{
+	}
 
 protected:
-	/** Event handlers @{ */
-	virtual void on_create(){
+	void on_init()
+	{
+		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
-		cout << "Creating window and device ..." << endl;
+		viewport vp = {0, 0, 512, 512, 0.0f, 1.0f};
+        data_->renderer->set_viewport(vp);
 
-		string title( "Sample: Anisotropic Filter" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
-		
 		planar_mesh = create_planar(
-			renderer_.get(), 
+			data_->renderer.get(), 
 			vec3(-50.0f, 0.0f, -50.0f), 
 			vec3(1.0f, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 1.0f),
@@ -271,24 +247,22 @@ protected:
 		
 		pvs_plane.reset(new vs_plane());
 
-		{
-			sampler_desc desc;
-			desc.min_filter = filter_linear;
-			desc.mag_filter = filter_linear;
-			desc.mip_filter = filter_anisotropic;
-			desc.max_anisotropy = 16;
+		sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+		desc.mip_filter = filter_anisotropic;
+		desc.max_anisotropy = 16;
 
-			plane_tex = load_texture(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
-			plane_tex->gen_mipmap(filter_linear, true);
+		plane_tex = load_texture(data_->renderer.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+		plane_tex->gen_mipmap(filter_linear, true);
 			
-			plane_sampler = renderer_->create_sampler(desc, plane_tex);
-            pps_plane.reset(new ps_plane(plane_sampler));
+		plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
+        pps_plane.reset(new ps_plane(plane_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			cout << "Creating Plane Pixel Shader ..." << endl;
-			psc_plane = compile( plane_ps_code, lang_pixel_shader );
+		cout << "Creating Plane Pixel Shader ..." << endl;
+		psc_plane = compile( plane_ps_code, lang_pixel_shader );
 #endif
-		}
 
 		pbs_plane.reset(new ts_blend_off);
 
@@ -297,40 +271,32 @@ protected:
 		rs_front.reset(new raster_state(rs_desc));
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
-
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-	}
-	/** @} */
-
-	void on_draw()
-    {
-        swap_chain_->present();
 	}
 
-	void on_idle(){
-			// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
+	void on_frame() override
+	{
+		int const ANISO_CAPACITY = 4;
+		int const TEST_TOTAL_FRAME_COUNT = ANISO_CAPACITY;
 
-		// check if new second
-		if (accumulate_time > 1)
+		switch(data_->mode)
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
+		case salviau::app_modes::benchmark:
+			data_->quiting = (data_->frame_count == BENCHMARK_TOTAL_FRAME_COUNT);
+			break;
+		case salviau::app_modes::test:
+			data_->quiting = (data_->frame_count == TEST_TOTAL_FRAME_COUNT);
+			break;
 		}
 
-		timer.restart();
+		if(data_->quiting)
+		{
+			return;
+		}
 
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+		profiling("BackBufferClearing", [this](){
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
@@ -341,54 +307,53 @@ protected:
 		desc.min_filter = filter_linear;
 		desc.mag_filter = filter_linear;
 
-		static int total_time = 0;
-		total_time += (int)( elapsed_time * 1000 );
-		if(total_time/3000 > 4) { total_time = 0; }
+		size_t max_aniso = 0;
 
-		if( total_time/3000 == 0 )
+		switch(data_->mode)
+		{
+		case salviau::app_modes::benchmark:
+		case salviau::app_modes::test:
+			max_aniso = data_->frame_count % ANISO_CAPACITY;
+			break;
+		case salviau::app_modes::interactive:
+			break;
+		case salviau::app_modes::replay:
+			max_aniso = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
+			break;
+		}
+
+		if(max_aniso == 0)
 		{
 			desc.mip_filter = filter_linear;
 			desc.max_anisotropy = 0;
-			impl->main_window()->set_title( std::string("Sample: Anisotropic Filter - Mipmap") );
 		}
 		else
 		{
 			desc.mip_filter = filter_anisotropic;
-			desc.max_anisotropy = 1 << (total_time/3000);
-			impl->main_window()->set_title( ( boost::format("Sample: Anisotropic Filter - AF %dX") % desc.max_anisotropy ).str() );
+			desc.max_anisotropy = 1 << max_aniso;
 		}
-        plane_sampler = renderer_->create_sampler(desc, plane_tex);
+        plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
 
-		for(float i = 0 ; i < 1 ; i ++)
-		{	
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+		mat_translate(world , -0.5f, 0, -0.5f);
+		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			renderer_->set_rasterizer_state(rs_back);
-			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-			renderer_->set_vertex_shader(pvs_plane);
+		data_->renderer->set_rasterizer_state(rs_back);
+		pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
+		data_->renderer->set_vertex_shader(pvs_plane);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_plane );
-			renderer_->set_ps_sampler( "samp", plane_sampler );
+		data_->renderer->set_pixel_shader_code( psc_plane );
+		data_->renderer->set_ps_sampler("samp", plane_sampler);
 #else
-			renderer_->set_pixel_shader(pps_plane);
+		data_->renderer->set_pixel_shader(pps_plane);
 #endif
-			renderer_->set_blend_shader(pbs_plane);
-			planar_mesh->render();
-		}
-
-		impl->main_window()->refresh();
+		data_->renderer->set_blend_shader(pbs_plane);
+		planar_mesh->render();
 	}
 
 protected:
 	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr            renderer_;
 	texture_ptr             sm_tex;
     
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-
 	mesh_ptr                planar_mesh;
 	texture_ptr             plane_tex;
 	sampler_ptr             plane_sampler;
@@ -401,16 +366,13 @@ protected:
 
 	raster_state_ptr        rs_front;
 	raster_state_ptr        rs_back;
-
-	uint32_t                num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
-	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
-	anisotropic_filter loader;
-	return loader.run();
+EFLIB_MAIN(argc, argv)
+{
+    anisotropic_filter loader;
+	loader.init( argc, const_cast<std::_tchar const**>(argv) );
+	loader.run();
+
+	return 0;
 }

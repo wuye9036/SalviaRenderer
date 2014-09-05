@@ -2,9 +2,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviax/include/swap_chain/swap_chain.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
-#include <salviau/include/win/win_application.h>
 #include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
@@ -141,7 +138,7 @@ public:
 	{
 	}
 	
-	void on_init()
+	void on_init() override
 	{
 		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 

@@ -37,6 +37,7 @@ sample_app::sample_app(std::string const& app_name):
 	data_->quiting = false;
 	data_->runnable = true;
 	data_->frame_count = 0;
+	data_->total_elapsed_sec = 0.0;
 	data_->elapsed_sec = 0.0;
 	data_->gui = nullptr;
 	data_->is_sync_renderer = boost::indeterminate;
@@ -265,6 +266,7 @@ void sample_app::draw_frame()
 	}
 
 	data_->elapsed_sec = data_->frame_timer.elapsed();
+	data_->total_elapsed_sec += data_->elapsed_sec;
 	data_->frame_timer.restart();
 	on_frame();
 	if(data_->mode == app_modes::benchmark)
@@ -300,10 +302,7 @@ void sample_app::draw_frame()
 
 	double current_time = data_->second_timer.elapsed();
 	double frame_elapsed = data_->frame_timer.elapsed();
-	double estimated_next_frame_time = current_time + frame_elapsed;
-	if( (current_time >= 1.0)
-		|| (1.0 - current_time < frame_elapsed)
-		)
+	if( (current_time >= 1.0) || (1.0 - current_time < frame_elapsed) )
 	{
 		cout.precision(3);
 		cout << "Frame: #" << data_->frame_count << " | FPS: " << data_->frames_in_second / current_time << endl;

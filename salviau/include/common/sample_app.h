@@ -60,6 +60,7 @@ struct sample_app_data
 	salviar::surface_ptr		resolved_color_target;
 	salviar::surface_ptr		ds_target;
 
+	double						total_elapsed_sec;
 	double						elapsed_sec;
 	size_t						frame_count;
 
