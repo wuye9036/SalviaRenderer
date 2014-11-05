@@ -1,5 +1,4 @@
-#ifndef EFLIB_PLATFORM_CONFIG_H
-#define EFLIB_PLATFORM_CONFIG_H
+#pragma once
 
 #if defined(DEBUG) || defined(_DEBUG)
 #	define EFLIB_DEBUG
@@ -73,4 +72,12 @@
 #else
 #	define EFLIB_ALIGN(x)   __attribute__ ((aligned ( x )))
 #endif
+
+namespace eflib
+{
+#if defined(EFLIB_DEBUG)
+	bool const is_debug_mode = true;
+#else
+	bool const is_debug_mode = false;
 #endif
+};

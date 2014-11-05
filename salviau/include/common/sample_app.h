@@ -35,7 +35,15 @@ enum class app_modes
 	benchmark,		// Run as benchmark. It will generate some benchmark results.
 	test,			// Run as regression test. It will generate final frames as image file for test.
 	interactive,	// Interactive mode.
-	replay			// Play mode.
+	replay,			// Play mode.
+	count
+};
+
+enum class quit_conditions
+{
+	user_defined	= 0,
+	frame_limits	= 1,
+	time_out		= 2,
 };
 
 struct frame_data
@@ -47,6 +55,7 @@ struct frame_data
 
 struct sample_app_data
 {
+public:
 	std::string					benchmark_name;
 	
 	app_modes					mode;
@@ -71,7 +80,8 @@ struct sample_app_data
 	salviar::async_object_ptr	pipeline_prof_obj;
 
 	std::vector<frame_data>		frame_profs;
-
+	quit_conditions				quit_cond;
+	uint32_t					quit_cond_data; // frame count or millisecond.
 	bool						runnable;
 	bool						quiting;
 	timer						frame_timer;
@@ -98,6 +108,9 @@ protected:
 		salviar::pixel_format color_fmt, salviar::pixel_format ds_format
 	);
 	
+	void quit_at_frame(uint32_t frame_cnt);
+	void quit_if_time_out(uint32_t milli_sec);
+
 	void quit();
 
 	// Events

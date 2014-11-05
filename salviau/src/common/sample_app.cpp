@@ -42,6 +42,8 @@ sample_app::sample_app(std::string const& app_name):
 	data_->gui = nullptr;
 	data_->is_sync_renderer = boost::indeterminate;
 	data_->frames_in_second = 0;
+	data_->quit_cond = quit_conditions::user_defined;
+	data_->quit_cond_data = 0;
 }
 
 sample_app::~sample_app()
@@ -258,6 +260,31 @@ void sample_app::create_devices_and_targets(
 
 void sample_app::draw_frame()
 {
+	data_->elapsed_sec = data_->frame_timer.elapsed();
+	data_->total_elapsed_sec += data_->elapsed_sec;
+	data_->frame_timer.restart();
+
+	switch(data_->quit_cond)
+	{
+	case quit_conditions::frame_limits:
+		if(data_->frame_count >= data_->quit_cond_data)
+		{
+			quit();
+		}
+		break;
+	case quit_conditions::time_out:
+		if(data_->total_elapsed_sec > data_->quit_cond_data / 1000.0)
+		{
+			quit();
+		}
+		break;
+	}
+
+	if(data_->quiting)
+	{
+		return;
+	}
+	
 	if(data_->mode == app_modes::benchmark)
 	{
 		data_->renderer->begin(data_->pipeline_stat_obj);
@@ -265,17 +292,15 @@ void sample_app::draw_frame()
 		data_->renderer->begin(data_->pipeline_prof_obj);
 	}
 
-	data_->elapsed_sec = data_->frame_timer.elapsed();
-	data_->total_elapsed_sec += data_->elapsed_sec;
-	data_->frame_timer.restart();
 	on_frame();
+
 	if(data_->mode == app_modes::benchmark)
 	{
 		data_->renderer->end(data_->pipeline_stat_obj);
 		data_->renderer->end(data_->internal_stat_obj);
 		data_->renderer->end(data_->pipeline_prof_obj);
 	}
-
+	
 	if(data_->quiting)
 	{
 		return;
@@ -365,7 +390,19 @@ void sample_app::run()
 
 	cout << "Running done." << endl;
 }
-	
+
+void sample_app::quit_at_frame(uint32_t frame_cnt)
+{
+	data_->quit_cond = quit_conditions::frame_limits;
+	data_->quit_cond_data = frame_cnt;
+}
+
+void sample_app::quit_if_time_out(uint32_t milli_sec)
+{
+	data_->quit_cond = quit_conditions::time_out;
+	data_->quit_cond_data = milli_sec;
+}
+
 void sample_app::quit()
 {
 	cout << "Exiting ..." << endl;

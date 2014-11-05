@@ -1,6 +1,6 @@
 #include <tchar.h>
 
-#include <salviau/include/win/win_application.h>
+#include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -17,8 +17,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 #include <salviax/include/resource/texture/tex_io.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -230,53 +229,27 @@ public:
 
 };
 
-class astro_boy: public quick_app{
+class astro_boy: public sample_app
+{
 public:
-	astro_boy(): quick_app( create_win_gui() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
+	astro_boy(): sample_app("AstroBoy")
+	{}
 
 protected:
 	/** Event handlers @{ */
-	virtual void on_create(){
-
-		cout << "Creating window and device ..." << endl;
-
-		string title( "Sample: Astro Boy" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
+	virtual void on_init()
+	{
+		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
         
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
+		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
+		data_->renderer->set_viewport(vp);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
-		astro_boy_mesh = create_mesh_from_collada( renderer_.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
+		astro_boy_mesh = create_mesh_from_collada( data_->renderer.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
@@ -287,40 +260,24 @@ protected:
 		pps.reset( new astro_boy_ps() );
 		pbs.reset( new bs() );
 
-		f = fopen("indices.txt", "w");
-		fclose(f);
+		switch(data_->mode)
+		{
+		case app_modes::benchmark:
+			quit_at_frame(eflib::is_debug_mode ? 10 : 400);
+			break;
+		case app_modes::test:
+			quit_at_frame(15);
+			break;
+		}
 	}
 	/** @} */
 
-	void on_draw()
-    {
-		swap_chain_->present();
-	}
-
-	void on_idle(){
-		static int frame_count = 0;
-		// measure statistics
-		++frame_count;
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
-
-		// check if new second
-		if (accumulate_time > 1)
-		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
-		}
-
-		timer.restart();
-
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+	void on_frame() override
+	{
+		profiling("BackBufferClearing", [this](){
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		vec4 camera_pos = vec4( 0.0f, 10.0f, 14.0f, 1.0f );
 
@@ -329,92 +286,86 @@ protected:
 		mat_lookat(view, camera_pos.xyz(), vec3(0.0f, 10.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
-		static float ang = 0.0f;
-		ang += elapsed_time/3.0f;
+		float ang = 0.0f;
+		float ani_time = 0.0f;
+		switch(data_->mode)
+		{
+		case app_modes::test:
+			ang = static_cast<float>(data_->frame_count) / 7.0f;
+			ani_time = static_cast<float>(data_->frame_count) / 10.0f;
+			break;
+		case app_modes::benchmark:
+			ang = static_cast<float>(data_->frame_count) / 7.0f;
+			ani_time = static_cast<float>(data_->frame_count) / 10.0f;
+			break;
+		default:
+			ang = static_cast<float>(data_->total_elapsed_sec / 3.0f);
+			ani_time = static_cast<float>(data_->total_elapsed_sec / 1.5f);
+			break;
+		}
+		ani_time = fmodf(ani_time, 1.0);
+		
 		vec4 lightPos( sin(ang)*15.0f, 10.0f, cos(ang)*15.0f, 1.0f );
 
-		renderer_->set_pixel_shader(pps);
-		renderer_->set_blend_shader(pbs);
+		data_->renderer->set_pixel_shader(pps);
+		data_->renderer->set_blend_shader(pbs);
 		
-		for(float i = 0 ; i < 1 ; i ++)
-		{
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+		mat_translate(world , -0.5f, 0, -0.5f);
+		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			renderer_->set_rasterizer_state(rs_back);
+		data_->renderer->set_rasterizer_state(rs_back);
 
-			static float cur_time = 0.0f;
-			cur_time = fmodf(cur_time+elapsed_time/1.5f, 1.0f);
-			astro_boy_mesh->set_time(cur_time+0.05f);
+		astro_boy_mesh->set_time(ani_time);
 
-			vector<mat44> boneMatrices = astro_boy_mesh->joint_matrices();
-			vector<mat44> boneInvMatrices = astro_boy_mesh->bind_inv_matrices();
-			int boneSize = (int)boneMatrices.size();
+		vector<mat44> boneMatrices = astro_boy_mesh->joint_matrices();
+		vector<mat44> boneInvMatrices = astro_boy_mesh->bind_inv_matrices();
+		int boneSize = (int)boneMatrices.size();
 
+		profiling("Rendering", [&](){
 			// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-			renderer_->set_vertex_shader_code( astro_boy_sc );
+			data_->renderer->set_vertex_shader_code( astro_boy_sc );
 
-			renderer_->set_vs_variable( "wvpMatrix", &wvp );
-			renderer_->set_vs_variable( "eyePos", &camera_pos );
-			renderer_->set_vs_variable( "lightPos", &lightPos );
+			data_->renderer->set_vs_variable( "wvpMatrix", &wvp );
+			data_->renderer->set_vs_variable( "eyePos", &camera_pos );
+			data_->renderer->set_vs_variable( "lightPos", &lightPos );
 
-			renderer_->set_vs_variable( "boneCount", &boneSize );
-			renderer_->set_vs_variable_pointer( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
-			renderer_->set_vs_variable_pointer( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
+			data_->renderer->set_vs_variable( "boneCount", &boneSize );
+			data_->renderer->set_vs_variable_pointer( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
+			data_->renderer->set_vs_variable_pointer( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );
 			pvs->set_constant( _T("lightPos"), &lightPos );
 
-			// renderer_->set_constant( "boneCount", &boneSize );
+			// data_->renderer->set_constant( "boneCount", &boneSize );
 			pvs->set_constant( _T("boneMatrices"), &boneMatrices );
 			pvs->set_constant( _T("invMatrices"), &boneInvMatrices );
 
-			renderer_->set_vertex_shader(pvs);
+			data_->renderer->set_vertex_shader(pvs);
 #endif
-			// f = fopen("indices.txt", "a");
-			// fprintf(f, "FRAME %d\n", frame_count);
-			for(uint32_t i_mesh = 0; i_mesh < 1 /*astro_boy_mesh->submesh_count()*/; ++i_mesh)
+
+			for(uint32_t i_mesh = 0; i_mesh < astro_boy_mesh->submesh_count(); ++i_mesh)
 			{
 				astro_boy_mesh->render(i_mesh);
 			}
-			// fclose(f);
-		}
-
-		impl->main_window()->refresh();
-
-		//save_surface(renderer_.get(), color_surface_, _EFLIB_T("astroboy.png"), pixel_format_color_bgra8);
-		//exit(1);
+		});
 	}
 
 protected:
-	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr            renderer_;
-
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-
 	skin_mesh_ptr           astro_boy_mesh;
-
 	shader_object_ptr       astro_boy_sc;
-
 	cpp_vertex_shader_ptr	pvs;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
-
 	raster_state_ptr        rs_back;
-
-	uint32_t                num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
-	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
+EFLIB_MAIN(argc, argv)
+{
 	astro_boy loader;
-	return loader.run();
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }

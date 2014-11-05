@@ -230,7 +230,7 @@ public:
 	}
 
 protected:
-	void on_init()
+	void on_init() override
 	{
 		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
@@ -337,17 +337,20 @@ protected:
 		mat_translate(world , -0.5f, 0, -0.5f);
 		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-		data_->renderer->set_rasterizer_state(rs_back);
-		pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-		data_->renderer->set_vertex_shader(pvs_plane);
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-		data_->renderer->set_pixel_shader_code( psc_plane );
-		data_->renderer->set_ps_sampler("samp", plane_sampler);
-#else
-		data_->renderer->set_pixel_shader(pps_plane);
-#endif
-		data_->renderer->set_blend_shader(pbs_plane);
-		planar_mesh->render();
+		profiling("Rendering", [&](){
+			data_->renderer->set_rasterizer_state(rs_back);
+			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
+			data_->renderer->set_vertex_shader(pvs_plane);
+	#ifdef SALVIA_ENABLE_PIXEL_SHADER
+			data_->renderer->set_pixel_shader_code( psc_plane );
+			data_->renderer->set_ps_sampler("samp", plane_sampler);
+	#else
+			data_->renderer->set_pixel_shader(pps_plane);
+	#endif
+			data_->renderer->set_blend_shader(pbs_plane);
+		
+			planar_mesh->render();
+		});
 	}
 
 protected:
