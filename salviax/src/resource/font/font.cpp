@@ -8,7 +8,9 @@
 #include <freetype/ftglyph.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #if defined(EFLIB_WINDOWS)
@@ -197,7 +199,7 @@ public:
 		font::render_hints /*hint*/)
 	{
 		std::wstring wtext;
-		::setlocale(LC_ALL, ".936");
+		::setlocale(LC_ALL, ".65001");
 		eflib::to_wide_string(wtext, text);
 		if( wtext.empty() ) { return; }
 
@@ -249,7 +251,12 @@ private:
 
 font_ptr font::create( std::string const& font_file_path, size_t face_index, size_t size, font::units unit )
 {
-	boost::shared_ptr<font_impl> ret( new font_impl(font_file_path, face_index) );
+	if ( !boost::filesystem::exists(font_file_path) )
+	{
+		return font_ptr();
+	}
+	
+	boost::shared_ptr<font_impl> ret = boost::make_shared<font_impl>(font_file_path, face_index);
 	ret->size_and_unit(size, unit);
 	return ret;
 }

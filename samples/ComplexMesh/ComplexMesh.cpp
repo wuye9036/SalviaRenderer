@@ -3,9 +3,7 @@
 #include <salviax/include/resource/texture/tex_io.h>
 #include <salviax/include/swap_chain/swap_chain.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
-#include <salviau/include/win/win_application.h>
+#include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -14,7 +12,7 @@
 #include <salviar/include/rasterizer.h>
 
 #include <eflib/include/utility/unref_declarator.h>
-#include <eflib/include/diagnostics/profiler.h>
+#include <eflib/include/platform/main.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign.hpp>
@@ -294,98 +292,53 @@ public:
 
 };
 
-class complex_mesh: public quick_app
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 3 : 300;
+int const TEST_FRAME_COUNT		= 3;
+
+class complex_mesh: public sample_app
 {
 public:
-	complex_mesh()
-		: quick_app( create_win_gui() )
-		, num_frames(0)
-		, accumulate_time(0.0f)
-		, fps(0.0f)
+	complex_mesh(): sample_app("ComplexMesh")
 	{
 	}
 
-	virtual void on_create()
+	void on_init() override
 	{
-		cout << "Creating window and device ..." << endl;
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		viewport vp = {0, 0, 512, 512, 0.0f, 1.0f};
+        data_->renderer->set_viewport(vp);
 
-		string title( "Sample: Complex Mesh" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
-				
-		// Rasterizer state
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
 		// Loading mesh
 		cout << "Loading mesh ... " << endl;
-		mesh_ = LoadModel(renderer_, "../../resources/M134 Predator.MESHML.model_bin");
+		mesh_ = LoadModel(data_->renderer, "../../resources/M134 Predator.MESHML.model_bin");
 		cout << "Loading pixel and blend shader... " << endl;
 
 		// Initialize shader
 		cpp_vs.reset(new vs_mesh());
 		cpp_ps.reset(new ps_mesh());
 		cpp_bs.reset(new ts_blend_off());
-	}
-	/** @} */
 
-	void on_draw()
-    {
-		swap_chain_->present();
-	}
-
-	void on_idle()
-	{
-		static int frame_count = 0;
-		// measure statistics
-		++frame_count;
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
-
-		// check if new second
-		if (accumulate_time > 1)
+		switch(data_->mode)
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
+		case app_modes::benchmark:
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
+			break;
+		case app_modes::test:
+			quit_at_frame(TEST_FRAME_COUNT);
+			break;
 		}
-		timer.restart();
-		
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+	}
+
+	void on_frame() override
+	{
+		profiling("BackBufferClearing", [this](){
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		mat44 world(mat44::identity()), view, proj, wv;
 		static float s_angle = -1;
@@ -397,44 +350,36 @@ public:
 		
 		vec3 light_pos(vec3(-4, 2, 0));
 
-		renderer_->set_vertex_shader(cpp_vs);
-		renderer_->set_pixel_shader(cpp_ps);
-		renderer_->set_blend_shader(cpp_bs);
+		profiling("Rendering", [&](){
+			data_->renderer->set_vertex_shader(cpp_vs);
+			data_->renderer->set_pixel_shader(cpp_ps);
+			data_->renderer->set_blend_shader(cpp_bs);
 
-		renderer_->set_rasterizer_state(rs_back);
+			data_->renderer->set_rasterizer_state(rs_back);
 
-		cpp_vs->set_constant(_T("WorldViewMat"), &wv);
-		cpp_vs->set_constant(_T("ProjMat"), &proj);
-		cpp_vs->set_constant(_T("LightPos"), &light_pos);
-		cpp_vs->set_constant(_T("EyePos"), &eye);
-		
-		mesh_->render();
-		
-		impl->main_window()->refresh();
+			cpp_vs->set_constant(_T("WorldViewMat"), &wv);
+			cpp_vs->set_constant(_T("ProjMat"), &proj);
+			cpp_vs->set_constant(_T("LightPos"), &light_pos);
+			cpp_vs->set_constant(_T("EyePos"), &eye);
+
+			mesh_->render();
+		});
 	}
 
-protected:
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr			renderer_;
-	mesh_ptr				mesh_;
-
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-	
+protected:	
     cpp_vertex_shader_ptr	cpp_vs;
 	cpp_pixel_shader_ptr	cpp_ps;
 	cpp_blend_shader_ptr	cpp_bs;
+	mesh_ptr				mesh_;
 
 	raster_state_ptr		rs_back;
-	uint32_t				num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] )
+EFLIB_MAIN(argc, argv)
 {
     complex_mesh loader;
-	return loader.run();
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }

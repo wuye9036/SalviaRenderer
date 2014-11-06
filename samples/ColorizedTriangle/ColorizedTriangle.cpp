@@ -124,12 +124,7 @@ public:
 };
 
 int const TEST_TOTAL_FRAME_COUNT = 5;
-
-#if defined(EFLIB_DEBUG)
-	int const BENCHMARK_TOTAL_FRAME_COUNT = 3;	
-#else
-	int const BENCHMARK_TOTAL_FRAME_COUNT = 2000;
-#endif
+int const BENCHMARK_TOTAL_FRAME_COUNT = eflib::is_debug_mode ? 3 : 2000;
 
 class colorized_triangle : public sample_app
 {

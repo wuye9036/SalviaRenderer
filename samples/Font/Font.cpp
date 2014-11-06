@@ -1,8 +1,4 @@
-#include <tchar.h>
-
-#include <salviau/include/win/win_application.h>
-
-#include <salviar/include/shader.h>
+﻿#include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/sync_renderer.h>
@@ -17,8 +13,9 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/tex_io.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
+#include <salviau/include/common/sample_app.h>
+
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -43,66 +40,6 @@ struct vert
 	vec4 pos;
 };
 
-class vs_box : public cpp_vertex_shader
-{
-	mat44 wvp;
-public:
-	vs_box():wvp(mat44::identity()){
-		declare_constant(_T("WorldViewProjMat"), wvp);
-
-		bind_semantic( "POSITION", 0, 0 );
-		bind_semantic( "TEXCOORD", 0, 1 );
-	}
-
-	vs_box(const mat44& wvp):wvp(wvp){}
-	void shader_prog(const vs_input& in, vs_output& out)
-	{
-		vec4 pos = in.attribute(0);
-		transform(out.position(), pos, wvp);
-		out.attribute(0) = in.attribute(0);//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
-		out.attribute(1) = in.attribute(1);
-	}
-
-	uint32_t num_output_attributes() const
-	{
-		return 2;
-	}
-
-	uint32_t output_attribute_modifiers(uint32_t index) const
-	{
-		switch (index)
-		{
-		case 0:
-			return salviar::vs_output::am_linear;
-
-		case 1:
-			return salviar::vs_output::am_linear;
-
-		case 2:
-			return salviar::vs_output::am_linear;
-
-		default:
-			return salviar::vs_output::am_linear;
-		}
-	}
-
-    virtual cpp_shader_ptr clone()
-	{
-        typedef std::remove_pointer<decltype(this)>::type this_type;
-		return cpp_shader_ptr(new this_type(*this));
-	}
-};
-
-char const* box_ps_code =
-	"sampler samp;"
-	"float4 ps_main( float4 pos: TEXCOORD0, float2 tex: TEXCOORD1 ): COLOR \r\n"
-	"{\r\n"
-	"	float4 color = tex2D(samp, tex); \r\n"
-	"	color.w = 0.5f; \r\n"
-	"	return color; \r\n"
-	"}\r\n"
-	;
-
 char const* plane_ps_code =
 	"sampler samp;"
 	"float4 ps_main( float2 tex: TEXCOORD0 ): COLOR \r\n"
@@ -113,34 +50,6 @@ char const* plane_ps_code =
 	"}\r\n"
 	;
 	
-
-class ps_box : public cpp_pixel_shader
-{
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
-public:
-
-	ps_box(sampler_ptr const& samp)
-        : sampler_(samp)
-	{
-	}
-
-	bool shader_prog(const vs_output& /*in*/, ps_output& out)
-	{
-		color_rgba32f color = tex2d(*sampler_ , 1);
-		color.a = 0.5;
-		out.color[0] = color.get_vec4();
-
-		return true;
-	}
-
-    virtual cpp_shader_ptr clone()
-	{
-        typedef std::remove_pointer<decltype(this)>::type this_type;
-		return cpp_shader_ptr(new this_type(*this));
-	}
-};
-
 class vs_plane : public cpp_vertex_shader
 {
 	mat44 wvp;
@@ -208,23 +117,6 @@ public:
 	}
 };
 
-class ts_blend_on : public cpp_blend_shader
-{
-public:
-	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
-	{
-		color_rgba32f color(in.color[0]);
-		inout.color(0, sample, lerp(inout.color(0, sample), color, color.a));
-		return true;
-	}
-
-    virtual cpp_shader_ptr clone()
-	{
-        typedef std::remove_pointer<decltype(this)>::type this_type;
-		return cpp_shader_ptr(new this_type(*this));
-	}
-};
-
 class ts_blend_off : public cpp_blend_shader
 {
 public:
@@ -240,146 +132,87 @@ public:
 	}
 };
 
-class font_sample: public quick_app{
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 3 : 2000;
+int const TEST_FRAME_COUNT		= 3;
+
+class font_sample: public sample_app{
 public:
-	font_sample(): quick_app( create_win_gui() ){}
+	font_sample(): sample_app("Font")
+	{
+	}
 
 protected:
-	/** Event handlers @{ */
-	virtual void on_create()
+	void on_init() override
     {
-		cout << "Creating window and device ..." << endl;
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
 
-		string title( "Sample: Font" );
-		impl->main_window()->set_title(title);
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
+		viewport vp = {0, 0, 512, 512, 0.0f, 1.0f};
+        data_->renderer->set_viewport(vp);
 		
 		planar_mesh = create_planar(
-			renderer_.get(), 
+			data_->renderer.get(), 
 			vec3(-1.0f, -1.0f, 0.0f), 
 			vec3(1.0f, 0.0f, 0.0f), 
 			vec3(0.0f, 1.0f, 0.0f),
 			2, 2, true
 			);
 		
-		box_mesh = create_box(renderer_.get());
-
-		pvs_box.reset(new vs_box());
 		pvs_plane.reset(new vs_plane());
 
+		sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+		desc.mip_filter = filter_linear;
+		desc.addr_mode_u = address_wrap;
+		desc.addr_mode_v = address_wrap;
+
+		plane_tex = data_->renderer->create_tex2d(512, 512, 1, pixel_format_color_rgba8);
+		fnt = font::create_in_system_path("msyh.ttc", 0, 14, font::points);
+		if (fnt)
 		{
-			sampler_desc desc;
-			desc.min_filter = filter_linear;
-			desc.mag_filter = filter_linear;
-			desc.mip_filter = filter_linear;
-			desc.addr_mode_u = address_clamp;
-			desc.addr_mode_v = address_clamp;
-			desc.addr_mode_w = address_clamp;
-
-			box_tex = load_texture(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
-			box_tex->gen_mipmap(filter_linear, true);
-
-			box_sampler = renderer_->create_sampler(desc, box_tex);
-            pps_box.reset(new ps_box(box_sampler));
-
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			cout << "Creating Box Pixel Shader ..." << endl;
-			psc_box = compile( box_ps_code, lang_pixel_shader );
-#endif
-		}
-
-		{
-			sampler_desc desc;
-			desc.min_filter = filter_linear;
-			desc.mag_filter = filter_linear;
-			desc.mip_filter = filter_linear;
-			desc.addr_mode_u = address_wrap;
-			desc.addr_mode_v = address_wrap;
-
-			plane_tex = renderer_->create_tex2d(512, 512, 1, pixel_format_color_rgba8);
-			fnt = font::create_in_system_path("msyh.ttc", 0, 14, font::points);
-			fnt->draw( "Hello���123", plane_tex->subresource(0).get(), rect<int32_t>(0, 0, 512, 512),
+			wchar_t const* str = L"吞玻璃；LazyFox；1875；お帰りなさい";
+			fnt->draw(to_ansi_string(str).c_str(), plane_tex->subresource(0).get(), rect<int32_t>(0, 0, 512, 512),
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
-			plane_tex->gen_mipmap(filter_linear, true);
+		}
+		else
+		{
+			fnt = font::create("../../resources/font/AnglicanText.ttf", 0, 56, font::points);
+			fnt->draw( "Cannot find msyh.ttc", plane_tex->subresource(0).get(), rect<int32_t>(0, 0, 512, 512),
+				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
+		}
+		plane_tex->gen_mipmap(filter_linear, true);
 			
-			plane_sampler = renderer_->create_sampler(desc, plane_tex);
-            pps_plane.reset(new ps_plane(plane_sampler));
+		plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
+        pps_plane.reset(new ps_plane(plane_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			cout << "Creating Plane Pixel Shader ..." << endl;
-			psc_plane = compile( plane_ps_code, lang_pixel_shader );
+		cout << "Creating Plane Pixel Shader ..." << endl;
+		psc_plane = compile( plane_ps_code, lang_pixel_shader );
 #endif
-		}
 
-		pbs_box.reset(new ts_blend_on);
 		pbs_plane.reset(new ts_blend_off);
 
 		raster_desc rs_desc;
-		rs_desc.cm = cull_front;
-		rs_front.reset(new raster_state(rs_desc));
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-	}
-	/** @} */
-
-	void on_draw()
-    {
-        swap_chain_->present();
-	}
-
-	void on_idle(){
-			// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
-
-		// check if new second
-		if (accumulate_time > 1)
+		switch(data_->mode)
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
+		case app_modes::benchmark:
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
+			break;
+		case app_modes::test:
+			quit_at_frame(TEST_FRAME_COUNT);
+			break;
 		}
+	}
 
-		timer.restart();
-
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+	void on_frame() override
+	{
+		profiling("BackBufferClearing", [this](){
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		vec3 camera(0.0f, 0.0f, -2.2f);
 
@@ -388,69 +221,44 @@ protected:
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_ortho(proj, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1000.0f);
 
-		for(float i = 0 ; i < 1 ; i ++)
-		{
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			renderer_->set_rasterizer_state(rs_back);
-			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-			renderer_->set_vertex_shader(pvs_plane);
+		data_->renderer->set_rasterizer_state(rs_back);
+		pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
+		data_->renderer->set_vertex_shader(pvs_plane);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_plane );
-			renderer_->set_ps_sampler( "samp", plane_sampler );
+		data_->renderer->set_pixel_shader_code( psc_plane );
+		data_->renderer->set_ps_sampler( "samp", plane_sampler );
 #else
-			renderer_->set_pixel_shader(pps_plane);
+		data_->renderer->set_pixel_shader(pps_plane);
 #endif
-			renderer_->set_blend_shader(pbs_plane);
-			planar_mesh->render();
-		}
+		data_->renderer->set_blend_shader(pbs_plane);
 
-		impl->main_window()->refresh();
+		profiling("Rendering", [&](){
+			planar_mesh->render();
+		});
 	}
 
 protected:
-	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr            renderer_;
-	texture_ptr             sm_tex;
-
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-
 	mesh_ptr                planar_mesh;
-	mesh_ptr                box_mesh;
-
 	texture_ptr             plane_tex;
-	texture_ptr             box_tex;
-
 	sampler_ptr             plane_sampler;
-	sampler_ptr             box_sampler;
-
-	cpp_vertex_shader_ptr   pvs_box;
-	cpp_pixel_shader_ptr    pps_box;
-	shader_object_ptr       psc_box;
 
 	cpp_vertex_shader_ptr   pvs_plane;
 	cpp_pixel_shader_ptr    pps_plane;
 	shader_object_ptr       psc_plane;
-
-	cpp_blend_shader_ptr    pbs_box;
 	cpp_blend_shader_ptr    pbs_plane;
 
-	raster_state_ptr        rs_front;
 	raster_state_ptr        rs_back;
 
 	font_ptr                fnt;
-
-	uint32_t                num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
-	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
+EFLIB_MAIN(argc, argv)
+{
 	font_sample loader;
-	return loader.run();
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }

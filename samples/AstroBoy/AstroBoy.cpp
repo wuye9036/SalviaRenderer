@@ -229,6 +229,9 @@ public:
 
 };
 
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 10 : 2000;
+int const TEST_FRAME_COUNT		= 15;
+
 class astro_boy: public sample_app
 {
 public:
@@ -239,7 +242,7 @@ protected:
 	/** Event handlers @{ */
 	virtual void on_init()
 	{
-		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
         
 		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
 		data_->renderer->set_viewport(vp);
@@ -263,10 +266,10 @@ protected:
 		switch(data_->mode)
 		{
 		case app_modes::benchmark:
-			quit_at_frame(eflib::is_debug_mode ? 10 : 400);
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
 			break;
 		case app_modes::test:
-			quit_at_frame(15);
+			quit_at_frame(TEST_FRAME_COUNT);
 			break;
 		}
 	}
@@ -292,7 +295,7 @@ protected:
 		{
 		case app_modes::test:
 			ang = static_cast<float>(data_->frame_count) / 7.0f;
-			ani_time = static_cast<float>(data_->frame_count) / 10.0f;
+			ani_time = static_cast<float>(data_->frame_count) / 10.0F;
 			break;
 		case app_modes::benchmark:
 			ang = static_cast<float>(data_->frame_count) / 7.0f;
