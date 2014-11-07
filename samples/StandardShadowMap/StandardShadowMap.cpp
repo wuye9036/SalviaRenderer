@@ -1,7 +1,3 @@
-#include <tchar.h>
-
-#include <salviau/include/win/win_application.h>
-
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/shader_object.h>
@@ -16,8 +12,10 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
+#include <salviau/include/common/sample_app.h>
+
+#include <eflib/include/platform/dl_loader.h>
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -50,8 +48,10 @@ class gen_sm_cpp_ps : public cpp_pixel_shader
         return true;
     }
 
-	bool shader_prog(const vs_output& /*in*/, ps_output& /*out*/)
+	bool shader_prog(const vs_output& in, ps_output& out)
 	{
+		EFLIB_UNREF_DECLARATOR(in);
+		EFLIB_UNREF_DECLARATOR(out);
 		return true;
 	}
 
@@ -176,44 +176,23 @@ public:
 	}
 };
 
-class ssm: public quick_app
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 3 : 500;
+int const TEST_FRAME_COUNT		= 8;
+
+class ssm: public sample_app
 {
 public:
-	ssm()
-		: quick_app( create_win_gui() )
-		, fps_counter_(3.0f)
+	ssm(): sample_app("ShadowMap")
 	{}
 
 protected:
-	/** Event handlers @{ */
-	virtual void on_create()
-	{
-		string title( "Sample: Obj File Loader" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-        void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
+	void on_init() override
+	{	
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
+		data_->renderer->set_viewport(vp);
 
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params, renderer_sync);
-        color_surface_ = swap_chain_->get_surface();
-        sm_texture_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            );
-		draw_ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
+        sm_texture_ = data_->renderer->create_tex2d(512, 512, 1, pixel_format_color_rg32f);
 
 		sampler_desc sm_desc;
 		sm_desc.min_filter = filter_point;
@@ -223,16 +202,7 @@ protected:
 		sm_desc.addr_mode_v = address_border;
 		sm_desc.addr_mode_w = address_border;
 		sm_desc.border_color = color_rgba32f(1.0f, 0.0f, 0.0f, 0.0f);
-        sm_sampler_ = renderer_->create_sampler(sm_desc, sm_texture_);
-
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
+        sm_sampler_ = data_->renderer->create_sampler(sm_desc, sm_texture_);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -244,60 +214,65 @@ protected:
 		draw_ps_.reset(new draw_cpp_ps());
 		pbs.reset( new bs() );
 		
-		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
+		cup_mesh = create_mesh_from_obj( data_->renderer.get(), "../../resources/models/cup/cup.obj", true );
         plane_mesh = create_planar(
-            renderer_.get(),
+            data_->renderer.get(),
             vec3(-3.0f, 0.0f, -3.0f),
             vec3(6.0f, -1.0f, 0.0f),
             vec3(0.0f, -1.0f, 6.0f),
             1, 1, false
             );
 	}
-	/** @} */
-
-	void on_draw()
-    {
-		swap_chain_->present();
-	}
 
 	void gen_sm()
 	{
-		renderer_->set_render_targets(0, nullptr, sm_texture_->subresource(0));
-        renderer_->clear_depth_stencil(sm_texture_->subresource(0), clear_depth | clear_stencil, 1.0f, 0);
+		data_->renderer->set_render_targets(0, nullptr, sm_texture_->subresource(0));
+		
+		profiling("BackBufferClearing", [&](){
+			profiling("Shadow", [&](){
+				data_->renderer->clear_depth_stencil(sm_texture_->subresource(0), clear_depth | clear_stencil, 1.0f, 0);
+			});
+		});
 
-        renderer_->set_vertex_shader_code(gen_sm_vs_);
-		renderer_->set_pixel_shader(gen_sm_ps_);
-		renderer_->set_blend_shader(pbs);
+        data_->renderer->set_vertex_shader_code(gen_sm_vs_);
+		data_->renderer->set_pixel_shader(gen_sm_ps_);
+		data_->renderer->set_blend_shader(pbs);
 
-		renderer_->set_rasterizer_state(rs_back);
+		data_->renderer->set_rasterizer_state(rs_back);
 
-        renderer_->set_vs_variable("wvpMatrix",	&light_wvp_);
-        plane_mesh->render();
-
-        for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
-		{
-			mesh_ptr cur_mesh = cup_mesh[i_mesh];
-			cur_mesh->render();
-		}
+        data_->renderer->set_vs_variable("wvpMatrix",	&light_wvp_);
+		
+		profiling("Rendering", [&](){
+			profiling("Shadow", [&](){
+				plane_mesh->render();
+				for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
+				{
+					mesh_ptr cur_mesh = cup_mesh[i_mesh];
+					cur_mesh->render();
+				}
+			});
+		});
 	}
 	
 	void draw()
 	{
-		renderer_->set_render_targets(1, &color_surface_, draw_ds_surface_);
+		data_->renderer->set_render_targets(1, &data_->color_target, data_->ds_target);
+		profiling("BackBufferClearing", [&](){
+			profiling("Scene", [&](){
+				data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+				data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+			});
+		});
+		data_->renderer->set_vertex_shader_code(draw_vs_);
+		data_->renderer->set_pixel_shader(draw_ps_);
+		data_->renderer->set_blend_shader(pbs);
 
-		renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(draw_ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+		data_->renderer->set_rasterizer_state(rs_back);
 
-		renderer_->set_vertex_shader_code(draw_vs_);
-		renderer_->set_pixel_shader(draw_ps_);
-		renderer_->set_blend_shader(pbs);
-
-		renderer_->set_rasterizer_state(rs_back);
-
-		renderer_->set_vs_variable("cameraPos",	&camera_pos_);
-		renderer_->set_vs_variable("cameraWvp", &camera_wvp_);
-		renderer_->set_vs_variable("lightPos",	&light_pos_);
-		renderer_->set_vs_variable("lightWvp",	&light_wvp_);
+		data_->renderer->set_vs_variable("cameraPos",	&camera_pos_);
+		data_->renderer->set_vs_variable("cameraWvp", &camera_wvp_);
+		data_->renderer->set_vs_variable("lightPos",	&light_pos_);
+		data_->renderer->set_vs_variable("lightWvp",	&light_wvp_);
 
         vec4 ambient (0.1f, 0.1f, 0.1f, 0.1f);
         vec4 diffuse (0.8f, 0.8f, 0.8f, 0.1f);
@@ -310,48 +285,46 @@ protected:
         draw_ps_->set_sampler(_T("TexSampler"), sampler_ptr());
         draw_ps_->set_sampler(_T("DepthSampler"), sm_sampler_);
 
-        plane_mesh->render();
-		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
-		{
-			mesh_ptr cur_mesh = cup_mesh[i_mesh];
+	    sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+		desc.mip_filter = filter_linear;
+		desc.addr_mode_u = address_clamp;
+		desc.addr_mode_v = address_clamp;
+		desc.addr_mode_w = address_clamp;
 
-			shared_ptr<obj_material> mtl
-				= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
-			draw_ps_->set_constant( _T("Ambient"),  &mtl->ambient );
-			draw_ps_->set_constant( _T("Diffuse"),  &mtl->diffuse );
-			draw_ps_->set_constant( _T("Specular"), &mtl->specular );
-			draw_ps_->set_constant( _T("Shininess"),&mtl->ambient );
+		profiling("Rendering", [&](){
+			profiling("Scene", [&](){
+				plane_mesh->render();
+				for (size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh)
+				{
+					mesh_ptr cur_mesh = cup_mesh[i_mesh];
 
-        	sampler_desc desc;
-		    desc.min_filter = filter_linear;
-		    desc.mag_filter = filter_linear;
-		    desc.mip_filter = filter_linear;
-		    desc.addr_mode_u = address_clamp;
-		    desc.addr_mode_v = address_clamp;
-		    desc.addr_mode_w = address_clamp;
+					shared_ptr<obj_material> mtl
+						= dynamic_pointer_cast<obj_material>(cur_mesh->get_attached());
+					draw_ps_->set_constant(_T("Ambient"), &mtl->ambient);
+					draw_ps_->set_constant(_T("Diffuse"), &mtl->diffuse);
+					draw_ps_->set_constant(_T("Specular"), &mtl->specular);
+					draw_ps_->set_constant(_T("Shininess"), &mtl->ambient);
 
-            if(mtl->tex)
-            {
-                draw_ps_->set_sampler(_T("TexSampler"), renderer_->create_sampler(desc, mtl->tex));
-            }
-            else
-            {
-                draw_ps_->set_sampler(_T("TexSampler"), sampler_ptr());
-            }
-            draw_ps_->set_sampler(_T("DepthSampler"), sm_sampler_);
+					if (mtl->tex)
+					{
+						draw_ps_->set_sampler(_T("TexSampler"), data_->renderer->create_sampler(desc, mtl->tex));
+					}
+					else
+					{
+						draw_ps_->set_sampler(_T("TexSampler"), sampler_ptr());
+					}
+					draw_ps_->set_sampler(_T("DepthSampler"), sm_sampler_);
 
-			cur_mesh->render();
-		}
+					cur_mesh->render();
+				}
+			});
+		});
 	}
 	
-	void on_idle()
+	void on_frame() override
     {
-		static float fps = 1.0f;
-		if( fps_counter_.on_frame(fps) )
-		{
-			cout << fps << endl;
-		}
-
 		if(!gen_sm_vs_ || !draw_vs_ || !gen_sm_ps_ || !draw_ps_)
 		{
 			return;
@@ -363,8 +336,21 @@ protected:
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 100.0f);
 		mat_mul(camera_wvp_, view, proj);
 
-        static float theta = 0.0f;
-		theta += 0.01f * 30 / fps;
+		float scene_sec = 0.0f;
+		switch(data_->mode)
+		{
+		case app_modes::benchmark:
+			scene_sec = static_cast<float>(data_->frame_count * 3.3f) / (BENCHMARK_FRAME_COUNT - 1);
+			break;
+		case app_modes::test:
+			scene_sec = static_cast<float>(data_->frame_count * 3.3f) / (TEST_FRAME_COUNT - 1);
+			break;
+		default:
+			scene_sec = static_cast<float>(data_->total_elapsed_sec);
+			break;
+		}
+
+		float theta = 0.3f * scene_sec;
 		light_pos_ = vec4(-4.0f * sin(theta), 6.1f, 3.5f * cos(theta), 1.0f);
 		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 40.0f);
@@ -372,18 +358,10 @@ protected:
 
 		gen_sm();
 		draw();
-		
-		impl->main_window()->refresh();
 	}
 
 protected:
-	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr            renderer_;
-
     texture_ptr             sm_texture_;
-	surface_ptr				draw_ds_surface_;
-    surface_ptr             color_surface_;
     sampler_ptr             sm_sampler_;
 
 	vec4					camera_pos_;
@@ -402,13 +380,13 @@ protected:
 	cpp_blend_shader_ptr    pbs;
 
 	raster_state_ptr        rs_back;
-
-	fps_counter				fps_counter_;
-	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] )
+EFLIB_MAIN(argc, argv)
 {
 	ssm loader;
-	return loader.run();
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }

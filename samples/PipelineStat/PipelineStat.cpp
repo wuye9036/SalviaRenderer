@@ -173,7 +173,8 @@ public:
 
 };
 
-class sponza: public quick_app{
+class sponza: public quick_app
+{
 public:
 	sponza(): quick_app( create_win_gui() ){}
 

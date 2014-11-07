@@ -49,12 +49,13 @@ result render_core::execute()
         EFLIB_ASSERT(false, "Unused command id.");
     }
 
+	++batch_id_;
     return result::failed;
 }
 
 result render_core::draw()
 {
-	if(state_->color_targets.empty() || !state_->depth_stencil_target)
+	if(state_->color_targets.empty() && !state_->depth_stencil_target)
 	{
 		return result::ok;
 	}
@@ -84,6 +85,8 @@ render_core::render_core()
 	stages_.host->initialize(&stages_);
 	stages_.ras->initialize(&stages_);
 	stages_.backend->initialize(&stages_);
+
+	batch_id_ = 0;
 }
 
 void render_core::apply_shader_cbuffer()

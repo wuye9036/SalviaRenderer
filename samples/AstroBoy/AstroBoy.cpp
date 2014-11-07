@@ -239,7 +239,6 @@ public:
 	{}
 
 protected:
-	/** Event handlers @{ */
 	virtual void on_init()
 	{
 		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
@@ -273,7 +272,6 @@ protected:
 			break;
 		}
 	}
-	/** @} */
 
 	void on_frame() override
 	{

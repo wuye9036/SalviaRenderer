@@ -31,6 +31,8 @@ public:
     result  execute ();
 
 private:
+	uint64_t			batch_id_;
+
     render_stages		stages_;
     render_state_ptr	state_;
 
