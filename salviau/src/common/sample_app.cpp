@@ -386,6 +386,7 @@ void sample_app::run()
 	{
 		data_->prof.end(data_->benchmark_name);
 		save_profiling_result();
+		print_profiler(&data_->prof, 3);
 	}
 
 	cout << "Running done." << endl;

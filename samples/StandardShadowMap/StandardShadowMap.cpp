@@ -222,6 +222,16 @@ protected:
             vec3(0.0f, -1.0f, 6.0f),
             1, 1, false
             );
+
+		switch(data_->mode)
+		{
+		case app_modes::benchmark:
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
+			break;
+		case app_modes::test:
+			quit_at_frame(TEST_FRAME_COUNT);
+			break;
+		}
 	}
 
 	void gen_sm()

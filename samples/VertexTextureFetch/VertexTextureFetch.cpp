@@ -1,7 +1,3 @@
-#include <tchar.h>
-
-#include <salviau/include/win/win_application.h>
-
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/shader_object.h>
@@ -15,8 +11,8 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/terrain/gen_terrain.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
+#include <salviau/include/common/sample_app.h>
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -148,46 +144,22 @@ public:
 
 };
 
-class vertex_texture_fetch: public quick_app{
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 15 : 1800;
+int const TEST_FRAME_COUNT		= 8;
+
+class vertex_texture_fetch: public sample_app
+{
 public:
-	vertex_texture_fetch(): quick_app( create_win_gui() ){}
+	vertex_texture_fetch(): sample_app("VertexTextureFetch")
+	{
+	}
 
 protected:
-	/** Event handlers @{ */
-	virtual void on_create(){
-
-		cout << "Creating window and device ..." << endl;
-
-		string title( "Sample: Vertex Texture Fetch" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
+	virtual void on_init()
+	{
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
+		data_->renderer->set_viewport(vp);
 		
         raster_desc rs_desc;
 		rs_desc.cm = cull_none;
@@ -198,7 +170,7 @@ protected:
 		salviax::resource::make_terrain_plasma(field, TERRAIN_SIZE, 0.5f);
 		salviax::resource::filter_terrain(field, TERRAIN_SIZE, 0.15f);
 
-		terrain_tex = salviax::resource::make_terrain_texture(renderer_.get(), field, TERRAIN_SIZE);
+		terrain_tex = salviax::resource::make_terrain_texture(data_->renderer.get(), field, TERRAIN_SIZE);
 		{
 			sampler_desc desc;
 			desc.min_filter = filter_linear;
@@ -208,62 +180,47 @@ protected:
 			desc.addr_mode_v = address_mirror;
 			desc.addr_mode_w = address_mirror;
 
-            terrain_samp = renderer_->create_sampler(desc, terrain_tex);
+            terrain_samp = data_->renderer->create_sampler(desc, terrain_tex);
 		}
 
 		cout << "Compiling vertex shader ... " << endl;
 		vsc = compile( vs_code, lang_vertex_shader );
-		renderer_->set_vertex_shader_code( vsc );
+		data_->renderer->set_vertex_shader_code( vsc );
 
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
 		cout << "Compiling pixel shader ... " << endl;
 		psc = compile( ps_code, lang_pixel_shader );
-		renderer_->set_pixel_shader_code(psc);
+		data_->renderer->set_pixel_shader_code(psc);
 #endif
 
 		plane = create_planar(
-			renderer_.get(), 
+			data_->renderer.get(), 
 			vec3(-TERRAIN_BLOCK_SIZE/2.0f, 0.0f, -TERRAIN_BLOCK_SIZE/2.0f), 
 			vec3(0.5f, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 0.5f),
 			TERRAIN_BLOCK_SIZE*2, TERRAIN_BLOCK_SIZE*2, false
 			);
 
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-
 		pps.reset( new ps() );
 		pbs.reset( new bs() );
-	}
-	/** @} */
 
-	void on_draw(){
-		swap_chain_->present();
-	}
-
-	void on_idle(){
-		// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
-
-		// check if new second
-		if (accumulate_time > 1)
+		switch(data_->mode)
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
+		case app_modes::benchmark:
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
+			break;
+		case app_modes::test:
+			quit_at_frame(TEST_FRAME_COUNT);
+			break;
 		}
+	}
 
-		timer.restart();
-
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
+	void on_frame() override
+	{
+		profiling("BackBufferClearing", [this](){
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
 		vec3 camera( 0.0f, 32.0f, -7.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
@@ -273,50 +230,56 @@ protected:
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
-		static float offset_x = 0.0f;
-		static float offset_y = 0.0f;
 		static float scale = 1.0f / 32;
 
-		offset_x += (0.006f * elapsed_time);
-		offset_y += (0.0088f * elapsed_time);
+		float scene_sec = 0.0f;
+		switch(data_->mode)
+		{
+		case app_modes::benchmark:
+			scene_sec = static_cast<float>(data_->frame_count * 161.2f) / (BENCHMARK_FRAME_COUNT - 1);
+			break;
+		case app_modes::test:
+			scene_sec = static_cast<float>(data_->frame_count * 161.2f) / (TEST_FRAME_COUNT - 1);
+			break;
+		default:
+			scene_sec = static_cast<float>(data_->total_elapsed_sec);
+			break;
+		}
 
-		renderer_->set_pixel_shader(pps);
-		renderer_->set_blend_shader(pbs);
+		float offset_x = (0.006f * scene_sec);
+		float offset_y = (0.0088f * scene_sec);
 
-		renderer_->set_rasterizer_state(rs_back);
+		data_->renderer->set_pixel_shader(pps);
+		data_->renderer->set_blend_shader(pbs);
+
+		data_->renderer->set_rasterizer_state(rs_back);
 
 		vec2 terrain_scale(scale, scale);
 		vec2 terrain_offset(offset_x, offset_y);
 
-		renderer_->set_vertex_shader_code( vsc );
+		data_->renderer->set_vertex_shader_code( vsc );
 
 		mat_mul(wvp, world, mat_mul(wvp, view, proj));
-		renderer_->set_vs_variable( "wvpMatrix", &wvp );
+		data_->renderer->set_vs_variable( "wvpMatrix", &wvp );
 
-		renderer_->set_vs_variable( "terrainScale", &terrain_scale );
-		renderer_->set_vs_variable( "terrainOffset", &terrain_offset );
-		renderer_->set_vs_sampler( "terrainSamp", terrain_samp);
+		data_->renderer->set_vs_variable( "terrainScale", &terrain_scale );
+		data_->renderer->set_vs_variable( "terrainOffset", &terrain_offset );
+		data_->renderer->set_vs_sampler( "terrainSamp", terrain_samp);
 		
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
-		renderer_->set_pixel_shader_code(psc);
-		renderer_->set_ps_variable( "color", &color );
+		data_->renderer->set_pixel_shader_code(psc);
+		data_->renderer->set_ps_variable( "color", &color );
 #endif
 		vec4 color = vec4( 0.3f, 0.7f, 0.3f, 1.0f );
 
 		pps->set_constant( _T("Color"), &color );
-		plane->render();
 
-		impl->main_window()->refresh();
+		profiling("Rendering", [&](){
+			plane->render();
+		});
 	}
 
 protected:
-	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr            renderer_;
-
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-
 	mesh_ptr			    plane;
 	texture_ptr		        terrain_tex;
 	sampler_ptr		        terrain_samp;
@@ -329,16 +292,14 @@ protected:
 	cpp_blend_shader_ptr	pbs;
 
 	raster_state_ptr        rs_back;
-
-	uint32_t                num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
 	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
+EFLIB_MAIN(argc, argv)
+{
 	vertex_texture_fetch loader;
-	return loader.run();
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }

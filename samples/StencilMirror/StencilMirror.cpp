@@ -1,7 +1,3 @@
-#include <tchar.h>
-
-#include <salviau/include/win/win_application.h>
-
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/shader_object.h>
@@ -16,8 +12,9 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
+#include <salviau/include/common/sample_app.h>
+
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -197,45 +194,22 @@ class color_disabled_bs: public cpp_blend_shader
 	}
 };
 
-class stencil_mirror: public quick_app
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 3 : 1500;
+int const TEST_FRAME_COUNT		= 8;
+
+class stencil_mirror: public sample_app
 {
 public:
-	stencil_mirror(): quick_app( create_win_gui() ){}
+	stencil_mirror(): sample_app("StencilMirror")
+	{
+	}
 
 protected:
-	/** Event handlers @{ */
-	virtual void on_create()
+	void on_init() override
 	{
-		string title( "Sample: Stencil Mirror" );
-		impl->main_window()->set_title( title );
-		boost::any view_handle_any = impl->main_window()->view_handle();
-        void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-		salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params, renderer_sync);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-        
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
+		data_->renderer->set_viewport(vp);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
@@ -265,22 +239,18 @@ protected:
 
 		cup_vs = compile(cup_vs_code, lang_vertex_shader);
 		mirror_vs = compile(mirror_vs_code, lang_vertex_shader);
-
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-
-		mirror_start_pos = vec3(-2.0f, -1.0f, -2.0f);
+		
+		mirror_start_pos = vec3(-3.5f, -1.0f, -3.5f);
 		mirror_norm = vec3(0.0f, 1.0f, 0.0f);
 
-		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
+		cup_mesh = create_mesh_from_obj( data_->renderer.get(), "../../resources/models/cup/cup.obj", true );
 		mirror_mesh = create_planar(
-			renderer_.get(),
+			data_->renderer.get(),
 			mirror_norm,
 			mirror_start_pos,
 			vec3(1.0f, 0.0f, 0.0f),		// major
 			vec2(1.0f, 1.0f),			// length
-			4, 4, false
+			7, 7, false
 			);
 
 		cup_ps_.reset( new cup_ps() );
@@ -289,37 +259,41 @@ protected:
 		opaque_bs_.reset( new opaque_bs() );
 		translucent_bs_.reset( new translucent_bs() );
 		color_disabled_bs_.reset( new color_disabled_bs() );
-	}
-	/** @} */
 
-	void on_draw()
-    {
-		swap_chain_->present();
+		switch(data_->mode)
+		{
+		case app_modes::benchmark:
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
+			break;
+		case app_modes::test:
+			quit_at_frame(TEST_FRAME_COUNT);
+			break;
+		}
 	}
 
 	void draw_cup(bool reflect)
 	{
 		if(!cup_vs){ return; }
 
-		renderer_->set_rasterizer_state(rs_back);
-		renderer_->set_vertex_shader_code( cup_vs );
-		renderer_->set_pixel_shader(cup_ps_);
+		data_->renderer->set_rasterizer_state(rs_back);
+		data_->renderer->set_vertex_shader_code( cup_vs );
+		data_->renderer->set_pixel_shader(cup_ps_);
 
 		vec4 camera_v4 = vec4(camera_pos, 1.0f);
-		renderer_->set_vs_variable("eyePos", &camera_v4);
-		renderer_->set_vs_variable("lightPos", &light_pos);
+		data_->renderer->set_vs_variable("eyePos", &camera_v4);
+		data_->renderer->set_vs_variable("lightPos", &light_pos);
 
 		if(reflect)
 		{
-			renderer_->set_depth_stencil_state(dss_draw_with_stencil, 1);
-			renderer_->set_blend_shader(translucent_bs_);
-			renderer_->set_vs_variable("wvpMatrix", &reflect_cup_wvp_matrix);
+			data_->renderer->set_depth_stencil_state(dss_draw_with_stencil, 1);
+			data_->renderer->set_blend_shader(translucent_bs_);
+			data_->renderer->set_vs_variable("wvpMatrix", &reflect_cup_wvp_matrix);
 		}
 		else
 		{
-			renderer_->set_depth_stencil_state(dss_normal, 1);	
-			renderer_->set_blend_shader(opaque_bs_);
-			renderer_->set_vs_variable("wvpMatrix", &cup_wvp_matrix);
+			data_->renderer->set_depth_stencil_state(dss_normal, 1);	
+			data_->renderer->set_blend_shader(opaque_bs_);
+			data_->renderer->set_vs_variable("wvpMatrix", &cup_wvp_matrix);
 		}
 
 		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
@@ -343,7 +317,7 @@ protected:
                 
             if(mtl->tex)
             {
-				cup_ps_->set_sampler(_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
+				cup_ps_->set_sampler(_T("Sampler"), data_->renderer->create_sampler(desc, mtl->tex));
             }
             else
             {
@@ -356,41 +330,41 @@ protected:
 
 	void draw_mirror()
 	{
-		renderer_->set_depth_stencil_state(dss_write_stencil, 1);
-		renderer_->set_rasterizer_state(rs_none);
-		renderer_->set_vertex_shader_code(mirror_vs);
-		renderer_->set_pixel_shader(mirror_ps_);
-		renderer_->set_vs_variable("wvpMatrix", &mirror_wvp_matrix); 
-		renderer_->set_blend_shader(opaque_bs_);
+		data_->renderer->set_depth_stencil_state(dss_write_stencil, 1);
+		data_->renderer->set_rasterizer_state(rs_none);
+		data_->renderer->set_vertex_shader_code(mirror_vs);
+		data_->renderer->set_pixel_shader(mirror_ps_);
+		data_->renderer->set_vs_variable("wvpMatrix", &mirror_wvp_matrix); 
+		data_->renderer->set_blend_shader(opaque_bs_);
 		
 		mirror_mesh->render();
 	}
 
-	void on_idle()
-    {
-		// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
+	void on_frame() override
+	{
+		profiling("BackBufferClearing", [this](){
+			profiling("ClearingDS", [this](){
+				data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+				data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+			});
+		});
 
-		// check if new second
-		if (accumulate_time > 1)
+		float scene_sec = 0.0f;
+		switch(data_->mode)
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-
-			accumulate_time = 0;
-			num_frames  = 0;
-
-			cout << fps << endl;
+		case app_modes::benchmark:
+			scene_sec = static_cast<float>(data_->frame_count) / (BENCHMARK_FRAME_COUNT - 1);
+			break;
+		case app_modes::test:
+			scene_sec = static_cast<float>(data_->frame_count) / (TEST_FRAME_COUNT - 1);
+			break;
+		default:
+			scene_sec = static_cast<float>(data_->total_elapsed_sec);
+			break;
 		}
 
-		timer.restart();
-
-		static float angle0 = 60.0f;
-		static float angle1 = 0;
-		// angle0 -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
-		angle1 += elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.25f;
+		float angle0 = 60.0f;
+		float angle1 = scene_sec * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.25f;
 
 		camera_pos = vec3(cos(angle0)*5.0f, 2.5f, sin(angle0)*5.0f);
 		
@@ -412,25 +386,23 @@ protected:
 
 		light_pos = vec4(sin(-angle0*1.5f)*2.2f, 0.15f, cos(angle0*0.9f)*1.8f, 0.0f);
 
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
-		
-		draw_cup(false);
-		draw_mirror();
+		profiling("Rendering", [this](){
+			profiling("Scene",  [&]{ draw_cup(false); });
+			profiling("Mirror", [&]{ draw_mirror();   });
+		});
 
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth, 1.0f, 0);
-		draw_cup(true);
+		profiling("BackBufferClearing", [this](){
+			profiling("ClearingDepth", [this](){
+				data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth, 1.0f, 0);
+			});
+		});
 
-		impl->main_window()->refresh();
+		profiling("Rendering", [this](){
+			profiling("InMirror",  [&]{ draw_cup(true); });
+		});		
 	}
 
 protected:
-	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr            renderer_;
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-
 	vector<mesh_ptr>        cup_mesh;
 	mesh_ptr				mirror_mesh;
 
@@ -442,7 +414,6 @@ protected:
 	mat44					mirror_wvp_matrix;
 	mat44					cup_wvp_matrix;
 	mat44					reflect_cup_wvp_matrix;
-
 
 	shader_object_ptr       mirror_vs;
 	shader_object_ptr       cup_vs;
@@ -460,17 +431,13 @@ protected:
 	depth_stencil_state_ptr	dss_normal;
 	depth_stencil_state_ptr	dss_write_stencil;
 	depth_stencil_state_ptr	dss_draw_with_stencil;
-
-	uint32_t                num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
-	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] )
+EFLIB_MAIN(argc, argv)
 {
-	stencil_mirror app;
-	return app.run();
+	stencil_mirror loader;
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }

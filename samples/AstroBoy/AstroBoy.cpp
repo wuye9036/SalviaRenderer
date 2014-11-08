@@ -1,5 +1,3 @@
-#include <tchar.h>
-
 #include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
@@ -79,8 +77,6 @@ char const* astro_boy_vs_code =
 "	return out; \r\n"
 "} \r\n"
 ;
-
-FILE* f = NULL;
 
 class astro_boy_vs : public cpp_vertex_shader
 {
@@ -229,7 +225,7 @@ public:
 
 };
 
-int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 10 : 2000;
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 10 : 1500;
 int const TEST_FRAME_COUNT		= 15;
 
 class astro_boy: public sample_app

@@ -13,8 +13,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviau/include/common/sample_app.h>
-
-#include <eflib/include/platform/dl_loader.h>
 #include <eflib/include/platform/main.h>
 
 #include <vector>
@@ -65,8 +63,6 @@ char const* morph_vs_code =
 "} \r\n"
 ;
 
-FILE* f = NULL;
-
 class morph_vs : public cpp_vertex_shader
 {
 	mat44 wvp;
@@ -115,15 +111,7 @@ public:
 			out.attribute(0) += (skin_nor*w);
 		}
 		
-#ifdef EFLIB_DEBUG
-		fprintf(f, "(%8.4f %8.4f %8.4f %8.4f)",
-			out.position().x(), out.position().y(), out.position().z(), out.position().w()
-			);
-#endif
 		transform(out.position(), out.position(), wvp);
-#ifdef EFLIB_DEBUG
-		fprintf(f, "\n");
-#endif
 
 		// out.attribute(0) = in.attribute(1);
 		out.attribute(1) = in.attribute(2);

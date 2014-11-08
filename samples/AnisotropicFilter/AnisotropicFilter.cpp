@@ -1,5 +1,3 @@
-#include <tchar.h>
-
 #include <salviau/include/common/sample_app.h>
 
 #include <salviar/include/shader.h>
@@ -217,9 +215,9 @@ public:
 };
 
 #if defined(EFLIB_DEBUG)
-	int const BENCHMARK_TOTAL_FRAME_COUNT = 3;	
+	int const BENCHMARK_TOTAL_FRAME_COUNT = 80;	
 #else
-	int const BENCHMARK_TOTAL_FRAME_COUNT = 600;
+	int const BENCHMARK_TOTAL_FRAME_COUNT = 1000;
 #endif
 
 class anisotropic_filter: public sample_app

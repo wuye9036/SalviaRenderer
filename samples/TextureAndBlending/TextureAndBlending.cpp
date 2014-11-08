@@ -1,7 +1,3 @@
-#include <tchar.h>
-
-#include <salviau/include/win/win_application.h>
-
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/shader_object.h>
@@ -15,8 +11,8 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/tex_io.h>
 
-#include <salviau/include/common/timer.h>
-#include <salviau/include/common/window.h>
+#include <salviau/include/common/sample_app.h>
+#include <eflib/include/platform/main.h>
 
 #include <vector>
 
@@ -242,57 +238,32 @@ public:
 
 };
 
-class texture_and_blending: public quick_app{
+int const BENCHMARK_FRAME_COUNT = eflib::is_debug_mode ? 3 : 1500;
+int const TEST_FRAME_COUNT		= 5;
+
+class texture_and_blending: public sample_app
+{
 public:
-	texture_and_blending(): quick_app( create_win_gui() ){}
+	texture_and_blending(): sample_app("TextureAndBlending")
+	{
+	}
 
 protected:
-	/** Event handlers @{ */
-	virtual void on_create(){
+	void on_init() override
+	{
+		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
+		data_->renderer->set_viewport(vp);
 
-		cout << "Creating window and device ..." << endl;
-
-		string title( "Sample: Texture And Blending" );
-		impl->main_window()->set_title( title );
-
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
-		
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
-        render_params.native_window = window_handle;
-
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
-            render_params.backbuffer_width,
-            render_params.backbuffer_height,
-            render_params.backbuffer_num_samples,
-            pixel_format_color_rg32f
-            )->subresource(0);
-        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
-
-        viewport vp;
-        vp.w = static_cast<float>(render_params.backbuffer_width);
-        vp.h = static_cast<float>(render_params.backbuffer_height);
-        vp.x = 0;
-        vp.y = 0;
-        vp.minz = 0.0f;
-        vp.maxz = 1.0f;
-        renderer_->set_viewport(vp);
-		
 		planar_mesh = create_planar(
-			renderer_.get(), 
+			data_->renderer.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 
 			vec3(6, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 6),
 			1, 1, true
 			);
 		
-		box_mesh = create_box(renderer_.get());
+		box_mesh = create_box(data_->renderer.get());
 
 		pvs_box.reset(new vs_box());
 		pvs_plane.reset(new vs_plane());
@@ -306,10 +277,10 @@ protected:
 			desc.addr_mode_v = address_clamp;
 			desc.addr_mode_w = address_clamp;
 
-			box_tex = load_texture(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
+			box_tex = load_texture(data_->renderer.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			box_tex->gen_mipmap(filter_linear, true);
 
-			box_sampler = renderer_->create_sampler(desc, box_tex);
+			box_sampler = data_->renderer->create_sampler(desc, box_tex);
             pps_box.reset(new ps_box(box_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -324,10 +295,10 @@ protected:
 			desc.mag_filter = filter_linear;
 			desc.mip_filter = filter_linear;
 
-			plane_tex = load_texture(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+			plane_tex = load_texture(data_->renderer.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
-            plane_sampler = renderer_->create_sampler(desc, plane_tex);
+            plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
             pps_plane.reset(new ps_plane(plane_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -345,103 +316,88 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-	}
-	/** @} */
-
-	void on_draw()
-    {
-		swap_chain_->present();
-	}
-
-	void on_idle()
-    {
-			// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
-
-		// check if new second
-		if (accumulate_time > 1)
+		switch(data_->mode)
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
+		case app_modes::benchmark:
+			quit_at_frame(BENCHMARK_FRAME_COUNT);
+			break;
+		case app_modes::test:
+			quit_at_frame(TEST_FRAME_COUNT);
+			break;
+		}
+	}
 
-			accumulate_time = 0;
-			num_frames  = 0;
+	void on_frame() override
+    {
+		profiling("BackBufferClearing", [this](){
+			data_->renderer->clear_color(data_->color_target, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+			data_->renderer->clear_depth_stencil(data_->ds_target, clear_depth | clear_stencil, 1.0f, 0);
+		});
 
-			cout << fps << endl;
+		float scene_sec = 0.0f;
+		switch(data_->mode)
+		{
+		case app_modes::benchmark:
+			scene_sec = static_cast<float>(data_->frame_count * 6) / (BENCHMARK_FRAME_COUNT - 1);
+			break;
+		case app_modes::test:
+			scene_sec = static_cast<float>(data_->frame_count * 6) / (TEST_FRAME_COUNT - 1);
+			break;
+		default:
+			scene_sec = static_cast<float>(data_->total_elapsed_sec);
+			break;
 		}
 
-		timer.restart();
-
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, clear_depth | clear_stencil, 1.0f, 0);
-
-		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
+		float angle = -scene_sec * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
+		vec3 camera(cos(angle) * 1.5f, 1.5f, sin(angle) * 1.5f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
-		for(float i = 0 ; i < 1 ; i ++)
-		{
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+		mat_translate(world , -0.5f, 0, -0.5f);
+		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			renderer_->set_rasterizer_state(rs_back);
+		profiling("Rendering", [&](){
+			data_->renderer->set_rasterizer_state(rs_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-			renderer_->set_vertex_shader(pvs_plane);
+			data_->renderer->set_vertex_shader(pvs_plane);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_plane );
-			renderer_->set_ps_sampler( "samp", plane_sampler );
+			data_->renderer->set_pixel_shader_code( psc_plane );
+			data_->renderer->set_ps_sampler( "samp", plane_sampler );
 #else
-			renderer_->set_pixel_shader(pps_plane);
+			data_->renderer->set_pixel_shader(pps_plane);
 #endif
-			renderer_->set_blend_shader(pbs_plane);
+			data_->renderer->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
-			renderer_->set_rasterizer_state(rs_front);
+			data_->renderer->set_rasterizer_state(rs_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
-			renderer_->set_vertex_shader(pvs_box);
+			data_->renderer->set_vertex_shader(pvs_box);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_box );
-			renderer_->set_ps_sampler( "samp", box_sampler );
+			data_->renderer->set_pixel_shader_code( psc_box );
+			data_->renderer->set_ps_sampler( "samp", box_sampler );
 #else
-			renderer_->set_pixel_shader(pps_box);
+			data_->renderer->set_pixel_shader(pps_box);
 #endif
-			renderer_->set_blend_shader(pbs_box);
+			data_->renderer->set_blend_shader(pbs_box);
 			box_mesh->render();
 
-			renderer_->set_rasterizer_state(rs_back);
-			renderer_->set_vertex_shader(pvs_box);
+			data_->renderer->set_rasterizer_state(rs_back);
+			data_->renderer->set_vertex_shader(pvs_box);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_box );
-			renderer_->set_ps_sampler( "samp", box_sampler );
+			data_->renderer->set_pixel_shader_code( psc_box );
+			data_->renderer->set_ps_sampler( "samp", box_sampler );
 #else
-			renderer_->set_pixel_shader(pps_box);
+			data_->renderer->set_pixel_shader(pps_box);
 #endif
-			renderer_->set_blend_shader(pbs_box);
+			data_->renderer->set_blend_shader(pbs_box);
 			box_mesh->render();
-		}
-
-		impl->main_window()->refresh();
+		});
 	}
 
 protected:
-	/** Properties @{ */
-	swap_chain_ptr          swap_chain_;
-	renderer_ptr	        renderer_;
-	texture_ptr             sm_tex;
-    
-    surface_ptr             ds_surface_;
-    surface_ptr             color_surface_;
-
 	mesh_ptr                planar_mesh;
 	mesh_ptr                box_mesh;
 
@@ -464,16 +420,13 @@ protected:
 
 	raster_state_ptr        rs_front;
 	raster_state_ptr        rs_back;
-
-	uint32_t	            num_frames;
-	float		            accumulate_time;
-	float		            fps;
-
-	timer		            timer;
-	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
+EFLIB_MAIN(argc, argv)
+{
 	texture_and_blending loader;
-	return loader.run();
+	loader.init(argc, const_cast<std::_tchar const**>(argv));
+	loader.run();
+
+	return 0;
 }
