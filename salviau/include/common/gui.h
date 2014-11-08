@@ -15,24 +15,6 @@ public:
 	virtual window* main_window() = 0;
 };
 
-class SALVIAU_API quick_app
-{
-public:
-	quick_app(gui* impl);
-	virtual ~quick_app();
-
-	virtual int run();
-
-protected:
-	virtual void on_create();
-	virtual void on_draw();
-	virtual void on_idle();
-
-protected:
-	gui*	impl;
-	window* main_wnd;
-};
-
 END_NS_SALVIAU();
 
 #endif

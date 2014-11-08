@@ -129,15 +129,7 @@ public:
 			out.attribute(0) += (skin_nor*w);
 		}
 		
-#ifdef EFLIB_DEBUG
-		fprintf( f, "(%8.4f %8.4f %8.4f %8.4f)",
-			out.position().x(), out.position().y(), out.position().z(), out.position().w()
-			);
-#endif
 		transform(out.position(), out.position(), wvp);
-#ifdef EFLIB_DEBUG
-		fprintf(f, "\n");
-#endif
 
 		// out.attribute(0) = in.attribute(1);
 		out.attribute(1) = in.attribute(2);
@@ -300,7 +292,7 @@ protected:
 			ani_time = static_cast<float>(data_->total_elapsed_sec / 1.5f);
 			break;
 		}
-		ani_time = fmodf(ani_time, 1.0);
+		ani_time = 1.0f; // fmodf(ani_time, 1.0f) + 0.05f;
 		
 		vec4 lightPos( sin(ang)*15.0f, 10.0f, cos(ang)*15.0f, 1.0f );
 

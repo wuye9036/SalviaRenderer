@@ -1,4 +1,4 @@
-#include <salviau/include/win/win_application.h>
+#include <salviau/include/win/win_gui.h>
 
 #include <salviau/src/win/resource.h>
 #include <salviau/include/common/window.h>

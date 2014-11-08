@@ -1,7 +1,7 @@
 #include <salviau/include/common/sample_app.h>
 
 #if defined(EFLIB_WINDOWS)
-#	include <salviau/include/win/win_application.h>
+#	include <salviau/include/win/win_gui.h>
 #endif
 #include <salviau/include/common/window.h>
 #include <salviax/include/resource/texture/tex_io.h>

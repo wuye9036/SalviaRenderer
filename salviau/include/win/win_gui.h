@@ -3,7 +3,7 @@
 #include <eflib/include/platform/config.h>
 
 #include <salviau/include/salviau_forward.h>
-#include <salviau/include/common/application.h>
+#include <salviau/include/common/gui.h>
 
 BEGIN_NS_SALVIAU();
 
