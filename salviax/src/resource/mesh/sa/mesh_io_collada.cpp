@@ -633,7 +633,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
 			if( !dae_mesh_node ) return skin_mesh_impl_ptr();
 
-			ret->submeshes = build_mesh( dae_mesh_node, skinfo, render );
+			ret->submeshes = build_mesh(dae_mesh_node, skinfo, render);
 			ret->joints = skinfo->joints;
 			ret->bind_inv_mats = skinfo->joint_inv_matrix;
 		}

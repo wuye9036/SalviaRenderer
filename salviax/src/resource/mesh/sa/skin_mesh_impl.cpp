@@ -88,7 +88,7 @@ vector<mat44> skin_mesh_impl::joint_matrices()
 
 void skin_mesh_impl::update_time( float t )
 {
-	for( animation_player_ptr const& anim_player: anims )
+	for(animation_player_ptr const& anim_player: anims)
 	{
 		anim_player->update_play_time(t);
 	}
@@ -96,20 +96,30 @@ void skin_mesh_impl::update_time( float t )
 
 void skin_mesh_impl::set_time( float t )
 {
-	for( animation_player_ptr const& anim_player: anims )
+	for(animation_player_ptr const& anim_player: anims)
 	{
 		anim_player->set_play_time(t);
 	}
 }
 
-size_t skin_mesh_impl::submesh_count()
+size_t skin_mesh_impl::submesh_count() const
 {
 	return submeshes.size();
 }
 
-vector<mat44> skin_mesh_impl::bind_inv_matrices()
+vector<mat44> skin_mesh_impl::bind_inv_matrices() const
 {
 	return bind_inv_mats;
+}
+
+float skin_mesh_impl::animation_length() const
+{
+	float max_length = 0.0f;
+	for(auto const& anim_player: anims)
+	{
+		max_length = std::max( max_length, anim_player->anim_length() );
+	}
+	return max_length;
 }
 
 END_NS_SALVIAX_RESOURCE();

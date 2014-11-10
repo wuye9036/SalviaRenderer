@@ -45,12 +45,13 @@ public:
 class skin_mesh
 {
 public:
-	virtual size_t	submesh_count() = 0;
+	virtual size_t	submesh_count() const = 0;
 	virtual void	render( uint32_t submesh_id ) = 0;
 	virtual void	update_time(float t) = 0;
 	virtual void	set_time(float t) = 0;
+	virtual float	animation_length() const = 0;
 	virtual std::vector<eflib::mat44> joint_matrices() = 0;
-	virtual std::vector<eflib::mat44> bind_inv_matrices() = 0;
+	virtual std::vector<eflib::mat44> bind_inv_matrices() const = 0;
 
 	virtual ~skin_mesh(){}
 };

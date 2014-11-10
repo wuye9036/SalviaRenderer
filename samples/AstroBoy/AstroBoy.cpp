@@ -289,10 +289,10 @@ protected:
 			break;
 		default:
 			ang = static_cast<float>(data_->total_elapsed_sec / 3.0f);
-			ani_time = static_cast<float>(data_->total_elapsed_sec / 1.5f);
+			ani_time = static_cast<float>(data_->total_elapsed_sec / 1.0f);
 			break;
 		}
-		ani_time = 1.0f; // fmodf(ani_time, 1.0f) + 0.05f;
+		ani_time = fmodf( ani_time, astro_boy_mesh->animation_length() );
 		
 		vec4 lightPos( sin(ang)*15.0f, 10.0f, cos(ang)*15.0f, 1.0f );
 

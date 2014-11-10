@@ -47,6 +47,7 @@ public:
 	virtual void				set_play_time(float t) = 0;
 	virtual void				update_play_time(float elapsed) = 0;
 	virtual animation_info_ptr	anim_info() = 0;
+	virtual float				anim_length() const = 0;
 };
 
 template <typename T>
@@ -57,16 +58,26 @@ public:
 		: current_time(0), aninfo( boost::make_shared< animation_info_impl<T> >() )
 	{}
 
-	virtual void set_play_time(float t)
+	virtual void set_play_time(float t) override
 	{
 		current_time = t;
 		aninfo->applier( resolve(current_time) );
 	}
 
-	virtual void update_play_time(float elapsed)
+	virtual void update_play_time(float elapsed) override
 	{
 		current_time += elapsed;
 		aninfo->applier( resolve(current_time) );
+	}
+
+	virtual float anim_length() const override
+	{
+		if( aninfo->X.empty() )
+		{
+			return 0.0f;
+		}
+
+		return aninfo->X.back();
 	}
 
 	animation_info_ptr anim_info() { return aninfo; }
@@ -143,20 +154,22 @@ public:
 class skin_mesh_impl: public skin_mesh
 {
 public:
-	virtual size_t	submesh_count();
-	virtual void	render( uint32_t submesh_id );
-	virtual void	update_time(float t);
-	virtual void	set_time(float t);
-	virtual std::vector<eflib::mat44> joint_matrices();
-	virtual std::vector<eflib::mat44> bind_inv_matrices();
+	virtual size_t	submesh_count() const override;
+	virtual void	render( uint32_t submesh_id ) override;
+	virtual float	animation_length() const override;
+	virtual void	update_time(float t) override;
+	virtual void	set_time(float t) override;
+	virtual std::vector<eflib::mat44> joint_matrices() override;
+	virtual std::vector<eflib::mat44> bind_inv_matrices() const override;
 
+public:
 	boost::unordered_map<
 		std::string, scene_node*>		joint_nodes;
 	std::vector<eflib::mat44>			bind_inv_mats;
 	std::vector<animation_player_ptr>	anims;
 	std::vector<std::string>			joints;
 	std::vector<eflib::mat44*>			joint_mats;
-	std::vector<mesh_ptr>					submeshes;
+	std::vector<mesh_ptr>				submeshes;
 	std::vector<scene_node_ptr>			roots;
 };
 
