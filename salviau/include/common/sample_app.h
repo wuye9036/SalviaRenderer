@@ -59,6 +59,10 @@ public:
 	std::string					benchmark_name;
 	
 	app_modes					mode;
+	uint32_t					screen_width;
+	uint32_t					screen_height;
+	float						screen_aspect_ratio;
+
 	boost::tribool				is_sync_renderer;
 	salviax::swap_chain_types	sc_type;
 

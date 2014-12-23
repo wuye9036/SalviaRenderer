@@ -82,6 +82,7 @@ private:
 	vs_output_op const*				vso_ops_;
     bool                            has_centroid_;
     uint32_t                        prim_count_;
+	bool							prim_reorderable_;		// Primitives could be reordered to rendering.
 
     async_object*                   pipeline_stat_;
     async_object*                   internal_stat_;
@@ -134,7 +135,7 @@ private:
 		drawing_shader_context const* shaders,
 		drawing_triangle_context const* triangle_ctx);
 	void draw_partial_tile(
-		int left0, int top0, int left, int top,
+		int left, int top,
 		const eflib::vec4* edge_factors,
 		drawing_shader_context const* shaders,
         drawing_triangle_context const* triangle_ctx);

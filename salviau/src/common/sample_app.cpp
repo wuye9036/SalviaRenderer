@@ -84,6 +84,10 @@ void sample_app::init_params(int argc, std::_tchar const** argv)
 		("mode,m",
 			po::value<string>()->default_value("r"),
 			"mode should be one of: r - replay, i - interactive, b - benchmark or t - test.")
+		("width,w", po::value<int>()->default_value(512),
+			"width of screen or back buffer. should be in 1 - 8192")
+		("height,h", po::value<int>()->default_value(512),
+			"height of screen or back buffer. should be in 1 - 8192")
 		;
 	
 	auto parsed = po::parse_command_line(argc, argv, opdesc);
@@ -128,6 +132,33 @@ void sample_app::init_params(int argc, std::_tchar const** argv)
 
 	cout << "Execution mode is " << mode_str << endl;
 
+	auto screen_width = var_map["width"].as<int>();
+	auto screen_height = var_map["height"].as<int>();
+
+	if( screen_width < 1 || 8192 < screen_width )
+	{
+		cout << "Error: screen width must be in range (0, 8192]." << endl;
+		data_->runnable = false;
+	}
+	else
+	{
+		data_->screen_width = static_cast<uint32_t>(screen_width);
+	}
+
+	if( screen_height < 1 || 8192 < screen_height )
+	{
+		cout << "Error: screen height must be in range (0, 8192]." << endl;
+		data_->runnable = false;
+	}
+	else
+	{
+		data_->screen_height = static_cast<uint32_t>(screen_height);
+	}
+
+	data_->screen_aspect_ratio = static_cast<float>(data_->screen_width) / data_->screen_height;
+
+	cout << "Screen resolution: " << screen_width << "x" << screen_height << endl;
+
 	data_->second_timer.restart();
 }
 
@@ -158,7 +189,7 @@ void sample_app::create_devices_and_targets(
 	void* wnd_handle = nullptr;
 	if (data_->gui)
 	{
-		data_->gui->create_window();
+		data_->gui->create_window( static_cast<uint32_t>(width), static_cast<uint32_t>(height) );
 		
 		wnd_handle = data_->gui->main_window()->view_handle_as_void();
 		if(!wnd_handle)

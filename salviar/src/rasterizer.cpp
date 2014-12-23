@@ -238,7 +238,7 @@ void rasterizer::update(render_state const* state)
 		( full_mask_ << (MAX_SAMPLE_COUNT * 1) ) |
 		( full_mask_ << (MAX_SAMPLE_COUNT * 2) ) |
 		( full_mask_ << (MAX_SAMPLE_COUNT * 3) );
-
+	prim_reorderable_		= false;
 	
 	vs_reflection_ = state->vx_shader ? state->vx_shader->get_reflection() : nullptr;
 
@@ -308,15 +308,13 @@ void rasterizer::draw_full_tile(
 }
 
 void rasterizer::draw_partial_tile(
-	int left0, int top0, int left, int top,
+	int left, int top,
 	const eflib::vec4* edge_factors,
 	drawing_shader_context const* shaders,
     drawing_triangle_context const* triangle_ctx)
 {
     auto& v0 = *triangle_ctx->tri_info->v0;
 
-	size_t sx = left - left0;
-	size_t sy = top - top0;
 	const uint32_t full_mask = (1UL << target_sample_count_) - 1;
 
 #ifndef EFLIB_NO_SIMD
@@ -722,6 +720,9 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 		cpp_ps->update_front_face(tri_info->front_face);
 	}
 
+	float target_vp_right = target_vp_->w + target_vp_->x;
+	float target_vp_bottom = target_vp_->h +  + target_vp_->y;
+
 	while (test_region_size[src_stage] > 0)
 	{
 		test_region_size[dst_stage] = 0;
@@ -741,14 +742,20 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp)
 		{
 			const uint32_t packed_region = test_regions[src_stage][ivp];
-			eflib::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
+			eflib::rect<uint32_t> cur_region(
+				packed_region & 0xFF, 
+				(packed_region >> 8) & 0xFF,
 				subtile_w, subtile_h);
 			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
 			const int vpleft = max(0U, static_cast<unsigned>(vpleft0 + cur_region.x) );
-			const int vptop = max(0U, static_cast<unsigned>(vptop0 + cur_region.y) );
-            const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(target_vp_->w));
-			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(target_vp_->h));
+			const int vptop  = max(0U, static_cast<unsigned>(vptop0 + cur_region.y) );
+
+			// Sub tile is out of screen.
+			if (vpleft >= target_vp_right || vptop >= target_vp_bottom)
+			{
+				continue;
+			}
 
 			// For one pixel region
 			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1))
@@ -763,13 +770,17 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 				break;
 
 			case TVT_FULL:
-				// The whole tile is inside a triangle.
-				this->draw_full_tile(vpleft, vptop, vpright, vpbottom, &ctx->shaders, &tri_ctx);
+				{
+					// The whole tile is inside a triangle.
+					const int vpright  = min( vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(target_vp_right)  );
+					const int vpbottom = min( vptop0  + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(target_vp_bottom) );
+					this->draw_full_tile(vpleft, vptop, vpright, vpbottom, &ctx->shaders, &tri_ctx);
+				}
 				break;
 
 			case TVT_PIXEL:
 				// The tile is small enough for pixel level matching.
-				this->draw_partial_tile(vpleft0, vptop0, vpleft, vptop, edge_factors, &ctx->shaders, &tri_ctx);
+				this->draw_partial_tile(vpleft, vptop, edge_factors, &ctx->shaders, &tri_ctx);
 				break;
 
 			default:

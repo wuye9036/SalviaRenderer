@@ -79,7 +79,7 @@ public:
 		InvalidateRect(hwnd_, nullptr, FALSE);
 	}
 	
-	bool create();
+	bool create(uint32_t width, uint32_t height);
 	
 private:
 	ATOM register_window_class(HINSTANCE hinst)
@@ -162,9 +162,9 @@ public:
 		return hinst_;
 	}
 
-	int create_window() override
+	int create_window(uint32_t width, uint32_t height) override
 	{
-		if( !main_wnd_->create() )
+		if( !main_wnd_->create(width, height) )
 		{
 			OutputDebugString( _EFLIB_T("Main window creation failed!\n") );
 			return 0;
@@ -204,14 +204,14 @@ private:
 	HINSTANCE	hinst_;
 };
 
-bool win_window::create()
+bool win_window::create(uint32_t width, uint32_t height)
 {
 	if (wnd_class_ == 0)
 	{
 		wnd_class_ = register_window_class( app_->instance() );
 	}
 	DWORD style = WS_OVERLAPPEDWINDOW;
-	RECT rc = {0, 0, 512, 512};
+	RECT rc = {0, 0, width, height};
 	AdjustWindowRect(&rc, style, false);
 	hwnd_ = CreateWindow(wnd_class_name_, _EFLIB_T(""), style,
 		CW_USEDEFAULT, 0, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, app_->instance(), NULL);

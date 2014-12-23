@@ -183,8 +183,8 @@ protected:
 	/** Event handlers @{ */
 	void on_init() override
     {
-		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
-		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
+		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		viewport vp = { 0, 0, data_->screen_width, data_->screen_height, 0.0f, 1.0f };
 
         
 		data_->renderer->set_viewport(vp);
@@ -250,7 +250,7 @@ protected:
 		mat44 world(mat44::identity()), view, proj, wvp;
 
 		mat_lookat(view, camera, vec3(40.0f, 15.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), data_->screen_aspect_ratio, 0.1f, 1000.0f);
 
 		float ypos = 10.0f + fmodf(8.0f * scene_sec, 40.0f);
 		vec4 lightPos( 0.0f, ypos, 0.0f, 1.0f );
