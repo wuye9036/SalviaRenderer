@@ -144,15 +144,14 @@ public:
 protected:
 	void on_init() override
     {
-		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
 
-		viewport vp = {0, 0, 512, 512, 0.0f, 1.0f};
-        data_->renderer->set_viewport(vp);
+        data_->renderer->set_viewport(data_->screen_vp);
 		
 		planar_mesh = create_planar(
 			data_->renderer.get(), 
-			vec3(-1.0f, -1.0f, 0.0f), 
-			vec3(1.0f, 0.0f, 0.0f), 
+			vec3(-data_->screen_aspect_ratio, -1.0f, 0.0f), 
+			vec3(data_->screen_aspect_ratio, 0.0f, 0.0f), 
 			vec3(0.0f, 1.0f, 0.0f),
 			2, 2, true
 			);
@@ -166,18 +165,19 @@ protected:
 		desc.addr_mode_u = address_wrap;
 		desc.addr_mode_v = address_wrap;
 
-		plane_tex = data_->renderer->create_tex2d(512, 512, 1, pixel_format_color_rgba8);
+		plane_tex = data_->renderer->create_tex2d(data_->screen_width, data_->screen_height, 1, pixel_format_color_rgba8);
 		fnt = font::create_in_system_path("msyh.ttc", 0, 14, font::points);
+		rect<int32_t> canvas_rect(0, 0, static_cast<int32_t>(data_->screen_width), static_cast<int32_t>(data_->screen_height));
 		if (fnt)
 		{
 			wchar_t const* str = L"吞玻璃；LazyFox；1875；お帰りなさい";
-			fnt->draw(to_ansi_string(str).c_str(), plane_tex->subresource(0).get(), rect<int32_t>(0, 0, 512, 512),
+			fnt->draw(to_ansi_string(str).c_str(), plane_tex->subresource(0).get(), canvas_rect,
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 		}
 		else
 		{
 			fnt = font::create("../../resources/font/AnglicanText.ttf", 0, 56, font::points);
-			fnt->draw( "Cannot find msyh.ttc", plane_tex->subresource(0).get(), rect<int32_t>(0, 0, 512, 512),
+			fnt->draw( "Cannot find msyh.ttc", plane_tex->subresource(0).get(), canvas_rect,
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 		}
 		plane_tex->gen_mipmap(filter_linear, true);
@@ -219,7 +219,7 @@ protected:
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_ortho(proj, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1000.0f);
+		mat_ortho(proj, -data_->screen_aspect_ratio, data_->screen_aspect_ratio, -1.0f, 1.0f, 0.0f, 1000.0f);
 
 		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 

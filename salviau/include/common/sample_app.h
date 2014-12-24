@@ -62,6 +62,7 @@ public:
 	uint32_t					screen_width;
 	uint32_t					screen_height;
 	float						screen_aspect_ratio;
+	salviar::viewport			screen_vp;
 
 	boost::tribool				is_sync_renderer;
 	salviax::swap_chain_types	sc_type;

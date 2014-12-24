@@ -188,11 +188,11 @@ public:
 protected:
 	void on_init() override
 	{	
-		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
-		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
-		data_->renderer->set_viewport(vp);
+		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
 
-        sm_texture_ = data_->renderer->create_tex2d(512, 512, 1, pixel_format_color_rg32f);
+		data_->renderer->set_viewport(data_->screen_vp);
+
+        sm_texture_ = data_->renderer->create_tex2d(data_->screen_width, data_->screen_height, 1, pixel_format_color_rg32f);
 
 		sampler_desc sm_desc;
 		sm_desc.min_filter = filter_point;
@@ -343,7 +343,7 @@ protected:
 		camera_pos_ = vec4(6.0f, 3.1f, 3.0f, 1.0f);
 		mat44 view, proj;
 		mat_lookat(view, camera_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 100.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), data_->screen_aspect_ratio, 0.1f, 100.0f);
 		mat_mul(camera_wvp_, view, proj);
 
 		float scene_sec = 0.0f;
@@ -363,7 +363,7 @@ protected:
 		float theta = 0.3f * scene_sec;
 		light_pos_ = vec4(-4.0f * sin(theta), 6.1f, 3.5f * cos(theta), 1.0f);
 		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 40.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), data_->screen_aspect_ratio, 0.1f, 40.0f);
 		mat_mul(light_wvp_, view, proj);
 
 		gen_sm();

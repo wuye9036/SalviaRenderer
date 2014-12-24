@@ -251,9 +251,9 @@ public:
 protected:
 	void on_init() override
 	{
-		create_devices_and_targets(512, 512, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
-		viewport vp = { 0, 0, 512, 512, 0.0f, 1.0f };
-		data_->renderer->set_viewport(vp);
+		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
+
+		data_->renderer->set_viewport(data_->screen_vp);
 
 		planar_mesh = create_planar(
 			data_->renderer.get(), 
@@ -354,7 +354,7 @@ protected:
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), data_->screen_aspect_ratio, 0.1f, 100.0f);
 
 		mat_translate(world , -0.5f, 0, -0.5f);
 		mat_mul(wvp, world, mat_mul(wvp, view, proj));

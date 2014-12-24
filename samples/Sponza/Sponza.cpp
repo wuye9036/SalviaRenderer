@@ -184,10 +184,8 @@ protected:
 	void on_init() override
     {
 		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
-		viewport vp = { 0, 0, data_->screen_width, data_->screen_height, 0.0f, 1.0f };
 
-        
-		data_->renderer->set_viewport(vp);
+		data_->renderer->set_viewport(data_->screen_vp);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -233,17 +231,17 @@ protected:
 		switch(data_->mode)
 		{
 		case app_modes::benchmark:
-			scene_sec = static_cast<float>(data_->frame_count * 6) / (BENCHMARK_FRAME_COUNT - 1);
+			scene_sec = static_cast<float>(data_->frame_count * 18) / (BENCHMARK_FRAME_COUNT - 1);
 			break;
 		case app_modes::test:
-			scene_sec = static_cast<float>(data_->frame_count * 6) / (TEST_FRAME_COUNT - 1);
+			scene_sec = static_cast<float>(data_->frame_count * 18) / (TEST_FRAME_COUNT - 1);
 			break;
 		default:
 			scene_sec = static_cast<float>(data_->total_elapsed_sec);
 			break;
 		}
 
-		float xpos = -36.0f + fmodf(10.0f * scene_sec, 66.0f);
+		float xpos = -36.0f + fmodf(3.0f * scene_sec, 66.0f);
 		vec3 camera( xpos, 8.0f, 0.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
 

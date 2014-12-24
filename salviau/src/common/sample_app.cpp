@@ -80,7 +80,7 @@ void sample_app::init_params(int argc, std::_tchar const** argv)
 
 	po::options_description opdesc("Sample parameters");
 	opdesc.add_options()
-		("help,h", "show help message")
+		("help", "show help message")
 		("mode,m",
 			po::value<string>()->default_value("r"),
 			"mode should be one of: r - replay, i - interactive, b - benchmark or t - test.")
@@ -156,6 +156,12 @@ void sample_app::init_params(int argc, std::_tchar const** argv)
 	}
 
 	data_->screen_aspect_ratio = static_cast<float>(data_->screen_width) / data_->screen_height;
+
+	data_->screen_vp.x = data_->screen_vp.y = 0;
+	data_->screen_vp.w = static_cast<float>(screen_width);
+	data_->screen_vp.h = static_cast<float>(screen_height);
+	data_->screen_vp.minz = 0.0f;
+	data_->screen_vp.maxz = 1.0f;
 
 	cout << "Screen resolution: " << screen_width << "x" << screen_height << endl;
 

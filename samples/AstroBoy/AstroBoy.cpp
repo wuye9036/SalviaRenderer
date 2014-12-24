@@ -231,8 +231,7 @@ protected:
 	{
 		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_bgra8, pixel_format_color_rg32f);
         
-		viewport vp = { 0, 0, data_->screen_width, data_->screen_height, 0.0f, 1.0f };
-		data_->renderer->set_viewport(vp);
+		data_->renderer->set_viewport(data_->screen_vp);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;

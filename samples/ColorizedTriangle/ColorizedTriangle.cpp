@@ -135,10 +135,9 @@ public:
 	
 	void on_init() override
 	{
-		create_devices_and_targets(512, 512, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
+		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
-		viewport vp = {0, 0, 512, 512, 0.0f, 1.0f};
-        data_->renderer->set_viewport(vp);
+        data_->renderer->set_viewport(data_->screen_vp);
 		
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -205,7 +204,7 @@ public:
 		mat44 world(mat44::identity()), view, proj, wvp;
 
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), data_->screen_aspect_ratio, 0.1f, 100.0f);
 
 		vec4 lightPos0( sin(-camera_angle * 1.5f) * 2.2f, 0.15f, cos( camera_angle * 0.9f) * 1.8f, 0.0f );
 		vec4 lightPos1( sin( camera_angle * 0.7f) * 1.9f, 0.15f, cos(-camera_angle * 0.4f) * 2.5f, 0.0f );
