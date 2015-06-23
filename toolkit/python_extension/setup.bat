@@ -1,2 +1,0 @@
-@setup.py install
-@pause
