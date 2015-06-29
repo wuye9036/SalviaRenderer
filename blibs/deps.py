@@ -80,7 +80,11 @@ class installer(object):
         else:
             raise NotImplementedError("Cannot support other systems.") 
 
-    def check_update(self, dl_info):
+    def update_all(self):
+        for dl_info in self.DOWNLOAD_FILE_LIST:
+            self.__update(dl_info)
+
+    def __check_update(self, dl_info):
         assert isinstance(dl_info, download_info)
 
         need_download = False
@@ -102,18 +106,18 @@ class installer(object):
 
         return (need_download, need_distribute)
 
-    def download(self, dl_info):
+    def __download(self, dl_info):
         assert isinstance(dl_info, download_info)
         download_file(dl_info.source, dl_info.store_path)
     
-    def decompress(self, dl_info):
+    def __decompress(self, dl_info):
         assert isinstance(dl_info, download_info)
         try:
             o = subprocess.check_output([self.decompressor.store_path, "e", dl_info.store_path, dl_info.dist_path])
         except:
             util.report_error("Found error while decompressing <%s>" % dl_info.res_path)
 
-    def distribute(self, dl_info):
+    def __distribute(self, dl_info):
         assert isinstance(dl_info, download_info)
 
         # Clean target if file is existed.
@@ -126,13 +130,13 @@ class installer(object):
 
         dist_parent = os.path.dirname(dl_info.dist_path)
         if dl_info.res_type in [COMPRESSED_FILE, COMPRESSED_FOLDER]:
-            decompress(dl_info.store_path, dist_parent)
+            self.__decompress(dl_info.store_path, dist_parent)
         else:
             shutil.copy(dl_info.store_path, dist_parent)
 
-    def update(self, dl_info):
-        need_download, need_distribute = check_update(dl_info)
+    def __update(self, dl_info):
+        need_download, need_distribute = self.__check_update(dl_info)
         if need_download:
-            self.download(dl_info)
+            self.__download(dl_info)
         if need_distribute:
-            self.distribute(dl_info)
+            self.__distribute(dl_info)
