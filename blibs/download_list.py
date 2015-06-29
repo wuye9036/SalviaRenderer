@@ -1,4 +1,4 @@
-DOWNLOAD_LIST = [
+﻿DOWNLOAD_LIST = [
     ("3rd_party/boost",                 COMPRESSED_FOLDER,  "e332400366d55dc63de59005f1b74a56"),
     ("3rd_party/FreeImage",             COMPRESSED_FOLDER,  "03ace1aaab81aec3fa2849c0e9da88d1"),
     ("3rd_party/freetype2",             COMPRESSED_FOLDER,  "88c7fa3bdc6a180592359aee994be199"),
@@ -9,7 +9,6 @@ DOWNLOAD_LIST = [
     ("resources/cup",                   COMPRESSED_FOLDER,  "4c40b18cacdb3f9cab9e27a665d059ba"),
     ("resources/font",                  COMPRESSED_FOLDER,  "faa561a3e23593ea2e994f58061a336d"),
     ("resources/morph",                 COMPRESSED_FOLDER,  "a7b65c2b04663577981d51a7e0ef7a25"),
-    ("resources/sponza_hq",             COMPRESSED_FOLDER,  "609907619b00e1c8a8caac064dbeda0d"),
     ("resources/sponza_lq",             COMPRESSED_FOLDER,  "575b0f14b5383fd9f83ebcb32a40aa59"),
     ("resources/ssm",                   COMPRESSED_FOLDER,  "ed6fbbd9da7eaf8eafbebd3d088e01dc"),
     ("resources/texture_and_blending",  COMPRESSED_FOLDER,  "396336ded94e96f37a36fe3e9174cedf"),
