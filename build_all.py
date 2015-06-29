@@ -86,7 +86,7 @@ def make_boost(proj):
 	libs = ["atomic", "chrono", "thread", "system", "filesystem", "date_time", "test", "wave", "program_options",
 			"serialization", "locale"]
 	address_model = 'address-model=%d' % proj.arch().bits()
-	options = ["--build-dir=./", "link=shared", "runtime-link=shared", "threading=multi", "stage"]
+	options = ["--build-dir=./", "--hash", "link=shared", "runtime-link=shared", "threading=multi", "stage"]
 	toolset = proj.toolset()
 	defs = []
 	cxxflags = []
