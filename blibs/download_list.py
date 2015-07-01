@@ -2,7 +2,7 @@ RAW_FILE          = "RAW_FILE"
 COMPRESSED_FILE   = "CMP_FILE"
 COMPRESSED_FOLDER = "CMP_FLDR"
 DOWNLOAD_LIST = [
-    ("3rd_party/boost", COMPRESSED_FOLDER, "555c2b9881793113f24d46fd3c1927bc"),
+    ("3rd_party/boost", COMPRESSED_FOLDER, "d03ee3b0e1f670f564d8958cb3e09fbb"),
     ("3rd_party/FreeImage", COMPRESSED_FOLDER, "03ace1aaab81aec3fa2849c0e9da88d1"),
     ("3rd_party/freetype2", COMPRESSED_FOLDER, "88c7fa3bdc6a180592359aee994be199"),
     ("3rd_party/llvm", COMPRESSED_FOLDER, "774a8246e974a7f00b5d0ffae0971e12"),

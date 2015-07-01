@@ -2,7 +2,7 @@
 from functools            import *
 from blibs.env            import *
 from blibs.boost_build    import *
-from blibs.util         import *
+from blibs.util           import *
 import subprocess
 
 class project:

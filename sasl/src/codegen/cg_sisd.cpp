@@ -30,7 +30,6 @@
 #include <boost/function.hpp>
 #include <boost/format.hpp>
 #include <boost/assign/std/vector.hpp>
-#include <boost/scope_exit.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace llvm;

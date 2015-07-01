@@ -297,11 +297,12 @@ def build(proj_props, cleanBuild):
     atexit.register(close_log)
 
     proj = project(proj_props, os.getcwd())
-    proj.print_props()
-    proj.check()
-
+    
     inst = installer("", proj.source_root())
     inst.update_all()
+
+    proj.print_props()
+    proj.check()
 
     make_bjam(proj)
     if cleanBuild: clean_all(proj)
@@ -334,6 +335,7 @@ if __name__ == "__main__":
     for opt, arg in opts:
         if opt == "-c" or opt == "--clean":
             proj = project(prj_props, os.getcwd())
+
             proj.print_props()
             clean_all(proj)
             os.system("pause")
