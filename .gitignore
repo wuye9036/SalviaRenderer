@@ -7,3 +7,5 @@ lib/
 *.pyc
 proj.py
 *.suo
+salvia-git.pyproj
+salvia-git.sln
