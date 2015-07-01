@@ -6,3 +6,4 @@ bin/
 lib/
 *.pyc
 proj.py
+*.suo
