@@ -1,11 +1,8 @@
-﻿import env, urllib2, os, download_list, shutil, env, util, fhash
+﻿import env, urllib2, os, shutil, env, util, fhash, subprocess
+from download_list import *
 
 def github_commit(commit):
     return "https://raw.githubusercontent.com/wuye9036/SalviaDeps/release/%s/" % commit
-
-RAW_FILE          = "RAW_FILE"
-COMPRESSED_FILE   = "CMP_FILE"
-COMPRESSED_FOLDER = "CMP_FLDR"
 
 def OS_PATH(p):
     return os.path.join( *p.split('/') )
@@ -69,8 +66,8 @@ class installer(object):
         self.COMMIT   = commit
         self.PRJ_ROOT = proj_root
         self.DOWNLOAD_FILE_LIST = [
-            download_info(github_commit(self.COMMIT), res_path, res_type, not "7z" in res_path, tag)
-            for res_path, res_type, tag in download_list.DOWNLOAD_LIST
+            download_info(github_commit(self.COMMIT), self.PRJ_ROOT, res_path, res_type, not "7z" in res_path, tag)
+            for res_path, res_type, tag in DOWNLOAD_LIST
         ]
 
         if env.systems.current() == env.systems.win32:
@@ -108,17 +105,19 @@ class installer(object):
 
     def __download(self, dl_info):
         assert isinstance(dl_info, download_info)
+        util.report_info("Downloading <%s> ..." % dl_info.res_path)
         download_file(dl_info.source, dl_info.store_path)
     
-    def __decompress(self, dl_info):
-        assert isinstance(dl_info, download_info)
+    def __decompress(self, source_path, dist_parent):
         try:
-            o = subprocess.check_output([self.decompressor.store_path, "e", dl_info.store_path, dl_info.dist_path])
+            o = subprocess.check_output([self.decompressor.store_path, "x", source_path, '-o%s' % dist_parent])
         except:
-            util.report_error("Found error while decompressing <%s>" % dl_info.res_path)
+            util.report_error("Found error while decompressing <%s>" % source_path)
 
     def __distribute(self, dl_info):
         assert isinstance(dl_info, download_info)
+        
+        util.report_info("Distributing <%s> ..." % dl_info.res_path)
 
         # Clean target if file is existed.
         if dl_info.res_type in [RAW_FILE, COMPRESSED_FILE]:
