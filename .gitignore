@@ -9,3 +9,4 @@ proj.py
 *.suo
 salvia-git.pyproj
 salvia-git.sln
+test_main.cpp
