@@ -1,1 +1,8 @@
 downloads/
+3rd_party/
+resources/
+build/
+bin/
+lib/
+*.pyc
+proj.py
