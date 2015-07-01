@@ -1,8 +1,8 @@
 ﻿import env, urllib2, os, shutil, env, util, fhash, subprocess
 from download_list import *
 
-def github_commit(commit):
-    return "https://raw.githubusercontent.com/wuye9036/SalviaDeps/release/%s/" % commit
+def GITHUB_RES_URL(commit):
+    return "https://raw.githubusercontent.com/wuye9036/SalviaDeps/%s/release/" % commit
 
 def OS_PATH(p):
     return os.path.join( *p.split('/') )
@@ -19,7 +19,13 @@ class download_info(object):
         self.res_type = res_type
         self.need_distribute = need_distribute
 
-        store_rel_path = rel_path if self.res_type == RAW_FILE else rel_path + ".7z"
+        if self.res_type == RAW_FILE:
+            store_rel_path = rel_path
+            self.res_url = self.source + self.res_path
+        else:
+            store_rel_path = rel_path + ".7z"
+            self.res_url = self.source + self.res_path + ".7z"
+
         self.store_path = os.path.join(prj_root, 'downloads', store_rel_path)
         if self.res_type == RAW_FILE:
             self.dist_path = os.path.join(prj_root, store_rel_path)
@@ -41,22 +47,27 @@ def download_file(url, file_path):
         u = open(url, "rb")
         
     try:
+        file_dir = os.path.dirname(file_path)
+        if not os.path.isdir(file_dir):
+            os.makedirs(file_dir)
+
         with open(file_path, 'wb') as f:
             f = open(file_path, 'wb')
             util.report_info( "Downloading: %s Bytes: %s" % (file_path, file_size) )
             file_size_dl = 0
-            block_sz = 8192
+            block_sz = 32 * 1024
             while True:
                 buffer = u.read(block_sz)
                 if not buffer: break
                 file_size_dl += len(buffer)
                 f.write(buffer)
-                status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+                status = r"%7d KB  [%3.1f%%]" % (file_size_dl / 1024, file_size_dl * 100. / file_size)
                 status = status + chr(8)*(len(status)+1)
                 print status,
     except:
         if os.path.exists(file_path):
             os.remove(file_path)
+        raise
 
 class installer(object):
     def __init__(self, commit, proj_root):
@@ -66,7 +77,7 @@ class installer(object):
         self.COMMIT   = commit
         self.PRJ_ROOT = proj_root
         self.DOWNLOAD_FILE_LIST = [
-            download_info(github_commit(self.COMMIT), self.PRJ_ROOT, res_path, res_type, not "7z" in res_path, tag)
+            download_info(GITHUB_RES_URL(self.COMMIT), self.PRJ_ROOT, res_path, res_type, not "7z" in res_path, tag)
             for res_path, res_type, tag in DOWNLOAD_LIST
         ]
 
@@ -78,8 +89,19 @@ class installer(object):
             raise NotImplementedError("Cannot support other systems.") 
 
     def update_all(self):
+        download_candidates = []
+        distribute_candidates = []
+
         for dl_info in self.DOWNLOAD_FILE_LIST:
-            self.__update(dl_info)
+            need_download, need_distribute = self.__check_update(dl_info)
+            if need_download:   download_candidates   += [dl_info]
+            if need_distribute: distribute_candidates += [dl_info]
+
+        for dl_info in download_candidates:
+            self.__download(dl_info)
+
+        for dl_info in distribute_candidates:
+            self.__distribute(dl_info)
 
     def __check_update(self, dl_info):
         assert isinstance(dl_info, download_info)
@@ -97,16 +119,17 @@ class installer(object):
 
         if not os.path.isfile(dl_info.store_path):
             need_download = True
-    
-        if fhash.hash_file(dl_info.store_path) != dl_info.tag:
+            need_distribute = dl_info.need_distribute
+        elif fhash.hash_file(dl_info.store_path) != dl_info.tag:
             need_download = True
+            need_distribute = dl_info.need_distribute
 
         return (need_download, need_distribute)
 
     def __download(self, dl_info):
         assert isinstance(dl_info, download_info)
         util.report_info("Downloading <%s> ..." % dl_info.res_path)
-        download_file(dl_info.source, dl_info.store_path)
+        download_file(dl_info.res_url, dl_info.store_path)
     
     def __decompress(self, source_path, dist_parent):
         try:
@@ -117,6 +140,15 @@ class installer(object):
     def __distribute(self, dl_info):
         assert isinstance(dl_info, download_info)
         
+        util.report_info("Verifying <%s> ..." % dl_info.res_path)
+
+        # Verify distribute source
+        if not os.path.isfile(dl_info.store_path):
+            util.report_error("File <%s> is not existed. Please check your network state and re-run build script." % dl_info.res_path)
+
+        if fhash.hash_file(dl_info.store_path) != dl_info.tag:
+            util.report_error("File <%s> verificaition is failed. Please check your network state and re-run build script." % dl_info.res_path)
+
         util.report_info("Distributing <%s> ..." % dl_info.res_path)
 
         # Clean target if file is existed.
@@ -132,10 +164,3 @@ class installer(object):
             self.__decompress(dl_info.store_path, dist_parent)
         else:
             shutil.copy(dl_info.store_path, dist_parent)
-
-    def __update(self, dl_info):
-        need_download, need_distribute = self.__check_update(dl_info)
-        if need_download:
-            self.__download(dl_info)
-        if need_distribute:
-            self.__distribute(dl_info)

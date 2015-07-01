@@ -17,6 +17,7 @@ from blibs.util import *
 from blibs.project import *
 from blibs.deps import *
 
+RESOURCE_COMMIT = "e08caf4c41cb52ebc87e0c344b16d6288cb60791"
 
 def guarded_rmtree(path):
     if os.path.isdir(path):
@@ -298,7 +299,7 @@ def build(proj_props, cleanBuild):
 
     proj = project(proj_props, os.getcwd())
     
-    inst = installer("", proj.source_root())
+    inst = installer(RESOURCE_COMMIT, proj.source_root())
     inst.update_all()
 
     proj.print_props()
