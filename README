@@ -2,14 +2,12 @@
 
 1. Requirements
   * Windows 7 or later
-    * Visual Studio 2012 update 4 or later version.
-	* Boost 1.55 or later. Please use boost 1.56 if your compiler is Visual Studio 2013.
+    * Visual Studio 2012 update 4 or Visual Studio 2013.
 	* Python 2.7.
 	* CMake 2.8.10 or later.
   * Linux
     * Mint 16 and Mint 17 were tested.
 	* GCC 4.7 or later.
-	* Boost 1.55 or later.
 	* Python 2.7.
 	* CMake 2.8.10 or later.
 	
@@ -35,21 +33,20 @@ https://git.oschina.net/wuye9036/SALVIA.git
 首先请确认您的机器上具有：
 
 Windows平台：
-1. Visual Studio 2012 Update 4；
-2. Boost 1.55 或以上版本。如果你使用Visual Studio 2013请使用Boost 1.56或以上；
+1. Visual Studio 2012 Update 4 或 Visual Studio 2013；
 3. Python 2.7；
 4. CMake 2.8.10或以上版本，如果使用Visual Studio 2013请使用对应的CMake版本；
 
 Linux平台：
 
 1. GCC 4.7或以上版本；
-2. Boost 1.55或以上版本；
 3. Python 2.7；
 4. CMake 2.8.10或以上版本。
 
 运行build_all.py文件。如果您是首次运行该脚本，它会生成proj.py文件。
 打开proj.py文件，阅读说明并修改配置。
-再次运行build_all.py，便可以等待其直到编译结束。
+再次运行build_all.py，期间可能需要下载一些资源和第三方库，请保持网络连接，等待编译过程其直到编译结束。
+如果发生Boost或者LLVM的编译异常，您可以尝试重新执行build_all.py。
 如果您使用的是Visual Studio，sln文件会生成在您指定的 build_root 的目录下。
 
 注意事项：
