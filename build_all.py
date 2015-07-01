@@ -23,13 +23,6 @@ def guarded_rmtree(path):
     if os.path.isdir(path):
         shutil.rmtree(path)
 
-log_f = None
-
-def close_log():
-    global log_f
-    if not log_f is None:
-        log_f.close()
-
 def make_bjam(prj):
     assert isinstance(prj, project)
     old_dir = os.curdir
@@ -294,9 +287,6 @@ def clean_all(proj):
     pass
 
 def build(proj_props, cleanBuild):
-    log_f = open("build.log", "w")
-    atexit.register(close_log)
-
     proj = project(proj_props, os.getcwd())
     
     inst = installer(RESOURCE_COMMIT, proj.source_root())
