@@ -111,7 +111,7 @@ struct convert_types<Conv, Head, Ts...>
 template <typename Conv, typename Head>
 struct convert_types<Conv, Head>
 {
-	typedef type_list<typename Conv::template apply<Head>::type> type;
+	typedef type_list<typename boost::mpl::apply<Conv, Head>::type> type;
 };
 
 template <typename Conv, typename FuncT>
@@ -123,24 +123,30 @@ template <typename Conv, typename RetT, typename... ParamTs>
 struct convert_to_jit_function_type<Conv, RetT(ParamTs...)>
 {
 	typedef typename make_function<RetT*, typename convert_types<Conv, ParamTs...>::type>::type type;
+	typedef RetT return_type;
 };
 
 template <typename Conv, typename... ParamTs>
 struct convert_to_jit_function_type<Conv, void(ParamTs...)>
 {
 	typedef typename make_function<void, typename convert_types<Conv, ParamTs...>::type>::type type;
+	typedef void return_type;
 };
 
 template <typename Fn>
-class jit_function_forward_base{
+class jit_function_forward_base
+{
 public:
 	explicit operator bool() const
 	{
 		return callee != nullptr; 
 	}
 	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
-	convert_to_jit_function_type<Conv, Fn>::type
-				callee;
+	typedef convert_to_jit_function_type<Conv, Fn> jit_function_type;
+	typedef typename jit_function_type::result_type result_type;
+
+	typename jit_function_type::type* callee;
+
 	std::string name;
 	jit_function_forward_base():callee(NULL){}
 	void on_error(char const* desc) { BOOST_ERROR( (std::string(desc) + " @ " + name).c_str() ); }
@@ -201,7 +207,7 @@ public:
 #endif
 
 template <typename Fn>
-class jit_function: public jit_function_forward< typename result_type<Fn>::type, Fn >
+class jit_function: public jit_function_forward< typename std::function<Fn>::result_type, Fn >
 {};
 
 class jit_fixture {
