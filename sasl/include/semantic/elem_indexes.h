@@ -58,8 +58,8 @@ struct elem_indexes
 	static elem_indexes from_length(size_t len)
 	{
 		elem_indexes ret;
-		assert(len <= 4);
-		for(int i = 0; i < len; ++i)
+		assert(0 <= len && len <= 4);
+		for(size_t i = 0; i < len; ++i)
 		{
 			ret.data[i] = static_cast<char>(i);
 		}

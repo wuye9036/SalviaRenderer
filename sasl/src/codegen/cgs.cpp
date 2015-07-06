@@ -635,7 +635,7 @@ multi_value cg_service::emit_insert_val( multi_value const& lhs, multi_value con
 	value_array new_value(parallel_factor_, NULL);
 	value_array elem = elem_value.load();
 
-	for(int value_index = 0; value_index < parallel_factor_; ++value_index)
+	for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 	{
 		Type* value_type = agg[value_index]->getType();
 		if( value_type->isStructTy() )
@@ -662,7 +662,7 @@ multi_value cg_service::emit_insert_val(multi_value const& lhs, size_t index, mu
 	value_array agg = lhs.load();
 	value_array new_value = value_array(parallel_factor_, NULL);
 	value_array elem_vm_values = elem_value.load(lhs.abi());
-	for(int value_index = 0; value_index < parallel_factor_; ++value_index)
+	for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 	{
 		Type* value_type = agg[value_index]->getType();
 		if( value_type->isStructTy() )
