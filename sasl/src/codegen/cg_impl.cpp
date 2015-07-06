@@ -20,10 +20,13 @@
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/IR/DerivedTypes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/Target/TargetSubtargetInfo.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/Host.h>
+#include <llvm/Support/TargetRegistry.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -50,6 +53,17 @@ using boost::format;
 
 using std::vector;
 using std::make_pair;
+
+TargetMachine* create_local_target_machine()
+{
+	std::string triple_str = llvm::sys::getProcessTriple();
+	Triple cur_triple(triple_str);
+	std::string err;
+	auto target = TargetRegistry::lookupTarget(triple_str, err);
+	llvm::TargetOptions options;
+	return target->createTargetMachine(triple_str, "", "", options);
+}
+
 
 #define SASL_VISITOR_TYPE_NAME cg_impl
 
@@ -648,8 +662,8 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 	EFLIB_UNREF_DECLARATOR(data);
 	EFLIB_UNREF_DECLARATOR(v);
 
-	TargetMachine* tm = EngineBuilder(module()).selectTarget();
-	vm_data_layout_ = tm->getDataLayout();
+	TargetMachine* tm = create_local_target_machine();
+	vm_data_layout_ = tm->getSubtargetImpl()->getDataLayout();
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
