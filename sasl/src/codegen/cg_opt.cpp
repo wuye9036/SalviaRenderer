@@ -1,5 +1,4 @@
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Analysis/Verifier.h>
 #include <llvm/Analysis/Passes.h>
 #include <llvm/IR/Module.h>
 #include <llvm/PassManager.h>
@@ -17,9 +16,7 @@
 using llvm::Function;
 using llvm::FunctionPassManager;
 using llvm::Module;
-using llvm::PrintMessageAction;
 using llvm::raw_os_ostream;
-using llvm::verifyFunction;
 
 using boost::shared_ptr;
 

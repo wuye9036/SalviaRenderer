@@ -15,7 +15,6 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/TypeBuilder.h>
-#include <llvm/Support/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>

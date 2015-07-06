@@ -249,19 +249,11 @@ SASL_VISIT_DEF( binary_expression ){
 				retval = service()->emit_mod(lval, rval);
 				break; 
 			case operators::left_shift:
-				retval = service()->emit_lshift(lval, rval);
-				break; 
 			case operators::right_shift:
-				retval = service()->emit_rshift(lval, rval);
-				break; 
 			case operators::bit_and:
-				retval = service()->emit_bit_and(lval, rval);
-				break; 
 			case operators::bit_or:
-				retval = service()->emit_bit_or(lval, rval);
-				break; 
 			case operators::bit_xor:
-				retval = service()->emit_bit_xor(lval, rval);
+				retval = service()->emit_bitwise_bin_op(v.op, lval, rval);
 				break; 
 			case operators::less:
 				retval = service()->emit_cmp_lt(lval, rval);
@@ -827,23 +819,23 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	}
 	else if( v.op == operators::lshift_assign )
 	{
-		val = service()->emit_lshift( rctxt->node_value, lctxt->node_value );
+		val = service()->emit_bitwise_bin_op(operators::left_shift, rctxt->node_value, lctxt->node_value);
 	}
 	else if( v.op == operators::rshift_assign )
 	{
-		val = service()->emit_rshift( rctxt->node_value, lctxt->node_value );
+		val = service()->emit_bitwise_bin_op(operators::right_shift, rctxt->node_value, lctxt->node_value);
 	}
 	else if( v.op == operators::bit_and_assign )
 	{
-		val = service()->emit_bit_and( rctxt->node_value, lctxt->node_value );
+		val = service()->emit_bitwise_bin_op(operators::bit_and, rctxt->node_value, lctxt->node_value);
 	}
 	else if( v.op == operators::bit_or_assign )
 	{
-		val = service()->emit_bit_or( rctxt->node_value, lctxt->node_value );
+		val = service()->emit_bitwise_bin_op(operators::bit_or, rctxt->node_value, lctxt->node_value);
 	}
 	else if( v.op == operators::bit_xor_assign )
 	{
-		val = service()->emit_bit_xor( rctxt->node_value, lctxt->node_value );
+		val = service()->emit_bitwise_bin_op(operators::bit_xor, rctxt->node_value, lctxt->node_value);
 	}
 	else if( v.op == operators::sub_assign )
 	{

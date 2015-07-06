@@ -190,7 +190,7 @@ SASL_VISIT_DEF(unary_expression)
 		ctxt->node_value = service()->emit_not(inner_value);
 	} else if( v.op == operators::bit_not ) {
 		multi_value all_one_value = service()->create_constant_int( NULL, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
-		ctxt->node_value = service()->emit_bit_xor( all_one_value, inner_value );
+		ctxt->node_value = service()->emit_bitwise_bin_op(operators::bit_xor, all_one_value, inner_value);
 	} else {
 
 		multi_value one_value = service()->create_constant_int( one_tyinfo, builtin_types::none, inner_value.abi(), 1 ) ;
