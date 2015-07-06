@@ -7,10 +7,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/function_pointer.hpp>
-#include <boost/function_types/result_type.hpp>
-#include <boost/function_types/parameter_types.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/or.hpp>
@@ -58,9 +54,6 @@ EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
 using eflib::vector_;
 using eflib::matrix_;
 
-using boost::function_types::result_type;
-using boost::function_types::function_pointer;
-using boost::function_types::parameter_types;
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
 using boost::mpl::_;
@@ -85,26 +78,70 @@ using std::string;
 #	pragma warning(disable: 4244) // C4244: conversion from 'X' to 'Y', possible loss of data
 #endif
 
+template <typename... Ts> struct type_list;
+
+template <typename Head, typename... Tails>
+struct cat_type_list
+{
+	typedef type_list<Head, Tails...> type;
+};
+
+template <typename RetT, typename ParamListT> struct make_function;
+
+template <typename RetT, typename... ParamTs>
+struct make_function<RetT, type_list<ParamTs...>>
+{
+	typedef typename std::identity<void (RetT, ParamTs...)>::type type;
+};
+
+template <typename... ParamTs>
+struct make_function<void, type_list<ParamTs...>>
+{
+	typedef typename std::identity<void (ParamTs...)>::type type;
+};
+
+template <typename Conv, typename... Ts> struct convert_types;
+
+template <typename Conv, typename Head, typename... Ts>
+struct convert_types<Conv, Head, Ts...>
+{
+	typedef typename cat_type_list<typename Conv::template apply<Head>::type, typename convert_types<Conv, Ts...>::type>::type type;
+};
+
+template <typename Conv, typename Head>
+struct convert_types<Conv, Head>
+{
+	typedef type_list<typename Conv::template apply<Head>::type> type;
+};
+
+template <typename Conv, typename FuncT>
+struct convert_to_jit_function_type
+{
+};
+
+template <typename Conv, typename RetT, typename... ParamTs>
+struct convert_to_jit_function_type<Conv, RetT(ParamTs...)>
+{
+	typedef typename make_function<RetT*, typename convert_types<Conv, ParamTs...>::type>::type type;
+};
+
+template <typename Conv, typename... ParamTs>
+struct convert_to_jit_function_type<Conv, void(ParamTs...)>
+{
+	typedef typename make_function<void, typename convert_types<Conv, ParamTs...>::type>::type type;
+};
+
 template <typename Fn>
 class jit_function_forward_base{
-protected:
-	typedef typename result_type<Fn>::type result_t;
-	typedef result_t* result_type_pointer;
-	typedef typename parameter_types<Fn>::type param_types;
-	typedef typename boost::mpl::transform< param_types, if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > >::type param_refs;
-	typedef typename if_<
-	is_same<result_t, void>,
-	param_refs,
-		typename push_front<param_refs, result_type_pointer>::type
-	>::type	callee_parameters;
-	typedef typename push_front<callee_parameters, void>::type
-		callee_return_parameters;
 public:
-	EFLIB_OPERATOR_BOOL( jit_function_forward_base<Fn> ){ return callee != NULL; }
-	typedef typename function_pointer<callee_return_parameters>::type
-		callee_ptr_t;
-	callee_ptr_t callee;
-	std::string  name;
+	explicit operator bool() const
+	{
+		return callee != nullptr; 
+	}
+	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
+	convert_to_jit_function_type<Conv, Fn>::type
+				callee;
+	std::string name;
 	jit_function_forward_base():callee(NULL){}
 	void on_error(char const* desc) { BOOST_ERROR( (std::string(desc) + " @ " + name).c_str() ); }
 };
