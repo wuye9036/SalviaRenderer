@@ -11,7 +11,7 @@ if (MSVC)
 		LLVMScalarOpts
 		LLVMInstCombine
 		LLVMTransformUtils
-		LLVMipa LLVMAnalysis LLVMTarget LLVMMC
+		LLVMipa LLVMAnalysis LLVMTarget LLVMMC LLVMMCDisassembler
 		LLVMObject LLVMCore LLVMSupport
 	)
 else(MSVC)
