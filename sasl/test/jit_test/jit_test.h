@@ -149,76 +149,25 @@ public:
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo );
 
 template <typename RT, typename Fn>
-class jit_function_forward: public jit_function_forward_base<Fn>{
+class jit_function_forward: public jit_function_forward_base<Fn>
+{
 public:
-	using typename jit_function_forward_base<Fn>::result_t;
-	result_t operator ()(){
-		result_t tmp;
+	using typename jit_function_forward_base<Fn>::result_type;
+	template <typename... Ts>
+	result_type operator ()(Ts... params)
+	{
+		result_type tmp;
 #if defined(EFLIB_MSVC)
 		__try
 		{
-			callee(&tmp);
+			callee(&tmp, params...);
 		}
 		__except( EXCEPTION_EXECUTE_HANDLER )
 		{
 			on_error("SEH exception was raised");
 		}
 #else
-		this->callee(&tmp);
-#endif
-		return tmp;
-	}
-
-	template <typename T0>
-	result_t operator() (T0 p0 ){
-		result_t tmp;
-#if defined(EFLIB_MSVC)
-		__try
-		{
-			callee(&tmp, p0);
-		}
-		__except( EXCEPTION_EXECUTE_HANDLER )
-		{
-			on_error("SEH exception was raised");
-		}
-#else
-		this->callee(&tmp, p0);
-#endif
-		return tmp;
-	}
-
-	template <typename T0, typename T1>
-	result_t operator() (T0 p0, T1 p1){
-		result_t tmp;
-#if defined(EFLIB_MSVC)
-		__try
-		{
-			callee(&tmp, p0, p1);
-		}
-		__except( EXCEPTION_EXECUTE_HANDLER )
-		{
-			on_error("SEH exception was raised");
-		}
-#else
-		this->callee(&tmp, p0, p1);
-#endif
-		return tmp;
-	}
-
-	template <typename T0, typename T1, typename T2>
-	result_t operator() (T0 p0, T1 p1, T2 p2){
-		result_t tmp;
-#if defined(EFLIB_MSVC)
-		__try
-		{
-			callee(&tmp, p0, p1, p2);
-		}
-		__except( EXCEPTION_EXECUTE_HANDLER )
-		{
-			on_error("SEH exception was raised");
-		}
-#else
-		this->callee(&tmp, p0, p1, p2);
+		this->callee(&tmp, params...);
 #endif
 		return tmp;
 	}
@@ -227,33 +176,11 @@ public:
 template <typename Fn>
 class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
 public:
-	using typename jit_function_forward_base<Fn>::result_t;
-	result_t operator ()(){
-		this->callee();
-	}
-
-	template <typename T0>
-	result_t operator() (T0 p0 ){
-		this->callee(p0);
-	}
-
-	template <typename T0, typename T1>
-	result_t operator() (T0 p0, T1 p1){
-		this->callee(p0, p1);
-	}
-
-	template <typename T0, typename T1, typename T2>
-	result_t operator() (T0 p0, T1 p1, T2 p2){
-		this->callee(p0, p1, p2);
-	}
-
+	using typename jit_function_forward_base<Fn>::result_type;
+	
 	template <typename T0, typename T1, typename T2, typename T3>
-	result_t operator() (T0 p0, T1 p1, T2 p2, T3 p3){
-		this->callee(p0, p1, p2, p3);
-	}
-
-	template <typename T0, typename T1, typename T2, typename T3>
-	result_t operator() (T0* psi, T1* pbi, T2* pso, T3* pbo){
+	result_type operator() (T0* psi, T1* pbi, T2* pso, T3* pbo)
+	{
 #if defined(EFLIB_MSVC)
 		__try
 		{
