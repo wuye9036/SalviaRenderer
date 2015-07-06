@@ -8,6 +8,7 @@
 #include <sasl/include/codegen/cg_extension.h>
 
 #include <sasl/enums/builtin_types.h>
+#include <sasl/enums/operators.h>
 
 #include <eflib/include/utility/enable_if.h>
 #include <eflib/include/diagnostics/assert.h>
@@ -18,6 +19,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
+#include <unordered_map>
 
 namespace sasl
 {
@@ -60,6 +62,8 @@ public:
 	Some simple overload-able operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
+	virtual multi_value emit_bitwise_bin_op(operators op, multi_value const& lhs, multi_value const& rhs);
+
 	virtual multi_value emit_add( multi_value const& lhs, multi_value const& rhs );
 	virtual multi_value emit_sub( multi_value const& lhs, multi_value const& rhs );
 	virtual multi_value emit_div( multi_value const& lhs, multi_value const& rhs );
@@ -67,13 +71,6 @@ public:
 
 	virtual multi_value emit_mul_comp  ( multi_value const& lhs, multi_value const& rhs );
 	virtual multi_value emit_mul_intrin( multi_value const& lhs, multi_value const& rhs );
-
-	virtual multi_value emit_lshift ( multi_value const& lhs, multi_value const& rhs );
-	virtual multi_value emit_rshift ( multi_value const& lhs, multi_value const& rhs );
-
-	virtual multi_value emit_bit_and( multi_value const& lhs, multi_value const& rhs );
-	virtual multi_value emit_bit_or ( multi_value const& lhs, multi_value const& rhs );
-	virtual multi_value emit_bit_xor( multi_value const& lhs, multi_value const& rhs );
 
 	virtual multi_value emit_cmp_lt ( multi_value const& lhs, multi_value const& rhs );
 	virtual multi_value emit_cmp_le ( multi_value const& lhs, multi_value const& rhs );
@@ -335,6 +332,9 @@ protected:
 	size_t								parallel_factor_;
 	multi_value							exec_mask;
 
+	std::unordered_map<operators, uint32_t>
+										conv_bin_op_to_vm_;
+										
 	multi_value emit_cmp(
 		multi_value const& lhs, multi_value const& rhs,
 		uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float

@@ -19,14 +19,12 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/TypeBuilder.h>
-#include <llvm/Support/CFG.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/bind.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <functional>
 
 using llvm::Module;
 using llvm::LLVMContext;
@@ -37,6 +35,8 @@ using llvm::VectorType;
 using llvm::TypeBuilder;
 using llvm::BasicBlock;
 using llvm::Instruction;
+
+using namespace std::placeholders;
 
 namespace VMIntrin = llvm::Intrinsic;
 
@@ -93,6 +93,16 @@ bool cg_service::initialize( module_vmcode_impl* mod, module_context* ctxt, modu
 			parallel_factor_
 			)
 		);
+
+	conv_bin_op_to_vm_ = decltype(conv_bin_op_to_vm_)
+	({
+		{operators::left_shift,  Instruction::BinaryOps::Shl},
+		{operators::right_shift, Instruction::BinaryOps::LShr},
+		{operators::bit_and,     Instruction::BinaryOps::And},
+		{operators::bit_or,      Instruction::BinaryOps::Or},
+		{operators::bit_xor,     Instruction::BinaryOps::Xor},
+	});
+
 	return true;
 }
 
@@ -344,7 +354,7 @@ multi_value cg_service::create_variable( builtin_types bt, abis abi, std::string
 	value_array values(parallel_factor_, NULL);
 	std::generate(
 		values.begin(), values.end(),
-		boost::bind(&cg_extension::stack_alloc, ext_.get(), vty, name)
+		[this, vty, &name]() { return ext_.get()->stack_alloc(vty, name); }
 		);
 	return create_value( bt, values, value_kinds::reference, abi );
 }
@@ -355,7 +365,7 @@ multi_value cg_service::create_variable( cg_type const* ty, abis abi, std::strin
 	value_array values(parallel_factor_, NULL);
 	std::generate(
 		values.begin(), values.end(),
-		boost::bind(&cg_extension::stack_alloc, ext_.get(), vty, name)
+		[this, vty, &name]() { return ext_.get()->stack_alloc(vty, name); }
 		);
 	return create_value( const_cast<cg_type*>(ty), values, value_kinds::reference, abi );
 }
@@ -373,45 +383,50 @@ void cg_service::clean_empty_blocks()
 {
 	assert( in_function() );
 
-	typedef Function::BasicBlockListType::iterator block_iterator_t;
-	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
-	block_iterator_t end = fn().fn->getBasicBlockList().end();
-
 	// Remove useless blocks
 	vector<BasicBlock*> useless_blocks;
 
-	for( block_iterator_t it = beg; it != end; ++it )
+	for(auto& bb: fn().fn->getBasicBlockList() )
 	{
 		// If block has terminator, that's a well-formed block.
-		if( it->getTerminator() ) continue;
+		if( bb.getTerminator() ) continue;
 
 		// Add no-pred & empty block to remove list.
-		if( llvm::pred_begin(it) == llvm::pred_end(it) && it->empty() ){
-			useless_blocks.push_back( it );
+		if( pred_begin(&bb) == pred_end(&bb) && bb.empty() )
+		{
+			useless_blocks.push_back(&bb);
 			continue;
 		}
 	}
 
-	for( BasicBlock* bb: useless_blocks ){
+	for( BasicBlock* bb: useless_blocks )
+	{
 		bb->removeFromParent();
 	}
 
 	// Relink unlinked blocks
-	beg = fn().fn->getBasicBlockList().begin();
-	end = fn().fn->getBasicBlockList().end();
-	for( block_iterator_t it = beg; it != end; ++it ){
+	auto beg = fn().fn->getBasicBlockList().begin();
+	auto end = fn().fn->getBasicBlockList().end();
+	for(auto it = beg; it != end; ++it )
+	{
 		if( it->getTerminator() ) continue;
 
 		// Link block to next.
-		block_iterator_t next_it = it;
+		auto next_it = it;
 		++next_it;
 		builder().SetInsertPoint( it );
-		if( next_it != fn().fn->getBasicBlockList().end() ){
+		if( next_it != fn().fn->getBasicBlockList().end() )
+		{
 			builder().CreateBr( next_it );
-		} else {
-			if( !fn().fn->getReturnType()->isVoidTy() ){
+		} 
+		else
+		{
+			if( !fn().fn->getReturnType()->isVoidTy() )
+			{
 				builder().CreateRet( Constant::getNullValue( fn().fn->getReturnType() ) );
-			} else {
+			} 
+			else
+			{
 				emit_return();
 			}
 		}
@@ -703,8 +718,8 @@ multi_value cg_service::emit_mul_comp( multi_value const& lhs, multi_value const
 		else { assert(false); }
 	}
 
-	binary_intrin_functor f_mul = boost::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_mul = boost::bind( &DefaultIRBuilder::CreateMul,  builder(), _1, _2, "", false, false );
+	binary_intrin_functor f_mul = std::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_mul = std::bind( &DefaultIRBuilder::CreateMul,  builder(), _1, _2, "", false, false );
 	return emit_bin_ps_ta_sva( lv, rv, i_mul, i_mul, f_mul );
 }
 
@@ -715,16 +730,16 @@ bool bool_xor(bool l, bool r)
 
 multi_value cg_service::emit_add( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_add = boost::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_add = boost::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
+	binary_intrin_functor f_add = std::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_add = std::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_add, i_add, f_add );
 }
 
 multi_value cg_service::emit_sub( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_sub = boost::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
+	binary_intrin_functor f_sub = std::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_sub = std::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_sub, i_sub, f_sub );
 }
@@ -766,60 +781,37 @@ multi_value cg_service::emit_mul_intrin( multi_value const& lhs, multi_value con
 
 multi_value cg_service::emit_div( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
-	binary_intrin_functor u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
-	binary_intrin_functor i_safe_div = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_div );
-	binary_intrin_functor u_safe_div = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_div );
+	binary_intrin_functor f_div = std::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_div = std::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
+	binary_intrin_functor u_div = std::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
+	binary_intrin_functor i_safe_div = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_div );
+	binary_intrin_functor u_safe_div = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_div );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_div, u_safe_div, f_div );
 }
 
 multi_value cg_service::emit_mod( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
-	binary_intrin_functor u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
+	binary_intrin_functor i_mod = std::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
+	binary_intrin_functor u_mod = std::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
 
-	binary_intrin_functor i_safe_mod = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_mod );
-	binary_intrin_functor u_safe_mod = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_mod );
+	binary_intrin_functor i_safe_mod = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_mod );
+	binary_intrin_functor u_safe_mod = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_mod );
 
 	binary_intrin_functor intrin_mod_f32 = ext_->bind_external_to_binary(externals::mod_f32);
 	binary_intrin_functor f_mod_sv =
 		ext_->promote_to_binary_sv(intrin_mod_f32, null_binary, null_binary);
 	binary_intrin_functor f_mod =
-		boost::bind(&cg_extension::call_binary_intrin_mono, ext_.get(), (Type*)NULL, _1, _2, f_mod_sv, null_unary);
+		std::bind(&cg_extension::call_binary_intrin_mono, ext_.get(), (Type*)NULL, _1, _2, f_mod_sv, null_unary);
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_mod, u_safe_mod, f_mod );
 }
 
-multi_value cg_service::emit_lshift( multi_value const& lhs, multi_value const& rhs )
+multi_value cg_service::emit_bitwise_bin_op(operators op, multi_value const& lhs, multi_value const& rhs)
 {
-	binary_intrin_functor shl = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Shl, _1, _2, "" );
-	return emit_bin_es_ta_sva( lhs, rhs, shl, shl, shl );
-}
-
-multi_value cg_service::emit_rshift( multi_value const& lhs, multi_value const& rhs )
-{
-	binary_intrin_functor shr = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::LShr, _1, _2, "" );
-	return emit_bin_es_ta_sva( lhs, rhs, shr, shr, shr );
-}
-
-multi_value cg_service::emit_bit_and( multi_value const& lhs, multi_value const& rhs )
-{
-	binary_intrin_functor bit_and = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::And, _1, _2, "" );
-	return emit_bin_es_ta_sva( lhs, rhs, bit_and, bit_and, bit_and );
-}
-
-multi_value cg_service::emit_bit_or( multi_value const& lhs, multi_value const& rhs )
-{
-	binary_intrin_functor bit_or = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Or, _1, _2, "" );
-	return emit_bin_es_ta_sva( lhs, rhs, bit_or, bit_or, bit_or );
-}
-
-multi_value cg_service::emit_bit_xor( multi_value const& lhs, multi_value const& rhs )
-{
-	binary_intrin_functor bit_xor = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Xor, _1, _2, "" );
-	return emit_bin_es_ta_sva( lhs, rhs, bit_xor, bit_xor, bit_xor );
+	auto vm_op = static_cast<Instruction::BinaryOps>(conv_bin_op_to_vm_[op]);
+	auto bin_op = std::bind(&DefaultIRBuilder::CreateBinOp, builder(), vm_op, _1, _2, "", nullptr);
+	return emit_bin_es_ta_sva( lhs, rhs, bin_op, bin_op, bin_op);
 }
 
 multi_value cg_service::emit_dot( multi_value const& lhs, multi_value const& rhs )
@@ -1240,7 +1232,7 @@ multi_value cg_service::emit_abs( multi_value const& arg_value )
 	abis arg_abi = arg_value.abi();
 
 	value_array v = arg_value.load(arg_abi);
-	value_array ret_v = ext_->call_unary_intrin( v[0]->getType(), v, boost::bind(&cg_extension::abs_sv, ext_.get(), _1) );
+	value_array ret_v = ext_->call_unary_intrin( v[0]->getType(), v, std::bind(&cg_extension::abs_sv, ext_.get(), _1) );
 	return create_value(arg_value.ty(), hint, ret_v, value_kinds::value, arg_abi);
 }
 
@@ -1590,15 +1582,15 @@ multi_value cg_service::emit_cmp( multi_value const& lhs, multi_value const& rhs
 	binary_intrin_functor cmp_fn;
 	if( is_real(scalar_hint) )
 	{
-		cmp_fn = boost::bind( &DefaultIRBuilder::CreateFCmp, builder(), (CmpInst::Predicate)pred_float, _1, _2, "" );
+		cmp_fn = std::bind( &DefaultIRBuilder::CreateFCmp, builder(), (CmpInst::Predicate)pred_float, _1, _2, "" );
 	}
 	else if ( is_integer(scalar_hint) )
 	{
 		int pred = is_signed(scalar_hint) ? pred_signed : pred_unsigned;
-		cmp_fn = boost::bind( &DefaultIRBuilder::CreateICmp, builder(), (CmpInst::Predicate)pred, _1, _2, "" );
+		cmp_fn = std::bind( &DefaultIRBuilder::CreateICmp, builder(), (CmpInst::Predicate)pred, _1, _2, "" );
 	}
 
-	unary_intrin_functor cast_fn = boost::bind( &cg_extension::i1toi8_sv, ext_.get(), _1 );
+	unary_intrin_functor cast_fn = std::bind( &cg_extension::i1toi8_sv, ext_.get(), _1 );
 	value_array ret = ext_->call_binary_intrin( ret_ty, lhs_v, rhs_v, cmp_fn, cast_fn );
 
 	return create_value( ret_hint, ret, value_kinds::value, promoted_abi );
@@ -1688,7 +1680,7 @@ multi_value cg_service::emit_and( multi_value const& lhs, multi_value const& rhs
 	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
 	assert( lhs.hint() == rhs.hint() );
 
-	return emit_bit_and( lhs, rhs );
+	return emit_bitwise_bin_op(operators::bit_and, lhs, rhs);
 }
 
 multi_value cg_service::emit_or( multi_value const& lhs, multi_value const& rhs )
@@ -1696,7 +1688,7 @@ multi_value cg_service::emit_or( multi_value const& lhs, multi_value const& rhs 
 	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
 	assert( lhs.hint() == rhs.hint() );
 
-	return emit_bit_or( lhs, rhs );
+	return emit_bitwise_bin_op(operators::bit_or, lhs, rhs);
 }
 
 multi_value cg_service::emit_tex2Dlod( multi_value const& samp, multi_value const& coord )
@@ -1984,7 +1976,7 @@ multi_value cg_service::emit_select( multi_value const& flag, multi_value const&
 multi_value cg_service::emit_not( multi_value const& v )
 {
 	multi_value mask_value = create_constant_int( NULL, v.hint(), v.abi(), 1 );
-	return emit_bit_xor( mask_value, v );
+	return emit_bitwise_bin_op(operators::bit_xor, mask_value, v);
 }
 
 multi_value cg_service::inf_from_value(multi_value const& v, bool negative)
