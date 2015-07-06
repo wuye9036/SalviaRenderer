@@ -101,3 +101,49 @@ void jit_fixture::init(string const& file_name, string const& options)
 	bool is_jit_enabled = vmc->enable_jit();
 	BOOST_REQUIRE(is_jit_enabled);
 }
+
+namespace 
+{
+	struct X {};
+	
+	void jit_function_compiling_testing()
+	{
+		typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
+
+		static_assert(is_same<make_function<void, type_list<int>>::type, void(int)>::value,	  "Make Function0 Assertion Failed");
+		static_assert(is_same<make_function<void, type_list<>>::type,    void()>::value,	  "Make Function1 Assertion Failed");
+		static_assert(is_same<make_function<int , type_list<>>::type,    void(int)>::value,	  "Make Function2 Assertion Failed");
+
+		static_assert(is_same<boost::mpl::apply<Conv, int>::type, int>::value,                "Applier0 Assertion Failed");
+		static_assert(is_same<boost::mpl::apply<Conv, X>::type,   X& >::value,                "Applier1 Assertion Failed");
+
+		static_assert(is_same<convert_types<Conv, int>::type,	  type_list<int>>::value,     "Convert Types0 Assertion Failed");
+		static_assert(is_same<convert_types<Conv, X>::type,		  type_list<X&>>::value,	  "Convert Types1 Assertion Failed");
+		static_assert(is_same<convert_types<Conv, int, X>::type,  type_list<int, X&>>::value, "Convert Types2 Assertion Failed");
+
+		typedef convert_to_jit_function_type<Conv, void(int)> convertor0;
+		static_assert(is_same<convertor0::type,        void(int)>::value, "Convertor0 Type Assertion Failed");
+		static_assert(is_same<convertor0::return_type, void     >::value, "Convertor0 Return Type Assertion Failed");
+
+		typedef convert_to_jit_function_type<Conv, int(int)> convertor1;
+		static_assert(is_same<convertor1::type,        void(int*, int)>::value, "Convertor1 Type Assertion Failed");
+		static_assert(is_same<convertor1::return_type, int            >::value, "Convertor1 Return Type Assertion Failed");
+
+		typedef convert_to_jit_function_type<Conv, X (int, X, X*, float, double*)> convertor2;
+		static_assert(is_same<convertor2::type,        void(X*, int, X&, X*, float, double*)>::value, "Convertor2 Type Assertion Failed");
+		static_assert(is_same<convertor2::return_type, X                >::value, "Convertor2 Return Type Assertion Failed");
+		
+		typedef convert_to_jit_function_type<Conv, int()> convertor3;
+		static_assert(is_same<convertor3::type,        void(int*)>::value, "Convertor3 Type Assertion Failed");
+		static_assert(is_same<convertor3::return_type, int       >::value, "Convertor3 Return Type Assertion Failed");
+
+		jit_function< int(int) > jit_func0;
+		jit_function< int(void)> jit_func1;
+
+		static_assert( is_same<jit_function<int(int)>::callee_type, void(*)(int*, int)>::value, "Callee Type 0 Assertion Failed");
+		static_assert( is_same<jit_function<int()>::callee_type,    void(*)(int*)>::value,      "Callee Type 1 Assertion Failed");
+
+		jit_func0(0);
+		jit_func1();
+	}
+}

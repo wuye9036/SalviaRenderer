@@ -1,7 +1,7 @@
 macro( config_llvm_libs )
 if (MSVC)
 	set( SASL_LLVM_LIBS
-		LLVMJIT LLVMInterpreter LLVMExecutionEngine
+		LLVMMCJIT LLVMInterpreter LLVMExecutionEngine
 		LLVMX86CodeGen LLVMX86Desc LLVMX86Utils LLVMX86AsmPrinter LLVMX86Info
 		LLVMBitWriter LLVMBitReader LLVMAsmParser LLVMAsmPrinter
 		LLVMRuntimeDyld 

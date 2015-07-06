@@ -80,10 +80,12 @@ using std::string;
 
 template <typename... Ts> struct type_list;
 
-template <typename Head, typename... Tails>
-struct cat_type_list
+template <typename Head, typename Tails> struct cat_type_list;
+
+template <typename Head, typename... Ts>
+struct cat_type_list<Head, type_list<Ts...>>
 {
-	typedef type_list<Head, Tails...> type;
+	typedef type_list<Head, Ts...> type;
 };
 
 template <typename RetT, typename ParamListT> struct make_function;
@@ -102,10 +104,16 @@ struct make_function<void, type_list<ParamTs...>>
 
 template <typename Conv, typename... Ts> struct convert_types;
 
+template <typename Conv>
+struct convert_types<Conv>
+{
+	typedef type_list<> type;
+};
+
 template <typename Conv, typename Head, typename... Ts>
 struct convert_types<Conv, Head, Ts...>
 {
-	typedef typename cat_type_list<typename Conv::template apply<Head>::type, typename convert_types<Conv, Ts...>::type>::type type;
+	typedef typename cat_type_list<typename boost::mpl::apply<Conv, Head>::type, typename convert_types<Conv, Ts...>::type>::type type;
 };
 
 template <typename Conv, typename Head>
@@ -143,9 +151,10 @@ public:
 	}
 	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
 	typedef convert_to_jit_function_type<Conv, Fn> jit_function_type;
-	typedef typename jit_function_type::result_type result_type;
+	typedef typename jit_function_type::type* callee_type;
+	typedef typename jit_function_type::return_type return_type;
 
-	typename jit_function_type::type* callee;
+	callee_type callee;
 
 	std::string name;
 	jit_function_forward_base():callee(NULL){}
@@ -154,15 +163,34 @@ public:
 
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo );
 
-template <typename RT, typename Fn>
+template <typename Fn>
 class jit_function_forward: public jit_function_forward_base<Fn>
 {
 public:
-	using typename jit_function_forward_base<Fn>::result_type;
-	template <typename... Ts>
-	result_type operator ()(Ts... params)
+	using typename jit_function_forward_base<Fn>::return_type;
+
+	return_type operator ()()
 	{
-		result_type tmp;
+		return_type tmp;
+#if defined(EFLIB_MSVC)
+		__try
+		{
+			(*callee)(&tmp);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER )
+		{
+			on_error("SEH exception was raised");
+		}
+#else
+		this->callee(&tmp, params...);
+#endif
+		return tmp;
+	}
+
+	template <typename... Ts>
+	return_type operator ()(Ts... params)
+	{
+		return_type tmp;
 #if defined(EFLIB_MSVC)
 		__try
 		{
@@ -179,25 +207,24 @@ public:
 	}
 };
 
-template <typename Fn>
-class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
+template <typename... Params>
+class jit_function_forward<void(Params...)>: public jit_function_forward_base<void(Params...)>
+{
 public:
-	using typename jit_function_forward_base<Fn>::result_type;
-	
-	template <typename T0, typename T1, typename T2, typename T3>
-	result_type operator() (T0* psi, T1* pbi, T2* pso, T3* pbo)
+	template <typename... Ts>
+	void operator ()(Ts... params)
 	{
 #if defined(EFLIB_MSVC)
 		__try
 		{
-			invoke( (void*)callee, psi, pbi, pso, pbo );
+			callee(params...);
 		}
 		__except( EXCEPTION_EXECUTE_HANDLER )
 		{
 			on_error("SEH exception was raised");
 		}
 #else
-		invoke( (void*)(this->callee), psi, pbi, pso, pbo );
+		this->callee(params...);
 #endif
 	}
 };
@@ -207,10 +234,11 @@ public:
 #endif
 
 template <typename Fn>
-class jit_function: public jit_function_forward< typename std::function<Fn>::result_type, Fn >
+class jit_function: public jit_function_forward<Fn>
 {};
 
-class jit_fixture {
+class jit_fixture
+{
 public:
 	jit_fixture() {}
 
@@ -224,7 +252,7 @@ public:
 	template <typename FunctionT>
 	void function( FunctionT& fn, string const& unmangled_name )
 	{
-		fn.callee = reinterpret_cast<typename FunctionT::callee_ptr_t>( function(unmangled_name) );
+		fn.callee = reinterpret_cast<typename FunctionT::callee_type>( function(unmangled_name) );
 		fn.name = unmangled_name;
 	}
 
