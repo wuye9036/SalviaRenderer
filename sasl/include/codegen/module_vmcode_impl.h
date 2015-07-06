@@ -68,8 +68,12 @@ protected:
 
 	llvm::LLVMContext*					vm_ctx_;
 	llvm::DefaultIRBuilder*				irbuilder_;
-	llvm::Module*						vm_module_;
-	llvm::ExecutionEngine*				vm_engine_;
+
+	llvm::Module*						vm_module_raw_ptr_;
+	std::unique_ptr<llvm::Module>		vm_module_;
+	std::unique_ptr<llvm::ExecutionEngine>
+										vm_engine_;
+	
 	eflib::fixed_string					error_;
 
 	std::vector<llvm::Function*>		jitted_funcs_;

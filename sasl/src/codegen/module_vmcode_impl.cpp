@@ -12,7 +12,6 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/ExecutionEngine/JIT.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <string>
@@ -42,16 +41,16 @@ struct llvm_options
 BEGIN_NS_SASL_CODEGEN();
 
 module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
-: vm_engine_(NULL)
 {
-	vm_ctx_		= new llvm::LLVMContext();
-	irbuilder_	= new llvm::IRBuilder<>(*vm_ctx_);
-	vm_module_	= new llvm::Module(name.raw_string(), *vm_ctx_);
+	vm_ctx_				= new llvm::LLVMContext();
+	irbuilder_			= new llvm::IRBuilder<>(*vm_ctx_);
+	vm_module_raw_ptr_	= new llvm::Module(name.raw_string(), *vm_ctx_);
+	vm_module_.reset(vm_module_raw_ptr_);
 }
 
 llvm::Module* module_vmcode_impl::get_vm_module() const
 {
-	return vm_module_;
+	return vm_module_raw_ptr_;
 }
 
 llvm::LLVMContext& module_vmcode_impl::get_vm_context()
@@ -61,19 +60,6 @@ llvm::LLVMContext& module_vmcode_impl::get_vm_context()
 
 module_vmcode_impl::~module_vmcode_impl()
 {
-	if(vm_engine_)
-	{
-		for(size_t i = 0; i < jitted_funcs_.size(); ++i)
-		{
-			vm_engine_->freeMachineCodeForFunction(jitted_funcs_[i]);
-		}
-		delete vm_engine_;
-	}
-	else
-	{
-		delete vm_module_;
-	}
-
 	delete irbuilder_;
 	delete vm_ctx_;
 }
@@ -140,14 +126,15 @@ bool module_vmcode_impl::enable_jit()
 
 	std::string err_str;
 
-	vm_engine_ = 
-		llvm::EngineBuilder(vm_module_)
+	vm_engine_.reset( 
+		llvm::EngineBuilder(std::move(vm_module_))
 		.setTargetOptions(opts)
 		.setMAttrs(attrs)
 		.setErrorStr(&err_str)
-		.create();
+		.create()
+	);
 
-	if(vm_engine_ == NULL)
+	if(!vm_engine_)
 	{
 		error_ = err_str;
 	}
@@ -156,7 +143,7 @@ bool module_vmcode_impl::enable_jit()
 		error_ = fixed_string();
 	}
 
-	return vm_engine_ != NULL;
+	return static_cast<bool>(vm_engine_);
 }
 
 void* module_vmcode_impl::get_function(fixed_string const& func_name)
