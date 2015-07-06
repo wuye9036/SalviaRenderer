@@ -14,7 +14,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/type_traits.hpp>
 #include <eflib/include/platform/boost_end.h>
 
