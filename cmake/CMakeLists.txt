@@ -35,19 +35,20 @@ function(SALVIA_CREATE_VCPROJ_USERFILE TARGETNAME)
   if(MSVC)
     set(SYSTEM_NAME $ENV{USERDOMAIN})
     set(USER_NAME $ENV{USERNAME})
-    if(MSVC_VERSION GREATER 1600)
+	if(MSVC_VERSION EQUAL 1800)
       configure_file(
-	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2012UserFile.vcxproj.user.in
+	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2013UserFile.vcxproj.user.in
 	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
 	  @ONLY
 	)
+    elseif(MSVC_VERSION EQUAL 1700)
+        configure_file(
+	    ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2012UserFile.vcxproj.user.in
+	    ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
+	    @ONLY
+	  )
+	else()
+	   MESSAGE(FATAL_ERROR "Cannot support Microsoft Visual C++ version ${MSVC_VERSION}. Build will be stopped." )
 	endif()
-    if(MSVC_VERSION EQUAL 1600)
-      configure_file(
-	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2010UserFile.vcxproj.user.in
-	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
-	  @ONLY
-	)
-    endif()
   endif()
 endfunction(SALVIA_CREATE_VCPROJ_USERFILE)

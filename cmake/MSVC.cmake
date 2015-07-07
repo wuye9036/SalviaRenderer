@@ -1,6 +1,6 @@
 # Set compiling flags for MSVC
 
-if(MSVC_VERSION LESS 1600)
+if(MSVC_VERSION LESS 1700)
 	MESSAGE(FATAL_ERROR "Cannot support Microsoft Visual C++ version ${MSVC_VERSION}. Build will be stopped." )
 endif()
 

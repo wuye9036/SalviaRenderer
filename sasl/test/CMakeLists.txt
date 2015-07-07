@@ -11,13 +11,14 @@ function(SASL_TEST_CREATE_VCPROJ_USERFILE TARGETNAME)
 	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
 	  @ONLY
 	)
-	endif()
-    if(MSVC_VERSION EQUAL 1600)
-      configure_file(
-	  ${SASL_HOME_DIR}/sasl/test/test_resources/vs2010.test.vcxproj.user.in
-	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
-	  @ONLY
-	)
+	elseif(MSVC_VERSION EQUAL 1800)
+	  configure_file(
+	    ${SASL_HOME_DIR}/sasl/test/test_resources/vs2013.test.vcxproj.user.in
+	    ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
+	    @ONLY
+	  )
+	else()
+	  MESSAGE(FATAL_ERROR "Cannot support Microsoft Visual C++ version ${MSVC_VERSION}. Build will be stopped." )
 	endif()
   endif()
 endfunction(SASL_TEST_CREATE_VCPROJ_USERFILE)
