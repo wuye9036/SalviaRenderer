@@ -12,6 +12,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/MCJIT.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <string>
