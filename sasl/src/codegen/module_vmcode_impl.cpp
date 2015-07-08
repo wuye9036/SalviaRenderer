@@ -5,12 +5,14 @@
 #include <eflib/include/platform/cpuinfo.h>
 
 #include <eflib/include/platform/disable_warnings.h>
+#include <llvm/ADT/Triple.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/Host.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <eflib/include/platform/enable_warnings.h>
@@ -49,7 +51,20 @@ module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
 	vm_module_ = vm_module.get();
 
 	std::string err;
-	auto engine = llvm::EngineBuilder(std::move(vm_module)).setErrorStr(&err).create();
+
+	// TODO:
+	//   LLVM 3.6.1 doesn't support COFF dynamic loading,
+	//   It will cause crash on Windows.
+	//   Added "-elf" as hack to resolve this issue.
+
+	auto sys_triple_str = llvm::sys::getProcessTriple();
+	auto patched_triple_str = sys_triple_str + "-elf";
+	llvm::Triple patched_triple(patched_triple_str);
+
+	llvm::SmallVector<std::string, 4> empty_attrs;
+	llvm::EngineBuilder engine_builder(std::move(vm_module));
+	auto target_machine = engine_builder.selectTarget(patched_triple, "", "", empty_attrs);
+	auto engine = engine_builder.setErrorStr(&err).create(target_machine);
 	error_ = engine ? fixed_string() : err;
 
 	vm_engine_.reset(engine);
