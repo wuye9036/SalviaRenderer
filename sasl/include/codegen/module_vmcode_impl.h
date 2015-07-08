@@ -68,7 +68,7 @@ protected:
 	sasl::semantic::module_semantic_ptr	sem_;
 	module_context_ptr					ctxt_;
 	eflib::fixed_string					error_;
-	std::vector<llvm::Function*>		jitted_funcs_;
+	bool								finalized_;
 };
 
 END_NS_SASL_CODEGEN();

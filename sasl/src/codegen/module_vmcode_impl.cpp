@@ -49,6 +49,7 @@ module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
 	ir_builder_ = std::make_unique<llvm::DefaultIRBuilder>(*vm_ctx_);
 	auto vm_module = std::make_unique<llvm::Module>(name.raw_string(), *vm_ctx_);
 	vm_module_ = vm_module.get();
+	finalized_ = false;
 
 	std::string err;
 
@@ -123,18 +124,19 @@ void module_vmcode_impl::set_context( shared_ptr<module_context> const& v )
 
 void* module_vmcode_impl::get_function(fixed_string const& func_name)
 {
+	if (!finalized_)
+	{
+		vm_engine_->finalizeObject();
+		finalized_ = true;
+	}
+
 	llvm::Function* vm_func = vm_module_->getFunction( func_name.raw_string() );
 	if (!vm_func)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	void* native_func = vm_engine_->getPointerToFunction(vm_func);
-	if( find(jitted_funcs_.begin(), jitted_funcs_.end(), vm_func) == jitted_funcs_.end() )
-	{
-		jitted_funcs_.push_back(vm_func);
-	}
-
 	return native_func;
 }
 
