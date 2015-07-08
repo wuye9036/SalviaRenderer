@@ -294,14 +294,8 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit, bool enable_reflec
 				cout << "Code generation error occurs!" << endl;
 				return diags;
 			}
-
-			if (enable_jit)
-			{
-				if( mvmc->enable_jit() )
-				{
-					inject_default_functions();
-				}
-			}
+			
+			inject_default_functions();
 		}
 	}
 
@@ -328,12 +322,9 @@ shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> cons
 		return results;
 	}
 
-	if( mvmc->enable_jit() )
+	for( size_t i = 0; i < external_funcs.size(); ++i )
 	{
-		for( size_t i = 0; i < external_funcs.size(); ++i )
-		{
-			inject_function(external_funcs[i].func, external_funcs[i].func_name, external_funcs[i].is_raw_name);
-		}
+		inject_function(external_funcs[i].func, external_funcs[i].func_name, external_funcs[i].is_raw_name);
 	}
 
 	return results;
@@ -436,7 +427,7 @@ void sasl_reversebits_u32(uint32_t* ret, uint32_t v)
 
 void compiler_impl::inject_default_functions()
 {
-	if(!mvmc || !mvmc->enable_jit())
+	if(!mvmc)
 	{
 		return;
 	}

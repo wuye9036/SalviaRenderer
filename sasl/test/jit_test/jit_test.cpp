@@ -97,9 +97,6 @@ void jit_fixture::init(string const& file_name, string const& options)
 	fstream dump_file( (file_name + "_ir.ll").c_str(), std::ios::out );
 	vmc->dump_ir(dump_file);
 	dump_file.close();
-
-	bool is_jit_enabled = vmc->enable_jit();
-	BOOST_REQUIRE(is_jit_enabled);
 }
 
 namespace 

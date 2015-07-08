@@ -43,15 +43,21 @@ BEGIN_NS_SASL_CODEGEN();
 
 module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
 {
-	vm_ctx_				= new llvm::LLVMContext();
-	irbuilder_			= new llvm::IRBuilder<>(*vm_ctx_);
-	vm_module_raw_ptr_	= new llvm::Module(name.raw_string(), *vm_ctx_);
-	vm_module_.reset(vm_module_raw_ptr_);
+	vm_ctx_		= std::make_unique<llvm::LLVMContext>();
+	ir_builder_ = std::make_unique<llvm::DefaultIRBuilder>(*vm_ctx_);
+	auto vm_module = std::make_unique<llvm::Module>(name.raw_string(), *vm_ctx_);
+	vm_module_ = vm_module.get();
+
+	std::string err;
+	auto engine = llvm::EngineBuilder(std::move(vm_module)).setErrorStr(&err).create();
+	error_ = engine ? fixed_string() : err;
+
+	vm_engine_.reset(engine);
 }
 
 llvm::Module* module_vmcode_impl::get_vm_module() const
 {
-	return vm_module_raw_ptr_;
+	return vm_module_;
 }
 
 llvm::LLVMContext& module_vmcode_impl::get_vm_context()
@@ -61,12 +67,11 @@ llvm::LLVMContext& module_vmcode_impl::get_vm_context()
 
 module_vmcode_impl::~module_vmcode_impl()
 {
-	delete irbuilder_;
-	delete vm_ctx_;
 }
 
-llvm::DefaultIRBuilder* module_vmcode_impl::builder() const{
-	return irbuilder_;
+llvm::DefaultIRBuilder* module_vmcode_impl::builder() const
+{
+	return ir_builder_.get();
 }
 
 void module_vmcode_impl::dump_ir() const
@@ -101,52 +106,6 @@ void module_vmcode_impl::set_context( shared_ptr<module_context> const& v )
 	ctxt_ = v;
 }
 
-bool module_vmcode_impl::enable_jit()
-{
-	if (vm_engine_)
-	{
-		return true;
-	}
-	
-	if(!error_.empty())
-	{
-		return false;
-	}
-	
-	llvm_options::initialize();
-
-	// Add Attrs
-	vector<string> attrs;
-	if( eflib::support_feature(eflib::cpu_sse2) )
-	{
-		attrs.push_back("+sse");
-		attrs.push_back("+sse2");
-	}
-	
-	llvm::TargetOptions opts;
-
-	std::string err_str;
-
-	vm_engine_.reset( 
-		llvm::EngineBuilder(std::move(vm_module_))
-		.setTargetOptions(opts)
-		.setMAttrs(attrs)
-		.setErrorStr(&err_str)
-		.create()
-	);
-
-	if(!vm_engine_)
-	{
-		error_ = err_str;
-	}
-	else
-	{
-		error_ = fixed_string();
-	}
-
-	return static_cast<bool>(vm_engine_);
-}
-
 void* module_vmcode_impl::get_function(fixed_string const& func_name)
 {
 	llvm::Function* vm_func = vm_module_->getFunction( func_name.raw_string() );
@@ -172,7 +131,7 @@ void module_vmcode_impl::inject_function(void* pfn, fixed_string const& name)
 		return;
 	}
 
-	llvm::Function* func = vm_module_->getFunction( name.raw_string() );
+	llvm::Function* func = vm_module_->getFunction(name.raw_string());
 	if (func)
 	{
 		vm_engine_->addGlobalMapping(func, pfn);

@@ -1,5 +1,4 @@
-#ifndef SASL_CODEGEN_CG_MODULE_IMPL_H
-#define SASL_CODEGEN_CG_MODULE_IMPL_H
+#pragma once
 
 #include <sasl/include/codegen/forward.h>
 #include <sasl/include/codegen/cg_api.h>
@@ -48,7 +47,6 @@ public:
 	virtual module_context*			get_context() const;
 	virtual void					set_context( module_context_ptr const& );
 
-	virtual bool					enable_jit();
 	virtual void*					get_function	(eflib::fixed_string const&);
 	virtual void					inject_function	(void* , eflib::fixed_string const&);
 
@@ -62,23 +60,15 @@ public:
 	~module_vmcode_impl();
 
 protected:
+	std::unique_ptr<llvm::LLVMContext>		vm_ctx_;
+	std::unique_ptr<llvm::ExecutionEngine>  vm_engine_;
+	std::unique_ptr<llvm::DefaultIRBuilder> ir_builder_;
+	llvm::Module*							vm_module_;
+
 	sasl::semantic::module_semantic_ptr	sem_;
-
 	module_context_ptr					ctxt_;
-
-	llvm::LLVMContext*					vm_ctx_;
-	llvm::DefaultIRBuilder*				irbuilder_;
-
-	llvm::Module*						vm_module_raw_ptr_;
-	std::unique_ptr<llvm::Module>		vm_module_;
-	std::unique_ptr<llvm::ExecutionEngine>
-										vm_engine_;
-	
 	eflib::fixed_string					error_;
-
 	std::vector<llvm::Function*>		jitted_funcs_;
 };
 
 END_NS_SASL_CODEGEN();
-
-#endif

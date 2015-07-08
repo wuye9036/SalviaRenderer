@@ -48,7 +48,6 @@ public:
 	virtual llvm::LLVMContext&
 					get_vm_context()		= 0;
 
-	virtual bool	enable_jit()			= 0;
 	virtual void*	get_function	(eflib::fixed_string const& /*func_name*/)			= 0;
 	virtual void	inject_function	(void* fn, eflib::fixed_string const& /*func_name*/)= 0;
 
