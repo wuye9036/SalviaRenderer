@@ -463,7 +463,7 @@ void cg_function::return_name( std::string const& s )
 
 void cg_function::inline_hint()
 {
-	fn->addAttribute( 0, llvm::Attribute::InlineHint );
+	// fn->addAttribute( 0, llvm::Attribute::InlineHint );
 }
 
 bool cg_function::need_mask() const
