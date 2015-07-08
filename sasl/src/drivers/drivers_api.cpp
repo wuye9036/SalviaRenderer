@@ -15,6 +15,8 @@ public:
 	llvm_initializer()
 	{
 		llvm::InitializeNativeTarget();
+		llvm::InitializeNativeTargetAsmPrinter();
+		// llvm::InitializeNativeTargetAsmParser();
 	}
 
 	~llvm_initializer()
