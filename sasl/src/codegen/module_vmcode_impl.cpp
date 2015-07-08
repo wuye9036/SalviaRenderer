@@ -62,9 +62,12 @@ module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
 	auto patched_triple_str = sys_triple_str + "-elf";
 	llvm::Triple patched_triple(patched_triple_str);
 
-	llvm::SmallVector<std::string, 4> empty_attrs;
+	llvm::SmallVector<std::string, 4> attrs;
+	attrs.push_back("+sse");
+	attrs.push_back("+sse2");
+
 	llvm::EngineBuilder engine_builder(std::move(vm_module));
-	auto target_machine = engine_builder.selectTarget(patched_triple, "", "", empty_attrs);
+	auto target_machine = engine_builder.selectTarget(patched_triple, "", "", attrs);
 	auto engine = engine_builder.setErrorStr(&err).create(target_machine);
 	error_ = engine ? fixed_string() : err;
 
