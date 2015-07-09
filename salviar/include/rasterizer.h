@@ -12,6 +12,7 @@
 
 #include <eflib/include/memory/atomic.h>
 #include <eflib/include/memory/pool.h>
+#include <eflib/include/memory/allocator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/array.hpp>
@@ -33,6 +34,9 @@ class  shader_reflection;
 
 struct pixel_statistic;
 struct drawing_triangle_context;
+
+template <typename T, int Alignment>
+using aligned_vector = std::vector<T, eflib::aligned_allocator<T, Alignment>>;
 
 struct drawing_shader_context
 {
@@ -108,7 +112,8 @@ private:
 
 	std::vector<std::vector<std::vector<uint32_t>>>
 									threaded_tiled_prims_;		// vector<prim> prims = thread_tiled_prims[ThreadID][TileID]
-	std::vector<triangle_info>		tri_infos_;
+	aligned_vector<triangle_info, 16>
+									tri_infos_;
 
 	vs_output**						clipped_verts_;
 	size_t							clipped_verts_count_;
