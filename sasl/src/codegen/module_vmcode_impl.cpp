@@ -13,6 +13,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Host.h>
+#include <llvm/Support/DynamicLibrary.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <eflib/include/platform/enable_warnings.h>
@@ -145,17 +146,7 @@ void* module_vmcode_impl::get_function(fixed_string const& func_name)
 
 void module_vmcode_impl::inject_function(void* pfn, fixed_string const& name)
 {
-	assert(vm_engine_);
-	if(!vm_engine_)
-	{
-		return;
-	}
-
-	llvm::Function* func = vm_module_->getFunction(name.raw_string());
-	if (func)
-	{
-		vm_engine_->addGlobalMapping(func, pfn);
-	}
+	llvm::sys::DynamicLibrary::AddSymbol(name.raw_string(), pfn);
 	return;
 }
 
