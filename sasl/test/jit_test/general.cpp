@@ -442,7 +442,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( ret2[1], ref2[1], 0.00001f );
 		BOOST_CHECK_CLOSE( ret2[2], ref2[2], 0.00001f );
 		BOOST_CHECK_CLOSE( ret3[0], ref3[0], 0.00001f );
-		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.00001f );
+		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.00002f );
 		BOOST_CHECK_CLOSE( ret3[2], ref3[2], 0.000001f );
 		BOOST_CHECK_CLOSE( ret4[0], ref4[0], 0.00001f );
 		BOOST_CHECK_CLOSE( ret4[1], ref4[1], 0.00001f );
@@ -476,22 +476,22 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_EQUAL( ret2[3], true );
 	}
 	{
-		float lhs_array[3][4] =
+		float arr0[3][4] =
 		{
 			{17.7f, 66.3f, 0.92f, -88.7f},
 			{8.6f, -0.22f, 17.1f, -64.4f},
 			{199.8f, 0.1f, -0.1f, 99.73f}
 		};
 
-		float rhs_array[3][4] =
+		float arr1[3][4] =
 		{
 			{9.62f, 10.33f, -18.2f, 99.7f},
 			{-0.3f, -76.9f, 93.3f,  0.22f},
 			{44.1f, 0.027f, 19.9f, -33.5f}
 		};
 
-		float3x4& lhs( reinterpret_cast<float3x4&>(lhs_array) );
-		float3x4& rhs( reinterpret_cast<float3x4&>(rhs_array) );
+		float3x4& lhs( reinterpret_cast<float3x4&>(arr0) );
+		float3x4& rhs( reinterpret_cast<float3x4&>(arr1) );
 
 		float3x4 ret_exp2	= test_exp2_m34(lhs);
 		float3x4 ret_sin	= test_sin_m34(lhs);
@@ -520,27 +520,27 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 				union { float f; uint32_t u; } ret, ref;
 
-				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0f, lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_sin.data_[i][j];	ref.f = sinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_cos.data_[i][j];	ref.f = cosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_tan.data_[i][j];	ref.f = tanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_sinh.data_[i][j];	ref.f = sinhf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_cosh.data_[i][j];	ref.f = coshf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_tanh.data_[i][j];	ref.f = tanhf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_asin.data_[i][j];	ref.f = asinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_acos.data_[i][j];	ref.f = acosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_atan.data_[i][j];	ref.f = atanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_ceil.data_[i][j];	ref.f = fast_ceil(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_floor.data_[i][j];	ref.f = fast_floor(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_round.data_[i][j];	ref.f = fast_round(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_trunc.data_[i][j];	ref.f = trunc(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_log.data_[i][j];	ref.f = fast_log(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_log2.data_[i][j];	ref.f = fast_log2(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_log10.data_[i][j];	ref.f = log10f(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_rsqrt.data_[i][j];	ref.f = 1.0f/sqrtf(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_rcp.data_[i][j];	ref.f = 1.0f / lhs_array[i][j];			BOOST_CHECK_CLOSE( ret.f, ref.f, 0.00001f );
-				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(lhs_array[i][j], rhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
-				ret.f = ret_pow.data_[i][j];	ref.f = powf(lhs_array[i][j], rhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0f, arr0[i][j]);		BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_sin.data_[i][j];	ref.f = sinf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_cos.data_[i][j];	ref.f = cosf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_tan.data_[i][j];	ref.f = tanf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_sinh.data_[i][j];	ref.f = sinhf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_cosh.data_[i][j];	ref.f = coshf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_tanh.data_[i][j];	ref.f = tanhf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_asin.data_[i][j];	ref.f = asinf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_acos.data_[i][j];	ref.f = acosf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_atan.data_[i][j];	ref.f = atanf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_ceil.data_[i][j];	ref.f = fast_ceil(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_floor.data_[i][j];	ref.f = fast_floor(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_round.data_[i][j];	ref.f = fast_round(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_trunc.data_[i][j];	ref.f = trunc(arr0[i][j]);				BOOST_CHECK_EQUAL		 (ret.f, ref.f);
+				ret.f = ret_log.data_[i][j];	ref.f = fast_log(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_log2.data_[i][j];	ref.f = fast_log2(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_log10.data_[i][j];	ref.f = log10f(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_rsqrt.data_[i][j];	ref.f = 1.0f/sqrtf(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_rcp.data_[i][j];	ref.f = 1.0f / arr0[i][j];				BOOST_CHECK_CLOSE	     (ret.f, ref.f, 0.00001f);
+				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(arr0[i][j], arr1[i][j]);	BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_pow.data_[i][j];	ref.f = powf(arr0[i][j], arr1[i][j]);	BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 			}
 		}
 	}
@@ -1979,14 +1979,14 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 	BOOST_CHECK_EQUAL( ref_i[2], ret_i[2] );
 
 	{
-		float lhs_array[3][4] =
+		float arr0[3][4] =
 		{
 			{17.7f, 66.3f, 0.92f, -88.7f},
 			{8.6f, -0.22f, 17.1f, -64.4f},
 			{199.8f, 0.1f, -0.1f, 99.73f}
 		};
 
-		float rhs_array[3][4] =
+		float arr1[3][4] =
 		{
 			{9.62f, 10.33f, -18.2f, 99.7f},
 			{-0.3f, -76.9f, 93.3f,  0.22f},
@@ -2000,13 +2000,13 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 			for( int j = 0; j < 4; ++j )
 			{
 				ref_v[i][j]
-				= (lhs_array[i][j] + rhs_array[i][j]) * lhs_array[i][j]
-				- fmodf( (rhs_array[i][j] / lhs_array[i][j]), rhs_array[i][j] );
+				= (arr0[i][j] + arr1[i][j]) * arr0[i][j]
+				- fmodf( (arr1[i][j] / arr0[i][j]), arr1[i][j] );
 			}
 		}
 
-		float3x4& lhs( reinterpret_cast<float3x4&>(lhs_array) );
-		float3x4& rhs( reinterpret_cast<float3x4&>(rhs_array) );
+		float3x4& lhs( reinterpret_cast<float3x4&>(arr0) );
+		float3x4& rhs( reinterpret_cast<float3x4&>(arr1) );
 		float3x4 ret = test_mat_arith( lhs, rhs );
 
 		for( int i = 0; i < 3; ++i )
