@@ -28,7 +28,7 @@ int const SIMD_ALIGNMENT = 32;
 
 float v4_get_float(__m128 v, int i)
 {
-	float f[4];
+	EFLIB_ALIGN(16) float f[4];
 	_mm_store_ps(f, v);
 	return f[i];
 }
@@ -2180,7 +2180,6 @@ struct array_vs_sin
 
 struct array_vs_bin
 {
-	int		mat_size;
 	mat44*	mat_arr;
 };
 
@@ -2239,7 +2238,6 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 	sin.pos = &data.pos;
 
 	array_vs_bin bin;
-	bin.mat_size = 50;
 	bin.mat_arr = &mats[0];
 
 	array_vs_bout bout;
