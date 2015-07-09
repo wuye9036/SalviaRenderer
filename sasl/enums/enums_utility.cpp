@@ -140,16 +140,20 @@ namespace sasl{
 			builtin_types s_btc = scalar_of( btc );
 
 			size_t comp_size = 0;
-			if(    s_btc == builtin_types::_sint32
-				|| s_btc == builtin_types::_uint32
-				|| s_btc == builtin_types::_float 
-				|| s_btc == builtin_types::_boolean)
+
+			switch(s_btc)
 			{
+			case builtin_types::_sint32:
+			case builtin_types::_uint32:
+			case builtin_types::_float:
+			case builtin_types::_boolean:
 				comp_size = 4;
-			}
-			else
-			{
-				return 0;
+				break;
+			case builtin_types::_sampler:
+				comp_size = sizeof(void*);
+				break;
+			default:
+				assert(false);
 			}
 
 			if( is_matrix(btc) )
