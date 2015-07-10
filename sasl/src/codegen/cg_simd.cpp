@@ -541,12 +541,12 @@ SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 }
 multi_value cg_simd::layout_to_value( sv_layout* svl )
 {
-	builtin_types bt = to_builtin_types( svl->value_type );
+	builtin_types bt = to_builtin_types(svl->value_type);
 	multi_value ret = service()->emit_extract_ref(
 		entry_values[svl->usage], 
 		static_cast<int>(svl->physical_index)
 		);
-	ret.hint( to_builtin_types( svl->value_type ) );
+	ret.hint(bt);
 	return ret;
 }
 

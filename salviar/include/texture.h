@@ -23,10 +23,10 @@ class texture
 {
 protected:
 	pixel_format			 fmt_;
-	int					     sample_count_;
-	int						 min_lod_;
-	int					     max_lod_;
-	eflib::int4				 size_;
+	size_t					 sample_count_;
+	size_t					 min_lod_;
+	size_t					 max_lod_;
+	eflib::uint4             size_;
 	std::vector<surface_ptr> surfs_;
 
 	static int calc_lod_limit(eflib::int4 sz)
@@ -66,20 +66,28 @@ public:
 		return max_lod_;
 	}
 	
-	surface_ptr const& subresource(size_t index) const
+	surface_ptr subresource(size_t index) const
 	{
-		EFLIB_ASSERT(max_lod_ <= index && index <= min_lod_, "Mipmap level is out of bound.");
-		return surfs_[index];
+		if(max_lod_ <= index && index <= index)
+		{
+			return surfs_[index]; 
+		}
+		return surface_ptr();
 	}
 	
-	eflib::int4	isize() const
+	eflib::uint4 size() const
 	{
 		return size_;
 	}
 
-	eflib::int4	isize(size_t subresource_index) const
+	eflib::uint4 size(size_t subresource_index) const
 	{
-		return subresource(subresource_index)->isize();
+		auto subres = subresource(subresource_index);
+		if (subres)
+		{
+			return eflib::uint4(0, 0, 0, 0);
+		}
+		return subres->size();
 	}
 
 	size_t sample_count() const
@@ -123,7 +131,7 @@ public:
 		return texture_type_cube;
 	};
 
-	surface_ptr const& subresource(int face, int lod) const
+	surface_ptr subresource(int face, int lod) const
 	{
 		return texture::subresource(lod * 6 + face);
 	}

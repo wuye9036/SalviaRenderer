@@ -211,7 +211,7 @@ result renderer_impl::set_render_targets(size_t color_target_count, surface_ptr 
         return result::failed;
     }
 
-    size_t   target_sample_count = 0;
+    size_t target_sample_count = 0;
     target_vp.x = 0;
     target_vp.y = 0;
     target_vp.w = std::numeric_limits<float>::max();

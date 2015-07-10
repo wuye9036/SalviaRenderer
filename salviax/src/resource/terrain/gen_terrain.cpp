@@ -245,7 +245,7 @@ void make_terrain_fault(
 	normalize_terrain(field, size);
 }
 
-texture_ptr make_terrain_texture(renderer* rend, std::vector<float>& normalized_field, int size )
+texture_ptr make_terrain_texture(renderer* rend, std::vector<float>& normalized_field, size_t size)
 {
 	texture_ptr ret = rend->create_tex2d(size, size, 1, salviar::pixel_format_color_r32f);
 	

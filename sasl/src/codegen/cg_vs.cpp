@@ -423,7 +423,8 @@ bool cg_vs::layout_to_node_context(
 	// if psc is not existed, create a temporary node context.
 	if(!psc) psc = ctxt_->create_temporary_node_context();
 
-	if(could_cached){
+	if(could_cached)
+	{
 		input_copies_.insert( make_pair(svl->sv, psc) );
 	}
 
@@ -446,7 +447,7 @@ bool cg_vs::layout_to_node_context(
 
 	if(svl->internal_type == -1)
 	{
-		layout_value.hint( to_builtin_types(svl->value_type) );
+		layout_value.hint(bt);
 	}
 	else
 	{

@@ -226,6 +226,7 @@ fixed_string const& symbol::mangled_name() const{
 	{
 		// TODO Unavailable until function type is finished.
 		node_semantic* node_sem = owner_->get_semantic(associated_node_);
+		EFLIB_UNREF_DECLARATOR(node_sem);
 		if(associated_node_->node_class() == node_ids::function_def)
 		{
 			node* fn_ty

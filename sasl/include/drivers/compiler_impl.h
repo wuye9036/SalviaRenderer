@@ -103,7 +103,7 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros();
 
-	virtual sasl::common::diag_chat_ptr			compile(bool enable_jit, bool enable_reflect2);
+	virtual sasl::common::diag_chat_ptr			compile(bool enable_reflect2);
 	virtual sasl::common::diag_chat_ptr			compile(std::vector<salviar::external_function_desc> const&, bool enable_reflect2);
 
 	virtual sasl::semantic::module_semantic_ptr	get_semantic() const;

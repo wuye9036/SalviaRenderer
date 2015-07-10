@@ -5,6 +5,7 @@
 #include <salviar/include/enums.h>
 
 #include <eflib/include/memory/atomic.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/shared_array.hpp>
@@ -113,6 +114,8 @@ public:
 				}
 				renderer_->flush();
 			}
+#else
+			EFLIB_UNREF_DECLARATOR(do_not_wait);
 #endif
 		}
 

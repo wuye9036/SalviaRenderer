@@ -38,22 +38,22 @@ public:
 	void transfer(pixel_format srcfmt, const eflib::rect<size_t>& dest_rect, void* pdata);
 	void transfer(const eflib::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);
 
-	int width() const
+	size_t width() const
     {
 		return size_[0];
 	}
 
-	int height() const
+	size_t height() const
     {
 		return size_[1];
 	}
 
-	eflib::int4 isize() const
+	eflib::uint4 size() const
 	{
 		return size_;
 	}
 
-	int sample_count() const
+	size_t sample_count() const
     {
 		return sample_count_;
 	}
@@ -82,9 +82,9 @@ public:
     void		  fill_texels(color_rgba32f const& color);
 
 private:
-	int				elem_size_;
-	int				sample_count_;
-	eflib::int4		size_;
+	size_t			elem_size_;
+	size_t			sample_count_;
+	eflib::uint4	size_;
 	pixel_format	format_;
 	std::vector<byte, eflib::aligned_allocator<byte, 16>>
 					datas_;

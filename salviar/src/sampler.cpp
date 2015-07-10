@@ -517,7 +517,7 @@ namespace surface_sampler
 	};
 }
 
-float sampler::calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
+float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
 {
 #if !defined(EFLIB_NO_SIMD)
 	static const union
@@ -766,7 +766,7 @@ color_rgba32f sampler::sample_cube(
 
 float sampler::calc_lod_2d(eflib::vec2 const& ddx, eflib::vec2 const& ddy) const
 {
-	int4 size = tex_->isize();
+	uint4 size = tex_->size();
 
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
@@ -793,7 +793,7 @@ color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod )
 
 color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
 {
-	int4 size = tex_->isize();
+	int4 size = tex_->size();
 
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
@@ -814,7 +814,7 @@ color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec
 }
 
 void sampler::calc_anisotropic_lod(
-	eflib::int4 const& size,
+	eflib::uint4 const& size,
 	eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
 	float& out_lod, float& out_ratio, vec4& out_long_axis ) const
 {

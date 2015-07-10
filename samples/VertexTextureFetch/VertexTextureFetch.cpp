@@ -33,9 +33,9 @@ using std::endl;
 #define SASL_VERTEX_SHADER_ENABLED
 // #define SALVIA_PIXEL_SHADER_ENABLED
 
-int const TERRAIN_BLOCKS	= 32;
-int const TERRAIN_BLOCK_SIZE= 32;
-int const TERRAIN_SIZE		= TERRAIN_BLOCKS * TERRAIN_BLOCK_SIZE;
+int    const TERRAIN_BLOCKS		= 32;
+int	   const TERRAIN_BLOCK_SIZE	= 32;
+size_t const TERRAIN_SIZE		= TERRAIN_BLOCKS * TERRAIN_BLOCK_SIZE;
 
 char const* vs_code =
 "float4x4 wvpMatrix; \r\n"

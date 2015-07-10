@@ -45,7 +45,7 @@ int main (int argc, char **argv)
 	shared_ptr<compiler> drv;
 	pfn(drv);
 	drv->set_parameter( argc, argv );
-	shared_ptr<diag_chat> comp_diags = drv->compile(true, false);
+	shared_ptr<diag_chat> comp_diags = drv->compile(false);
 
 	diag_chat::merge(diags.get(), comp_diags.get(), true);
 

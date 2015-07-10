@@ -29,7 +29,7 @@ void make_terrain_fault (
 
 void filter_terrain(std::vector<float>& field, int size, float filter);
 
-salviar::texture_ptr make_terrain_texture(salviar::renderer* render, std::vector<float>& normalized_field, int size);
+salviar::texture_ptr make_terrain_texture(salviar::renderer* render, std::vector<float>& normalized_field, size_t size);
 
 END_NS_SALVIAX_RESOURCE();
 

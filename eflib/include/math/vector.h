@@ -24,6 +24,8 @@ namespace eflib{
 	typedef vector_<int, 3>		int3;
 	typedef vector_<int, 4>		int4;
 
+	typedef vector_<int, 4>		uint4;
+
 #ifdef EFLIB_NO_SIMD
 	typedef vector_<float, 4> float4;
 #endif

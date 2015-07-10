@@ -132,7 +132,7 @@ compiler_impl::compiler_impl()
 	opt_includes.fill_desc(desc);
 }
 
-shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit, bool enable_reflect2)
+shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2)
 {
 	// Initialize env for compiling.
 	shared_ptr<diag_chat> diags = diag_chat::create();
@@ -316,7 +316,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit, bool enable_reflec
 
 shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> const& external_funcs, bool enable_reflect2)
 {
-	shared_ptr<diag_chat> results = compile(true, enable_reflect2);
+	shared_ptr<diag_chat> results = compile(enable_reflect2);
 	if(!mvmc)
 	{
 		return results;
