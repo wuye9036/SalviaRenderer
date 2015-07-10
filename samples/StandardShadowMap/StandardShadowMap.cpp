@@ -13,6 +13,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
 
 #include <eflib/include/platform/dl_loader.h>
 #include <eflib/include/platform/main.h>
@@ -208,13 +209,13 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		gen_sm_vs_ = compile_from_file("../../resources/shaders/ssm/GenSM.savs", lang_vertex_shader);
-		draw_vs_ = compile_from_file("../../resources/shaders/ssm/Draw.savs", lang_vertex_shader);
+		gen_sm_vs_ = compile_from_file(find_path("ssm/GenSM.savs"), lang_vertex_shader);
+		draw_vs_ = compile_from_file(find_path("ssm/Draw.savs"), lang_vertex_shader);
 		gen_sm_ps_.reset(new gen_sm_cpp_ps());
 		draw_ps_.reset(new draw_cpp_ps());
 		pbs.reset( new bs() );
 		
-		cup_mesh = create_mesh_from_obj( data_->renderer.get(), "../../resources/models/cup/cup.obj", true );
+		cup_mesh = create_mesh_from_obj( data_->renderer.get(), find_path("cup/cup.obj"), true );
         plane_mesh = create_planar(
             data_->renderer.get(),
             vec3(-3.0f, 0.0f, -3.0f),

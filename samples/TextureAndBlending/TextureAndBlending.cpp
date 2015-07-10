@@ -12,6 +12,8 @@
 #include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
+
 #include <eflib/include/platform/main.h>
 
 #include <vector>
@@ -277,7 +279,7 @@ protected:
 			desc.addr_mode_v = address_clamp;
 			desc.addr_mode_w = address_clamp;
 
-			box_tex = load_texture(data_->renderer.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
+			box_tex = load_texture(data_->renderer.get() , find_path(_EFLIB_T("texture_and_blending/Dirt.jpg")) , salviar::pixel_format_color_rgba8);
 			box_tex->gen_mipmap(filter_linear, true);
 
 			box_sampler = data_->renderer->create_sampler(desc, box_tex);
@@ -295,7 +297,7 @@ protected:
 			desc.mag_filter = filter_linear;
 			desc.mip_filter = filter_linear;
 
-			plane_tex = load_texture(data_->renderer.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+			plane_tex = load_texture(data_->renderer.get(), find_path(_EFLIB_T("texture_and_blending/chessboard.png")) , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
             plane_sampler = data_->renderer->create_sampler(desc, plane_tex);

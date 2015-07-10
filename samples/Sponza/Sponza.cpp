@@ -13,8 +13,9 @@
 #include <salviar/include/colors.h>
 #include <salviar/include/texture.h>
 
-
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
+
 #include <eflib/include/platform/main.h>
 
 #include <vector>
@@ -196,12 +197,11 @@ protected:
 		sponza_sc = compile( sponza_vs_code, lang_vertex_shader );
 #endif
 
-
 		cout << "Loading mesh ... " << endl;
 #ifdef EFLIB_DEBUG
 		cout << "Application is built in debug mode. Mesh loading is *VERY SLOW*." << endl;
 #endif
-		sponza_mesh = create_mesh_from_obj( data_->renderer.get(), "../../resources/models/sponza/sponza.obj", false );
+		sponza_mesh = create_mesh_from_obj( data_->renderer.get(), find_path("sponza_lq/sponza.obj"), false );
 		cout << "Loading pixel and blend shader... " << endl;
 
 		pvs.reset( new sponza_vs() );

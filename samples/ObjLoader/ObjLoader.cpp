@@ -13,6 +13,8 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
+
 #include <eflib/include/platform/main.h>
 
 #include <vector>
@@ -151,7 +153,7 @@ protected:
 		rs_back.reset(new raster_state(rs_desc));
 
 		cup_vs = compile(cup_vs_code, lang_vertex_shader);
-		cup_mesh = create_mesh_from_obj( data_->renderer.get(), "../../resources/models/cup/cup.obj", true );
+		cup_mesh = create_mesh_from_obj( data_->renderer.get(), find_path("cup/cup.obj"), true );
 
 		pps.reset( new cup_ps() );
 		pbs.reset( new bs() );

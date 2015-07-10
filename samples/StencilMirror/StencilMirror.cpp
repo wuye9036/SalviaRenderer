@@ -13,6 +13,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
 
 #include <eflib/include/platform/main.h>
 
@@ -243,7 +244,7 @@ protected:
 		mirror_start_pos = vec3(-3.5f, -1.0f, -3.5f);
 		mirror_norm = vec3(0.0f, 1.0f, 0.0f);
 
-		cup_mesh = create_mesh_from_obj( data_->renderer.get(), "../../resources/models/cup/cup.obj", true );
+		cup_mesh = create_mesh_from_obj( data_->renderer.get(), find_path("cup/cup.obj"), true );
 		mirror_mesh = create_planar(
 			data_->renderer.get(),
 			mirror_norm,
