@@ -793,7 +793,7 @@ color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod )
 
 color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
 {
-	int4 size = tex_->size();
+	uint4 size = tex_->size();
 
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);

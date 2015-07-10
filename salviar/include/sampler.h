@@ -57,10 +57,10 @@ private:
 	texture_ptr     tex_;
 	filter_op_type  filters_[sampler_state_count];
 
-	float calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const;
+	float calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const;
 	
 	void calc_anisotropic_lod(
-		eflib::int4 const& size,
+		eflib::uint4 const& size,
 		eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
 		float& out_lod, float& out_ratio, eflib::vec4& out_long_axis ) const;
 

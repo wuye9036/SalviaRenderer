@@ -583,7 +583,7 @@ value_array cg_extension::split_array(llvm::Value* v)
 {
 	Type* ty = v->getType();
 	assert( ty->isArrayTy() );
-	size_t parallel_factor = ty->getArrayNumElements();
+	size_t parallel_factor = static_cast<size_t>(ty->getArrayNumElements());
 	value_array ret(parallel_factor, NULL);
 	unsigned value_index[] = {0};
 	for(; value_index[0] < parallel_factor; ++value_index[0])

@@ -29,12 +29,10 @@ protected:
 	eflib::uint4             size_;
 	std::vector<surface_ptr> surfs_;
 
-	static int calc_lod_limit(eflib::int4 sz)
+	static size_t calc_lod_limit(eflib::uint4 sz)
 	{
-		assert(sz[0] > 0 && sz[1] > 0 && sz[2] > 0);
-
-		int rv = 0;
-		int max_sz = std::max( sz[0], std::max(sz[1], sz[2]) );
+		size_t rv = 0;
+		auto max_sz = std::max( sz[0], std::max(sz[1], sz[2]) );
 		while (max_sz > 0)
 		{
 			max_sz >>= 1;

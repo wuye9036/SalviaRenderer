@@ -325,7 +325,7 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 	value_array diff_values(parallel_factor_, NULL);
 
 	multi_value source0 = create_value(
-		v.ty(), v.hint(), value_array(1, nullptr), value_kinds::value, v.abi()
+		v.ty(), hint, value_array(1, nullptr), value_kinds::value, v.abi()
 		);
 	multi_value source1 = source0;
 

@@ -55,8 +55,8 @@ surface::~surface()
 
 surface_ptr surface::make_mip_surface(filter_type filter)
 {
-	int mip_w = ( width()  + 1 ) / 2;
-	int mip_h = ( height() + 1 ) / 2;
+	size_t mip_w = ( width()  + 1 ) / 2;
+	size_t mip_h = ( height() + 1 ) / 2;
 
 	auto ret = boost::make_shared<surface>(mip_w, mip_h, sample_count_, format_);
 
@@ -131,7 +131,7 @@ result surface::map(internal_mapped_resource& mapped, map_mode mm)
 #endif
 }
 
-result surface::unmap(internal_mapped_resource& mapped, map_mode mm)
+result surface::unmap(internal_mapped_resource& /*mapped*/, map_mode /*mm*/)
 {
 	// No intermediate buffer needed in linear mode.
 	return result::ok;

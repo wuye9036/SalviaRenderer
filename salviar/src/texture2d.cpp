@@ -22,7 +22,7 @@ texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_fo
 {
 	fmt_  = format;
 	sample_count_ = static_cast<int>(num_samples);
-	size_ = int4(static_cast<int>(width), static_cast<int>(height), 1, 0);
+	size_ = uint4(static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1, 0);
 	surfs_.push_back( make_shared<surface>(width, height, num_samples, format) );
 }
 

@@ -35,7 +35,7 @@ float v4_get_float(__m128 v, int i)
 
 void v4_set_float(__m128& v, int i, float f)
 {
-
+	v.m128_f32[i] = f;
 }
 
 uint32_t naive_reversebits(uint32_t v)
@@ -520,7 +520,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 				union { float f; uint32_t u; } ret, ref;
 
-				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0f, arr0[i][j]);		BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_sin.data_[i][j];	ref.f = sinf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_cos.data_[i][j];	ref.f = cosf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_tan.data_[i][j];	ref.f = tanf(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
@@ -539,8 +538,11 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_log10.data_[i][j];	ref.f = log10f(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_rsqrt.data_[i][j];	ref.f = 1.0f/sqrtf(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_rcp.data_[i][j];	ref.f = 1.0f / arr0[i][j];				BOOST_CHECK_CLOSE	     (ret.f, ref.f, 0.00001f);
-				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(arr0[i][j], arr1[i][j]);	BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_pow.data_[i][j];	ref.f = powf(arr0[i][j], arr1[i][j]);	BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+
+				// TODO: ldexp and exp2 are not followed HLSL spec. Should fix them later.
+				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0f, (int)arr0[i][j]);	BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
+				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(arr0[i][j], (int)arr1[i][j]); BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 			}
 		}
 	}

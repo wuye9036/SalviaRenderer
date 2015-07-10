@@ -1229,6 +1229,8 @@ multi_value cg_service::emit_abs( multi_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
+	EFLIB_UNREF_DECLARATOR(scalar_hint);
+
 	abis arg_abi = arg_value.abi();
 
 	value_array v = arg_value.load(arg_abi);
@@ -1239,7 +1241,7 @@ multi_value cg_service::emit_abs( multi_value const& arg_value )
 multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
-	builtin_types scalar_hint = scalar_of( arg_value.hint() );
+	builtin_types scalar_hint = scalar_of(hint);
 	abis arg_abi = arg_value.abi();
 
 	value_array v = arg_value.load(arg_abi);

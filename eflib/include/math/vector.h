@@ -15,16 +15,16 @@ namespace eflib{
 	typedef float4				  float4x4[4];
 #endif
 
-	typedef vector_<float, 2>	vec2;
-	typedef vector_<float, 3>	vec3;
-	typedef vector_<float, 4>	vec4;	
-	typedef vector_<float, 4>	coord;
+	typedef vector_<float, 2>	 vec2;
+	typedef vector_<float, 3>	 vec3;
+	typedef vector_<float, 4>	 vec4;	
+	typedef vector_<float, 4>	 coord;
 
-	typedef vector_<int, 2>		int2;
-	typedef vector_<int, 3>		int3;
-	typedef vector_<int, 4>		int4;
+	typedef vector_<int, 2>		 int2;
+	typedef vector_<int, 3>		 int3;
+	typedef vector_<int, 4>		 int4;
 
-	typedef vector_<int, 4>		uint4;
+	typedef vector_<uint32_t, 4> uint4;
 
 #ifdef EFLIB_NO_SIMD
 	typedef vector_<float, 4> float4;
