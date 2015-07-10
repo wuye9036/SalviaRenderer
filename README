@@ -2,14 +2,14 @@
 
 1. Requirements
   * Windows 7 or later
-    * Visual Studio 2012 update 4 or Visual Studio 2013.
+    * Visual Studio 2013.
 	* Python 2.7.
-	* CMake 2.8.10 or later.
+	* CMake 3.x
   * Linux
     * Mint 16 and Mint 17 were tested.
-	* GCC 4.7 or later.
+	* GCC 4.8 or later.
 	* Python 2.7.
-	* CMake 2.8.10 or later.
+	* CMake 3.x
 	
 2. Build steps
   * Run build_all.py which is located at root of project.
@@ -33,15 +33,15 @@ https://git.oschina.net/wuye9036/SALVIA.git
 首先请确认您的机器上具有：
 
 Windows平台：
-1. Visual Studio 2012 Update 4 或 Visual Studio 2013；
+1. Visual Studio 2013. Desktop Express/Community/Profession；
 3. Python 2.7；
-4. CMake 2.8.10或以上版本，如果使用Visual Studio 2013请使用对应的CMake版本；
+4. CMake 3.x
 
 Linux平台：
 
-1. GCC 4.7或以上版本；
+1. GCC 4.8或以上版本；
 3. Python 2.7；
-4. CMake 2.8.10或以上版本。
+4. CMake 3.x。
 
 运行build_all.py文件。如果您是首次运行该脚本，它会生成proj.py文件。
 打开proj.py文件，阅读说明并修改配置。
