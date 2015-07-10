@@ -18,6 +18,7 @@ class download_info(object):
         self.tag = tag 
         self.res_type = res_type
         self.need_distribute = need_distribute
+        self.is_patch = res_path.startswith("__patches__")
 
         if self.res_type == RAW_FILE:
             store_rel_path = rel_path
@@ -28,7 +29,10 @@ class download_info(object):
 
         self.store_path = os.path.join(prj_root, 'downloads', store_rel_path)
         if self.res_type == RAW_FILE:
-            self.dist_path = os.path.join(prj_root, store_rel_path)
+            if self.is_patch:
+                self.dist_path = os.path.join(prj_root, store_rel_path[len('__patches__/'):])
+            else:
+                self.dist_path = os.path.join(prj_root, store_rel_path)
         elif self.res_type == COMPRESSED_FILE or self.res_type == COMPRESSED_FOLDER:
             self.dist_path = os.path.join(prj_root, rel_path)
         else:
