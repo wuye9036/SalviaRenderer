@@ -18,6 +18,7 @@ set( APP_COMMON_HEADERS
 	${SALVIA_HOME_DIR}/salviau/include/common/window.h
 	${SALVIA_HOME_DIR}/salviau/include/common/timer.h
 	${SALVIA_HOME_DIR}/salviau/include/common/sample_app.h
+	${SALVIA_HOME_DIR}/salviau/include/common/path.h
 )
 
 set( APP_WIN_HEADERS
@@ -37,6 +38,7 @@ set( APP_WIN_IMPLS
 set( APP_COMMON_SOURCES
 	${SALVIA_HOME_DIR}/salviau/src/common/timer.cpp
 	${SALVIA_HOME_DIR}/salviau/src/common/sample_app.cpp
+	${SALVIA_HOME_DIR}/salviau/src/common/path.cpp
 )
 
 SOURCE_GROUP( "Header Files\\Common"	FILES ${APP_COMMON_HEADERS} )
