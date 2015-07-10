@@ -153,7 +153,8 @@ token_ptr attribute::token_end() const
 	return tok_end;
 }
 
-shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const{
+shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const
+{
 	assert(!"Terminate attribute has no child.");
 	return shared_ptr<attribute>();
 }
@@ -179,8 +180,11 @@ size_t sequence_attribute::child_size() const{
 }
 
 selector_attribute::selector_attribute() : selected_idx(-1){}
-shared_ptr<attribute> selector_attribute::child( int idx ) const{
-	EFLIB_ASSERT_AND_IF( idx == 0, "" ){
+
+shared_ptr<attribute> selector_attribute::child( int idx ) const
+{
+	EFLIB_ASSERT_AND_IF( idx == 0, "" )
+	{
 		return shared_ptr<attribute>();
 	}
 	return attr;
@@ -191,8 +195,10 @@ size_t selector_attribute::child_size() const
 	return selected_idx == -1 ? 0 : 1;
 }
 
-shared_ptr<attribute> queuer_attribute::child( int idx ) const{
-	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
+shared_ptr<attribute> queuer_attribute::child( int idx ) const
+{
+	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" )
+	{
 		return shared_ptr<attribute>();
 	}
 	return attrs[idx];
@@ -387,7 +393,7 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 			final_result = branch_result;
 			slc_attr->attr = attrs[i_result];
 			slc_attr->token_range( attrs[i_result]->token_beg(), attrs[i_result]->token_end() );
-			slc_attr->selected_idx = i_result;
+			slc_attr->selected_idx = static_cast<int>(i_result);
 			iter = iters[i_result];
 		}
 	}

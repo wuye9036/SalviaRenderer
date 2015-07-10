@@ -3,6 +3,7 @@
 #include <sasl/include/codegen/ty_cache.h>
 #include <sasl/enums/enums_utility.h>
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/IR/Module.h>
@@ -504,6 +505,8 @@ Value* cg_extension::get_constant_by_scalar( Type* ty, Value* scalar )
 {
 	Type* scalar_ty = scalar->getType();
 	assert( !scalar_ty->isAggregateType() && !scalar_ty->isVectorTy() );
+	EFLIB_UNREF_DECLARATOR(scalar_ty);
+
 	if ( ty->isVectorTy() )
 	{
 		// Vector
@@ -759,13 +762,13 @@ value_array cg_extension::extract_element(value_array const& agg, value_array co
 	return ret;
 }
 
-value_array cg_extension::extract_value(value_array const& agg, uint32_t index)
+value_array cg_extension::extract_value(value_array const& agg, size_t index)
 {
 	assert( valid_all(agg) );
 	value_array ret(agg.size(), NULL);
 	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
 	{
-		ret[value_index] = builder_->CreateExtractValue(agg[value_index], index);
+		ret[value_index] = builder_->CreateExtractValue(agg[value_index], static_cast<uint32_t>(index));
 	}
 	return ret;
 }
@@ -784,14 +787,14 @@ value_array cg_extension::gep(value_array const& agg_addr, value_array const& in
 	return ret;
 }
 
-value_array cg_extension::struct_gep(value_array const& agg, uint32_t index)
+value_array cg_extension::struct_gep(value_array const& agg, size_t index)
 {
 	assert( valid_all(agg) );
 	
 	value_array ret(agg.size(), NULL);
 	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
 	{
-		ret[value_index] = builder_->CreateStructGEP(agg[value_index], index);
+		ret[value_index] = builder_->CreateStructGEP(agg[value_index], static_cast<unsigned int>(index));
 	}
 	return ret;
 }

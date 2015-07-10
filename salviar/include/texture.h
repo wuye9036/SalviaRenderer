@@ -54,12 +54,12 @@ public:
 		return fmt_;
 	}
 	
-	int min_lod() const
+	size_t min_lod() const
 	{
 		return min_lod_;
 	}
 
-	int max_lod() const
+	size_t max_lod() const
 	{
 		return max_lod_;
 	}
@@ -129,7 +129,7 @@ public:
 		return texture_type_cube;
 	};
 
-	surface_ptr subresource(int face, int lod) const
+	surface_ptr subresource(size_t face, size_t lod) const
 	{
 		return texture::subresource(lod * 6 + face);
 	}

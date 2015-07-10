@@ -31,7 +31,7 @@ void texture_cube::gen_mipmap(filter_type filter, bool auto_gen)
 
 	for(size_t lod_level = max_lod_; lod_level < min_lod_; ++lod_level)
 	{
-		for(int i_face = 0; i_face < 6; ++i_face)
+		for(size_t i_face = 0; i_face < 6; ++i_face)
 		{
 			surfs_.push_back( subresource(i_face, lod_level)->make_mip_surface(filter) );
 		}

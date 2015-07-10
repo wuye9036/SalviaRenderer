@@ -231,8 +231,8 @@ public:
 	value_array call			(value_array const& fn, llvm::ArrayRef<value_array const*> const& args);
 	value_array load			(value_array const& addr);
 	value_array store			(value_array const& values, value_array const& addr);
-	value_array struct_gep		(value_array const& agg, uint32_t index);
-	value_array extract_value	(value_array const& agg, uint32_t index);
+	value_array struct_gep		(value_array const& agg, size_t index);
+	value_array extract_value	(value_array const& agg, size_t index);
 	
 	value_array shuffle_vector	(value_array const& v1, value_array const& v2, value_array const& mask);
 	value_array extract_element	(value_array const& agg, value_array const& index);

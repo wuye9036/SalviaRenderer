@@ -1483,9 +1483,12 @@ multi_value cg_service::create_value_by_scalar( multi_value const& scalar, cg_ty
 {
 	builtin_types src_hint = scalar.hint();
 	assert( is_scalar(src_hint) );
+	EFLIB_UNREF_DECLARATOR(src_hint);
+
 	builtin_types dst_hint = tyinfo ? tyinfo->hint() : hint;
 	builtin_types dst_scalar = scalar_of(dst_hint);
 	assert( dst_scalar == src_hint );
+	EFLIB_UNREF_DECLARATOR(dst_scalar);
 
 	if( is_scalar(dst_hint) )
 	{
@@ -1746,6 +1749,8 @@ multi_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_i
 
 	builtin_types hint = v0.hint();
 	assert( hint == v1.hint() );
+	EFLIB_UNREF_DECLARATOR(hint);
+
 	abis abi = promote_abi( v0.abi(), v1.abi() );
 
 	binary_intrin_functor intrin_sv = ext_->promote_to_binary_sv(
@@ -1761,6 +1766,7 @@ multi_value cg_service::extend_to_vm( multi_value const& v, builtin_types comple
 {
 	builtin_types hint = v.hint();
 	assert( is_scalar(hint) );
+	EFLIB_UNREF_DECLARATOR(hint);
 
 	if( is_vector(complex_hint) )
 	{

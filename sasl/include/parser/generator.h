@@ -57,7 +57,13 @@ public:
 	attribute();
 	virtual ~attribute();
 
-	virtual boost::shared_ptr<attribute> child( int idx ) const = 0;
+	boost::shared_ptr<attribute> child(size_t idx) const
+	{
+		return child(static_cast<int>(idx));
+	}
+
+	virtual boost::shared_ptr<attribute> child(int idx) const = 0;
+
 	virtual size_t child_size() const = 0;
 
 	virtual intptr_t rule_id() const;

@@ -117,7 +117,7 @@ public:
 		if( err ) { return; }
 		library_.make_enable();
 
-		err = FT_New_Face( library_.get(), file_name.c_str(), face_index, face_.get_ptr() );
+		err = FT_New_Face( library_.get(), file_name.c_str(), static_cast<FT_Long>(face_index), face_.get_ptr() );
 		if(!err) {
 			face_.make_enable();
 			return;
@@ -160,14 +160,15 @@ public:
 		unit_ = un;
 
 		static int const dpi = 96;
+		auto sz_uint = static_cast<FT_UInt>(sz);
 
 		switch(un)
 		{
 		case pixels:
-			FT_Set_Pixel_Sizes(face_.get(), sz, sz);
+			FT_Set_Pixel_Sizes(face_.get(), sz_uint, sz_uint);
 			return;
 		case points:
-			FT_Set_Char_Size(face_.get(), sz << 6, sz << 6, dpi, dpi);
+			FT_Set_Char_Size(face_.get(), sz_uint << 6, sz_uint << 6, dpi, dpi);
 			break;
 		default:
 			EFLIB_ASSERT_UNIMPLEMENTED();

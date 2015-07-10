@@ -591,12 +591,12 @@ sampler::sampler(sampler_desc const& desc, texture_ptr const& tex)
 	filters_[sampler_state_mip] = surface_sampler::filter_table[desc_.mip_filter][desc_.addr_mode_u][desc.addr_mode_v];
 }
 
-inline int compute_cube_subresource(std::true_type, int face, int lod_level)
+inline size_t compute_cube_subresource(std::true_type, size_t face, size_t lod_level)
 {
 	return lod_level * 6 + face;
 }
 
-inline int compute_cube_subresource(std::false_type, int /*face*/, int lod_level)
+inline size_t compute_cube_subresource(std::false_type, size_t /*face*/, size_t lod_level)
 {
 	return lod_level;
 }
@@ -605,6 +605,7 @@ template <bool IsCubeTexture>
 color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t sample, float miplevel, float ratio, vec4 const& long_axis) const
 {
 	std::integral_constant<bool, IsCubeTexture> dummy;
+	size_t face_sz = static_cast<size_t>(face);
 
 	bool is_mag
 		= (desc_.mip_filter == filter_point)
@@ -614,16 +615,17 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 
 	if(is_mag)
 	{
-		int subres_index = compute_cube_subresource(dummy, face, tex_->max_lod() );
+		auto subres_index = compute_cube_subresource(dummy, face_sz, tex_->max_lod() );
 		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_mag);
 	}
 
 	if(desc_.mip_filter == filter_point)
 	{
 		int ml = fast_floori(miplevel + 0.5f);
-		ml = clamp(ml, tex_->max_lod(), tex_->min_lod());
 
-		int subres_index = compute_cube_subresource(dummy, face, ml);
+		ml = clamp(ml, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod()));
+
+		auto subres_index = compute_cube_subresource(dummy, face_sz, ml);
 		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_min);
 	}
 
@@ -634,11 +636,11 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 
 		float frac = miplevel - lo;
 
-		lo = clamp(lo, tex_->max_lod(), tex_->min_lod());
-		hi = clamp(hi, tex_->max_lod(), tex_->min_lod());
+		auto lo_sz = static_cast<size_t>(clamp(lo, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod())));
+		auto hi_sz = static_cast<size_t>(clamp(hi, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod())));
 
-		int subres_index_lo = compute_cube_subresource(dummy, face, lo);
-		int subres_index_hi = compute_cube_subresource(dummy, face, hi);
+		auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
+		auto subres_index_hi = compute_cube_subresource(dummy, face_sz, hi_sz);
 
 		color_rgba32f c0 = sample_surface(*tex_->subresource(subres_index_lo), coordx, coordy, sample, sampler_state_min);
 		color_rgba32f c1 = sample_surface(*tex_->subresource(subres_index_hi), coordx, coordy, sample, sampler_state_min);
@@ -665,14 +667,17 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 		int hi  = lo + 1;
 
 		// float frac = miplevel + miplevel_af_bias - low;
+		lo = max(lo, 0);
+		hi = max(hi, 0);
 
-		lo = clamp(lo, tex_->max_lod(), tex_->min_lod());
-		hi = clamp(hi, tex_->max_lod(), tex_->min_lod());
+		auto lo_sz = clamp(static_cast<size_t>(lo), tex_->max_lod(), tex_->min_lod());
+		auto hi_sz = clamp(static_cast<size_t>(hi), tex_->max_lod(), tex_->min_lod());
+		EFLIB_UNREF_DECLARATOR(hi_sz);
 
 		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
 		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
 		{
-			int subres_index_lo = compute_cube_subresource(dummy, face, lo);
+			auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
 			color_rgba32f c0 = sample_surface(
 				*tex_->subresource(subres_index_lo), sample_coord_x, sample_coord_y, sample, sampler_state_min
 				);

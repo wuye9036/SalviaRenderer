@@ -19,8 +19,9 @@ namespace Intrinsic = llvm::Intrinsic;
 
 BEGIN_NS_SASL_CODEGEN();
 
-llvm::Intrinsic::ID get_intrinsic_id( char const* Name ){
-	unsigned Len = strlen(Name);
+llvm::Intrinsic::ID get_intrinsic_id( char const* Name )
+{
+	unsigned Len = static_cast<unsigned>( strlen(Name) );
 
 	if (Len < 5 || Name[4] != '.' || Name[0] != 'l' || Name[1] != 'l'
 		|| Name[2] != 'v' || Name[3] != 'm')

@@ -475,7 +475,7 @@ skin_info_ptr build_skin_info( dae_skin_ptr skin )
 	}
 	assert( weight_index_stride == 2 );
 
-	size_t vertex_skin_info_cursor = 0;
+	uint32_t vertex_skin_info_cursor = 0;
 	for(uint32_t i_vert = 0; i_vert < skin->weights->count; ++i_vert)
 	{
 		uint32_t vcount = skin->weights->vcount[i_vert];
@@ -723,8 +723,8 @@ void merge_buffer_to_mesh(
 	);
 	
 	ieds.push_back(ied);
-	ieds.back().input_slot = slot_counter;
-	ieds.back().semantic_index = src_mesh_idx+src_mesh_count*ied.semantic_index;
+	ieds.back().input_slot = static_cast<uint32_t>(slot_counter);
+	ieds.back().semantic_index = static_cast<uint32_t>(src_mesh_idx+src_mesh_count*ied.semantic_index);
 
 	++slot_counter;
 }
