@@ -13,6 +13,8 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
+
 #include <eflib/include/platform/main.h>
 
 #include <vector>
@@ -219,9 +221,7 @@ protected:
 		rs_back.reset(new raster_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
-		char const* src_file = "../../resources/models/morph/src.dae";
-		char const* dst_file = "../../resources/models/morph/dst.dae";
-		morph_mesh = create_morph_mesh_from_collada( data_->renderer.get(), src_file, dst_file );
+		morph_mesh = create_morph_mesh_from_collada( data_->renderer.get(), find_path("morph/src.dae"), find_path("morph/dst.dae"));
 
 		assert(morph_mesh);
 

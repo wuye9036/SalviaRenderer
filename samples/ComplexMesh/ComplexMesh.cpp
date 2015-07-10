@@ -4,6 +4,7 @@
 #include <salviax/include/swap_chain/swap_chain.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -313,7 +314,7 @@ public:
 
 		// Loading mesh
 		cout << "Loading mesh ... " << endl;
-		mesh_ = LoadModel(data_->renderer, "../../resources/M134 Predator.MESHML.model_bin");
+		mesh_ = LoadModel(data_->renderer, find_path("complex_mesh/M134 Predator.MESHML.model_bin"));
 		cout << "Loading pixel and blend shader... " << endl;
 
 		// Initialize shader

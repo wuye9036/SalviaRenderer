@@ -14,6 +14,7 @@
 #include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
 
 #include <eflib/include/platform/main.h>
 
@@ -176,7 +177,7 @@ protected:
 		}
 		else
 		{
-			fnt = font::create("../../resources/font/AnglicanText.ttf", 0, 56, font::points);
+			fnt = font::create(find_path("font/AnglicanText.ttf"), 0, 56, font::points);
 			fnt->draw( "Cannot find msyh.ttc", plane_tex->subresource(0).get(), canvas_rect,
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 		}

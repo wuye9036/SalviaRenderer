@@ -1,4 +1,5 @@
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -238,7 +239,7 @@ protected:
 		rs_back.reset(new raster_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
-		astro_boy_mesh = create_mesh_from_collada( data_->renderer.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
+		astro_boy_mesh = create_mesh_from_collada( data_->renderer.get(), find_path("astro_boy/astroBoy_walk_Maya.dae") );
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;

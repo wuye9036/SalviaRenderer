@@ -1,4 +1,5 @@
 #include <salviau/include/common/sample_app.h>
+#include <salviau/include/common/path.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -250,7 +251,13 @@ protected:
 		desc.mip_filter = filter_anisotropic;
 		desc.max_anisotropy = 16;
 
-		plane_tex = load_texture(data_->renderer.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+		auto plane_tex_path = find_path(_EFLIB_T("texture_and_blending/chessboard.png"));
+		if(plane_tex_path.empty())
+		{
+			throw "Plane texture loading failed.";
+		}
+
+		plane_tex = load_texture(data_->renderer.get(), plane_tex_path, salviar::pixel_format_color_rgba8);
 		plane_tex->gen_mipmap(filter_linear, true);
 			
 		plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
