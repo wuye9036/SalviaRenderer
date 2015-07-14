@@ -465,61 +465,61 @@ namespace surface_sampler
 		{
 			{
 				point<addresser::wrap, addresser::wrap>::op,
-					point<addresser::wrap, addresser::mirror>::op,
-					point<addresser::wrap, addresser::clamp>::op,
-					point<addresser::wrap, addresser::border>::op
+				point<addresser::wrap, addresser::mirror>::op,
+				point<addresser::wrap, addresser::clamp>::op,
+				point<addresser::wrap, addresser::border>::op
 			},
 			{
 				point<addresser::mirror, addresser::wrap>::op,
-					point<addresser::mirror, addresser::mirror>::op,
-					point<addresser::mirror, addresser::clamp>::op,
-					point<addresser::mirror, addresser::border>::op
-				},
-				{
-					point<addresser::clamp, addresser::wrap>::op,
-						point<addresser::clamp, addresser::mirror>::op,
-						point<addresser::clamp, addresser::clamp>::op,
-						point<addresser::clamp, addresser::border>::op
-				},
-				{
-					point<addresser::border, addresser::wrap>::op,
-						point<addresser::border, addresser::mirror>::op,
-						point<addresser::border, addresser::clamp>::op,
-						point<addresser::border, addresser::border>::op
-					}
+				point<addresser::mirror, addresser::mirror>::op,
+				point<addresser::mirror, addresser::clamp>::op,
+				point<addresser::mirror, addresser::border>::op
+			},
+			{
+				point<addresser::clamp, addresser::wrap>::op,
+				point<addresser::clamp, addresser::mirror>::op,
+				point<addresser::clamp, addresser::clamp>::op,
+				point<addresser::clamp, addresser::border>::op
+			},
+			{
+				point<addresser::border, addresser::wrap>::op,
+				point<addresser::border, addresser::mirror>::op,
+				point<addresser::border, addresser::clamp>::op,
+				point<addresser::border, addresser::border>::op
+			}
 		},
 		{
 			{
 				linear<addresser::wrap, addresser::wrap>::op,
-					linear<addresser::wrap, addresser::mirror>::op,
-					linear<addresser::wrap, addresser::clamp>::op,
-					linear<addresser::wrap, addresser::border>::op
+				linear<addresser::wrap, addresser::mirror>::op,
+				linear<addresser::wrap, addresser::clamp>::op,
+				linear<addresser::wrap, addresser::border>::op
 			},
 			{
 				linear<addresser::mirror, addresser::wrap>::op,
-					linear<addresser::mirror, addresser::mirror>::op,
-					linear<addresser::mirror, addresser::clamp>::op,
-					linear<addresser::mirror, addresser::border>::op
-				},
-				{
-					linear<addresser::clamp, addresser::wrap>::op,
-						linear<addresser::clamp, addresser::mirror>::op,
-						linear<addresser::clamp, addresser::clamp>::op,
-						linear<addresser::clamp, addresser::border>::op
-				},
-				{
-					linear<addresser::border, addresser::wrap>::op,
-						linear<addresser::border, addresser::mirror>::op,
-						linear<addresser::border, addresser::clamp>::op,
-						linear<addresser::border, addresser::border>::op
-					}
+				linear<addresser::mirror, addresser::mirror>::op,
+				linear<addresser::mirror, addresser::clamp>::op,
+				linear<addresser::mirror, addresser::border>::op
+			},
+			{
+				linear<addresser::clamp, addresser::wrap>::op,
+				linear<addresser::clamp, addresser::mirror>::op,
+				linear<addresser::clamp, addresser::clamp>::op,
+				linear<addresser::clamp, addresser::border>::op
+			},
+			{
+				linear<addresser::border, addresser::wrap>::op,
+				linear<addresser::border, addresser::mirror>::op,
+				linear<addresser::border, addresser::clamp>::op,
+				linear<addresser::border, addresser::border>::op
+			}
 		}
 	};
 }
 
 float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
 {
-#if !defined(EFLIB_NO_SIMD)
+#if 0 && !defined(EFLIB_NO_SIMD)
 	static const union
 	{
 		int maski;
@@ -556,14 +556,26 @@ float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib
 #else
 	float rho, lambda;
 
+#if 0
 	vec4 maxD(
 		max(abs(ddx[0]), abs(ddy[0])),
 		max(abs(ddx[1]), abs(ddy[1])),
 		max(abs(ddx[2]), abs(ddy[2])),
 		0.0f);
 	maxD *= vec4(static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0);
-
 	rho = max(max(maxD[0], maxD[1]), maxD[2]);
+#else
+	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
+
+	vec4 ddx_ts = ddx * size_vec4;
+	vec4 ddy_ts = ddy * size_vec4;
+
+	float ddx_rho = ddx_ts.xyz().length();
+	float ddy_rho = ddy_ts.xyz().length();
+
+	rho = max(ddx_rho, ddy_rho);
+#endif
+
 	if(rho == 0.0f) rho = 0.000001f;
 	lambda = fast_log2(rho);
 	return lambda + bias;
@@ -653,7 +665,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 		int int_ratio = min( fast_roundi(ratio), static_cast<int>(desc_.max_anisotropy) );
 
 		float miplevel_af_bias = fast_log2(ratio / int_ratio);
-		if( miplevel_af_bias < 1.5f )
+		if( abs(miplevel_af_bias) < 1.5f )
 		{
 			miplevel_af_bias = 0.0f;
 		}
@@ -666,7 +678,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 		int lo = fast_floori(miplevel+miplevel_af_bias);
 		int hi  = lo + 1;
 
-		// float frac = miplevel + miplevel_af_bias - low;
+		float frac = miplevel + miplevel_af_bias - lo;
 		lo = max(lo, 0);
 		hi = max(hi, 0);
 
@@ -678,12 +690,15 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
 		{
 			auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
+			auto subres_index_hi = compute_cube_subresource(dummy, face_sz, hi_sz);
 			color_rgba32f c0 = sample_surface(
 				*tex_->subresource(subres_index_lo), sample_coord_x, sample_coord_y, sample, sampler_state_min
 				);
-			// color_rgba32f c1 = sample_surface(tex_->subresource(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+			color_rgba32f c1 = sample_surface(
+				*tex_->subresource(subres_index_hi), sample_coord_x, sample_coord_y, sample, sampler_state_min
+				);
 
-			color += c0.get_vec4(); //lerp(c0, c1, frac).get_vec4();
+			color += lerp(c0, c1, frac).get_vec4();
 
 			sample_coord_x += long_axis.x();
 			sample_coord_y += long_axis.y();
@@ -827,22 +842,25 @@ void sampler::calc_anisotropic_lod(
 
 	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
 
-	vec4 ddx_in_texcoord = ddx * size_vec4;
-	vec4 ddy_in_texcoord = ddy * size_vec4;
+	vec4 ddx_ts = ddx * size_vec4;
+	vec4 ddy_ts = ddy * size_vec4;
 
-	float ddx_rho = max(max(abs(ddx_in_texcoord[0]), abs(ddx_in_texcoord[1])), abs(ddx_in_texcoord[2]));
-	float ddy_rho = max(max(abs(ddy_in_texcoord[0]), abs(ddy_in_texcoord[1])), abs(ddy_in_texcoord[2]));
+	float ddx_rho = ddx_ts.xyz().length();
+	float ddy_rho = ddy_ts.xyz().length();
+
+	float diag0 = (ddx_ts - ddy_ts).xyz().length();
+	float diag1 = (ddx_ts + ddy_ts).xyz().length();
+
+	rho = min( min(diag0, diag1), min(ddx_rho, ddy_rho) );
 
 	if( ddx_rho > ddy_rho )
 	{
-		rho = ddy_rho;
-		out_ratio = ddx_rho / ddy_rho;
+		out_ratio = ddx_rho / rho;
 		out_long_axis = ddx / out_ratio;
 	}
 	else
 	{
-		rho = ddx_rho;
-		out_ratio = ddy_rho / ddx_rho;
+		out_ratio = ddy_rho / rho;
 		out_long_axis = ddy / out_ratio;
 	}
 

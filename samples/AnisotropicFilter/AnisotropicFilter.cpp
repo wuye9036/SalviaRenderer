@@ -1,5 +1,7 @@
 #include <salviau/include/common/sample_app.h>
 #include <salviau/include/common/path.h>
+#include <salviau/include/common/gui.h>
+#include <salviau/include/common/window.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_regs.h>
@@ -18,6 +20,7 @@
 #include <eflib/include/platform/main.h>
 
 #include <vector>
+#include <cmath>
 
 using namespace eflib;
 using namespace salviar;
@@ -39,6 +42,11 @@ struct vert
 {
 	vec4 pos;
 };
+
+float  const CYLINDER_RADIUS         = 5.0f;
+size_t const CYLINDER_SEGMENTS       = 6;
+float  const CYLINDER_SEG_ANGLE      = 360.0f / static_cast<float>(CYLINDER_SEGMENTS);
+float  const CYLINDER_SEG_HALF_WIDTH = tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS;
 
 class vs_cone : public cpp_vertex_shader 
 {
@@ -125,7 +133,7 @@ public:
 	{
 		vec4 pos = in.attribute(0);
 		transform(out.position(), pos, wvp);
-		out.attribute(0) = vec4(in.attribute(0).x(), in.attribute(0).z(), 0, 0);
+		out.attribute(0) = vec4(in.attribute(0).x() * 0.5f, in.attribute(0).z() * 2.0f, 0, 0);
 	}
 
 	uint32_t num_output_attributes() const
@@ -237,10 +245,10 @@ protected:
 
 		planar_mesh = create_planar(
 			data_->renderer.get(), 
-			vec3(-50.0f, 0.0f, -50.0f), 
-			vec3(1.0f, 0.0f, 0.0f), 
+			vec3(-CYLINDER_SEG_HALF_WIDTH, 0.0f, 8.0f), 
+			vec3(CYLINDER_SEG_HALF_WIDTH, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 1.0f),
-			100, 100, true
+			2, 10, true
 			);
 		
 		pvs_plane.reset(new vs_plane());
@@ -252,6 +260,7 @@ protected:
 		desc.max_anisotropy = 16;
 
 		auto plane_tex_path = find_path(_EFLIB_T("texture_and_blending/chessboard.png"));
+		// auto plane_tex_path = find_path(_EFLIB_T("font/font.png"));
 		if(plane_tex_path.empty())
 		{
 			throw "Plane texture loading failed.";
@@ -279,7 +288,7 @@ protected:
 
 	void on_frame() override
 	{
-		int const ANISO_CAPACITY = 4;
+		int const ANISO_CAPACITY = 5;
 		int const TEST_TOTAL_FRAME_COUNT = ANISO_CAPACITY;
 
 		switch(data_->mode)
@@ -304,7 +313,7 @@ protected:
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
-		mat_lookat(view, vec3(0.0f, 1.0f, 10.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, vec3(0.0f, 0.0f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), data_->screen_aspect_ratio, 0.1f, 100.0f);
 
 		sampler_desc desc;
@@ -322,7 +331,7 @@ protected:
 		case salviau::app_modes::interactive:
 			break;
 		case salviau::app_modes::replay:
-			max_aniso = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
+			max_aniso = 4; // static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
 			break;
 		}
 
@@ -330,30 +339,43 @@ protected:
 		{
 			desc.mip_filter = filter_linear;
 			desc.max_anisotropy = 0;
+			if(data_->gui) { data_->gui->main_window()->set_title("Mipmap"); }
 		}
 		else
 		{
 			desc.mip_filter = filter_anisotropic;
 			desc.max_anisotropy = 1 << max_aniso;
+			if(data_->gui) { data_->gui->main_window()->set_title(std::string("AF: ") + std::to_string(max_aniso)); }
 		}
         plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
 
-		mat_translate(world , -0.5f, 0, -0.5f);
-		mat_mul(wvp, world, mat_mul(wvp, view, proj));
-
 		profiling("Rendering", [&](){
 			data_->renderer->set_rasterizer_state(rs_back);
-			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-			data_->renderer->set_vertex_shader(pvs_plane);
-	#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			data_->renderer->set_pixel_shader_code( psc_plane );
-			data_->renderer->set_ps_sampler("samp", plane_sampler);
-	#else
-			data_->renderer->set_pixel_shader(pps_plane);
-	#endif
-			data_->renderer->set_blend_shader(pbs_plane);
+
+			for(size_t i = 0; i < CYLINDER_SEGMENTS; ++i)
+			{
+				if (i != 0) continue;
+				mat44 rot_mat;
+				mat_rotZ(rot_mat, i * CYLINDER_SEG_ANGLE);
+				mat_translate(world, 0.0, -CYLINDER_RADIUS, 0.0f);
+				mat_mul(world, world, rot_mat);
+
+				mat_mul(wvp, world, mat_mul(wvp, view, proj));
+
+				pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
+				data_->renderer->set_vertex_shader(pvs_plane);
+		#ifdef SALVIA_ENABLE_PIXEL_SHADER
+				data_->renderer->set_pixel_shader_code( psc_plane );
+				data_->renderer->set_ps_sampler("samp", plane_sampler);
+		#else
+				data_->renderer->set_pixel_shader(pps_plane);
+		#endif
+				data_->renderer->set_blend_shader(pbs_plane);
 		
-			planar_mesh->render();
+				planar_mesh->render();
+			}
+
+
 		});
 	}
 
