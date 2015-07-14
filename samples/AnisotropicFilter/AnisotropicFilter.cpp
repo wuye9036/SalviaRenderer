@@ -44,7 +44,7 @@ struct vert
 };
 
 float  const CYLINDER_RADIUS         = 5.0f;
-size_t const CYLINDER_SEGMENTS       = 6;
+size_t const CYLINDER_SEGMENTS       = 12;
 float  const CYLINDER_SEG_ANGLE      = 360.0f / static_cast<float>(CYLINDER_SEGMENTS);
 float  const CYLINDER_SEG_HALF_WIDTH = tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS;
 
@@ -133,7 +133,7 @@ public:
 	{
 		vec4 pos = in.attribute(0);
 		transform(out.position(), pos, wvp);
-		out.attribute(0) = vec4(in.attribute(0).x() * 0.5f, in.attribute(0).z() * 2.0f, 0, 0);
+		out.attribute(0) = vec4(in.attribute(0).x() * 1.0f, in.attribute(0).z() * 2.0f, 0, 0);
 	}
 
 	uint32_t num_output_attributes() const
@@ -245,10 +245,10 @@ protected:
 
 		planar_mesh = create_planar(
 			data_->renderer.get(), 
-			vec3(-CYLINDER_SEG_HALF_WIDTH, 0.0f, 8.0f), 
+			vec3(-CYLINDER_SEG_HALF_WIDTH, 0.0f, -10.0f), 
 			vec3(CYLINDER_SEG_HALF_WIDTH, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 1.0f),
-			2, 10, true
+			2, 50, true
 			);
 		
 		pvs_plane.reset(new vs_plane());
@@ -331,7 +331,7 @@ protected:
 		case salviau::app_modes::interactive:
 			break;
 		case salviau::app_modes::replay:
-			max_aniso = 4; // static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
+			max_aniso = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
 			break;
 		}
 
@@ -354,7 +354,7 @@ protected:
 
 			for(size_t i = 0; i < CYLINDER_SEGMENTS; ++i)
 			{
-				if (i != 0) continue;
+				// if (i != 0) continue;
 				mat44 rot_mat;
 				mat_rotZ(rot_mat, i * CYLINDER_SEG_ANGLE);
 				mat_translate(world, 0.0, -CYLINDER_RADIUS, 0.0f);

@@ -456,6 +456,8 @@ namespace surface_sampler
 			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
 				int4(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0));
 
+			// printf("%d, %d\n", pos0[0], pos0[1]);
+
 			return surf.get_texel(pos0[0], pos0[1], pos1[0], pos1[1], t[0], t[1], sample);
 		}
 	};
@@ -519,7 +521,7 @@ namespace surface_sampler
 
 float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
 {
-#if 0 && !defined(EFLIB_NO_SIMD)
+#if !defined(EFLIB_NO_SIMD)
 	static const union
 	{
 		int maski;
@@ -662,23 +664,15 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 
 	if(desc_.mip_filter == filter_anisotropic)
 	{
-		int int_ratio = min( fast_roundi(ratio), static_cast<int>(desc_.max_anisotropy) );
-
-		float miplevel_af_bias = fast_log2(ratio / int_ratio);
-		if( abs(miplevel_af_bias) < 1.5f )
-		{
-			miplevel_af_bias = 0.0f;
-		}
-
-		float start_relative_distance = - 0.5f * (int_ratio - 1.0f);
+		float start_relative_distance = - 0.5f * (ratio - 1.0f);
 
 		float sample_coord_x = coordx + long_axis.x() * start_relative_distance;
 		float sample_coord_y = coordy + long_axis.y() * start_relative_distance;
 
-		int lo = fast_floori(miplevel+miplevel_af_bias);
+		int lo = fast_floori(miplevel);
 		int hi  = lo + 1;
 
-		float frac = miplevel + miplevel_af_bias - lo;
+		float frac = miplevel - lo;
 		lo = max(lo, 0);
 		hi = max(hi, 0);
 
@@ -687,7 +681,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 		EFLIB_UNREF_DECLARATOR(hi_sz);
 
 		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
-		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
+		for(int i_sample = 0; i_sample < static_cast<int>(ratio); ++i_sample)
 		{
 			auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
 			auto subres_index_hi = compute_cube_subresource(dummy, face_sz, hi_sz);
@@ -704,7 +698,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 			sample_coord_y += long_axis.y();
 		}
 
-		color /= static_cast<float>(int_ratio);
+		color /= ratio;
 
 		return color_rgba32f(color);
 	}
@@ -838,35 +832,60 @@ void sampler::calc_anisotropic_lod(
 	eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
 	float& out_lod, float& out_ratio, vec4& out_long_axis ) const
 {
-	float rho, lambda;
-
 	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
 
 	vec4 ddx_ts = ddx * size_vec4;
 	vec4 ddy_ts = ddy * size_vec4;
 
-	float ddx_rho = ddx_ts.xyz().length();
-	float ddy_rho = ddy_ts.xyz().length();
+	float ddx_len = ddx_ts.xyz().length();
+	float ddy_len = ddy_ts.xyz().length();
 
-	float diag0 = (ddx_ts - ddy_ts).xyz().length();
-	float diag1 = (ddx_ts + ddy_ts).xyz().length();
+	float diag0_len = (ddx_ts - ddy_ts).xyz().length();
+	float diag1_len = (ddx_ts + ddy_ts).xyz().length();
 
-	rho = min( min(diag0, diag1), min(ddx_rho, ddy_rho) );
+	auto minor_axis_len = min( min(diag0_len, diag1_len), min(ddx_len, ddy_len) );
+	
+	if(minor_axis_len == 0.0f) minor_axis_len = 0.000001f;
 
-	if( ddx_rho > ddy_rho )
+	vec4 const* long_axis;
+	float long_axis_len;
+	if(ddx_len > ddy_len)
 	{
-		out_ratio = ddx_rho / rho;
-		out_long_axis = ddx / out_ratio;
+		long_axis_len = ddx_len;
+		long_axis = &ddx_ts;
 	}
 	else
 	{
-		out_ratio = ddy_rho / rho;
-		out_long_axis = ddy / out_ratio;
+		long_axis_len = ddy_len;
+		long_axis = &ddy_ts;
 	}
 
-	if(rho == 0.0f) rho = 0.000001f;
-	lambda = fast_log2(rho);
-	out_lod = lambda + bias;
+	float probe_count = long_axis_len / minor_axis_len;
+
+	if ( probe_count > static_cast<float>(desc_.max_anisotropy) )
+	{
+		probe_count = static_cast<float>(desc_.max_anisotropy);	
+	}
+	else
+	{
+		probe_count = fast_round(probe_count);
+	}
+
+	if (probe_count == 1.0f)
+	{
+		out_lod = fast_log2(long_axis_len) + bias;
+		out_ratio = 1.0f;
+		return;
+	}
+	else
+	{
+		float step = long_axis_len / probe_count;
+		minor_axis_len = 2 * long_axis_len / (probe_count + 1);
+		out_lod = fast_log2(minor_axis_len) + bias;
+		out_long_axis = (*long_axis) * step / long_axis_len;
+		out_long_axis *= (1.0f / size_vec4);
+		out_ratio = probe_count;
+	}
 }
 
 END_NS_SALVIAR();
