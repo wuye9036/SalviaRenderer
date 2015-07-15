@@ -46,6 +46,14 @@ int const DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
 int const VP_PROJ_TRANSFORM_PAKCAGE_SIZE = 8;
 int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 
+#define DEBUG_QUAD 0
+#if DEBUG_QUAD
+bool is_valid_quad(size_t quad_x, size_t quad_y)
+{
+	return quad_x == 256 && quad_y == 332;
+}
+#endif
+
 struct pixel_statistic
 {
     uint64_t ps_invocations;
@@ -1372,6 +1380,10 @@ void rasterizer::draw_full_quad(
     drawing_triangle_context const* triangle_ctx
 	)
 {
+#if DEBUG_QUAD
+	if (!is_valid_quad(left, top)) return;
+#endif
+
 #if 1
 	EFLIB_ALIGN(16) vs_output pixels[4];
 
@@ -1451,6 +1463,10 @@ void rasterizer::draw_quad(
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
+#if DEBUG_QUAD
+	if (!is_valid_quad(left, top)) return;
+#endif
+
 #if 1
 	EFLIB_ALIGN(16) vs_output pixels[4];
 
