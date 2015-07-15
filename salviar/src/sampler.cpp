@@ -456,7 +456,7 @@ namespace surface_sampler
 			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
 				int4(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0));
 
-			// printf("%d, %d\n", pos0[0], pos0[1]);
+			printf("(%d, %d) - (%d, %d): (%0.3f, %0.3f)\n", pos0[0], pos0[1], pos1[0], pos1[1], t[0], t[1]);
 
 			return surf.get_texel(pos0[0], pos0[1], pos1[0], pos1[1], t[0], t[1], sample);
 		}
@@ -521,7 +521,7 @@ namespace surface_sampler
 
 float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
 {
-#if !defined(EFLIB_NO_SIMD)
+#if 0 &&!defined(EFLIB_NO_SIMD)
 	static const union
 	{
 		int maski;
@@ -569,13 +569,30 @@ float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib
 #else
 	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
 
-	vec4 ddx_ts = ddx * size_vec4;
-	vec4 ddy_ts = ddy * size_vec4;
+	vec4 ddx_ts = ddx * size_vec4; // (1, 0)
+	vec4 ddy_ts = ddy * size_vec4; // (0, 1)
 
+#if 1
+	auto A = ddx_ts[0] * ddx_ts[0] + ddy_ts[0] * ddy_ts[0];				// 1
+	auto B = -2.0f * (ddx_ts[0] * ddx_ts[1] + ddy_ts[0] * ddy_ts[1]);	// 0
+	auto C = ddx_ts[1] * ddx_ts[1] + ddy_ts[1] * ddy_ts[1];				// 1
+
+	auto F = A * C - B * B * 0.25f;										// 1
+	auto invF = 1.0f / F;
+	A *= invF;
+	B *= invF;
+	C *= invF;
+
+	auto AsubC = A - C;													// 0
+	auto R = sqrt(AsubC * AsubC + B * B);								// 0
+
+	rho = sqrt( 2.0f / (A + C - R) );									// 1
+#else
 	float ddx_rho = ddx_ts.xyz().length();
 	float ddy_rho = ddy_ts.xyz().length();
-
 	rho = max(ddx_rho, ddy_rho);
+#endif
+
 #endif
 
 	if(rho == 0.0f) rho = 0.000001f;

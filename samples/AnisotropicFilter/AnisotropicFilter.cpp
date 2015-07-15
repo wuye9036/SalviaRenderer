@@ -44,7 +44,7 @@ struct vert
 };
 
 float  const CYLINDER_RADIUS         = 5.0f;
-size_t const CYLINDER_SEGMENTS       = 12;
+size_t const CYLINDER_SEGMENTS       = 3;
 float  const CYLINDER_SEG_ANGLE      = 360.0f / static_cast<float>(CYLINDER_SEGMENTS);
 float  const CYLINDER_SEG_HALF_WIDTH = tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS;
 
@@ -268,7 +268,11 @@ protected:
 
 		plane_tex = load_texture(data_->renderer.get(), plane_tex_path, salviar::pixel_format_color_rgba8);
 		plane_tex->gen_mipmap(filter_linear, true);
-			
+
+		// plane_tex->subresource(2)->fill_texels( color_rgba32f(0.0f, 0.0f, 1.0f, 0.0f) );
+		// plane_tex->subresource(3)->fill_texels( color_rgba32f(1.0f, 0.0f, 0.0f, 0.0f) );
+		// plane_tex->subresource(4)->fill_texels( color_rgba32f(0.0f, 1.0f, 0.0f, 0.0f) );
+
 		plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
         pps_plane.reset(new ps_plane(plane_sampler));
 
@@ -331,7 +335,7 @@ protected:
 		case salviau::app_modes::interactive:
 			break;
 		case salviau::app_modes::replay:
-			max_aniso = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
+			max_aniso = 0; //static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
 			break;
 		}
 
