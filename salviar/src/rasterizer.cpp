@@ -50,7 +50,14 @@ int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 #if DEBUG_QUAD
 bool is_valid_quad(size_t quad_x, size_t quad_y)
 {
-	return quad_x == 256 && quad_y == 332;
+	size_t debug_start_x = 0;
+	size_t debug_start_y = 0;
+	size_t width = 512;
+	size_t height = 512;
+
+	return 
+		debug_start_x <= quad_x && quad_x < debug_start_x + width &&
+		debug_start_y <= quad_y && quad_y < debug_start_y + height;
 }
 #endif
 
