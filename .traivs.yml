@@ -1,0 +1,5 @@
+language: C++
+before-install:
+	- python build_all.py --travis_ci
+compiler:
+	- python build_all.py
