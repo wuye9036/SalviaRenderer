@@ -1,7 +1,10 @@
-import sys, os, hashlib, datetime, env
+import sys, os, hashlib, datetime
 
 class batch_command:
-	def __init__( self, working_dir, target_sys = env.systems.current() ):
+	def __init__( self, working_dir, target_sys = None ):
+		from . import env
+		if target_sys is None: target_sys = env.systems.current()
+		
 		self.dir_ = working_dir
 		self.commands_ = []
 		
@@ -46,6 +49,9 @@ class batch_command:
 		return ret_code
 
 def executable_file_name(base_name, target_sys):
+	from . import env
+	if target_sys is None:
+		target_sys = env.systems.current()
 	if target_sys == env.systems.win32:
 		return base_name + ".exe"
 	if target_sys == env.systems.linux:

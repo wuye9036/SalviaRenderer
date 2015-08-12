@@ -1,4 +1,5 @@
-import os, re, util
+import os, re
+from . import util
 
 class version_object:
 	def __init__(self, version_int):

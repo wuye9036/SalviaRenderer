@@ -1,4 +1,5 @@
-import os, sys, platform, subprocess, util
+import os, sys, platform, subprocess
+from . import util
 
 class arch:
 	def __init__(self, tag):
@@ -180,18 +181,23 @@ def windows_kit_dirs():
 	close_key = None
 
 	try:
-		import _winreg
-		winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
+		# Compatible import for py2 and py3
+		try:
+			from _winreg import OpenKey, CloseKey, QueryValueEx, HKEY_LOCAL_MACHINE
+		except ImportError:
+			from winreg import OpenKey, CloseKey, QueryValueEx, HKEY_LOCAL_MACHINE
+		
+		winkit_key = OpenKey(HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
 		if winkit_key is None:
 			return None
-		def CloseKey():
-			_winreg.CloseKey(winkit_key)
-		close_key = CloseKey
+		def _CloseKey():
+			CloseKey(winkit_key)
+		close_key = _CloseKey
 		kit_key_names = ["KitsRoot", "KitsRoot81"]
 		kits = []
 		for kit_key_name in kit_key_names:
 			try:
-				kit_value = _winreg.QueryValueEx(winkit_key, kit_key_name)[0]
+				kit_value = QueryValueEx(winkit_key, kit_key_name)[0]
 				kits.append( str(kit_value) )
 			except Exception:
 				continue
@@ -200,7 +206,7 @@ def windows_kit_dirs():
 		
 	except ImportError as e:
 		if close_key: close_key()
-		util.report_error("_winreg library is not existed in Python on Win32 platform.")
+		util.report_error("_winreg/winreg library is not existed in Python on Win32 platform.")
 		
 	except WindowsError as e:
 		if close_key: close_key()
