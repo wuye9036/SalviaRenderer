@@ -705,6 +705,7 @@ uint64_t framebuffer::early_z_test(size_t x, size_t y, uint32_t px_mask, float d
 		float new_depth = aa_z_offset[i_samp] + depth;
 		bool depth_test_passed = ds_state_->depth_test(new_depth, old_depth);
         mask |= ( depth_test_passed ? 1 : 0 ) << i_samp;
+		px_mask &= (px_mask - 1);
 		if(depth_test_passed)
 		{
 			write_depth_stencil_(ds_data, new_depth, 0, 0);
