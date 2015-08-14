@@ -135,7 +135,7 @@ public:
 	
 	void on_init() override
 	{
-		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
+		create_devices_and_targets(data_->screen_width, data_->screen_height, 4, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
         data_->renderer->set_viewport(data_->screen_vp);
 		
