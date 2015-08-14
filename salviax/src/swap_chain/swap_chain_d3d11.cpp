@@ -214,7 +214,7 @@ public:
 
 			UINT create_device_flags = 0;
 #ifdef EFLIB_DEBUG
-			create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
+			// create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
 			D3D_FEATURE_LEVEL const feature_levels[] =
