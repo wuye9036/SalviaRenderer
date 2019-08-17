@@ -1,4 +1,5 @@
-import os, sys, platform, subprocess, util
+import os, sys, platform, subprocess
+from . import util
 
 class arch:
 	def __init__(self, tag):
@@ -180,18 +181,18 @@ def windows_kit_dirs():
 	close_key = None
 
 	try:
-		import _winreg
-		winkit_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
+		import winreg as winreg
+		winkit_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
 		if winkit_key is None:
 			return None
 		def CloseKey():
-			_winreg.CloseKey(winkit_key)
+			winreg.CloseKey(winkit_key)
 		close_key = CloseKey
-		kit_key_names = ["KitsRoot", "KitsRoot81"]
+		kit_key_names = ["KitsRoot", "KitsRoot81", "KitRoots10"]
 		kits = []
 		for kit_key_name in kit_key_names:
 			try:
-				kit_value = _winreg.QueryValueEx(winkit_key, kit_key_name)[0]
+				kit_value = winreg.QueryValueEx(winkit_key, kit_key_name)[0]
 				kits.append( str(kit_value) )
 			except Exception:
 				continue

@@ -1,4 +1,5 @@
-import sys, os, shutil, util
+import sys, os, shutil
+from . import util
 
 def copy_diff( src, dst ):
 	pass

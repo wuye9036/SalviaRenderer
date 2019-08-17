@@ -28,27 +28,17 @@ class project:
         default_gcc, default_gcc_dir = detect_gcc(candidate_gcc_dir, 4, 7)
 
         if default_toolset is None or default_toolset == "":
-            if "VS120COMNTOOLS" in env:
-                default_toolset = "msvc-12.0"
-            if "VS110COMNTOOLS" in env:
-                default_toolset = "msvc-11.0"
-            if "VS100COMNTOOLS" in env:
-                default_toolset = "msvc-10.0"
+            if "VS140COMNTOOLS" in env:
+                default_toolset = "msvc-14.0"
             elif default_gcc:
                 #gcc or mingw
                 default_toolset = "gcc"
             else:
                 report_error('Cannot found any valid compiler on your computer. Please set toolset in "proj.py" ')
         
-        if default_toolset == "msvc-12.0":
-            self.toolset_ = toolset('vs', 'msvc', 12, 0, None)
-            self.builder_root_ = os.path.join( env['VS120COMNTOOLS'], "../../" )
-        elif default_toolset == "msvc-11.0":
-            self.toolset_ = toolset('vs', 'msvc', 11, 0, None)
-            self.builder_root_ = os.path.join( env['VS110COMNTOOLS'], "../../" )
-        elif default_toolset == "msvc-10.0":
-            self.toolset_ = toolset('vs', 'msvc', 10, 0, None)
-            self.builder_root_ = os.path.join( env['VS100COMNTOOLS'], "../../" )
+        if default_toolset == "msvc-14.0":
+            self.toolset_ = toolset('vs', 'msvc', 14, 0, None)
+            self.builder_root_ = os.path.join( env['VS140COMNTOOLS'], "../../" )
         elif default_toolset == "gcc" and not default_gcc is None:
             self.toolset_ = default_gcc
             self.builder_root_ = default_gcc_dir
@@ -305,18 +295,10 @@ class project:
             return "CodeBlocks - Unix Makefiles"
         elif self.toolset().short_compiler_name() == 'vc':
             if self.arch() == arch.x86:
-                if self.toolset().short_name() == 'msvc12':
-                    return "Visual Studio 12"
-                if self.toolset().short_name() == 'msvc11':
-                    return "Visual Studio 11"
-                if self.toolset().short_name() == 'msvc10':
-                    return "Visual Studio 10"
+                if self.toolset().short_name() == 'msvc14':
+                    return "Visual Studio 14"
             elif self.arch() == arch.x64:
-                if self.toolset().short_name() == 'msvc12':
-                    return "Visual Studio 12 Win64"
-                if self.toolset().short_name() == 'msvc11':
-                    return "Visual Studio 11 Win64"
-                if self.toolset().short_name() == 'msvc10':
-                    return "Visual Studio 10 Win64"
+                if self.toolset().short_name() == 'msvc14':
+                    return "Visual Studio 14 Win64"
 
         report_error( "Unknown generator.")

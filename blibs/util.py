@@ -1,4 +1,5 @@
-import sys, os, hashlib, datetime, env
+import sys, os, hashlib, datetime
+from . import env
 
 class batch_command:
 	def __init__( self, working_dir, target_sys = env.systems.current() ):
