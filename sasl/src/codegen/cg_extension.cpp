@@ -9,13 +9,13 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Intrinsics.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
+#include <array>
 
 using sasl::utility::vector_of;
 using llvm::APInt;
@@ -160,7 +160,10 @@ unary_intrin_functor cg_extension::bind_to_unary( Function* fn )
 
 binary_intrin_functor cg_extension::bind_to_binary( Function* fn )
 {
-	return [this, fn](Value* v0, Value* v1) -> CallInst* { return builder_->CreateCall2(fn, v0, v1); };
+	return [this, fn](Value* v0, Value* v1) -> CallInst* {
+        std::array<Value*, 2> args{v0, v1};
+        return builder_->CreateCall(fn, args); 
+    };
 }
 
 unary_intrin_functor cg_extension::bind_external_to_unary( Function* fn )
@@ -281,7 +284,7 @@ Value* cg_extension::shrink( Value* vec, size_t vsize )
 Value* cg_extension::extract_elements( Value* src, size_t start_pos, size_t length )
 {
 	VectorType* vty = llvm::cast<VectorType>(src->getType());
-	uint32_t elem_count = vty->getNumElements();
+	auto elem_count = vty->getNumElements();
 	if( start_pos == 0 && length == elem_count ){
 		return src;
 	}
@@ -302,7 +305,7 @@ Value* cg_extension::insert_elements( Value* dst, Value* src, size_t start_pos )
 	}
 
 	VectorType* src_ty = llvm::cast<VectorType>(src->getType());
-	uint32_t count = src_ty->getNumElements();
+	auto count = src_ty->getNumElements();
 
 	// Expand source to dest size
 	Value* ret = dst;
@@ -319,7 +322,7 @@ Value* cg_extension::i8toi1_sv( Value* v )
 	Type* ty = IntegerType::get( v->getContext(), 1 );
 	if( v->getType()->isVectorTy() )
 	{
-		ty = VectorType::get( ty, llvm::cast<VectorType>(v->getType())->getNumElements() );
+		ty = VectorType::get(ty, v->getType()->getVectorNumElements());
 	}
 
 	return builder_->CreateTruncOrBitCast(v, ty);
@@ -341,7 +344,7 @@ Value* cg_extension::i1toi8_sv( Value* v )
 	Type* ty = IntegerType::get( v->getContext(), 8 );
 	if( v->getType()->isVectorTy() )
 	{
-		ty = VectorType::get( ty, llvm::cast<VectorType>(v->getType())->getNumElements() );
+		ty = VectorType::get(ty, v->getType()->getVectorNumElements());
 	}
 
 	return builder_->CreateZExtOrBitCast(v, ty);
@@ -349,19 +352,19 @@ Value* cg_extension::i1toi8_sv( Value* v )
 
 Value* cg_extension::call_external_1(Function* f, Value* v)
 {
-	Argument* ret_arg = f->getArgumentList().begin();
+	Argument* ret_arg = f->args().begin();
 	Type* ret_ty = ret_arg->getType()->getPointerElementType();
 	Value* tmp = stack_alloc(ret_ty, "tmp");
-	builder_->CreateCall2( f, tmp, v );
+    builder_->CreateCall(f, { tmp, v });
 	return builder_->CreateLoad( tmp );
 }
 
 Value* cg_extension::call_external_2( Function* f, Value* v0, Value* v1 )
 {
-	Argument* ret_arg = f->getArgumentList().begin();
+	Argument* ret_arg = f->args().begin();
 	Type* ret_ty = ret_arg->getType()->getPointerElementType();
 	Value* tmp = stack_alloc(ret_ty, "tmp");
-	builder_->CreateCall3( f, tmp, v0, v1 );
+    builder_->CreateCall(f, { tmp, v0, v1 });
 	return builder_->CreateLoad( tmp );
 }
 

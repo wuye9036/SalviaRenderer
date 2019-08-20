@@ -17,7 +17,6 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Intrinsics.h>
-#include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -68,7 +67,6 @@ using llvm::StructType;
 using llvm::VectorType;
 using llvm::UndefValue;
 using llvm::StoreInst;
-using llvm::TypeBuilder;
 using llvm::SwitchInst;
 using llvm::CmpInst;
 

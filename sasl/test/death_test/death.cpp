@@ -65,7 +65,7 @@ string make_command( string const& inc, string const& sysinc, string const& file
 
 bool print_diagnostic( diag_chat*, diag_item* item )
 {
-	BOOST_MESSAGE( sasl::common::str(item) );
+	BOOST_TEST_MESSAGE( sasl::common::str(item) );
 	return true;
 }
 

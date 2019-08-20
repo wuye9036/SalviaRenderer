@@ -160,7 +160,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def ){
 
 		node_context* ctxt = node_ctxt(v, true);
 
-		vector<Type*> param_types = generate_vs_entry_param_type( abii, vm_data_layout_, service() );
+		vector<Type*> param_types = generate_vs_entry_param_type( abii, service() );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
 		Function* fn = Function::Create(

@@ -96,7 +96,7 @@ llvm::DefaultIRBuilder* module_vmcode_impl::builder() const
 
 void module_vmcode_impl::dump_ir() const
 {
-	vm_module_->dump();
+    // vm_module_->dump();
 }
 
 void module_vmcode_impl::dump_ir( std::ostream& ostr ) const

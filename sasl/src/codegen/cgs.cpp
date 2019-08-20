@@ -18,8 +18,8 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/IntrinsicEnums.inc>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
@@ -32,7 +32,6 @@ using llvm::DefaultIRBuilder;
 using llvm::Value;
 using llvm::Type;
 using llvm::VectorType;
-using llvm::TypeBuilder;
 using llvm::BasicBlock;
 using llvm::Instruction;
 
@@ -414,10 +413,10 @@ void cg_service::clean_empty_blocks()
 		// Link block to next.
 		auto next_it = it;
 		++next_it;
-		builder().SetInsertPoint( it );
+		builder().SetInsertPoint(std::addressof(*it));
 		if( next_it != fn().fn->getBasicBlockList().end() )
 		{
-			builder().CreateBr( next_it );
+			builder().CreateBr(std::addressof(*next_it));
 		} 
 		else
 		{
@@ -1248,10 +1247,16 @@ multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 
 	if( scalar_hint == builtin_types::_float )
 	{
+        Type* float_ty = Type::getFloatTy(context());
 		unary_intrin_functor sqrt_sv = ext_->promote_to_unary_sv(
-			ext_->bind_to_unary( ext_->vm_intrin<float(float)>(VMIntrin::sqrt) ),
+			ext_->bind_to_unary(
+                ext_->vm_intrin(
+                    VMIntrin::sqrt, 
+                    FunctionType::get(float_ty, {float_ty}, false)
+                )
+            ),
 			null_unary,
-			ext_->bind_to_unary( ext_->vm_intrin(VMIntrin::x86_sse_sqrt_ps) )
+			ext_->bind_to_unary( ext_->vm_intrin(VMIntrin::sqrt) )
 			);
 		value_array ret_v = ext_->call_unary_intrin(NULL, v, sqrt_sv);
 		return create_value( arg_value.ty(), arg_value.hint(), ret_v, value_kinds::value, arg_abi );
@@ -1587,7 +1592,10 @@ multi_value cg_service::emit_cmp( multi_value const& lhs, multi_value const& rhs
 	binary_intrin_functor cmp_fn;
 	if( is_real(scalar_hint) )
 	{
-		cmp_fn = std::bind( &DefaultIRBuilder::CreateFCmp, builder(), (CmpInst::Predicate)pred_float, _1, _2, "" );
+		cmp_fn = std::bind(
+            &DefaultIRBuilder::CreateFCmp,
+            builder(), (CmpInst::Predicate)pred_float, _1, _2, "", nullptr
+        );
 	}
 	else if ( is_integer(scalar_hint) )
 	{

@@ -20,6 +20,8 @@
 #include <boost/test/test_tools.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <functional>
+
 #if defined(EFLIB_WINDOWS)
 #include <excpt.h>
 #endif
@@ -93,13 +95,13 @@ template <typename RetT, typename ParamListT> struct make_function;
 template <typename RetT, typename... ParamTs>
 struct make_function<RetT, type_list<ParamTs...>>
 {
-	typedef typename std::identity<void (RetT, ParamTs...)>::type type;
+    using type = void(RetT, ParamTs...);
 };
 
 template <typename... ParamTs>
 struct make_function<void, type_list<ParamTs...>>
 {
-	typedef typename std::identity<void (ParamTs...)>::type type;
+	using type = void(ParamTs...);
 };
 
 template <typename Conv, typename... Ts> struct convert_types;
@@ -267,8 +269,8 @@ public:
 	module_vmcode_ptr		vmc;
 	shared_ptr<diag_chat>	diags;
 private:
-	jit_fixture(jit_fixture const&);
-	jit_fixture& operator = (jit_fixture const&);
+	jit_fixture(jit_fixture const&) = delete;
+	jit_fixture& operator = (jit_fixture const&) = delete;
 };
 
 #define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);

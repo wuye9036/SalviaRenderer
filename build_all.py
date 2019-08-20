@@ -1,6 +1,4 @@
 ﻿#!/usr/bin/env python
-#-*- coding:utf-8 -#-
-
 import os
 import sys
 import re
@@ -122,11 +120,17 @@ def make_boost(proj):
     env = os.environ
     if not proj.customized_toolset_dir() is None:
         env = add_binpath(os.environ, [proj.customized_toolset_dir()])
-        
-    os.chdir(src)
-    if subprocess.call(boost_cmd, env=env, stdout = sys.stdout) != 0:
-        report_error("Boost build failed.")
-    os.chdir(proj.source_root())
+
+    boost_build_bat = batch_command(src)
+    if proj.toolset().short_compiler_name() == "vc":
+        boost_build_bat.add_native_command('@call "%s"' % proj.env_setup_commands())
+        boost_build_bat.add_execmd_with_error_exit(" ".join(boost_cmd))
+        boost_build_bat.execute(keep_bat=False)
+    else:
+        os.chdir(src)
+        if subprocess.call(boost_cmd, env=env, stdout = sys.stdout) != 0:
+            report_error("Boost build failed.")
+        os.chdir(proj.source_root())
     report_info("Boost build done.")
     return True
     
@@ -160,7 +164,9 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
             conf_cmd.add_native_command('PATH=%s:$PATH' % proj.customized_toolset_dir())
         else:
             report_error("Unsupported OS.")
-    conf_cmd.add_execmd_with_error_exit('"%s" -G "%s" %s %s' % (proj.cmake_exe(), proj.generator(), params_cmd, source_dir))
+    conf_cmd.add_execmd_with_error_exit(
+        f'"{proj.cmake_exe()}" -G "{proj.generator()}" -A "{proj.arch()}" {params_cmd} {source_dir}'
+    )
     
     if conf_cmd.execute() != 0:
         report_error("%s configure failed." % project_name)
@@ -191,8 +197,8 @@ def config_and_make_llvm(proj):
     # Add definitions here
     defs = dict()
     defs["PYTHON_EXECUTABLE"] = ("PATH", sys.executable)
-    defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
-    defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
+    # defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
+    # defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
     config_and_make_cmake_project('LLVM', defs, proj.llvm_root(), proj.llvm_build(), proj.llvm_install(), proj)
 
 def config_and_make_freeimage(proj):

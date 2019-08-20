@@ -344,16 +344,16 @@ bool load_obj_mesh(
 					if( '/' == objf.peek() ){
 						objf.ignore();
 						objf >> normal_index;
-						vert.normal = normals[ normal_index - 1 ];
+						vert.normal = normals[normal_index - 1];
 					}
 				}
 
 				uint32_t vert_index = 0;
-				smooth_id_t smooth_id = make_tuple( pos_index, texcoord_index, normal_index );
-				if( smooth_id_to_vertex_index.count(pos_index) == 0){
-					vert_index = static_cast<uint32_t>( verts.size() );
+				smooth_id_t smooth_id = make_tuple(pos_index, texcoord_index, normal_index);
+				if( smooth_id_to_vertex_index.count(smooth_id) == 0){
+					vert_index = static_cast<uint32_t>(verts.size());
 					smooth_id_to_vertex_index[smooth_id] = vert_index;
-					verts.push_back( vert );
+					verts.push_back(vert);
 				} else {
 					vert_index = smooth_id_to_vertex_index[smooth_id];
 				}

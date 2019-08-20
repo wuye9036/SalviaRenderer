@@ -7,7 +7,7 @@
 #include <sasl/enums/literal_classifications.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/smart_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>

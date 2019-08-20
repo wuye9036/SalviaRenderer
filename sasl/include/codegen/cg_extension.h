@@ -9,7 +9,6 @@
 #include <eflib/include/utility/enable_if.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/ADT/APInt.h>
 #include <eflib/include/platform/enable_warnings.h>
@@ -36,12 +35,10 @@ namespace llvm
 	class APInt;
 	class PHINode;
 
-	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template< bool preserveNames, typename T, typename Inserter
-	> class IRBuilder;
-	class ConstantFolder;
-	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
-		DefaultIRBuilder;
+    class IRBuilderDefaultInserter;
+    template <typename T, typename Inserter> class IRBuilder;
+    class ConstantFolder;
+    using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
 	template <typename T> class ArrayRef;
 }
 
@@ -154,11 +151,6 @@ public:
 	// Extended IR intrinsics.
 	llvm::Function* vm_intrin(int intrin_id);
 	llvm::Function* vm_intrin(int intrin_id, llvm::FunctionType* ty);
-	template <typename FunctionT>
-	llvm::Function* vm_intrin( int intrin_id )
-	{
-		return vm_intrin( intrin_id, llvm::TypeBuilder<FunctionT, false>::get(context_) );
-	}
 
 	llvm::Function* external(externals::id id);
 
@@ -170,7 +162,7 @@ public:
 	llvm::Value* i8toi1_sv( llvm::Value* );
 	value_array  i8toi1_sv( value_array const& );
 	llvm::Value* i1toi8_sv( llvm::Value* );
-	llvm::Value* call_external_1( llvm::Function* f, llvm::Value* v );
+	llvm::Value* call_external_1( llvm::Function* f, llvm::Value* v);
 	llvm::Value* call_external_2( llvm::Function* f, llvm::Value* v0, llvm::Value* v1 );
 	llvm::Value* cast_sv(llvm::Value* v, llvm::Type* ty, cast_ops::id op);
 	llvm::Value* select(llvm::Value*, llvm::Value*, llvm::Value*);
@@ -238,7 +230,7 @@ public:
 	value_array extract_element	(value_array const& agg, value_array const& index);
 
 private:
-	cg_extension& operator = (cg_extension const&);
+	cg_extension& operator = (cg_extension const&) = delete;
 	
 	llvm::Value* promote_to_unary_sv_impl(
 		llvm::Value* v, unary_intrin_functor sfn, unary_intrin_functor vfn, unary_intrin_functor simd_fn );

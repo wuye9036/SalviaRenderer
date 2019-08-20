@@ -365,7 +365,7 @@ multi_value cg_function::arg(size_t index) const
 	shared_ptr<parameter> par = fn_def->params[index];
 	cg_type* par_ty = cg->get_node_context( par.get() )->ty;
 
-	Function::ArgumentListType::iterator it = fn->arg_begin();
+	auto it = fn->arg_begin();
 	std::advance(it, logical_arg_offset() + index);
 	abis arg_abi = cg->param_abi(c_compatible);
 
@@ -395,7 +395,7 @@ multi_value cg_function::arg(size_t index) const
 multi_value cg_function::execution_mask() const
 {
 	if( !partial_execution ){ return multi_value(); }
-	Function::ArgumentListType::iterator it = fn->arg_begin();
+	auto it = fn->arg_begin();
 	if( return_via_arg() ){ ++it; }
 	return cg->create_value(
 		builtin_types::_uint32, value_array(1, &(*it)), value_kinds::value, abis::llvm
@@ -502,4 +502,5 @@ bool valid_all(value_array const& arr)
 	}
 	return true;
 }
+
 END_NS_SASL_CODEGEN();

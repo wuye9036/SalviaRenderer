@@ -35,13 +35,11 @@ namespace llvm{
 	class LLVMContext;
 	class Module;
 	class Type;
-	class DataLayout;
 	
-	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template< bool preserveNames, typename T, typename Inserter
-        > class IRBuilder;
-    typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
-        DefaultIRBuilder;
+    class IRBuilderDefaultInserter;
+    template <typename T, typename Inserter> class IRBuilder;
+    class ConstantFolder;
+    using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
 }
 
 enum class builtin_types: uint32_t;
@@ -146,7 +144,7 @@ protected:
 	sasl::semantic::reflection_impl const*	abii;
 	boost::shared_ptr<sasl::semantic::caster_t>
 											caster;		///< For type conversation.
-	llvm::DataLayout const *				vm_data_layout_;
+
 	cg_service*								service_;
 
 	// Status

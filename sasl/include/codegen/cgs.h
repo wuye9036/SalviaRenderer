@@ -330,7 +330,7 @@ protected:
 
 	std::vector<cg_function*>			fn_ctxts;
 	size_t								parallel_factor_;
-	multi_value							exec_mask;
+	multi_value							exec_mask_;
 
 	std::unordered_map<operators, uint32_t>
 										conv_bin_op_to_vm_;

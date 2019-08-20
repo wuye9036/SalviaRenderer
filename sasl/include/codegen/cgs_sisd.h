@@ -35,13 +35,10 @@ namespace llvm{
 	class ConstantInt;
 	class ConstantVector;
 
-	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template< bool preserveNames, typename T, typename Inserter
-	> class IRBuilder;
-	class ConstantFolder;
-
-	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
-		DefaultIRBuilder;
+    class IRBuilderDefaultInserter;
+    template <typename T, typename Inserter> class IRBuilder;
+    class ConstantFolder;
+    using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
 }
 
 namespace sasl{

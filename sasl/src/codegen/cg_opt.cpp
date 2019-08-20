@@ -1,7 +1,6 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Analysis/Passes.h>
 #include <llvm/IR/Module.h>
-#include <llvm/PassManager.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -14,7 +13,6 @@
 #include <vector>
 
 using llvm::Function;
-using llvm::FunctionPassManager;
 using llvm::Module;
 using llvm::raw_os_ostream;
 
