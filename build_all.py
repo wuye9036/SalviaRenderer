@@ -195,11 +195,15 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
     
 def config_and_make_llvm(proj):
     # Add definitions here
-    defs = dict()
-    defs["PYTHON_EXECUTABLE"] = ("PATH", sys.executable)
-    # defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
-    # defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
-    config_and_make_cmake_project('LLVM', defs, proj.llvm_root(), proj.llvm_build(), proj.llvm_install(), proj)
+    configuration = {
+        "PYTHON_EXECUTABLE": ("PATH", sys.executable),
+        "LLVM_INCLUDE_TESTS": ("BOOL", "FALSE"),
+        "LLVM_INCLUDE_TOOLS": ("BOOL", "FALSE"),
+        "LLVM_INCLUDE_EXAMPLES": ("BOOL", "FALSE"),
+        "LLVM_INCLUDE_BENCHMARKS": ("BOOL", "FALSE"),
+        "LLVM_TARGETS_TO_BUILD": ("STRING", "X86")
+    }
+    config_and_make_cmake_project('LLVM', configuration, proj.llvm_root(), proj.llvm_build(), proj.llvm_install(), proj)
 
 def config_and_make_freeimage(proj):
     config_and_make_cmake_project('FreeImage', None, proj.freeimage_root(), proj.freeimage_build(), proj.freeimage_install(), proj)
@@ -301,13 +305,13 @@ def build(proj_props, cleanBuild):
     proj.print_props()
     proj.check()
 
-    make_bjam(proj)
-    if cleanBuild: clean_all(proj)
-    make_boost(proj)
-
-    config_and_make_freetype(proj)
-    config_and_make_freeimage(proj)
-    config_and_make_llvm(proj)
+    # make_bjam(proj)
+    # if cleanBuild: clean_all(proj)
+    # make_boost(proj)
+    #
+    # config_and_make_freetype(proj)
+    # config_and_make_freeimage(proj)
+    # config_and_make_llvm(proj)
     config_and_make_salvia(proj)
 
     install_prebuild_binaries(proj)
