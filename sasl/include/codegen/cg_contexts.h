@@ -53,7 +53,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(module_context);
 class module_context
 {
 public:
-	static boost::shared_ptr<module_context> create();
+	static std::shared_ptr<module_context> create();
 
 	virtual node_context*	get_node_context(sasl::syntax_tree::node const*) const = 0;
 	virtual node_context*	get_or_create_node_context(sasl::syntax_tree::node const*) = 0;

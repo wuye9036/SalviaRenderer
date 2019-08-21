@@ -7,8 +7,9 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/utility/value_init.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <memory>
 
 namespace sasl{
 	namespace semantic{
@@ -80,7 +81,7 @@ private:
 		node_context* ctxt, salviar::sv_layout* si,
 		bool store_to_existed_value, bool copy_from_input);
 
-	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
+	void copy_to_result( std::shared_ptr<sasl::syntax_tree::expression> const& );
 	void copy_to_agg_result( node_context* data );
 
 	llvm::Function* entry_fn;
@@ -88,7 +89,7 @@ private:
 
 	multi_value param_values[salviar::sv_usage_count];
 
-	typedef boost::unordered_map<salviar::semantic_value, node_context*> input_copies_dict;
+	typedef std::unordered_map<salviar::semantic_value, node_context*> input_copies_dict;
 	input_copies_dict input_copies_;
 };
 

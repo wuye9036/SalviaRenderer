@@ -39,7 +39,7 @@ public:
 	pixel_shader_unit( pixel_shader_unit const& );
 	pixel_shader_unit& operator = ( pixel_shader_unit const& );
 	
-	boost::shared_ptr<pixel_shader_unit> clone() const;
+	std::shared_ptr<pixel_shader_unit> clone() const;
 
 	void initialize( shader_object const* );
 	void reset_pointers();

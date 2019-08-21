@@ -43,7 +43,7 @@ using semantic::caster_t;
 using semantic::type_equal;
 using semantic::node_semantic;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::any;
 using boost::any_cast;
 

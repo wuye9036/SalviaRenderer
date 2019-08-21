@@ -25,7 +25,7 @@ using sasl::common::diag_chat;
 using sasl::common::chat_scope;
 using sasl::common::token_t;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::make_shared;
 
 using std::vector;
@@ -500,15 +500,15 @@ shared_ptr<parser> queuer::clone() const
 	return make_shared<queuer>( *this );
 }
 
-negnativer::negnativer( boost::shared_ptr<parser> p ): expr(p){}
+negnativer::negnativer( std::shared_ptr<parser> p ): expr(p){}
 negnativer::negnativer( negnativer const& rhs ): expr(rhs.expr){}
 
-parse_results negnativer::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* diags ) const{
+parse_results negnativer::parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, diag_chat* diags ) const{
 	if ( !expr ) {return parse_results::failed;}
 	return ( expr->parse(iter, end, attr, diags).is_succeed() ) ? parse_results::failed : parse_results::succeed;
 }
 
-boost::shared_ptr<parser> negnativer::clone() const{
+std::shared_ptr<parser> negnativer::clone() const{
 	return make_shared<negnativer>( *this );
 }
 
@@ -703,14 +703,14 @@ rule const* rule_wrapper::get_rule() const
 endholder::endholder(){}
 
 endholder::endholder( endholder const & ){}
-parse_results endholder::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* /*diags*/ ) const{
+parse_results endholder::parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, diag_chat* /*diags*/ ) const{
 	if( iter == end ){
 		attr = make_shared<terminal_attribute>();
 		return parse_results::succeed;
 	}
 	return parse_results::failed;
 }
-boost::shared_ptr<parser> endholder::clone() const{
+std::shared_ptr<parser> endholder::clone() const{
 	return make_shared<endholder>();
 }
 
@@ -776,7 +776,7 @@ shared_ptr<parser> error_catcher::clone() const
 	return make_shared<error_catcher>( *this );
 }
 
-parse_results error_catcher::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const
+parse_results error_catcher::parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const
 {
 	token_iterator origin_iter = iter;
 

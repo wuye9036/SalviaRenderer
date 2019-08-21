@@ -3,8 +3,11 @@
 
 #include <eflib/include/math/math.h>
 #include <eflib/include/math/vector.h>
-#include <boost/type_traits.hpp>
+
 #include <salviar/include/salviar_forward.h>
+
+#include <type_traits>
+
 BEGIN_NS_SALVIAR()
 
 using eflib::round;

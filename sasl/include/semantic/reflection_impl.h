@@ -83,9 +83,9 @@ private:
 	sv_layout*			position_output_;
 
 	// Include su_stream_in and su_buffer_in
-	typedef boost::unordered_map<semantic_value, sv_layout>			semantic_layout_dict;
-	typedef boost::unordered_map<symbol*, sv_layout>				symbol_layout_dict;
-	typedef boost::unordered_map<eflib::fixed_string, sv_layout*>	name_layout_dict;
+	typedef std::unordered_map<semantic_value, sv_layout>			semantic_layout_dict;
+	typedef std::unordered_map<symbol*, sv_layout>				symbol_layout_dict;
+	typedef std::unordered_map<eflib::fixed_string, sv_layout*>	name_layout_dict;
 
 	semantic_layout_dict		semantic_input_layouts_;
 	semantic_layout_dict		semantic_output_layouts_;

@@ -11,7 +11,7 @@ using eflib::mat44;
 
 using boost::property_tree::ptree;
 using boost::make_shared;
-using boost::unordered_map;
+using std::unordered_map;
 using boost::optional;
 
 using std::vector;

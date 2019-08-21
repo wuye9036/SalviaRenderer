@@ -90,9 +90,9 @@ using eflib::scoped_value;
 using eflib::fixed_string;
 
 using boost::format;
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::weak_ptr;
-using boost::unordered_map;
+using std::unordered_map;
 
 using std::vector;
 using std::string;

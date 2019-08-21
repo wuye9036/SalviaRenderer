@@ -10,16 +10,14 @@
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/array.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/functional/hash.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
 #include <string>
 #include <map>
+#include <memory>
+#include <unordered_map>
 
 BEGIN_NS_SALVIAR();
 
@@ -197,12 +195,12 @@ public:
 	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval, size_t index) = 0;
 
 	virtual result find_register( semantic_value const& sv, size_t& index ) = 0;
-	virtual boost::unordered_map<semantic_value, size_t> const& get_register_map() = 0;
+	virtual std::unordered_map<semantic_value, size_t> const& get_register_map() = 0;
 
     template <typename T>
-    boost::shared_ptr<T> clone()
+    std::shared_ptr<T> clone()
     {
-        auto ret = boost::dynamic_pointer_cast<T>( clone() );
+        auto ret = std::dynamic_pointer_cast<T>( clone() );
         assert(ret);
         return ret;
     }
@@ -247,7 +245,7 @@ public:
 	}
 
 	result find_register( semantic_value const& sv, size_t& index );
-	boost::unordered_map<semantic_value, size_t> const& get_register_map();
+	std::unordered_map<semantic_value, size_t> const& get_register_map();
 	void bind_semantic( char const* name, size_t semantic_index, size_t register_index );
 	void bind_semantic( semantic_value const& s, size_t register_index );
 
@@ -275,9 +273,9 @@ private:
 		variable_map;
 	typedef std::map<std::_tstring, sampler_ptr*>
 		sampler_map;
-	typedef std::map<std::_tstring, boost::shared_ptr<detail::container> >
+	typedef std::map<std::_tstring, std::shared_ptr<detail::container> >
 		container_variable_map;
-	typedef boost::unordered_map<semantic_value, size_t>
+	typedef std::unordered_map<semantic_value, size_t>
 		register_map;
 
 	variable_map			varmap_;
@@ -289,7 +287,7 @@ private:
 	result declare_container_constant_impl(const std::_tstring& varname, T& var, const ElemType&)
 	{
 		varmap_[varname] = shader_constant::voidptr(&var);
-		contmap_[varname] = boost::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));
+		contmap_[varname] = std::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));
 		return result::ok;
 	}
 };

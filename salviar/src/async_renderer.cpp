@@ -5,11 +5,9 @@
 #include <eflib/include/memory/bounded_buffer.h>
 #include <eflib/include/diagnostics/assert.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/utility/addressof.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/atomic.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
+#include <mutex>
+#include <atomic>
 
 using std::vector;
 
@@ -42,14 +40,14 @@ public:
 	{
         while(object_count_in_pool() != MAX_COMMAND_QUEUE)
         {
-            boost::thread::yield();
+            std::this_thread::yield();
         }
 		return result::ok;
 	}
 
 	void run()
 	{
-		rendering_thread_ = boost::thread(&async_renderer::do_rendering, this);
+		rendering_thread_ = std::thread(&async_renderer::do_rendering, this);
 	}
 
 private:
@@ -68,7 +66,7 @@ private:
                 }
             }
 
-            boost::thread::yield();
+            std::this_thread::yield();
         }
     }
 
@@ -124,13 +122,13 @@ private:
     mutable eflib::bounded_buffer<render_state_ptr> state_queue_;
 	mutable std::vector<render_state_ptr>           state_pool_;
 
-	boost::thread	                                rendering_thread_;
-    boost::atomic<bool>                             waiting_exit_;                                                          
+	std::thread	                                    rendering_thread_;
+    std::atomic<bool>                               waiting_exit_;                                                          
 };
 
 renderer_ptr create_async_renderer()
 {
-	boost::shared_ptr<async_renderer> ret( new async_renderer() );
+    auto ret = std::make_shared<async_renderer>();
 	ret->run();
 	return ret;
 }

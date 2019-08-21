@@ -10,13 +10,9 @@
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <limits>
 #include <cassert>
+#include <type_traits>
 
 namespace eflib
 {
@@ -60,8 +56,8 @@ namespace eflib
 	template <class T, class U>
 	T round(U d)
 	{
-		BOOST_STATIC_ASSERT(boost::is_floating_point<U>::value);
-		BOOST_STATIC_ASSERT(boost::is_integral<T>::value);
+		static_assert(std::is_floating_point<U>::value);
+		static_assert(boost::is_integral<T>::value);
 		return (T)(d+0.5);
 	}
 
@@ -77,22 +73,22 @@ namespace eflib
 	template <class T>
 	T trunc(T d)
 	{
-		BOOST_STATIC_ASSERT(boost::is_floating_point<T>::value);
+		static_assert(std::is_floating_point<T>::value);
 		return d > static_cast<T>(0) ? fast_floor(d) : fast_ceil(d);
 	}
 
 	template <class T, class U>
 	void round(T& t, U d)
 	{
-		BOOST_STATIC_ASSERT(boost::is_floating_point<U>::value);
-		BOOST_STATIC_ASSERT(boost::is_integral<T>::value);
+		static_assert(std::is_floating_point<U>::value);
+		static_assert(boost::is_integral<T>::value);
 		t = (T)floor(d+0.5);
 	}
 
 	template <class T>
 	T clamp(T v, T minv, T maxv)
 	{
-		BOOST_STATIC_ASSERT(boost::is_arithmetic<T>::value);
+		static_assert(boost::is_arithmetic<T>::value);
 		assert(minv <= maxv);
 
 		if(v < minv) return minv;
@@ -103,7 +99,7 @@ namespace eflib
 	template <class T>
 	T radians(T angle)
 	{
-		BOOST_STATIC_ASSERT(boost::is_float<T>::value);
+		static_assert(std::is_float<T>::value);
 
 		return T(angle * PI / T(180.0));
 	}
@@ -111,7 +107,7 @@ namespace eflib
 	template <class T>
 	void sincos(T rad, float& s, float& c)
 	{
-		BOOST_STATIC_ASSERT(boost::is_float<T>::value);
+		static_assert(std::is_float<T>::value);
 		s = sin(rad);
 		c = cos(rad);
 	}

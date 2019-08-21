@@ -11,13 +11,13 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
 #include <sstream>
 #include <set>
+#include <memory>
+#include <optional>
 
 typedef salviar::format color_formats;
 
@@ -34,11 +34,12 @@ using eflib::mat44;
 
 using boost::property_tree::ptree;
 using boost::property_tree::read_xml;
-using boost::optional;
-using boost::make_shared;
-using boost::unordered_map;
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+
+using std::optional;
+using std::make_shared;
+using std::unordered_map;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 
 using std::vector;
 using std::string;

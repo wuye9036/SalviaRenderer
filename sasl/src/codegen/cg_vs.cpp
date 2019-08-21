@@ -45,7 +45,7 @@ using namespace llvm;
 using namespace sasl::utility;
 
 using boost::any;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::vector;
 using std::sort;

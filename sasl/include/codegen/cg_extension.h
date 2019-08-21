@@ -13,10 +13,8 @@
 #include <llvm/ADT/APInt.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <boost/type_traits.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <functional>
+#include <type_traits>
 
 namespace llvm
 {
@@ -105,9 +103,9 @@ namespace cast_ops
 	};
 }
 
-typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	binary_intrin_functor;
-typedef boost::function<llvm::Value* (llvm::Value*, llvm::Type*)>	cast_intrin_functor;
-typedef boost::function<llvm::Value* (llvm::Value*)>				unary_intrin_functor;
+typedef std::function<llvm::Value* (llvm::Value*, llvm::Value*)>	binary_intrin_functor;
+typedef std::function<llvm::Value* (llvm::Value*, llvm::Type*)>	cast_intrin_functor;
+typedef std::function<llvm::Value* (llvm::Value*)>				unary_intrin_functor;
 
 static binary_intrin_functor null_binary;
 static unary_intrin_functor  null_unary;

@@ -6,15 +6,14 @@
 #include <eflib/include/memory/vls.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <boost/array.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility.hpp>
 #include <boost/mpl/if.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <cassert>
 #include <limits>
 #include <vector>
+#include <array>
+#include <type_traits>
 
 namespace eflib
 {
@@ -39,7 +38,7 @@ namespace eflib
 			}
 
 		protected:
-			void intialize_usage( typename boost::disable_if_c<IsFreeTogether>::type* dummy = 0 ){
+			void intialize_usage( typename std::enable_if<!IsFreeTogether>::type* dummy = 0 ){
 				usage[0] = false;
 				memcpy( boost::addressof(usage[0]), usage[0], sizeof(usage) );
 			}

@@ -7,12 +7,12 @@
 #include <sasl/include/syntax_tree/declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
 #include <boost/assign/list_inserter.hpp>
-#include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <any>
 #include <vector>
+#include <functional>
 
 using namespace boost::assign;
 
@@ -38,7 +38,7 @@ void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 	btc_list_t const& btclst( sasl::utility::list_of_builtin_types() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
-			boost::shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
+			std::shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
 			bt->tycode = *it;
 			boost::assign::insert( cont )(*it, bt );
 		}
@@ -71,17 +71,17 @@ void list_of_builtin_type( ContainerT& cont, const PredT& pred ){
 }
 
 void follow_up_traversal(
-	boost::shared_ptr<node> root,
-	boost::function<void( node&, ::boost::any* )> on_visit
+	std::shared_ptr<node> root,
+	std::function<void( node&, ::boost::any* )> on_visit
 	);
 
 #define SASL_SYNTAX_NODE_IS_A( node, node_type ) ( (node)->node_class() == BOOST_PP_CAT(node_ids::, node_type) )
 
 // node creators
-boost::shared_ptr<node> duplicate( ::boost::shared_ptr<node> src );
-boost::shared_ptr<node> deep_duplicate( ::boost::shared_ptr<node> src );
+std::shared_ptr<node> duplicate( std::shared_ptr<node> src );
+std::shared_ptr<node> deep_duplicate( std::shared_ptr<node> src );
 
-boost::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc );
+std::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc );
 
 END_NS_SASL_SYNTAX_TREE();
 

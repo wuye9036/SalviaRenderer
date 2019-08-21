@@ -83,8 +83,8 @@ public:
 
 	virtual void set_code       ( std::string const& code_text );
 	virtual void set_code_file  ( std::string const& code_file );
-	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& );
-	virtual void set_lex_context( boost::shared_ptr<sasl::common::lex_context> const& );
+	virtual void set_code_source( std::shared_ptr<sasl::common::code_source> const& );
+	virtual void set_lex_context( std::shared_ptr<sasl::common::lex_context> const& );
 
 	/// Only support by default code_source.
 	virtual void add_virtual_file( std::string const& file_name, std::string const& code_content, bool high_priority );
@@ -143,10 +143,10 @@ private:
 	po::variables_map		vm;
 
 	// Overridden options
-	boost::shared_ptr<sasl::common::code_source>	user_code_src;
-	boost::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
+	std::shared_ptr<sasl::common::code_source>	user_code_src;
+	std::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
 
-	typedef boost::unordered_map< std::string,
+	typedef std::unordered_map< std::string,
 		std::pair<std::string, bool> > virtual_file_dict;
 	enum macro_states
 	{

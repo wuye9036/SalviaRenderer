@@ -45,22 +45,22 @@ class args_type_repr
 {
 public:
 	args_type_repr();
-	args_type_repr& arg( boost::shared_ptr<sasl::syntax_tree::tynode> const& );
+	args_type_repr& arg( std::shared_ptr<sasl::syntax_tree::tynode> const& );
 	args_type_repr& arg( sasl::syntax_tree::node* );
 	std::string str();
 private:
-	std::vector< boost::shared_ptr<sasl::syntax_tree::tynode> > arg_tys;
+	std::vector< std::shared_ptr<sasl::syntax_tree::tynode> > arg_tys;
 	std::string str_buffer;
 };
 
 class type_repr
 {
 public:
-	type_repr( boost::shared_ptr<sasl::syntax_tree::tynode> const& );
+	type_repr( std::shared_ptr<sasl::syntax_tree::tynode> const& );
 	type_repr(sasl::syntax_tree::tynode*);
 	std::string str();
 private:
-	boost::shared_ptr<sasl::syntax_tree::tynode> ty;
+	std::shared_ptr<sasl::syntax_tree::tynode> ty;
 	std::string str_cache;
 };
 
@@ -68,12 +68,12 @@ class source_position_repr
 {
 public:
 	source_position_repr(
-		boost::shared_ptr<sasl::common::token_t> const& beg,
-		boost::shared_ptr<sasl::common::token_t> const& end,
+		std::shared_ptr<sasl::common::token_t> const& beg,
+		std::shared_ptr<sasl::common::token_t> const& end,
 		sasl::common::compiler_compatibility cc );
 	std::string str();
 private:
-	boost::shared_ptr<sasl::common::token_t> beg, end;
+	std::shared_ptr<sasl::common::token_t> beg, end;
 	sasl::common::compiler_compatibility cc;
 	std::string str_cache;
 };

@@ -26,7 +26,7 @@ using eflib::fixed_string;
 
 using boost::addressof;
 using boost::make_shared;
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::icl::interval_set;
 using boost::icl::continuous_interval;
 
@@ -421,7 +421,7 @@ private:
 
 	vector< pair<node_semantic const*, reg_handle> >
 						var_auto_regs_;
-	boost::unordered_map<node_semantic const*, reg_name>
+	std::unordered_map<node_semantic const*, reg_name>
 						input_var_regs_;
 };
 

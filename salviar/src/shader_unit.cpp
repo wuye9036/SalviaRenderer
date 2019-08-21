@@ -15,9 +15,8 @@
 
 using namespace eflib;
 using std::vector;
-using boost::shared_ptr;
-using boost::shared_array;
-using boost::make_shared;
+using std::shared_ptr;
+using std::make_shared;
 
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 {

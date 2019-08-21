@@ -21,7 +21,7 @@
 #include <fstream>
 #include <cstring>
 
-using boost::unordered_map;
+using std::unordered_map;
 using boost::filesystem::path;
 using boost::filesystem::absolute;
 using boost::tuples::tuple;

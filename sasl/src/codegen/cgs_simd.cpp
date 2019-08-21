@@ -73,10 +73,10 @@ using llvm::CmpInst;
 namespace Intrinsic = llvm::Intrinsic;
 
 using boost::any;
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::enable_if;
 using boost::is_integral;
-using boost::unordered_map;
+using std::unordered_map;
 using boost::lexical_cast;
 
 using std::vector;

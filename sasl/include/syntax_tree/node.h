@@ -10,12 +10,10 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/pointee.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
+#include <memory>
 
 namespace sasl{
 	namespace common{
@@ -44,14 +42,14 @@ EFLIB_USING_SHARED_PTR(sasl::common, token_t);
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 
-struct node: public boost::enable_shared_from_this<node>{
+struct node: public std::enable_shared_from_this<node>{
 	friend class swallow_duplicator;
 	friend class deep_duplicator;
 
 	node_ptr as_handle() const;
-	template <typename T> boost::shared_ptr<T> as_handle() const
+	template <typename T> std::shared_ptr<T> as_handle() const
 	{
-		return boost::dynamic_pointer_cast<T>( as_handle() );
+		return std::dynamic_pointer_cast<T>( as_handle() );
 	}
 
 	token_t_ptr	token_begin() const;
@@ -63,8 +61,8 @@ struct node: public boost::enable_shared_from_this<node>{
 
 protected:
 	node(node_ids tid, token_t_ptr const& tok_beg, token_t_ptr const& tok_end);
-	node& operator = ( const node& );
-	node( const node& );
+	node& operator = ( const node& ) = delete;
+	node( const node& ) = delete;
 
 	node_ids	type_id;
 	token_t_ptr	tok_beg, tok_end;
@@ -72,16 +70,16 @@ protected:
 	virtual ~node();
 };
 
-//template <typename NodeT> boost::shared_ptr<NodeT> create_node();
-//template <typename R, typename P0> boost::shared_ptr<R> create_node( P0 ); 
-//template <typename R, typename P0, typename P1> boost::shared_ptr<R> create_node( P0, P1 );
+//template <typename NodeT> std::shared_ptr<NodeT> create_node();
+//template <typename R, typename P0> std::shared_ptr<R> create_node( P0 ); 
+//template <typename R, typename P0, typename P1> std::shared_ptr<R> create_node( P0, P1 );
 
 END_NS_SASL_SYNTAX_TREE();
 
 #define SASL_SYNTAX_NODE_CREATORS() \
-	template <typename R> friend boost::shared_ptr<R> create_node(); \
-	template <typename R, typename P0> friend boost::shared_ptr<R> create_node( P0 ); \
-	template <typename R> friend boost::shared_ptr<R> create_node(boost::shared_ptr<token_t> const&, boost::shared_ptr<token_t> const&);
+	template <typename R> friend std::shared_ptr<R> create_node(); \
+	template <typename R, typename P0> friend std::shared_ptr<R> create_node( P0&& ); \
+	template <typename R> friend std::shared_ptr<R> create_node(std::shared_ptr<token_t> const&, std::shared_ptr<token_t> const&);
 
 	
 #endif //SASL_SYNTAX_TREE_NODE_H

@@ -35,7 +35,7 @@ using eflib::fixed_string;
 
 using boost::addressof;
 using boost::make_shared;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::lower_bound;
 using std::string;

@@ -21,17 +21,17 @@ namespace sasl{
 		class grammars;
 
 		bool parse(
-			boost::shared_ptr<attribute>& pt_root,
+			std::shared_ptr<attribute>& pt_root,
 			const std::string& code,
-			boost::shared_ptr< ::sasl::common::lex_context > ctxt,
+			std::shared_ptr< ::sasl::common::lex_context > ctxt,
 			lexer& l, grammars& g,
 			sasl::common::diag_chat* diags
 			);
 
 		bool parse(
-			boost::shared_ptr<attribute>& pt_root,
+			std::shared_ptr<attribute>& pt_root,
 			sasl::common::code_source* src,
-			boost::shared_ptr< ::sasl::common::lex_context > ctxt,
+			std::shared_ptr< ::sasl::common::lex_context > ctxt,
 			lexer& l, grammars& g,
 			sasl::common::diag_chat* diags
 			);

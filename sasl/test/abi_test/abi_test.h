@@ -53,7 +53,7 @@ using eflib::vector_;
 using eflib::matrix_;
 
 using boost::format;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::string;
 using std::vector;
@@ -70,7 +70,7 @@ struct compiler_loader
 
 	static void (*create_compiler)( shared_ptr<compiler>& );
 private:
-	boost::shared_ptr<eflib::dynamic_lib> lib_;
+	std::shared_ptr<eflib::dynamic_lib> lib_;
 };
 
 string make_command(string const& file_name, string const& options)

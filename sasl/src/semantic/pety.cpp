@@ -16,10 +16,10 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
+#include <unordered_map>
 
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
@@ -27,11 +27,10 @@ using eflib::polymorphic_cast;
 using eflib::fixed_string;
 using eflib::spinlock;
 using eflib::scoped_spin_locker;
-using boost::atomic;
-using boost::make_shared;
-using boost::shared_ptr; // prevent conflicting with std::tr1.
-using boost::dynamic_pointer_cast;
-using boost::unordered_map;
+using std::make_shared;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::unordered_map;
 using std::make_pair;
 using std::vector;
 using std::string;

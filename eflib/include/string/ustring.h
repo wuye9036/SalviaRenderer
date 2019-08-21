@@ -37,7 +37,7 @@ namespace eflib{
 
 	private:
 		size_t							hash_;
-		boost::shared_ptr<string_type>	content_;
+		std::shared_ptr<string_type>	content_;
 
 	public:
 		fixed_basic_string()

@@ -6,13 +6,11 @@
 #include <salviar/include/renderer.h>
 
 #include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-#include <eflib/include/platform/boost_end.h>
 
+#include <any>
 #include <vector>
+#include <memory>
+#include <functional>
 
 BEGIN_NS_SALVIAR();
 

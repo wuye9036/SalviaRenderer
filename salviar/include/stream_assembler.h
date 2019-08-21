@@ -38,7 +38,7 @@ public:
 	void update(render_state const* state);
 
 	// Used by Cpp Vertex Shader
-	void update_register_map( boost::unordered_map<semantic_value, size_t> const& reg_map );
+	void update_register_map( std::unordered_map<semantic_value, size_t> const& reg_map );
 	void fetch_vertex(vs_input& vertex, size_t vert_index) const;
 
 	// Used by Old Shader Unit

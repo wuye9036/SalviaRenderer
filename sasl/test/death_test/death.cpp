@@ -38,8 +38,8 @@ using sasl::semantic::symbol;
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 using boost::format;
 namespace fs = boost::filesystem;
 

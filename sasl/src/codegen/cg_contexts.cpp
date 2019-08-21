@@ -10,9 +10,9 @@
 #include <eflib/include/platform/boost_end.h>
 
 using sasl::syntax_tree::node;
-using boost::unordered_map;
+using std::unordered_map;
 using boost::pool;
-using boost::shared_ptr;
+using std::shared_ptr;
 using std::make_pair;
 using std::vector;
 using std::ostream;

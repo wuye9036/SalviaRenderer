@@ -21,7 +21,7 @@ EFLIB_USING_SHARED_PTR(sasl::semantic, reflection_impl);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 
 using sasl::semantic::symbol;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 module_vmcode_ptr generate_vmcode(
 	module_semantic_ptr const&	sem,

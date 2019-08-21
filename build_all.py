@@ -305,13 +305,12 @@ def build(proj_props, cleanBuild):
     proj.print_props()
     proj.check()
 
-    # make_bjam(proj)
-    # if cleanBuild: clean_all(proj)
-    # make_boost(proj)
-    #
-    # config_and_make_freetype(proj)
-    # config_and_make_freeimage(proj)
-    # config_and_make_llvm(proj)
+    make_bjam(proj)
+    if cleanBuild: clean_all(proj)
+    make_boost(proj)
+    config_and_make_freetype(proj)
+    config_and_make_freeimage(proj)
+    config_and_make_llvm(proj)
     config_and_make_salvia(proj)
 
     install_prebuild_binaries(proj)

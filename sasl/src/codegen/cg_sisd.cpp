@@ -27,14 +27,13 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
 #include <boost/format.hpp>
-#include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <functional>
 
 using namespace llvm;
 using namespace sasl::syntax_tree;
-using namespace boost::assign;
 using namespace sasl::utility;
 
 using sasl::semantic::symbol;
@@ -44,9 +43,9 @@ using sasl::semantic::caster_t;
 
 using eflib::scoped_value;
 
-using boost::addressof;
-using boost::any_cast;
-using boost::weak_ptr;
+using std::addressof;
+using std::any_cast;
+using std::weak_ptr;
 
 using std::vector;
 using std::string;
@@ -221,7 +220,7 @@ SASL_VISIT_DEF( compound_statement ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
-	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+	for ( std::vector< std::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
 		visit_child(*it);

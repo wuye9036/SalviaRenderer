@@ -109,17 +109,17 @@ public:
 	virtual std::vector<symbol*> const&		intrinsics() const = 0;
 	virtual std::vector<symbol*>&			intrinsics() = 0;
 
-	template <typename T> node_semantic*	get_semantic( boost::shared_ptr<T> const& v )
+	template <typename T> node_semantic*	get_semantic( std::shared_ptr<T> const& v )
 	{
 		return get_semantic( v.get() );
 	}
 
-	template <typename T> node_semantic* get_or_create_semantic( boost::shared_ptr<T> const& v )
+	template <typename T> node_semantic* get_or_create_semantic( std::shared_ptr<T> const& v )
 	{
 		return get_or_create_semantic(v.get() );
 	}
 
-	template <typename T> node_semantic* create_semantic(boost::shared_ptr<T> const& v)
+	template <typename T> node_semantic* create_semantic(std::shared_ptr<T> const& v)
 	{
 		return create_semantic( v.get() );
 	}

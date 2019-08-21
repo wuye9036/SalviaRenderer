@@ -22,7 +22,7 @@ using sasl::syntax_tree::tynode;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::function_full_def;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::string;
 using std::stringstream;

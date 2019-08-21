@@ -42,7 +42,7 @@ using sasl::utility::scalar_of;
 using sasl::utility::vector_size;
 using sasl::utility::vector_count;
 
-using ::boost::shared_ptr;
+using std::shared_ptr;
 
 fixed_string symbol::null_name;
 

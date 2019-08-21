@@ -7,15 +7,15 @@
 #include <sasl/include/common/diag_item.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/scoped_ptr.hpp>
-#include <boost/function.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/unordered_map.hpp>
 #include <boost/wave.hpp>
 #include <boost/wave/cpplexer/cpp_lex_token.hpp>
 #include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <memory>
+#include <functional>
+#include <filesystem>
+#include <unordered_map>
 #include <string>
 
 namespace sasl
@@ -34,7 +34,7 @@ class wave_reported_fatal_error: public boost::exception
 
 void fixes_file_end_with_newline( std::string& content );
 
-typedef boost::function<
+typedef std::function<
 	bool/*succeed*/ (
 		std::string& /*[out]content*/, std::string& /*[out]native file name*/,
 		std::string const& /*file name*/, bool /*is system header*/,
@@ -257,11 +257,11 @@ private:
 	wcontext_t::iterator_type cur_it;
 	wcontext_t::iterator_type next_it;
 
-	typedef boost::unordered_map< std::string, std::pair<bool, std::string> > virtual_file_dict;
+	typedef std::unordered_map< std::string, std::pair<bool, std::string> > virtual_file_dict;
 	virtual_file_dict	virtual_files;
 	include_handler_fn	inc_handler;
 
-	static boost::unordered_map<void*, compiler_code_source*> ctxt_to_source;
+	static std::unordered_map<void*, compiler_code_source*> ctxt_to_source;
 	static compiler_code_source* get_code_source(void*);
 };
 

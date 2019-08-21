@@ -5,15 +5,8 @@
 
 #include <eflib/include/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/config.hpp>
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <memory>
+#include <functional>
 #include <vector>
 
 BEGIN_NS_SASL_COMMON();
@@ -24,7 +17,7 @@ class	diag_item;
 class	diag_template;
 struct	code_span;
 
-typedef boost::function<bool (diag_chat*, diag_item*)> report_handler_fn;
+typedef std::function<bool (diag_chat*, diag_item*)> report_handler_fn;
 
 class diag_item_committer
 {
@@ -59,14 +52,10 @@ private:
 class diag_chat
 {
 public:
-#if defined(BOOST_NO_CXX11_SMART_PTR)
-	typedef std::auto_ptr<diag_item_committer> committer_pointer;
-#else
 	typedef std::unique_ptr<diag_item_committer> committer_pointer;
-#endif
 
 	friend class diag_item_committer;
-	static boost::shared_ptr<diag_chat> create();
+	static std::shared_ptr<diag_chat> create();
 	static diag_chat* merge( diag_chat* dest, diag_chat* src, bool trigger_callback );
 
 	void add_report_raised_handler( report_handler_fn const& handler );

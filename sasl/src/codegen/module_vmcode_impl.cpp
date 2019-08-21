@@ -23,7 +23,7 @@
 
 using sasl::semantic::module_semantic;
 using eflib::fixed_string;
-using boost::shared_ptr;
+using std::shared_ptr;
 using std::vector;
 using std::string;
 

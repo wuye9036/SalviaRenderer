@@ -16,16 +16,16 @@ namespace sasl{
 BEGIN_NS_SASL_SEMANTIC();
 
 bool type_equal(
-	boost::shared_ptr< ::sasl::syntax_tree::tynode > lhs,
-	boost::shared_ptr< ::sasl::syntax_tree::tynode > rhs
+	std::shared_ptr< ::sasl::syntax_tree::tynode > lhs,
+	std::shared_ptr< ::sasl::syntax_tree::tynode > rhs
 );
 
 bool type_equal(
-	boost::shared_ptr< ::sasl::syntax_tree::builtin_type > lhs,
-	boost::shared_ptr< ::sasl::syntax_tree::builtin_type > rhs
+	std::shared_ptr< ::sasl::syntax_tree::builtin_type > lhs,
+	std::shared_ptr< ::sasl::syntax_tree::builtin_type > rhs
 );
 
-// boost::shared_ptr<::sasl::syntax_tree::tynode> actual_type( boost::shared_ptr<::sasl::syntax_tree::tynode> );
+// std::shared_ptr<::sasl::syntax_tree::tynode> actual_type( std::shared_ptr<::sasl::syntax_tree::tynode> );
 END_NS_SASL_SEMANTIC();
 
 #endif

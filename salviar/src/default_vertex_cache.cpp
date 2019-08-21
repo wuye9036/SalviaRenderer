@@ -31,8 +31,8 @@
 
 using eflib::num_available_threads;
 
-using boost::atomic;
-using boost::shared_array;
+using std::atomic;
+using std::shared_ptr;
 
 using std::vector;
 
@@ -362,7 +362,7 @@ private:
 	vector<uint32_t>		indices_;
 	vector<uint32_t>		unique_indices_;
 
-	shared_array<vs_output> transformed_verts_;
+	shared_ptr<vs_output[]> transformed_verts_;
 	size_t					transformed_verts_capacity_;
 
 	vector<int32_t>			used_verts_;

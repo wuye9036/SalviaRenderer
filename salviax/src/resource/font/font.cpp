@@ -257,7 +257,7 @@ font_ptr font::create( std::string const& font_file_path, size_t face_index, siz
 		return font_ptr();
 	}
 	
-	boost::shared_ptr<font_impl> ret = boost::make_shared<font_impl>(font_file_path, face_index);
+	std::shared_ptr<font_impl> ret = std::make_shared<font_impl>(font_file_path, face_index);
 	ret->size_and_unit(size, unit);
 	return ret;
 }

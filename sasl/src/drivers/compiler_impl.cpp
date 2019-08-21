@@ -49,8 +49,8 @@ using salviar::external_function_desc;
 
 using eflib::fixed_string;
 
-using boost::dynamic_pointer_cast;
-using boost::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::shared_ptr;
 
 using std::vector;
 using std::string;

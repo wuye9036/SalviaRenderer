@@ -6,14 +6,10 @@
 #include <sasl/include/semantic/elem_indexes.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/function.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/utility/operator_bool.h>
 
+#include <memory>
+#include <functional>
 #include <vector>
 
 namespace llvm
@@ -209,8 +205,8 @@ protected:
 	/// @{
 
 	// Parent, Index and Indexes for swizzle/write mask.
-	boost::scoped_ptr<multi_value>	parent_;
-	boost::scoped_ptr<multi_value>	index_;
+	std::unique_ptr<multi_value>	parent_;
+	std::unique_ptr<multi_value>	index_;
 	elem_indexes					elem_indexes_;
 
 	// Value
@@ -231,7 +227,7 @@ protected:
 
 template <typename RVT>
 struct cg_scope_guard{
-	typedef boost::function<RVT ()> on_exit_fn;
+	typedef std::function<RVT ()> on_exit_fn;
 	cg_scope_guard( on_exit_fn do_exit ): do_exit(do_exit){}
 	~cg_scope_guard(){ do_exit(); }
 private:

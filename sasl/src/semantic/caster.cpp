@@ -9,8 +9,8 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using namespace ::sasl::syntax_tree;
 using namespace ::std;
-using boost::shared_ptr;
-using boost::unordered_map;
+using std::shared_ptr;
+using std::unordered_map;
 using boost::bimap;
 
 void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv )

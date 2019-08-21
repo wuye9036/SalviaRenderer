@@ -16,7 +16,7 @@ using llvm::Function;
 using llvm::Module;
 using llvm::raw_os_ostream;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::vector;
 using std::ostream;

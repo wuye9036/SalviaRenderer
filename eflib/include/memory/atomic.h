@@ -2,23 +2,24 @@
 #define EFLIB_MEMORY_ATOMIC_H
 
 #include <eflib/include/platform/config.h>
-
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/atomic.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <atomic>
 
 namespace eflib{
 	class spinlock {
 	private:
-		typedef enum {Locked, Unlocked} LockState;
-		boost::atomic<LockState> state_;
+		enum class LockState: intptr_t
+        {
+            Locked,
+            Unlocked
+        };
+		std::atomic<LockState> state_;
 
 	public:
-		spinlock() : state_(Unlocked) {}
+		spinlock() : state_(LockState::Unlocked) {}
 		
 		bool try_lock()
 		{
-			return state_.exchange(Locked, boost::memory_order_acquire) == Unlocked;
+			return state_.exchange(LockState::Locked, std::memory_order_acquire) == LockState::Unlocked;
 		}
 
 		void lock()
@@ -31,7 +32,7 @@ namespace eflib{
 
 		void unlock()
 		{
-			state_.store(Unlocked, boost::memory_order_release);
+			state_.store(LockState::Unlocked, std::memory_order_release);
 		}
 	};
 
@@ -41,8 +42,8 @@ namespace eflib{
 		scoped_spin_locker(spinlock& lock): lock_(lock) { lock_.lock(); }
 		~scoped_spin_locker() { lock_.unlock(); }
 	private:
-		scoped_spin_locker(scoped_spin_locker const&);
-		scoped_spin_locker& operator = (scoped_spin_locker const&);
+		scoped_spin_locker(scoped_spin_locker const&) = delete;
+		scoped_spin_locker& operator = (scoped_spin_locker const&) = delete;
 		spinlock& lock_;
 	};
 }

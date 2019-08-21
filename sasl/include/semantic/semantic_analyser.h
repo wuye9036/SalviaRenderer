@@ -104,9 +104,9 @@ public:
 
 private:
 	template <typename NodeT> 
-	boost::shared_ptr<NodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	std::shared_ptr<NodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
 	template <typename ReturnNodeT, typename NodeT> 
-	boost::shared_ptr<ReturnNodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	std::shared_ptr<ReturnNodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
 
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,
@@ -189,7 +189,7 @@ private:
 		lvalue_or_rvalue::id param_lrvs[3];
 	};
 
-	boost::unordered_map<operators, parameter_lrvs>
+	std::unordered_map<operators, parameter_lrvs>
 			operator_parameter_lrvs_;
 	bool	is_global_scope;
 	symbol*	current_symbol;

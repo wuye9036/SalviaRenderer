@@ -15,7 +15,7 @@ namespace sasl
 
 BEGIN_NS_SASL_PARSER();
 
-typedef boost::shared_ptr< sasl::common::token_t > token_ptr;
+typedef std::shared_ptr< sasl::common::token_t > token_ptr;
 typedef std::vector< token_ptr > token_seq;
 typedef token_seq::iterator token_iterator;
 

@@ -11,7 +11,7 @@
 
 BEGIN_NS_SASL_DRIVERS();
 class compiler;
-boost::shared_ptr<compiler> create_compiler();
+std::shared_ptr<compiler> create_compiler();
 END_NS_SASL_DRIVERS();
 
 #endif

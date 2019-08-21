@@ -24,7 +24,7 @@ using llvm::Type;
 using llvm::Value;
 using llvm::Function;
 using llvm::Argument;
-using boost::shared_ptr;
+using std::shared_ptr;
 using std::vector;
 using std::string;
 

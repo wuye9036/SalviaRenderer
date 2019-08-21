@@ -21,15 +21,15 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct program;
 
-boost::shared_ptr<program> parse(
+std::shared_ptr<program> parse(
 	const std::string& code_text,
-	boost::shared_ptr<sasl::common::lex_context> ctxt,
+	std::shared_ptr<sasl::common::lex_context> ctxt,
 	sasl::common::diag_chat* diags
 	);
 
-boost::shared_ptr<program> parse(
+std::shared_ptr<program> parse(
 	sasl::common::code_source* src,
-	boost::shared_ptr<sasl::common::lex_context> ctxt,
+	std::shared_ptr<sasl::common::lex_context> ctxt,
 	sasl::common::diag_chat* diags
 	);
 

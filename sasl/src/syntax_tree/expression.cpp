@@ -4,7 +4,7 @@
 #include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
-using boost::shared_ptr;
+using std::shared_ptr;
 using namespace boost::assign;
 
 BEGIN_NS_SASL_SYNTAX_TREE();

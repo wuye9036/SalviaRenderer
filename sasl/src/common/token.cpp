@@ -1,7 +1,7 @@
 #include <sasl/include/common/token.h>
 
 using eflib::fixed_string;
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::make_shared;
 
 BEGIN_NS_SASL_COMMON();
@@ -14,12 +14,12 @@ token_t::token_t(const token_t& rhs) : file_name(rhs.file_name), span(rhs.span),
 {
 }
 
-boost::shared_ptr<token_t> token_t::make(
+std::shared_ptr<token_t> token_t::make(
 	size_t id, eflib::fixed_string const& str,
 	size_t line, size_t col, eflib::fixed_string const& fname
 	)
 {
-	boost::shared_ptr<token_t> ret = boost::make_shared<token_t>();
+	std::shared_ptr<token_t> ret = boost::make_shared<token_t>();
 	ret->id = id;
 	ret->str = str;
 	ret->file_name = fname;

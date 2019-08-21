@@ -5,7 +5,7 @@
 
 using sasl::common::diag_chat;
 using sasl::syntax_tree::node;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 BEGIN_NS_SASL_SEMANTIC();
 

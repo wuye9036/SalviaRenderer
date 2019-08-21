@@ -29,11 +29,10 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <boost/utility.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <memory>
 #include <vector>
 #include <functional>
 

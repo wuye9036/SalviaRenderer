@@ -1,7 +1,7 @@
 #ifndef SALVIAR_LOCKFREE_QUEUE_H
 #define SALVIAR_LOCKFREE_QUEUE_H
 
-#include "salviar/include/atomic.h"
+#include "eflib/include/memory/atomic.h"
 
 template <typename T>
 class lockfree_queue

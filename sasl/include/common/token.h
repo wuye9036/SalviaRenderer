@@ -5,10 +5,7 @@
 
 #include <eflib/include/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
 BEGIN_NS_SASL_COMMON();
 
@@ -37,11 +34,11 @@ struct token_t{
 
 	token_t& operator = ( const token_t& rhs);
 
-	boost::shared_ptr<token_t> make_copy() const;
+	std::shared_ptr<token_t> make_copy() const;
 
-	static boost::shared_ptr<token_t> null();
-	static boost::shared_ptr<token_t> from_string( eflib::fixed_string const& str );
-	static boost::shared_ptr<token_t> make(
+	static std::shared_ptr<token_t> null();
+	static std::shared_ptr<token_t> from_string( eflib::fixed_string const& str );
+	static std::shared_ptr<token_t> make(
 		size_t id, eflib::fixed_string const& str,
 		size_t line, size_t col, eflib::fixed_string const& fname
 		);

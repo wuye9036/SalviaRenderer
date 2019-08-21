@@ -33,7 +33,7 @@ using eflib::ceil_to_pow2;
 using eflib::fixed_string;
 
 using boost::addressof;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::vector;
 using std::make_pair;

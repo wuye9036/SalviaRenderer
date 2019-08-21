@@ -6,21 +6,17 @@
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/sizeof.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/add_reference.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/test_tools.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <functional>
+#include <type_traits>
+#include <memory>
 
 #if defined(EFLIB_WINDOWS)
 #include <excpt.h>
@@ -56,8 +52,8 @@ EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
 using eflib::vector_;
 using eflib::matrix_;
 
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 using boost::mpl::_;
 using boost::mpl::if_;
 using boost::mpl::or_;

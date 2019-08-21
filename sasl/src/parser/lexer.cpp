@@ -16,8 +16,8 @@ using sasl::common::lex_context;
 using sasl::common::token_t;
 
 using boost::make_shared;
-using boost::shared_ptr;
-using boost::unordered_map;
+using std::shared_ptr;
+using std::unordered_map;
 using boost::unordered_set;
 
 using std::cout;
@@ -30,7 +30,7 @@ BEGIN_NS_SASL_PARSER();
 class shared_data{
 public:
 	shared_data(): attrs(NULL){}
-	boost::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
+	std::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
 	unordered_set< std::string > skippers;
 	unordered_set< std::string > init_states;
 	token_seq* attrs;

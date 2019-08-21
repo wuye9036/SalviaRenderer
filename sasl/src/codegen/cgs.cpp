@@ -39,7 +39,7 @@ using namespace std::placeholders;
 
 namespace VMIntrin = llvm::Intrinsic;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;

@@ -24,9 +24,9 @@ EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
 
-using boost::unordered_map;
+using std::unordered_map;
 using boost::unordered_set;
-using boost::shared_ptr;
+using std::shared_ptr;
 using boost::make_shared;
 using boost::string_ref;
 
