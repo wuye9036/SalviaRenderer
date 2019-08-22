@@ -6,12 +6,8 @@
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftglyph.h>
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/scoped_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <eflib/include/platform/boost_end.h>
+
+#include <filesystem>
 
 #if defined(EFLIB_WINDOWS)
 #	include <salviax/include/utility/inc_windows.h>

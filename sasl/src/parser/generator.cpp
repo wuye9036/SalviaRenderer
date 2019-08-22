@@ -11,13 +11,14 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/preprocessor.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/diagnostics/assert.h>
+
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 using sasl::common::diag_template;
 using sasl::common::diag_item;
@@ -26,7 +27,7 @@ using sasl::common::chat_scope;
 using sasl::common::token_t;
 
 using std::shared_ptr;
-using boost::make_shared;
+using std::make_shared;
 
 using std::vector;
 

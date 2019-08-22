@@ -9,15 +9,12 @@
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/platform/typedefs.h>
 
+#include <any>
 #include <vector>
+#include <memory>
+#include <unordered_map>
 
 namespace sasl{
 	namespace common{
@@ -167,7 +164,7 @@ private:
 	sasl::syntax_tree::program*	prog_;
 
 	// Global States
-	typedef std::vector< boost::weak_ptr<
+	typedef std::vector< std::weak_ptr<
 		sasl::syntax_tree::labeled_statement> >	label_list_t;
 	typedef sasl::syntax_tree::function_def_ptr function_def_ptr;
 

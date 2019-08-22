@@ -5,11 +5,8 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/jump_mode.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 

@@ -70,7 +70,7 @@ struct vs_output_op
 	vs_output_functions::compute_derivative
 										compute_derivative;
 
-	typedef boost::array<uint32_t, MAX_VS_OUTPUT_ATTRS> interpolation_modifier_array;
+	typedef std::array<uint32_t, MAX_VS_OUTPUT_ATTRS> interpolation_modifier_array;
 	interpolation_modifier_array		attribute_modifiers;
 };
 

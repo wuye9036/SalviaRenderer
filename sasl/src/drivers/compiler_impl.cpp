@@ -24,9 +24,9 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
-#include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <memory>
 #include <fstream>
 #include <math.h>
 

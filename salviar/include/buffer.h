@@ -8,12 +8,9 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/memory/allocator.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
-#include <memory.h>
+#include <memory>
 
 BEGIN_NS_SALVIAR();
 

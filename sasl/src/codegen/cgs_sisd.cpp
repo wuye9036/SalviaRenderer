@@ -65,7 +65,7 @@ namespace Intrinsic = llvm::Intrinsic;
 using boost::any;
 using std::shared_ptr;
 using boost::enable_if;
-using boost::is_integral;
+using std::is_integral;
 using std::unordered_map;
 using boost::lexical_cast;
 
@@ -77,7 +77,7 @@ BEGIN_NS_SASL_CODEGEN();
 namespace {
 	template <typename T> APInt apint( T v )
 	{
-		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
+		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), std::is_signed<T>::value );
 	}
 
 	void mask_to_indexes( char indexes[4], uint32_t mask ){

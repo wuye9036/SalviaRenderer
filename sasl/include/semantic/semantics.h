@@ -11,12 +11,9 @@
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/typedefs.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace salviar
 {
@@ -39,40 +36,6 @@ namespace sasl
 }
 
 BEGIN_NS_SASL_SEMANTIC();
-
-#if 0
-class semantic_node;
-class literal_value;
-
-class type
-{
-	builtin_type	bt_code;
-	type*			inner_type;
-	std::vector<semantic_node*>
-					dims_or_members;
-	std::vector<type*>
-					param_types;
-};
-
-class semantic_block
-{
-	vector< std::pair<semantic_node*, semantic_block*> > jumps;
-};
-
-// Declarators and expressions
-class semantic_node
-{
-	// Declarator and expression
-	symbol*			name;
-	type*			ty;
-
-	literal_value*	lit_value;
-
-	// Expression
-	operators		op;			// expression
-	semantic_node*	exprs[3];	// sub expressions
-};
-#endif
 
 class node_semantic;
 class pety_t;
@@ -149,7 +112,7 @@ class node_semantic
 {
 public:
 	typedef std::vector<
-		boost::weak_ptr<sasl::syntax_tree::labeled_statement>
+		std::weak_ptr<sasl::syntax_tree::labeled_statement>
 	>		labeled_statement_array;
 
 	~node_semantic();

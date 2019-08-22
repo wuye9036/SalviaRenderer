@@ -526,21 +526,23 @@ void init_builtin_short_name()
 
 	if(builtin_shorten_initialized) { return; }
 
-	boost::assign::insert( btc_decorators )
-		( builtin_types::_void, "O" )
-		( builtin_types::_boolean, "B" )
-		( builtin_types::_sint8, "S1" )
-		( builtin_types::_sint16, "S2" )
-		( builtin_types::_sint32, "S4" )
-		( builtin_types::_sint64, "S8" )
-		( builtin_types::_uint8, "U1" )
-		( builtin_types::_uint16, "U2" )
-		( builtin_types::_uint32, "U4" )
-		( builtin_types::_uint64, "U8" )
-		( builtin_types::_float, "F" )
-		( builtin_types::_double, "D" )
-		;
+    decltype(btc_decorators) tmp
+    {
+        {builtin_types::_void, "O"      },
+        {builtin_types::_boolean, "B"   },
+        {builtin_types::_sint8, "S1"    },
+        {builtin_types::_sint16, "S2"   },
+        {builtin_types::_sint32, "S4"   },
+        {builtin_types::_sint64, "S8"   },
+        {builtin_types::_uint8, "U1"    },
+        {builtin_types::_uint16, "U2"   },
+        {builtin_types::_uint32, "U4"   },
+        {builtin_types::_uint64, "U8"   },
+        {builtin_types::_float, "F"     },
+        {builtin_types::_double, "D"    },
+    };
 
+    std::swap(btc_decorators, tmp);
 	builtin_shorten_initialized = true;
 }
 

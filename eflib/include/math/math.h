@@ -13,6 +13,7 @@
 #include <limits>
 #include <cassert>
 #include <type_traits>
+#include <algorithm>
 
 namespace eflib
 {
@@ -57,7 +58,7 @@ namespace eflib
 	T round(U d)
 	{
 		static_assert(std::is_floating_point<U>::value);
-		static_assert(boost::is_integral<T>::value);
+		static_assert(std::is_integral<T>::value);
 		return (T)(d+0.5);
 	}
 
@@ -81,33 +82,22 @@ namespace eflib
 	void round(T& t, U d)
 	{
 		static_assert(std::is_floating_point<U>::value);
-		static_assert(boost::is_integral<T>::value);
+		static_assert(std::is_integral<T>::value);
 		t = (T)floor(d+0.5);
 	}
 
-	template <class T>
-	T clamp(T v, T minv, T maxv)
-	{
-		static_assert(boost::is_arithmetic<T>::value);
-		assert(minv <= maxv);
-
-		if(v < minv) return minv;
-		if(v > maxv) return maxv;
-		return v;
-	}
+    using std::clamp;
 
 	template <class T>
 	T radians(T angle)
 	{
-		static_assert(std::is_float<T>::value);
+		static_assert(std::is_floating_point<T>::value);
 
 		return T(angle * PI / T(180.0));
 	}
 
-	template <class T>
-	void sincos(T rad, float& s, float& c)
+	inline void sincos(float rad, float& s, float& c)
 	{
-		static_assert(std::is_float<T>::value);
 		s = sin(rad);
 		c = cos(rad);
 	}

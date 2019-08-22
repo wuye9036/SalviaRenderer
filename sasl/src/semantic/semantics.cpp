@@ -11,23 +11,23 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/utility/string_ref.hpp>
-#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
 
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
 
 using std::unordered_map;
-using boost::unordered_set;
+using std::unordered_set;
 using std::shared_ptr;
-using boost::make_shared;
+using std::make_shared;
 using boost::string_ref;
 
 using std::vector;
@@ -83,7 +83,7 @@ string_ref split_real_literal_suffix(string_ref str, bool& is_single)
 	return is_single ? str.substr(0, str.length()-1) : str;
 }
 
-BEGIN_NS_SASL_SEMANTIC();
+BEGIN_NS_SASL_SEMANTIC()
 
 class module_semantic_impl: public module_semantic
 {

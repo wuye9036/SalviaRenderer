@@ -23,11 +23,10 @@ node_context* cg_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_ne
 
 template <typename NodeT>
 node_context* cg_impl::node_ctxt(
-	NodeT const& nd,
-	bool create_if_need /*= false */,
-	typename std::disable_if< std::is_pointer<NodeT> >::type* /*dummy = NULL*/
+	NodeT const& nd, bool create_if_need, typename std::enable_if<!std::is_pointer<NodeT>::value>::type*
 	)
 {
 	return node_ctxt( static_cast<node const*>(&nd), create_if_need );
 }
+
 END_NS_SASL_CODEGEN();

@@ -38,7 +38,7 @@ using std::shared_ptr;
 using std::vector;
 using std::make_pair;
 
-BEGIN_NS_SASL_SEMANTIC();
+BEGIN_NS_SASL_SEMANTIC()
 
 using namespace sasl::utility::ops;
 
@@ -269,4 +269,4 @@ salviar::languages reflection_impl::get_language() const
 	return module_sem_->get_language();
 }
 
-END_NS_SASL_SEMANTIC();
+END_NS_SASL_SEMANTIC()

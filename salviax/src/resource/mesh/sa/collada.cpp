@@ -2,15 +2,15 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <sstream>
+#include <memory>
 
 using eflib::mat44;
 
 using boost::property_tree::ptree;
-using boost::make_shared;
+using std::make_shared;
 using std::unordered_map;
 using boost::optional;
 
@@ -18,7 +18,7 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+BEGIN_NS_SALVIAX_RESOURCE()
 
 template <typename T>
 void parse_array( vector<T>& arr, std::string const& content )

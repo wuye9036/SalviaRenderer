@@ -8,13 +8,9 @@
 #include <sasl/enums/operators.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <string>
+#include <type_traits>
+#include <memory>
 #include <unordered_map>
 
 namespace sasl{
@@ -122,8 +118,7 @@ protected:
 	template <typename NodeT>
 	node_context* node_ctxt( std::shared_ptr<NodeT> const&, bool create_if_need = false );
 	template <typename NodeT>
-	node_context* node_ctxt( NodeT const&, bool create_if_need = false,
-		typename boost::disable_if< std::is_pointer<NodeT> >::type* = NULL );
+	node_context* node_ctxt(NodeT const&, bool create_if_need = false, typename std::enable_if<!std::is_pointer<NodeT>::value>::type* = nullptr);
 
 	// Direct access member from module.
 	llvm::DefaultIRBuilder*	builder() const;

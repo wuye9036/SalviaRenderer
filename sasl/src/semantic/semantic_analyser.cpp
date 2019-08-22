@@ -23,15 +23,13 @@
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/assign/list_of.hpp>
-#include <boost/assign/list_inserter.hpp>
-#include <boost/assign/std/vector.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <memory>
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -83,7 +81,6 @@ using sasl::syntax_tree::variable_expression;
 using sasl::syntax_tree::while_statement;
 using sasl::syntax_tree::list_of_builtin_type;
 
-using namespace boost::assign;
 using namespace sasl::utility;
 
 using eflib::scoped_value;
@@ -91,7 +88,7 @@ using eflib::fixed_string;
 
 using boost::format;
 using std::shared_ptr;
-using boost::weak_ptr;
+using std::weak_ptr;
 using std::unordered_map;
 
 using std::vector;
@@ -273,8 +270,11 @@ SASL_VISIT_DEF( binary_expression )
 	dup_expr->right_expr = visit_child(v.right_expr, &right_expr_sem);
 
 	fixed_string opname = module_semantic_->pety()->operator_name( v.op );
-	vector<expression*> exprs;
-	exprs += dup_expr->left_expr.get(), dup_expr->right_expr.get();
+    vector<expression*> exprs
+    { 
+        dup_expr->left_expr.get(),
+        dup_expr->right_expr.get() 
+    };
 
 	if(	left_expr_sem == NULL ||  right_expr_sem == NULL )
 	{
@@ -1741,33 +1741,33 @@ void semantic_analyser::register_builtin_functions2()
 	vector<size_t>	vb_vf_intrins;
 
 	// Function groups
-	vector<fixed_string>	vf_vf_intrin_names;
-	vf_vf_intrin_names.reserve(25);
-	vf_vf_intrin_names +=
-		fixed_string("degrees"), fixed_string("radians"),
-		fixed_string("sqrt"), fixed_string("exp"), fixed_string("exp2"),
-		fixed_string("sin"), fixed_string("cos"), fixed_string("tan"),
-		fixed_string("asin"), fixed_string("acos"), fixed_string("atan"),
-		fixed_string("ceil"), fixed_string("floor"),
-		fixed_string("log"), fixed_string("log2"), fixed_string("log10"),
-		fixed_string("sinh"), fixed_string("cosh"), fixed_string("tanh"),
-		fixed_string("frac"), fixed_string("saturate"), fixed_string("round"), fixed_string("trunc"),
-		fixed_string("rsqrt"), fixed_string("rcp");
+	vector<fixed_string> vf_vf_intrin_names
+    {
+        fixed_string("degrees"), fixed_string("radians"),
+        fixed_string("sqrt"), fixed_string("exp"), fixed_string("exp2"),
+        fixed_string("sin"), fixed_string("cos"), fixed_string("tan"),
+        fixed_string("asin"), fixed_string("acos"), fixed_string("atan"),
+        fixed_string("ceil"), fixed_string("floor"),
+        fixed_string("log"), fixed_string("log2"), fixed_string("log10"),
+        fixed_string("sinh"), fixed_string("cosh"), fixed_string("tanh"),
+        fixed_string("frac"), fixed_string("saturate"), fixed_string("round"), fixed_string("trunc"),
+        fixed_string("rsqrt"), fixed_string("rcp")
+    };
 
-	vector<fixed_string>	vf_vfvf_intrin_names;
-	vf_vfvf_intrin_names.reserve(4);
-	vf_vfvf_intrin_names +=
-		fixed_string("fmod"), fixed_string("ldexp"), fixed_string("pow"), fixed_string("step");
+	vector<fixed_string> vf_vfvf_intrin_names
+    {
+		fixed_string("fmod"), fixed_string("ldexp"), fixed_string("pow"), fixed_string("step") 
+    };
 
-	vector<fixed_string>	vf_vfvfvf_intrin_names;
-	vf_vfvfvf_intrin_names.reserve(4);
-	vf_vfvfvf_intrin_names +=
-		fixed_string("lerp"), fixed_string("smoothstep");
+	vector<fixed_string> vf_vfvfvf_intrin_names
+    {
+		fixed_string("lerp"), fixed_string("smoothstep")
+    };
 
-	vector<fixed_string>	vb_vf_intrin_names;
-	vb_vf_intrin_names.reserve(3);
-	vb_vf_intrin_names +=
-		fixed_string("isinf"), fixed_string("isfinite"), fixed_string("isnan");
+    vector<fixed_string> vb_vf_intrin_names
+    {
+        fixed_string("isinf"), fixed_string("isfinite"), fixed_string("isnan")
+    };
 
 	// Initialize builtins and tids.
 	list_of_builtin_type(builtins, &is_storagable);

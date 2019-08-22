@@ -5,10 +5,6 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/string/string.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/enable_warnings.h>
-
 #include <string>
 
 BEGIN_NS_SALVIAR();

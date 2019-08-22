@@ -34,7 +34,7 @@ using salviar::sv_usage_count;
 using eflib::fixed_string;
 
 using boost::addressof;
-using boost::make_shared;
+using std::make_shared;
 using std::shared_ptr;
 
 using std::lower_bound;

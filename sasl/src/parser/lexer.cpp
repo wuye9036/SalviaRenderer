@@ -15,7 +15,7 @@ namespace splex = boost::spirit::lex;
 using sasl::common::lex_context;
 using sasl::common::token_t;
 
-using boost::make_shared;
+using std::make_shared;
 using std::shared_ptr;
 using std::unordered_map;
 using boost::unordered_set;
@@ -205,7 +205,7 @@ lexer::init_states_adder const& lexer::init_states_adder::operator()( std::strin
 lexer::lexer()
 {
 	shared_ptr<attr_processor> proc( new attr_processor() );
-	impl = boost::make_shared<lexer_impl>( proc );
+	impl = std::make_shared<lexer_impl>( proc );
 }
 
 lexer::token_definer lexer::define_tokens( std::string const& name, std::string const& patterndef )

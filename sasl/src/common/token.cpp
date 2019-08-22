@@ -2,7 +2,7 @@
 
 using eflib::fixed_string;
 using std::shared_ptr;
-using boost::make_shared;
+using std::make_shared;
 
 BEGIN_NS_SASL_COMMON();
 
@@ -19,7 +19,7 @@ std::shared_ptr<token_t> token_t::make(
 	size_t line, size_t col, eflib::fixed_string const& fname
 	)
 {
-	std::shared_ptr<token_t> ret = boost::make_shared<token_t>();
+	std::shared_ptr<token_t> ret = std::make_shared<token_t>();
 	ret->id = id;
 	ret->str = str;
 	ret->file_name = fname;

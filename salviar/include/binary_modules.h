@@ -7,12 +7,9 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/enable_warnings.h>
-
 #include <vector>
 #include <string>
+#include <memory>
 
 BEGIN_NS_SALVIAR();
 

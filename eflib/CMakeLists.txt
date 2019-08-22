@@ -30,6 +30,7 @@ set (HEADER_FILES
 	include/utility/scoped_value.h
 	include/utility/shared_declaration.h
 	include/utility/enum.h
+	include/utility/hash.h
 	include/platform/config.h
 	include/platform/constant.h
 	include/platform/disable_warnings.h

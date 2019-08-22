@@ -15,12 +15,11 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/test_tools.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
+#include <memory>
 
 #if defined(EFLIB_WINDOWS)
 #include <excpt.h>

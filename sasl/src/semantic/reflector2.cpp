@@ -25,7 +25,7 @@ using namespace salviar;
 using eflib::fixed_string;
 
 using boost::addressof;
-using boost::make_shared;
+using std::make_shared;
 using std::shared_ptr;
 using boost::icl::interval_set;
 using boost::icl::continuous_interval;

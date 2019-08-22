@@ -4,7 +4,7 @@
 #include <eflib/include/diagnostics/assert.h>
 
 using eflib::fixed_string;
-using boost::scoped_ptr;
+using std::unique_ptr;
 using std::shared_ptr;
 using std::vector;
 

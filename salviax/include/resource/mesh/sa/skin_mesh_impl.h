@@ -52,7 +52,7 @@ class animation_player_impl : public animation_player
 {
 public:
 	animation_player_impl()
-		: current_time(0), aninfo( boost::make_shared< animation_info_impl<T> >() )
+		: current_time(0), aninfo( std::make_shared< animation_info_impl<T> >() )
 	{}
 
 	virtual void set_play_time(float t) override

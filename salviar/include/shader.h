@@ -8,6 +8,7 @@
 #include <salviar/include/renderer_capacity.h>
 
 #include <eflib/include/utility/shared_declaration.h>
+#include <eflib/include/utility/hash.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string.hpp>
@@ -18,6 +19,190 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
+#include <functional>
+
+BEGIN_NS_SALVIAR()
+
+
+enum languages
+{
+    lang_none,
+
+    lang_general,
+    lang_vertex_shader,
+    lang_pixel_shader,
+    lang_blending_shader,
+
+    lang_count
+};
+
+enum system_values
+{
+    sv_none,
+
+    sv_position,
+    sv_texcoord,
+    sv_normal,
+
+    sv_blend_indices,
+    sv_blend_weights,
+    sv_psize,
+
+    sv_target,
+    sv_depth,
+
+    sv_customized
+};
+
+class semantic_value {
+public:
+    static std::string lower_copy(std::string const& name)
+    {
+        std::string ret(name);
+        for (size_t i = 0; i < ret.size(); ++i)
+        {
+            if ('A' <= ret[i] && ret[i] <= 'Z')
+            {
+                ret[i] = ret[i] - ('A' - 'a');
+            }
+        }
+        return ret;
+    }
+
+    semantic_value() : sv(sv_none), index(0) {}
+
+    explicit semantic_value(std::string const& name, uint32_t index = 0)
+    {
+        assert(!name.empty());
+
+        std::string lower_name = lower_copy(name);
+
+        if (lower_name == "position" || lower_name == "sv_position") {
+            sv = sv_position;
+        }
+        else if (lower_name == "normal") {
+            sv = sv_normal;
+        }
+        else if (lower_name == "texcoord") {
+            sv = sv_texcoord;
+        }
+        else if (lower_name == "color" || lower_name == "sv_target") {
+            sv = sv_target;
+        }
+        else if (lower_name == "depth" || lower_name == "sv_depth") {
+            sv = sv_depth;
+        }
+        else if (lower_name == "blend_indices") {
+            sv = sv_blend_indices;
+        }
+        else if (lower_name == "blend_weights") {
+            sv = sv_blend_weights;
+        }
+        else if (lower_name == "psize") {
+            sv = sv_psize;
+        }
+        else {
+            sv = sv_customized;
+            this->name = lower_name;
+        }
+        this->index = index;
+    }
+
+    semantic_value(system_values sv, uint32_t index = 0) {
+        assert(sv_none <= sv && sv < sv_customized);
+        this->sv = sv;
+        this->index = index;
+    }
+
+    std::string const& get_name() const {
+        return name;
+    }
+
+    system_values const& get_system_value() const {
+        return sv;
+    }
+
+    uint32_t get_index() const {
+        return index;
+    }
+
+    bool operator < (semantic_value const& rhs) const {
+        return sv < rhs.sv || name < rhs.name || index < rhs.index;
+    }
+
+    bool operator == (semantic_value const& rhs) const {
+        return is_same_sv(rhs) && index == rhs.index;
+    }
+
+    bool operator == (system_values rhs) const {
+        return sv == rhs && index == 0;
+    }
+
+    template <typename T>
+    bool operator != (T const& v) const {
+        return !(*this == v);
+    }
+
+    semantic_value advance_index(size_t i) const
+    {
+        semantic_value ret;
+        ret.name = name;
+        ret.sv = sv;
+        ret.index = static_cast<uint32_t>(index + i);
+        return ret;
+    }
+
+    bool valid() const
+    {
+        return sv != sv_none || !name.empty();
+    }
+
+private:
+    std::string		name;
+    system_values	sv;
+    uint32_t		index;
+
+    bool is_same_sv(semantic_value const& rhs) const {
+        if (sv != rhs.sv) return false;
+        if (sv == sv_customized) return rhs.name == name;
+        return true;
+    }
+};
+
+inline size_t hash_value(semantic_value const& v) {
+    size_t seed = v.get_index();
+    if (v.get_system_value() != sv_customized)
+    {
+        boost::hash_combine(seed, static_cast<size_t>(v.get_system_value()));
+    }
+    else
+    {
+        boost::hash_combine(seed, v.get_name());
+    }
+    return seed;
+}
+
+END_NS_SALVIAR()
+
+namespace std
+{
+    template <> struct hash<salviar::semantic_value>
+    {
+        size_t operator ()(salviar::semantic_value const& v) const noexcept
+        {
+            size_t seed = v.get_index();
+            if (v.get_system_value() != salviar::sv_customized)
+            {
+                eflib::hash_combine(seed, static_cast<size_t>(v.get_system_value()));
+            }
+            else
+            {
+                eflib::hash_combine(seed, v.get_name());
+            }
+            return seed;
+        }
+    };
+}
 
 BEGIN_NS_SALVIAR();
 
@@ -31,156 +216,6 @@ struct ps_output;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
-
-enum languages
-{
-	lang_none,
-
-	lang_general,
-	lang_vertex_shader,
-	lang_pixel_shader,
-	lang_blending_shader,
-
-	lang_count
-};
-
-enum system_values
-{
-	sv_none,
-
-	sv_position,
-	sv_texcoord,
-	sv_normal,
-
-	sv_blend_indices,
-	sv_blend_weights,
-	sv_psize,
-
-	sv_target,
-	sv_depth,
-
-	sv_customized
-};
-
-class semantic_value{
-public:
-	static std::string lower_copy( std::string const& name )
-	{
-		std::string ret(name);
-		for( size_t i = 0; i < ret.size(); ++i )
-		{
-			if( 'A' <= ret[i] && ret[i] <= 'Z' )
-			{
-				ret[i] = ret[i] - ('A' - 'a');
-			}
-		}
-		return ret;
-	}
-
-	semantic_value(): sv(sv_none), index(0){}
-
-	explicit semantic_value( std::string const& name, uint32_t index = 0 )
-{
-		assert( !name.empty() );
-
-		std::string lower_name = lower_copy(name);
-
-		if( lower_name == "position" || lower_name == "sv_position" ){
-			sv = sv_position;
-		} else if ( lower_name == "normal" ){
-			sv = sv_normal;
-		} else if ( lower_name == "texcoord" ){
-			sv = sv_texcoord;
-		} else if ( lower_name == "color" || lower_name == "sv_target" ){
-			sv = sv_target;
-		} else if ( lower_name == "depth" || lower_name == "sv_depth" ) {
-			sv = sv_depth;
-		} else if ( lower_name == "blend_indices" ){
-			sv = sv_blend_indices;
-		} else if ( lower_name == "blend_weights" ){
-			sv = sv_blend_weights;
-		} else if ( lower_name == "psize" ){
-			sv = sv_psize;
-		} else {
-			sv = sv_customized;
-			this->name = lower_name;
-		}
-		this->index = index;
-	}
-
-	semantic_value( system_values sv, uint32_t index = 0 ){
-		assert( sv_none <= sv && sv < sv_customized );
-		this->sv = sv;
-		this->index = index;
-	}
-
-	std::string const& get_name() const{
-		return name;
-	}
-
-	system_values const& get_system_value() const{
-		return sv;
-	}
-
-	uint32_t get_index() const{
-		return index;
-	}
-
-	bool operator < ( semantic_value const& rhs ) const{
-		return sv < rhs.sv || name < rhs.name || index < rhs.index;
-	}
-
-	bool operator == ( semantic_value const& rhs ) const{
-		return is_same_sv(rhs) && index == rhs.index;
-	}
-
-	bool operator == ( system_values rhs ) const{
-		return sv == rhs && index == 0;
-	}
-
-	template <typename T>
-	bool operator != ( T const& v ) const{
-		return !( *this == v );
-	}
-
-	semantic_value advance_index(size_t i) const
-	{
-		semantic_value ret;
-		ret.name	= name;
-		ret.sv		= sv;
-		ret.index	= static_cast<uint32_t>(index + i);
-		return ret;
-	}
-
-	bool valid() const
-	{
-		return sv != sv_none || !name.empty();
-	}
-
-private:
-	std::string		name;
-	system_values	sv;
-	uint32_t		index;
-
-	bool is_same_sv( semantic_value const& rhs ) const{
-		if( sv != rhs.sv ) return false;
-		if( sv == sv_customized ) return rhs.name == name;
-		return true;
-	}
-};
-
-inline size_t hash_value( semantic_value const& v ){
-	size_t seed = v.get_index();
-	if(v.get_system_value() != sv_customized )
-	{
-		boost::hash_combine( seed, static_cast<size_t>( v.get_system_value() ) );
-	}
-	else
-	{
-		boost::hash_combine( seed, v.get_name() );
-	}
-	return seed;
-}
 
 struct shader_profile
 {

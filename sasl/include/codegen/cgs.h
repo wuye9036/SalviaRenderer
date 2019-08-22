@@ -231,16 +231,16 @@ public:
 
 	template <typename T>
 	multi_value create_constant_scalar(
-		T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND(boost::is_integral<T>) )
+		T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND(std::is_integral<T>) )
 	{
 		llvm::Value* ll_val = llvm::ConstantInt::get(
-			llvm::IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value
+			llvm::IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), std::is_signed<T>::value
 		);
 		return create_scalar( ll_val, tyinfo, hint );
 	}
 
 	template <typename T>
-	multi_value create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
+	multi_value create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( std::is_floating_point<T> ) ){
 		llvm::Value* ll_val = llvm::ConstantFP::get( llvm::Type::getFloatTy( context() ), v );
 		return create_scalar( ll_val, tyinfo, hint );
 	}
@@ -426,7 +426,7 @@ protected:
 	multi_value inf_from_value(multi_value const& v, bool negative);
 
 protected:
-	boost::scoped_ptr<cg_extension> ext_;
+	std::unique_ptr<cg_extension> ext_;
 	value_array load_as_llvm_c(multi_value const& v, abis abi);
 };
 

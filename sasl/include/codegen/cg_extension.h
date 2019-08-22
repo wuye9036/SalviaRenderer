@@ -181,7 +181,7 @@ public:
 	template <typename T>
 	llvm::APInt apint(T v)
 	{
-		return llvm::APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
+		return llvm::APInt( sizeof(v) << 3, static_cast<uint64_t>(v), std::is_signed<T>::value );
 	}
 	template <typename T>
 	llvm::ConstantInt* get_int( T v, EFLIB_ENABLE_IF_PRED1(is_integral, T) )

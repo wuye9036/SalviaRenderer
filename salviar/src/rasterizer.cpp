@@ -31,7 +31,7 @@
 
 using eflib::num_available_threads;
 
-using boost::atomic;
+using std::atomic;
 
 class shader_reflection;
 

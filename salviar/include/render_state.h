@@ -12,10 +12,6 @@
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/math/vector.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 BEGIN_NS_SALVIAR();
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);

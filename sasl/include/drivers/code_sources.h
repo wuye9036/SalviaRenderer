@@ -167,7 +167,7 @@ public:
 	~wave_context_wrapper();
 	wcontext_t* get_wctxt() const;
 private:
-	boost::scoped_ptr<wcontext_t> wctxt;
+	std::unique_ptr<wcontext_t> wctxt;
 };
 
 class compiler_code_source: public sasl::common::lex_context, public sasl::common::code_source{
@@ -244,7 +244,7 @@ private:
 		bool is_before_include );
 	friend void report_load_file_failed(void* ctxt, std::string const& name, bool is_system);
 
-	boost::scoped_ptr<wave_context_wrapper>	wctxt_wrapper;
+	std::unique_ptr<wave_context_wrapper>	wctxt_wrapper;
 	sasl::common::diag_chat*				diags;
 
 	mutable eflib::fixed_string

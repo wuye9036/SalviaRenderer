@@ -5,15 +5,11 @@
 
 #include <sasl/include/common/lex_context.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
+#include <unordered_map>
 
 namespace sasl{
 	namespace common{

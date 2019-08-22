@@ -9,11 +9,8 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace sasl
@@ -83,7 +80,7 @@ private:
 	sv_layout*			position_output_;
 
 	// Include su_stream_in and su_buffer_in
-	typedef std::unordered_map<semantic_value, sv_layout>			semantic_layout_dict;
+	typedef std::unordered_map<semantic_value, sv_layout, std::hash<semantic_value>>		semantic_layout_dict;
 	typedef std::unordered_map<symbol*, sv_layout>				symbol_layout_dict;
 	typedef std::unordered_map<eflib::fixed_string, sv_layout*>	name_layout_dict;
 

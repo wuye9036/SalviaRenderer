@@ -6,15 +6,9 @@
 #include <sasl/enums/enums_utility.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/assign/list_inserter.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <any>
 #include <vector>
 #include <functional>
-
-using namespace boost::assign;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -65,7 +59,7 @@ void list_of_builtin_type( ContainerT& cont, const PredT& pred ){
 	btc_list_t const& btclst( sasl::utility::list_of_builtin_types() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
-			cont += *it;
+			cont.push_back(*it);
 		}
 	}
 }

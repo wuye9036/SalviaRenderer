@@ -75,7 +75,7 @@ namespace Intrinsic = llvm::Intrinsic;
 using boost::any;
 using std::shared_ptr;
 using boost::enable_if;
-using boost::is_integral;
+using std::is_integral;
 using std::unordered_map;
 using boost::lexical_cast;
 

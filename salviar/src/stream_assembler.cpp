@@ -14,9 +14,9 @@
 
 using namespace eflib;
 
-using boost::make_tuple;
-using boost::get;
-using boost::tuple;
+using std::make_tuple;
+using std::get;
+using std::tuple;
 
 using std::vector;
 using std::pair;

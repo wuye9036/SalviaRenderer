@@ -2,6 +2,8 @@
 
 #include <eflib/include/platform/dl_loader.h>
 
+#include <cassert>
+
 using eflib::dynamic_lib;
 
 using std::shared_ptr;

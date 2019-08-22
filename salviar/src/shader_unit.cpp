@@ -9,9 +9,7 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/math.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
 using namespace eflib;
 using std::vector;

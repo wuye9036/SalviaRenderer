@@ -4,14 +4,10 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/unordered_map.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <tuple>
+#include <unordered_map>
+
 
 BEGIN_NS_SALVIAR();
 

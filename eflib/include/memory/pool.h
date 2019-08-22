@@ -67,7 +67,7 @@ namespace eflib
 			}
 
 			static const int ObjectSize = sizeof(ObjectT);
-			boost::array<bool, MaxCount> usage;
+			std::array<bool, MaxCount> usage;
 			char data[ObjectSize * MaxCount];
 		};
 

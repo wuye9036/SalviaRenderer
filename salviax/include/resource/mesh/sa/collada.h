@@ -124,7 +124,7 @@ struct dae_node
 template <typename T>
 std::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree& xml_node, dae_node* parent)
 {
-	std::shared_ptr<T> ret = boost::make_shared<T>();
+	std::shared_ptr<T> ret = std::make_shared<T>();
 	ret->owner	= this;
 	ret->parent	= parent;
 	ret->parse_attribute(xml_node);

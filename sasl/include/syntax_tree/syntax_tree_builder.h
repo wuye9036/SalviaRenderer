@@ -10,11 +10,9 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/variant.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
+#include <unordered_map>
+#include <variant>
 
 namespace sasl{
 	namespace parser{

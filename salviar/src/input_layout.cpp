@@ -1,14 +1,13 @@
 #include <salviar/include/input_layout.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <boost/functional/hash.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
+#include <memory>
 
-using boost::make_shared;
+using std::make_shared;
 
 BEGIN_NS_SALVIAR();
 

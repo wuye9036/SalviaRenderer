@@ -11,7 +11,7 @@ using sasl::common::code_span;
 using sasl::common::diag_item_committer;
 using eflib::fixed_string;
 using std::shared_ptr;
-using boost::scoped_ptr;
+using std::unique_ptr;
 using boost::wave::preprocess_exception;
 using std::unordered_map;
 using std::string;

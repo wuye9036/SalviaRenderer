@@ -3,10 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <memory>
 #include <string>
 
 namespace sasl{
