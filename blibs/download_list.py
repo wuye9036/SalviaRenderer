@@ -20,4 +20,5 @@ DOWNLOAD_LIST = [
     ("basic_tools/win32/7z.dll", RAW_FILE, "04ad4b80880b32c94be8d0886482c774"),
     ("basic_tools/win32/7z.exe", RAW_FILE, "a51d90f2f9394f5ea0a3acae3bd2b219"),
     ("__patches__/resources/sponza_lq/part_of_sponza.mtl", RAW_FILE, "6028084c57c09a405c03bbdc3b343285"),
+    ("__patches__/3rd_party/FreeImage/CMakeLists.txt", RAW_FILE, "f253f36bbf70f4c39fe378d0887cf092"),
 ]
