@@ -2,10 +2,10 @@ RAW_FILE          = "RAW_FILE"
 COMPRESSED_FILE   = "CMP_FILE"
 COMPRESSED_FOLDER = "CMP_FLDR"
 DOWNLOAD_LIST = [
-    ("3rd_party/boost", COMPRESSED_FOLDER, "d03ee3b0e1f670f564d8958cb3e09fbb"),
-    ("3rd_party/FreeImage", COMPRESSED_FOLDER, "03ace1aaab81aec3fa2849c0e9da88d1"),
+    ("3rd_party/boost", COMPRESSED_FOLDER, "4a8a1a7c77fb6029ac30865ad7339e52"),
+    ("3rd_party/FreeImage", COMPRESSED_FOLDER, "260599ca08ae81f68d42b64104e7458f"),
     ("3rd_party/freetype2", COMPRESSED_FOLDER, "88c7fa3bdc6a180592359aee994be199"),
-    ("3rd_party/llvm", COMPRESSED_FOLDER, "774a8246e974a7f00b5d0ffae0971e12"),
+    ("3rd_party/llvm", COMPRESSED_FOLDER, "e3a2d6d9ccd132dba317e68f1cdf2cc1"),
     ("3rd_party/threadpool", COMPRESSED_FOLDER, "0ccb614305e10bb0e6bb12af46c35997"),
     ("resources/astro_boy", COMPRESSED_FOLDER, "af69f995eb33d36fa50e800d92e0eb5c"),
     ("resources/complex_mesh", COMPRESSED_FOLDER, "d0df59b45e5769713f61cd3517b4b6d1"),

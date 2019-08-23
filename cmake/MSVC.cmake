@@ -1,17 +1,16 @@
 # Set compiling flags for MSVC
 
-if(MSVC_VERSION LESS 1700)
+if(MSVC_VERSION LESS 1920)
 	MESSAGE(FATAL_ERROR "Cannot support Microsoft Visual C++ version ${MSVC_VERSION}. Build will be stopped." )
 endif()
 
-set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /W4 /wd4503 /wd4251 /wd4275 /wd4819 /EHsc /GR /D_SECURE_SCL=0 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_SCL_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_WARNINGS /std:c++17") 
+set(CMAKE_C_FLAGS "/DWIN32 /D_WINDOWS /W4 /wd4503 /wd4251 /wd4275 /wd4819 /EHsc /GR /D_SECURE_SCL=0 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_SCL_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_WARNINGS" )
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /std:c++17") 
 
 #C4503: decorated name length exceeded, name was truncated
 #C4251: 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
 #C4275: non – DLL-interface classkey 'identifier' used as base for DLL-interface classkey 'identifier'
 #C4819: The file contains a character that cannot be represented in the current code page (number). Save the file in Unicode format to prevent data loss.
-
-set(CMAKE_C_FLAGS ${CMAKE_CXX_FLAGS})
 
 if(CMAKE_INFO_PLATFORM_BITNESS EQUAL 32)
 	set(CMAKE_CXX_FLAGS_DEBUG "/Zi")

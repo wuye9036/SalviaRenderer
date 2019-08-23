@@ -15,7 +15,7 @@ from blibs.util import *
 from blibs.project import *
 from blibs.deps import *
 
-RESOURCE_COMMIT = "ee9d620bc0a089ab0392a7a12e57da1125d3dd4f"
+RESOURCE_COMMIT = "1492b249c98dd7ec32a6023c77a59e4829e0b9af"
 
 def guarded_rmtree(path):
     if os.path.isdir(path):
@@ -82,8 +82,7 @@ def make_boost(proj):
     
     #Get boost build command
     # Add configs
-    libs = ["atomic", "chrono", "thread", "system", "filesystem", "date_time", "test", "wave", "program_options",
-            "serialization", "locale"]
+    libs = ["test", "wave", "program_options"]
     address_model = 'address-model=%d' % proj.arch().bits()
     options = ["--build-dir=./", "--hash", "link=shared", "runtime-link=shared", "threading=multi", "stage"]
     toolset = proj.toolset()
@@ -91,7 +90,7 @@ def make_boost(proj):
     cxxflags = []
     if toolset.short_compiler_name() == 'vc':
         defs = ["_CRT_SECURE_NO_DEPRECATE", "_SCL_SECURE_NO_DEPRECATE"]
-        cxxflags = ["-wd4819", "-wd4910"]
+        cxxflags = ["-wd4819", "-wd4910", "-wd4244", "-wd4996"]
         
     #bjam toolset stagedir address-model defs cxxflags libs options
     bjam_executable = None
@@ -199,9 +198,14 @@ def config_and_make_llvm(proj):
         "PYTHON_EXECUTABLE": ("PATH", sys.executable),
         "LLVM_INCLUDE_TESTS": ("BOOL", "FALSE"),
         "LLVM_INCLUDE_TOOLS": ("BOOL", "FALSE"),
+        "LLVM_INCLUDE_UTILS": ("BOOL", "FALSE"),
         "LLVM_INCLUDE_EXAMPLES": ("BOOL", "FALSE"),
         "LLVM_INCLUDE_BENCHMARKS": ("BOOL", "FALSE"),
-        "LLVM_TARGETS_TO_BUILD": ("STRING", "X86")
+        "LLVM_BUILD_TESTS": ("BOOL", "FALSE"),
+        "LLVM_BUILD_TOOLS": ("BOOL", "FALSE"),
+        "LLVM_BUILD_UTILS": ("BOOL", "FALSE"),
+        "LLVM_TARGETS_TO_BUILD": ("STRING", "X86"),
+        # "LLVM_OPTIMIZED_TABLEGEN": ("BOOL", "TRUE")
     }
     config_and_make_cmake_project('LLVM', configuration, proj.llvm_root(), proj.llvm_build(), proj.llvm_install(), proj)
 
@@ -305,11 +309,11 @@ def build(proj_props, cleanBuild):
     proj.print_props()
     proj.check()
 
-    make_bjam(proj)
-    if cleanBuild: clean_all(proj)
-    make_boost(proj)
-    config_and_make_freetype(proj)
-    config_and_make_freeimage(proj)
+    # make_bjam(proj)
+    # if cleanBuild: clean_all(proj)
+    # make_boost(proj)
+    # config_and_make_freetype(proj)
+    # config_and_make_freeimage(proj)
     config_and_make_llvm(proj)
     config_and_make_salvia(proj)
 

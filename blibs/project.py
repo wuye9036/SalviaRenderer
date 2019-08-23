@@ -42,9 +42,6 @@ class project:
         if default_toolset == "msvc-14.2":
             self.toolset_ = toolset('vs', 'msvc', 14, 2, None)
             self.builder_root_ = ""
-        elif default_toolset == "msvc-14.0":
-            self.toolset_ = toolset('vs', 'msvc', 14, 0, None)
-            self.builder_root_ = os.path.join( env['VS140COMNTOOLS'], "../../" )
         elif default_toolset == "gcc" and not default_gcc is None:
             self.toolset_ = default_gcc
             self.builder_root_ = default_gcc_dir
@@ -151,13 +148,13 @@ class project:
         return reduce( lambda ret,s: ret+"_"+s, [hint_dict[hnt] for hnt in hints] )
         
     def env_setup_commands(self):
+        major_ver = self.toolset().major_ver
+        minor_ver = self.toolset().minor_ver
+        
         if self.os() == systems.win32:
             if self.toolset().short_compiler_name() == 'vc':
-                if self.toolset().major_ver == 14 and self.toolset().minor_ver > 0:
-                    return r"D:\Software\VS2019\VC\Auxiliary\Build\vcvars64.bat"
-                base_dir = os.path.join(self.builder_root_, "vc", "bin")
-                if arch.current() == arch.x64:
-                    return os.path.join(base_dir, "amd64", "vcvars64.bat" )
+                assert major_ver > 14 or (major_ver == 14 and minor_ver >= 2)
+                return os.path.join(self.props_.toolset_dir, r"vcvars64.bat")
             elif self.toolset().short_compiler_name() == "mgw":
                 if not self.build_root_ is None:
                     return 'set PATH=%s;%%PATH%%' % self.builder_root_
@@ -300,9 +297,7 @@ class project:
             return "CodeBlocks - Unix Makefiles"
         elif self.toolset().short_compiler_name() == 'vc':
             assert self.arch() == arch.x64
-            if self.toolset().short_name() == 'msvc14':
-                return "Visual Studio 14 Win64"
-            elif self.toolset().short_name() == "msvc142":
+            if self.toolset().short_name() == "msvc142":
                 return "Visual Studio 16 2019"
 
         report_error( "Unknown generator.")
