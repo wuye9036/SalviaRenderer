@@ -1,35 +1,15 @@
-/*! \file
-* \brief Thread pool worker.
-*
-* The worker thread instance is attached to a pool 
-* and executes tasks of this pool. 
-*
-* Copyright (c) 2005-2007 Philipp Henkel
-*
-* Use, modification, and distribution are  subject to the
-* Boost Software License, Version 1.0. (See accompanying  file
-* LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-*
-* http://threadpool.sourceforge.net
-*
-*/
-
-#ifndef THREADPOOL_DETAIL_WORKER_THREAD_HPP_INCLUDED
-#define THREADPOOL_DETAIL_WORKER_THREAD_HPP_INCLUDED
-
-
 #include "scope_guard.hpp"
 
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/exceptions.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/bind.hpp>
+#include <memory>
+#include <thread>
+#include <mutex>
+#include <functional>
 
 
-namespace boost { namespace threadpool { namespace detail 
+namespace eflib { namespace threadpool { namespace detail 
 {
 
+  using namespace std;
   /*! \brief Thread pool worker. 
   *
   * A worker_thread represents a thread of execution. The worker is attached to a 
@@ -42,8 +22,7 @@ namespace boost { namespace threadpool { namespace detail
   */ 
   template <typename Pool>
   class worker_thread
-  : public enable_shared_from_this< worker_thread<Pool> > 
-  , private noncopyable
+  : public enable_shared_from_this< worker_thread<Pool> >
   {
   public:
     typedef Pool pool_type;         	   //!< Indicates the pool's type.
@@ -109,7 +88,5 @@ namespace boost { namespace threadpool { namespace detail
   };
 
 
-} } } // namespace boost::threadpool::detail
-
-#endif // THREADPOOL_DETAIL_WORKER_THREAD_HPP_INCLUDED
+} } }
 

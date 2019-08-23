@@ -1,43 +1,16 @@
-/*! \file
-* \brief Thread pool core.
-*
-* This file contains the threadpool's core class: pool<Task, SchedulingPolicy>.
-*
-* Thread pools are a mechanism for asynchronous and parallel processing 
-* within the same process. The pool class provides a convenient way 
-* for dispatching asynchronous tasks as functions objects. The scheduling
-* of these tasks can be easily controlled by using customized schedulers. 
-*
-* Copyright (c) 2005-2007 Philipp Henkel
-*
-* Use, modification, and distribution are  subject to the
-* Boost Software License, Version 1.0. (See accompanying  file
-* LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-*
-* http://threadpool.sourceforge.net
-*
-*/
+#pragma once
 
-
-#ifndef THREADPOOL_POOL_HPP_INCLUDED
-#define THREADPOOL_POOL_HPP_INCLUDED
-
-#include <boost/ref.hpp>
-
-#include "./detail/pool_core.hpp"
-
+#include "pool_core.hpp"
 #include "task_adaptors.hpp"
-
-#include "./detail/locking_ptr.hpp"
+#include "locking_ptr.hpp"
 
 #include "scheduling_policies.hpp"
 #include "size_policies.hpp"
 #include "shutdown_policies.hpp"
 
 
-
 /// The namespace threadpool contains a thread pool and related utility classes.
-namespace boost { namespace threadpool
+namespace eflib { namespace threadpool
 {
 
 
@@ -227,6 +200,4 @@ namespace boost { namespace threadpool
 
 
 
-} } // namespace boost::threadpool
-
-#endif // THREADPOOL_POOL_HPP_INCLUDED
+} } // namespace eflib::threadpool

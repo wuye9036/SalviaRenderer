@@ -1,32 +1,14 @@
-/*! \file
-* \brief Task adaptors.
-*
-* This file contains adaptors for task function objects.
-*
-* Copyright (c) 2005-2007 Philipp Henkel
-*
-* Use, modification, and distribution are  subject to the
-* Boost Software License, Version 1.0. (See accompanying  file
-* LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-*
-* http://threadpool.sourceforge.net
-*
-*/
+#pragma once
 
-
-#ifndef THREADPOOL_TASK_ADAPTERS_HPP_INCLUDED
-#define THREADPOOL_TASK_ADAPTERS_HPP_INCLUDED
-
-
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <memory>
+#include <thread>
+#include <functional>
 
 #if BOOST_VERSION < 105000
 #define TIME_UTC_ TIME_UTC
 #endif
 
-namespace boost { namespace threadpool
+namespace eflib { namespace threadpool
 {
 
   /*! \brief Standard task function object.
@@ -37,9 +19,7 @@ namespace boost { namespace threadpool
   * \see boost function library
   *
   */ 
-  typedef function0<void> task_func;
-
-
+  typedef std::function<void()> task_func;
 
 
   /*! \brief Prioritized task function object. 
@@ -110,7 +90,7 @@ namespace boost { namespace threadpool
   class looped_task_func
   {
   private:
-    function0<bool> m_function;   //!< The task's function.
+    std::function<bool ()> m_function;   //!< The task's function.
     unsigned int m_break_s;              //!< Duration of breaks in seconds.
     unsigned int m_break_ns;             //!< Duration of breaks in nano seconds.
 
@@ -122,7 +102,7 @@ namespace boost { namespace threadpool
     * \param function The task's function object which is looped until false is returned.
     * \param interval The minimum break time in milli seconds before the first execution of the task function and between the following ones.
     */
-    looped_task_func(function0<bool> const & function, unsigned int const interval = 0)
+    looped_task_func(std::function<bool()> const & function, unsigned int const interval = 0)
       : m_function(function)
     {
       m_break_s  = interval / 1000;
@@ -152,11 +132,11 @@ namespace boost { namespace threadpool
             xtime_get(&xt, TIME_UTC_);
             xt.nsec += m_break_ns;
             xt.sec += m_break_s;
-            thread::sleep(xt); 
+            this_thread::sleep(xt); 
           }
           else
           {
-            thread::yield(); // Be fair to other threads
+            this_thread::yield(); // Be fair to other threads
           }
         }
       }
@@ -165,7 +145,5 @@ namespace boost { namespace threadpool
   }; // looped_task_func
 
 
-} } // namespace boost::threadpool
-
-#endif // THREADPOOL_TASK_ADAPTERS_HPP_INCLUDED
+} }
 

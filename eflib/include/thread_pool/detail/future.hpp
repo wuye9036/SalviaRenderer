@@ -19,15 +19,10 @@
 
   
 #include "./detail/future.hpp"
-#include <boost/utility/enable_if.hpp>
 
-//#include "pool.hpp"
-//#include <boost/utility.hpp>
+#include <type_traits>
 
-//#include <boost/thread/mutex.hpp>
-
-
-namespace boost { namespace threadpool
+namespace eflib { namespace threadpool
 {
 
   /*! \brief Experimental. Do not use in production code. TODO. 

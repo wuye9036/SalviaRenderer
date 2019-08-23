@@ -1,51 +1,18 @@
-/*! \file
-* \brief Thread pool core.
-*
-* This file contains the threadpool's core class: pool<Task, SchedulingPolicy>.
-*
-* Thread pools are a mechanism for asynchronous and parallel processing 
-* within the same process. The pool class provides a convenient way 
-* for dispatching asynchronous tasks as functions objects. The scheduling
-* of these tasks can be easily controlled by using customized schedulers. 
-*
-* Copyright (c) 2005-2007 Philipp Henkel
-*
-* Use, modification, and distribution are  subject to the
-* Boost Software License, Version 1.0. (See accompanying  file
-* LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-*
-* http://threadpool.sourceforge.net
-*
-*/
-
-
-#ifndef THREADPOOL_POOL_CORE_HPP_INCLUDED
-#define THREADPOOL_POOL_CORE_HPP_INCLUDED
-
-
-
+#pragma once
 
 #include "locking_ptr.hpp"
 #include "worker_thread.hpp"
-
-#include "../task_adaptors.hpp"
-
-#include <boost/thread.hpp>
-#include <boost/thread/exceptions.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/smart_ptr/scoped_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits.hpp>
+#include "task_adaptors.hpp"
 
 #include <vector>
+#include <memory>
 
 
 /// The namespace threadpool contains a thread pool and related utility classes.
-namespace boost { namespace threadpool { namespace detail 
+namespace eflib { namespace threadpool { namespace detail 
 {
+  
+  using namespace std;
 
   /*! \brief Thread pool. 
   *
@@ -74,8 +41,7 @@ namespace boost { namespace threadpool { namespace detail
     template <typename> class ShutdownPolicy
   > 
   class pool_core
-  : public enable_shared_from_this< pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController, ShutdownPolicy > > 
-  , private noncopyable
+  : public std::enable_shared_from_this< pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController, ShutdownPolicy > >
   {
 
   public: // Type definitions
@@ -97,10 +63,10 @@ namespace boost { namespace threadpool { namespace detail
     typedef worker_thread<pool_type> worker_type;
 
     // The task is required to be a nullary function.
-    BOOST_STATIC_ASSERT(function_traits<task_type()>::arity == 0);
+    static_assert(function_traits<task_type()>::arity == 0);
 
     // The task function's result type is required to be void.
-    BOOST_STATIC_ASSERT(is_void<typename result_of<task_type()>::type >::value);
+    static_assert(is_void<typename result_of<task_type()>::type >::value);
 
 
   private:  // Friends 
@@ -123,15 +89,15 @@ namespace boost { namespace threadpool { namespace detail
 
   private: // The following members are accessed only by _one_ thread at the same time:
     scheduler_type  m_scheduler;
-    scoped_ptr<size_policy_type> m_size_policy; // is never null
+    unique_ptr<size_policy_type> m_size_policy; // is never null
     
     bool  m_terminate_all_workers;								// Indicates if termination of all workers was triggered.
     std::vector<shared_ptr<worker_type> > m_terminated_workers; // List of workers which are terminated but not fully destructed.
     
   private: // The following members are implemented thread-safe:
-    mutable recursive_mutex  m_monitor;
-    mutable condition m_worker_idle_or_terminated_event;	// A worker is idle or was terminated.
-    mutable condition m_task_or_terminate_workers_event;  // Task is available OR total worker count should be reduced.
+    mutable recursive_mutex    m_monitor;
+    mutable condition_variable m_worker_idle_or_terminated_event;	// A worker is idle or was terminated.
+    mutable condition_variable m_task_or_terminate_workers_event;  // Task is available OR total worker count should be reduced.
 
   public:
     /// Constructor.
@@ -147,6 +113,7 @@ namespace boost { namespace threadpool { namespace detail
       m_scheduler.clear();
     }
 
+    pool_core(pool_core const&) = delete;
 
     /// Destructor.
     ~pool_core()
@@ -449,6 +416,4 @@ namespace boost { namespace threadpool { namespace detail
 
 
 
-} } } // namespace boost::threadpool::detail
-
-#endif // THREADPOOL_POOL_CORE_HPP_INCLUDED
+} } } // namespace eflib::threadpool::detail

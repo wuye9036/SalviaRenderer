@@ -28,7 +28,7 @@
 
 #include "task_adaptors.hpp"
 
-namespace boost { namespace threadpool
+namespace eflib { namespace threadpool
 {
 
   /*! \brief SchedulingPolicy which implements FIFO ordering. 
