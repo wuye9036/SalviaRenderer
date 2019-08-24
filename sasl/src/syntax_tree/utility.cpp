@@ -14,24 +14,25 @@
 #include <boost/preprocessor.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <any>
 #include <vector>
 #include <memory>
 #include <type_traits>
 
 using std::vector;
 
-using boost::any;
-using boost::any_cast;
-using boost::is_base_of;
+using std::any;
+using std::any_cast;
+using std::is_base_of;
 using std::dynamic_pointer_cast;
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+BEGIN_NS_SASL_SYNTAX_TREE()
 
 #define SAFE_ACCEPT( node_handle ) if( node_handle ) { (node_handle)->accept(this, data); }
 class follow_up_visitor : public syntax_tree_visitor{
 public:
-	follow_up_visitor( std::function<void( node&, ::boost::any* )> applied ): applied( applied ){}
+	follow_up_visitor( std::function<void( node&, ::std::any* )> applied ): applied( applied ){}
 
 	// expression
 	SASL_VISIT_DCL( unary_expression ) {
@@ -213,15 +214,15 @@ public:
 
 private:
 	template <typename ContainerT>
-	void visit( ContainerT& v, ::boost::any* data ){
+	void visit( ContainerT& v, ::std::any* data ){
 		for( typename ContainerT::iterator it = v.begin(); it != v.end(); ++it ){
 			SAFE_ACCEPT( *it );
 		}
 	}
-	std::function<void( node&, ::boost::any* )> applied;
+	std::function<void( node&, ::std::any* )> applied;
 };
 
-void follow_up_traversal( std::shared_ptr<node> root, std::function<void( node&, ::boost::any* )> on_visit ){
+void follow_up_traversal( std::shared_ptr<node> root, std::function<void( node&, ::std::any* )> on_visit ){
 	follow_up_visitor fuv( on_visit );
 	if( root ){
 		root->accept( &fuv, NULL );
@@ -252,7 +253,7 @@ void store_node_to_data( any* lhs, shared_ptr< NodeT > rhs ){
 	BOOST_PP_SEQ_FOR_EACH( COPY_VALUE_ITEM, (cloned, v), member_seq ); \
 	store_node_to_data( (output), cloned );
 
-template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
+template<typename T> void copy_from_any( T& lhs, const std::any& rhs ){
 	lhs = any_cast<T>(rhs);
 }
 
@@ -271,7 +272,7 @@ template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& 
 
 #define SASL_DEEP_CLONE_NODE( dest_any_ptr, src_v_ref, node_type, member_seq )	\
 	std::shared_ptr< node_type > cloned	= create_node< node_type >( src_v_ref.token_begin(), src_v_ref.token_end() ); \
-	boost::any member_dup; \
+	std::any member_dup; \
 	BOOST_PP_SEQ_FOR_EACH( DEEPCOPY_VALUE_ITEM, (cloned, src_v_ref), member_seq ); \
 	store_node_to_data( (dest_any_ptr), cloned );
 
@@ -387,17 +388,17 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( program );
 
 	// If value is "value semantic", copy it as raw data.
-	template <typename ValueT> void visit( ValueT& v, boost::any* data ){
+	template <typename ValueT> void visit( ValueT& v, std::any* data ){
 		*data = v;
 	}
 
 	// If value is "value semantic", copy it as raw data.
-	template <typename NodeT> void visit( vector< shared_ptr<NodeT> > & v, boost::any* data ){
+	template <typename NodeT> void visit( vector< shared_ptr<NodeT> > & v, std::any* data ){
 		vector< shared_ptr<NodeT> > out_v(v.size());
 		for( shared_ptr<NodeT> item: v ){
-			boost::any cloned;
+            std::any cloned;
 			visit( item, &cloned );
-			out_v.push_back( dynamic_pointer_cast<NodeT>( boost::any_cast< shared_ptr<node> > (cloned) ) );
+			out_v.push_back( dynamic_pointer_cast<NodeT>(std::any_cast< shared_ptr<node> > (cloned) ) );
 		}
 		*data = out_v;
 	}
@@ -409,9 +410,9 @@ ValueT process_node(std::shared_ptr<node> src, syntax_tree_visitor* v){
 		return src;
 	}
 
-	::boost::any result_val;
+	std::any result_val;
 	src->accept( v, &result_val );
-	return ::boost::any_cast< ValueT >(result_val);
+	return std::any_cast< ValueT >(result_val);
 }
 
 std::shared_ptr<node> duplicate( std::shared_ptr<node> src ){
@@ -424,4 +425,4 @@ std::shared_ptr<node> deep_duplicate( std::shared_ptr<node> src ){
 	return process_node<std::shared_ptr<node>>( src, &dup );
 }
 
-END_NS_SASL_SYNTAX_TREE();
+END_NS_SASL_SYNTAX_TREE()

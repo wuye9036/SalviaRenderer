@@ -9,6 +9,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/optional.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -16,7 +17,7 @@
 #include <memory>
 #include <optional>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+BEGIN_NS_SALVIAX_RESOURCE()
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_source);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_verts);
@@ -110,7 +111,7 @@ struct dae_node
 		return owner->load_node<T>(xml_node, this);
 	}
 
-	std::optional<
+	boost::optional<
 		std::string>	id, sid, name, source;
 	dae_dom*			owner;
 	dae_node*			parent;
@@ -306,6 +307,6 @@ struct dae_matrix: public dae_node
 	eflib::mat44 mat;
 };
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()
 
 #endif

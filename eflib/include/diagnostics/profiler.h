@@ -1,24 +1,21 @@
 #pragma once
 
-#ifndef EFLIB_DIAGNOSTICS_PROFILER_H
-#define EFLIB_DIAGNOSTICS_PROFILER_H
-
 #include <eflib/include/platform/typedefs.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/chrono.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace eflib
 {
 	class profiling_item
 	{
 	public:
-		typedef boost::chrono::high_resolution_clock clock;
+		typedef std::chrono::high_resolution_clock clock;
 
 		profiling_item();
 		~profiling_item();
@@ -66,8 +63,8 @@ namespace eflib
 		profiling_scope(profiler* prof, std::string const& name, size_t tag = 0);
 		~profiling_scope();
 	private:
-		profiling_scope(const profiling_scope&);
-		profiling_scope& operator = (const profiling_scope&);
+		profiling_scope(const profiling_scope&) = delete;
+		profiling_scope& operator = (const profiling_scope&) = delete;
 		profiler*	prof;
 		std::string name;
 	};
@@ -75,5 +72,3 @@ namespace eflib
 	void print_profiler(profiler const* prof, size_t max_level);
 	boost::property_tree::ptree make_ptree(profiler const* prof, size_t max_level);
 }
-
-#endif

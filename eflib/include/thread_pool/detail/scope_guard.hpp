@@ -12,7 +12,7 @@ class scope_guard
 	bool                  m_is_active;
 
 public:
-	scope_guard(function0<void> const & call_on_exit)
+	scope_guard(std::function<void()> const & call_on_exit)
 	: m_function(call_on_exit)
 	, m_is_active(true)
 	{

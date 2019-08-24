@@ -7,11 +7,9 @@
 
 #include <eflib/include/memory/pool.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_array.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 struct vs_output_op;
 class  vs_output;
@@ -68,18 +66,18 @@ private:
 	void threaded_clip_geometries(thread_context const* thread_ctx);
 	void threaded_compact_geometries(thread_context const* thread_ctx);
 	
-	boost::shared_array<vs_output_pool>	vso_pools_;
+	std::shared_ptr<vs_output_pool[]>	vso_pools_;
 	
-	boost::shared_array<vs_output*>		clipped_verts_;
+    std::shared_ptr<vs_output*[]>		clipped_verts_;
 	size_t								clipped_verts_cap_;
 
-	boost::shared_array<uint32_t>		clipped_package_verts_count_;
+    std::shared_ptr<uint32_t[]>		    clipped_package_verts_count_;
 	size_t								clipped_package_verts_count_cap_;
 	
-	boost::shared_array<vs_output*>		compacted_verts_;
+    std::shared_ptr<vs_output*[]>		compacted_verts_;
 	size_t								compacted_verts_cap_;
 
-	boost::shared_array<uint32_t>		clipped_package_compacted_addresses_;
+    std::shared_ptr<uint32_t[]>		    clipped_package_compacted_addresses_;
 	size_t								clipped_package_compacted_addresses_cap_;
 
 	int32_t								clipping_package_count_;
@@ -90,4 +88,4 @@ private:
 	geom_setup_context const*			ctxt_;
 };
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

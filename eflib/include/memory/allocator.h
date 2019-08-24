@@ -191,7 +191,7 @@ namespace eflib
 		template <class T>
 		bool check(T p)
 		{
-			static_assert(boost::is_pointer<T>::value);
+			static_assert(std::is_pointer<T>::value);
 
 			return ((size_t)p % aligned_size == 0);
 		}

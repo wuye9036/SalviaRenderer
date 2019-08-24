@@ -33,9 +33,9 @@ using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
 
 using std::make_shared;
-using std::dynamic_pointer_cast;
 using std::shared_ptr;
-using boost::static_pointer_cast;
+using std::dynamic_pointer_cast;
+using std::static_pointer_cast;
 
 using std::vector;
 

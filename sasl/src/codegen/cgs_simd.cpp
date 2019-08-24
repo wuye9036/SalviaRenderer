@@ -21,13 +21,13 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/foreach.hpp>
-#include <boost/unordered_map.hpp>
 #include <boost/lexical_cast.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/platform/cpuinfo.h>
+
+#include <unordered_map>
 
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::function_full_def;
@@ -72,9 +72,9 @@ using llvm::CmpInst;
 
 namespace Intrinsic = llvm::Intrinsic;
 
-using boost::any;
+using std::any;
 using std::shared_ptr;
-using boost::enable_if;
+using std::enable_if;
 using std::is_integral;
 using std::unordered_map;
 using boost::lexical_cast;

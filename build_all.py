@@ -15,7 +15,7 @@ from blibs.util import *
 from blibs.project import *
 from blibs.deps import *
 
-RESOURCE_COMMIT = "1492b249c98dd7ec32a6023c77a59e4829e0b9af"
+RESOURCE_COMMIT = "f18fc82afd6ca2f64e4a6eac9275553bc47d42a1"
 
 def guarded_rmtree(path):
     if os.path.isdir(path):

@@ -44,7 +44,7 @@ using namespace sasl::syntax_tree;
 using namespace llvm;
 using namespace sasl::utility;
 
-using boost::any;
+using std::any;
 using std::shared_ptr;
 
 using std::vector;
@@ -57,7 +57,7 @@ using std::make_pair;
 	push_fn( (fn) );	\
 	scope_guard<void> pop_fn_on_exit##__LINE__( [this]() { pop_fn(); } );
 
-BEGIN_NS_SASL_CODEGEN();
+BEGIN_NS_SASL_CODEGEN()
 
 // expressions
 SASL_VISIT_DEF_UNIMPL( cast_expression );

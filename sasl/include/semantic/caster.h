@@ -10,6 +10,8 @@
 #include <boost/multi_index_container.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/utility/hash.h>
+
 #include <tuple>
 #include <unordered_map>
 #include <functional>
@@ -21,7 +23,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_SEMANTIC();
+BEGIN_NS_SASL_SEMANTIC()
 
 namespace sst = sasl::syntax_tree;
 
@@ -62,7 +64,7 @@ public:
 
 	virtual ~caster_t(){}
 private:
-	typedef boost::tuples::tuple<
+	typedef std::tuple<
 		casts/*result*/, int/*prior*/,
 		tid_t/*src*/, tid_t/*dest*/, cast_t/*caster*/
 	> cast_info;
@@ -87,6 +89,6 @@ private:
 	get_semantic_fn					get_semantic_;
 };
 
-END_NS_SASL_SEMANTIC();
+END_NS_SASL_SEMANTIC()
 
 #endif

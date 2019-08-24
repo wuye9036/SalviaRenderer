@@ -248,7 +248,7 @@ private:
 
 font_ptr font::create( std::string const& font_file_path, size_t face_index, size_t size, font::units unit )
 {
-	if ( !boost::filesystem::exists(font_file_path) )
+	if ( !std::filesystem::exists(font_file_path) )
 	{
 		return font_ptr();
 	}
@@ -263,10 +263,10 @@ font_ptr font::create_in_system_path( std::string const& font_file_name, size_t 
 	char system_directory[1024];
 #if defined(EFLIB_WINDOWS)
 	GetWindowsDirectoryA(system_directory, 1024);
-	boost::filesystem::path font_path(system_directory);
+	std::filesystem::path font_path(system_directory);
 	font_path /= "Fonts";
 #else
-	boost::filesystem::path font_path("usr/share/fonts/truetype");
+	std::filesystem::path font_path("usr/share/fonts/truetype");
 #endif
 
 	font_path /= font_file_name;
@@ -274,4 +274,4 @@ font_ptr font::create_in_system_path( std::string const& font_file_name, size_t 
 	return create(font_path.string(), face_index, size, unit);
 }
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()

@@ -105,7 +105,7 @@ namespace
 	
 	void jit_function_compiling_testing()
 	{
-		typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
+		typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_lvalue_reference<_> > Conv;
 
 		static_assert(is_same<make_function<void, type_list<int>>::type, void(int)>::value,	  "Make Function0 Assertion Failed");
 		static_assert(is_same<make_function<void, type_list<>>::type,    void()>::value,	  "Make Function1 Assertion Failed");

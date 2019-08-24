@@ -173,11 +173,11 @@ inline size_t hash_value(semantic_value const& v) {
     size_t seed = v.get_index();
     if (v.get_system_value() != sv_customized)
     {
-        boost::hash_combine(seed, static_cast<size_t>(v.get_system_value()));
+        eflib::hash_combine(seed, static_cast<size_t>(v.get_system_value()));
     }
     else
     {
-        boost::hash_combine(seed, v.get_name());
+        eflib::hash_combine(seed, v.get_name());
     }
     return seed;
 }

@@ -47,26 +47,26 @@ using sasl::drivers::compiler;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;
+
 EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
 
 using eflib::vector_;
 using eflib::matrix_;
 
-using std::shared_ptr;
-using std::dynamic_pointer_cast;
 using boost::mpl::_;
 using boost::mpl::if_;
 using boost::mpl::or_;
 using boost::mpl::push_front;
 using boost::mpl::sizeof_;
 using boost::mpl::transform;
-using boost::is_arithmetic;
-using boost::is_pointer;
-using boost::is_same;
-using boost::add_reference;
-using boost::enable_if_c;
-using boost::enable_if;
-using boost::disable_if;
+
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::is_arithmetic;
+using std::is_pointer;
+using std::is_same;
+using std::add_lvalue_reference;
+using std::enable_if;
 
 using std::string;
 
@@ -147,7 +147,7 @@ public:
 	{
 		return callee != nullptr; 
 	}
-	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
+	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_lvalue_reference<_> > Conv;
 	typedef convert_to_jit_function_type<Conv, Fn> jit_function_type;
 	typedef typename jit_function_type::type* callee_type;
 	typedef typename jit_function_type::return_type return_type;

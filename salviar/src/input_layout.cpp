@@ -9,7 +9,7 @@
 
 using std::make_shared;
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 void input_layout::slot_range( size_t& min_slot, size_t& max_slot ) const{
 	min_slot = std::numeric_limits<size_t>::max();
@@ -88,20 +88,20 @@ size_t hash_value(input_element_desc const& v)
 {
 	size_t seed = 0;
 
-	boost::hash_combine(seed, v.aligned_byte_offset);
-	boost::hash_combine(seed, static_cast<size_t>(v.data_format) );
-	boost::hash_combine(seed, v.input_slot);
-	boost::hash_combine(seed, v.instance_data_step_rate);
-	boost::hash_combine(seed, v.semantic_index);
-	boost::hash_combine(seed, v.semantic_name);
-	boost::hash_combine(seed, static_cast<size_t>(v.slot_class) );
+	eflib::hash_combine(seed, v.aligned_byte_offset);
+	eflib::hash_combine(seed, static_cast<size_t>(v.data_format) );
+	eflib::hash_combine(seed, v.input_slot);
+	eflib::hash_combine(seed, v.instance_data_step_rate);
+	eflib::hash_combine(seed, v.semantic_index);
+	eflib::hash_combine(seed, v.semantic_name);
+	eflib::hash_combine(seed, static_cast<size_t>(v.slot_class) );
 
 	return seed;
 }
 
 size_t hash_value(input_layout const& v)
 {
-	return boost::hash_range( v.desc_begin(), v.desc_end() );
+	return eflib::hash_range( v.desc_begin(), v.desc_end() );
 }
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

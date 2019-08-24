@@ -11,7 +11,7 @@
 
 using std::vector;
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
@@ -56,7 +56,7 @@ private:
         for(;;)
         {
             {
-                boost::lock_guard<boost::mutex> pool_lock(state_pool_mutex_);
+                std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
 
                 if(!state_pool_.empty())
                 {
@@ -72,13 +72,13 @@ private:
 
     void free_render_state(render_state_ptr const& state)
     {
-        boost::lock_guard<boost::mutex> pool_lock(state_pool_mutex_);
+        std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
         state_pool_.push_back(state);
     }
 
     size_t object_count_in_pool() const
     {
-        boost::lock_guard<boost::mutex> pool_lock(state_pool_mutex_);
+        std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
         return state_pool_.size();
     }
 
@@ -118,7 +118,7 @@ private:
 		}
 	}
 
-    mutable boost::mutex                            state_pool_mutex_;
+    mutable std::mutex                              state_pool_mutex_;
     mutable eflib::bounded_buffer<render_state_ptr> state_queue_;
 	mutable std::vector<render_state_ptr>           state_pool_;
 
@@ -133,4 +133,4 @@ renderer_ptr create_async_renderer()
 	return ret;
 }
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

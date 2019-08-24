@@ -26,7 +26,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_DRIVERS();
+BEGIN_NS_SASL_DRIVERS()
 
 class wave_reported_fatal_error: public boost::exception
 {
@@ -73,18 +73,18 @@ struct wave_hooks
 
 		if ( ctx.find_include_file (file_path, dir_path, is_system, current_name) )
 		{
-			namespace fs = boost::filesystem;
+			namespace fs = std::filesystem;
 
-			fs::path native_path(boost::wave::util::create_path(file_path));
+			fs::path native_path(file_path);
 			if ( fs::exists(native_path) )
 			{
-				native_name = boost::wave::util::native_file_string(native_path);
+				native_name = native_path.string();
 				return true;
 			}
 		}
 
 		check_file(is_succeed, is_exclusive, native_name, &ctx, file_path, is_system, false);
-		if( !is_succeed )
+		if(!is_succeed)
 		{
 			report_load_file_failed( &ctx, file_path, is_system );
 			throw wave_reported_fatal_error();
@@ -265,6 +265,6 @@ private:
 	static compiler_code_source* get_code_source(void*);
 };
 
-END_NS_SASL_DRIVERS();
+END_NS_SASL_DRIVERS()
 
 #endif

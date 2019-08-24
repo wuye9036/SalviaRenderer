@@ -52,8 +52,8 @@ using eflib::vector_;
 using eflib::matrix_;
 
 using boost::format;
-using std::shared_ptr;
 
+using std::shared_ptr;
 using std::string;
 using std::vector;
 using std::pair;

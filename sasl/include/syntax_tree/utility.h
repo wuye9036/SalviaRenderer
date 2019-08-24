@@ -34,7 +34,7 @@ void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 		if ( pred(*it) ){
 			std::shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
 			bt->tycode = *it;
-			boost::assign::insert( cont )(*it, bt );
+            cont[*it] = bt;
 		}
 	}
 }
@@ -66,7 +66,7 @@ void list_of_builtin_type( ContainerT& cont, const PredT& pred ){
 
 void follow_up_traversal(
 	std::shared_ptr<node> root,
-	std::function<void( node&, ::boost::any* )> on_visit
+	std::function<void( node&, ::std::any* )> on_visit
 	);
 
 #define SASL_SYNTAX_NODE_IS_A( node, node_type ) ( (node)->node_class() == BOOST_PP_CAT(node_ids::, node_type) )

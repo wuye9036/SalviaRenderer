@@ -17,13 +17,13 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/filesystem.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/platform/cpuinfo.h>
 
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 using namespace eflib;
 
@@ -41,7 +41,7 @@ using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 using std::shared_ptr;
 using std::dynamic_pointer_cast;
 using boost::format;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 using std::fstream;
 using std::string;

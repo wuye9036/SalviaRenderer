@@ -5,9 +5,7 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/memory/atomic.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/functional/hash.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/include/utility/hash.h>
 
 #include <string>
 #include <memory>
@@ -42,25 +40,25 @@ namespace eflib{
 		fixed_basic_string()
 		{
 			content_ = std::make_shared<string_type>();
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(string_type const& content)
 		{
 			content_ = std::make_shared<string_type>(content);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(const_pointer content)
 		{
 			content_ = std::make_shared<string_type>(content);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(string_type&& content)
 		{
 			content_ = std::make_shared<string_type>( std::move(content) );
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(fixed_basic_string const& rhs)
@@ -77,7 +75,7 @@ namespace eflib{
 		fixed_basic_string(IteratorT const& begin, IteratorT const& end)
 		{
 			content_ = std::make_shared<string_type>(begin, end);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string& operator = (fixed_basic_string const& rhs)
@@ -101,7 +99,7 @@ namespace eflib{
 				content_ = std::make_shared<string_type>( std::move(content) );
 			}
 
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 			return *this;
 		}
 
@@ -153,7 +151,7 @@ namespace eflib{
 				content_ = std::make_shared<string_type>(begin, end);
 			}
 			
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::hash_value(*content_);
 		}
 
 		void assign (string_type&& content)
@@ -167,7 +165,7 @@ namespace eflib{
 				content_ = std::make_shared<string_type>( std::move(content) );
 			}
 
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::hash_value(*content_);
 		}
 
 		void append(const_pointer content)
@@ -178,7 +176,7 @@ namespace eflib{
 			}
 
 			content_->append(content);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		void append(string_type const& content)
@@ -189,7 +187,7 @@ namespace eflib{
 			}
 
 			content_->append(content);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		void append(this_type const& content)
@@ -200,7 +198,7 @@ namespace eflib{
 			}
 
 			content_->append(content.raw_string());
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		const_pointer c_str() const

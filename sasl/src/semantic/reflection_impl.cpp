@@ -32,7 +32,7 @@ using salviar::sv_layout;
 using eflib::ceil_to_pow2;
 using eflib::fixed_string;
 
-using boost::addressof;
+using std::addressof;
 using std::shared_ptr;
 
 using std::vector;

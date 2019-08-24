@@ -5,10 +5,12 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/lex.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
-#include <boost/unordered_set.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/utility/hash.h>
 #include <eflib/include/diagnostics/assert.h>
+
+#include <unordered_set>
 
 namespace splex = boost::spirit::lex;
 
@@ -18,14 +20,14 @@ using sasl::common::token_t;
 using std::make_shared;
 using std::shared_ptr;
 using std::unordered_map;
-using boost::unordered_set;
+using std::unordered_set;
 
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SASL_PARSER();
+BEGIN_NS_SASL_PARSER()
 
 class shared_data{
 public:
@@ -330,4 +332,4 @@ bool lexer::tokenize_with_end( std::string const& code, shared_ptr<lex_context> 
 	return ret;
 }
 
-END_NS_SASL_PARSER();
+END_NS_SASL_PARSER()

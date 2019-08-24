@@ -46,9 +46,9 @@ using eflib::polymorphic_cast;
 using eflib::scoped_value;
 using eflib::fixed_string;
 
-using boost::addressof;
 using boost::format;
 
+using std::addressof;
 using std::vector;
 using std::make_pair;
 

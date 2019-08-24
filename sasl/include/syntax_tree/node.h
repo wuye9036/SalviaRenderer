@@ -7,11 +7,7 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/pointee.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <any>
 #include <vector>
 #include <memory>
 
@@ -28,9 +24,9 @@ namespace sasl{
 	}
 }
 
-#define SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() void accept( syntax_tree_visitor*, ::boost::any* data )
+#define SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() void accept( syntax_tree_visitor*, ::std::any* data )
 #define SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( node_class_name ) \
-	void node_class_name ::accept ( syntax_tree_visitor* v, ::boost::any* data ) \
+	void node_class_name ::accept ( syntax_tree_visitor* v, ::std::any* data ) \
 {	\
 	v->visit( *this, data );\
 }

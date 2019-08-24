@@ -9,9 +9,10 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
+
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/polymorphic_cast.h>
-
+#include <eflib/include/utility/hash.h>
 #include <eflib/include/memory/atomic.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -284,7 +285,7 @@ private:
 	unordered_map<vector<tid_t>, tid_t>			fn_dict_;
 	vector<type_item>							type_items_;
 	unordered_map<vector<tid_t>, std::string>	mangling_cache_;
-	unordered_map< tid_t, vector<tid_t> >		param_tids_cache_;
+	unordered_map<tid_t, vector<tid_t>>	    	param_tids_cache_;
 	unordered_map<operators, fixed_string>		opname_cache_;
 
 	symbol*										root_symbol_;

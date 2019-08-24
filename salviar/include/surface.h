@@ -83,7 +83,7 @@ private:
 	size_t			sample_count_;
 	eflib::uint4	size_;
 	pixel_format	format_;
-	std::vector<byte, eflib::aligned_allocator<byte, 16>>
+	std::vector<uint8_t, eflib::aligned_allocator<uint8_t, 16>>
 					datas_;
 
 #if SALVIA_TILED_SURFACE

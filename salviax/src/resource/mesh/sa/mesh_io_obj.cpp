@@ -162,7 +162,7 @@ bool load_obj_mesh_c(
 
 	uint32_t subset = 0;
 
-	unordered_map<smooth_id_t, uint32_t, boost::hash<smooth_id_t>> smooth_id_to_vertex_index;
+	unordered_map<smooth_id_t, uint32_t> smooth_id_to_vertex_index;
 
 	for(;;){
 		fscanf( objf, "%s", obj_cmd );

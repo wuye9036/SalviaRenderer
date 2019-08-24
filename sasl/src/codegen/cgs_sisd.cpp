@@ -62,9 +62,9 @@ using llvm::DefaultIRBuilder;
 
 namespace Intrinsic = llvm::Intrinsic;
 
-using boost::any;
+using std::any;
 using std::shared_ptr;
-using boost::enable_if;
+using std::enable_if;
 using std::is_integral;
 using std::unordered_map;
 using boost::lexical_cast;

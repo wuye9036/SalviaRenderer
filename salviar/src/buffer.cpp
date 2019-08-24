@@ -40,8 +40,8 @@ void buffer::transfer( size_t offset, void const* psrcdata, size_t sz, size_t co
 		return;
 	}
 
-	byte* dest = raw_data(offset);
-	byte* src = (byte*)psrcdata;
+    uint8_t* dest = raw_data(offset);
+    uint8_t* src = (uint8_t*)psrcdata;
 
 	memcpy( dest, src, sz*count );
 }
@@ -52,8 +52,8 @@ void buffer::transfer(size_t offset, void const* psrcdata, size_t stride_dest, s
 		return;
 	}
 
-	byte* dest = raw_data(offset);
-	byte* src = (byte*)psrcdata;
+    uint8_t* dest = raw_data(offset);
+    uint8_t* src = (uint8_t*)psrcdata;
 
 	if( stride_dest == stride_src && stride_src == sz )
 	{

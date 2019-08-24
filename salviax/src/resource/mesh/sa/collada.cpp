@@ -12,7 +12,7 @@ using eflib::mat44;
 using boost::property_tree::ptree;
 using std::make_shared;
 using std::unordered_map;
-using boost::optional;
+using std::optional;
 
 using std::vector;
 using std::string;
@@ -46,7 +46,7 @@ void dae_node::parse_attribute(ptree& xml_node)
 
 bool dae_tech::parse(ptree& root)
 {
-	optional<ptree&> accessor_xml_node = root.get_child_optional("accessor");
+	auto accessor_xml_node = root.get_child_optional("accessor");
 	if( !accessor_xml_node ) { return false; }
 	accessor = load_child<dae_accessor>(*accessor_xml_node);
 	return (bool)accessor;
@@ -265,7 +265,7 @@ void dae_array::parse_content( std::string const& tag_name )
 
 bool dae_controller::parse(ptree& root)
 {
-	optional<ptree&> skin_node = root.get_child_optional("skin");
+	auto skin_node = root.get_child_optional("skin");
 	assert( skin_node );
 	skin = load_child<dae_skin>(*skin_node);
 	return true;
@@ -469,4 +469,4 @@ dae_node_ptr dae_dom::node_by_path(string const& path)
 	return ret_node;
 }
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()
