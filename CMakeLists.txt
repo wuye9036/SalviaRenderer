@@ -1,6 +1,6 @@
 PROJECT( salvia )
 
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.14 )
 
 option(SALVIA_BUILD_WITH_UNICODE "Build with unicode(wide-byte) or ansi(multi-byte)." TRUE)
 

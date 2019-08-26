@@ -40,7 +40,7 @@ sample_app::sample_app(std::string const& app_name):
 	data_->total_elapsed_sec = 0.0;
 	data_->elapsed_sec = 0.0;
 	data_->gui = nullptr;
-	data_->is_sync_renderer = boost::indeterminate;
+    data_->is_sync_renderer = std::optional<bool>{};
 	data_->frames_in_second = 0;
 	data_->quit_cond = quit_conditions::user_defined;
 	data_->quit_cond_data = 0;
@@ -217,13 +217,9 @@ void sample_app::create_devices_and_targets(
 	renderer_types rtype = salviax::renderer_none;
 	swap_chain_types sc_type = data_->gui ? salviax::swap_chain_default : salviax::swap_chain_none;
 
-	if (data_->is_sync_renderer)
-	{
-		rtype = salviax::renderer_sync;
-	}
-	else if (!data_->is_sync_renderer)
-	{
-		rtype = salviax::renderer_async;
+    if (data_->is_sync_renderer.has_value())
+    {
+		rtype = data_->is_sync_renderer.value() ? salviax::renderer_sync : salviax::renderer_async;
 	}
 	else
 	{

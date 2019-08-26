@@ -6,19 +6,17 @@
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/sizeof.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/add_reference.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/test_tools.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <functional>
+#include <type_traits>
+#include <memory>
 
 #if defined(EFLIB_WINDOWS)
 #include <excpt.h>
@@ -49,26 +47,26 @@ using sasl::drivers::compiler;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;
+
 EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
 
 using eflib::vector_;
 using eflib::matrix_;
 
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
 using boost::mpl::_;
 using boost::mpl::if_;
 using boost::mpl::or_;
 using boost::mpl::push_front;
 using boost::mpl::sizeof_;
 using boost::mpl::transform;
-using boost::is_arithmetic;
-using boost::is_pointer;
-using boost::is_same;
-using boost::add_reference;
-using boost::enable_if_c;
-using boost::enable_if;
-using boost::disable_if;
+
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::is_arithmetic;
+using std::is_pointer;
+using std::is_same;
+using std::add_lvalue_reference;
+using std::enable_if;
 
 using std::string;
 
@@ -93,13 +91,13 @@ template <typename RetT, typename ParamListT> struct make_function;
 template <typename RetT, typename... ParamTs>
 struct make_function<RetT, type_list<ParamTs...>>
 {
-	typedef typename std::identity<void (RetT, ParamTs...)>::type type;
+    using type = void(RetT, ParamTs...);
 };
 
 template <typename... ParamTs>
 struct make_function<void, type_list<ParamTs...>>
 {
-	typedef typename std::identity<void (ParamTs...)>::type type;
+	using type = void(ParamTs...);
 };
 
 template <typename Conv, typename... Ts> struct convert_types;
@@ -149,7 +147,7 @@ public:
 	{
 		return callee != nullptr; 
 	}
-	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > Conv;
+	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_lvalue_reference<_> > Conv;
 	typedef convert_to_jit_function_type<Conv, Fn> jit_function_type;
 	typedef typename jit_function_type::type* callee_type;
 	typedef typename jit_function_type::return_type return_type;
@@ -267,8 +265,8 @@ public:
 	module_vmcode_ptr		vmc;
 	shared_ptr<diag_chat>	diags;
 private:
-	jit_fixture(jit_fixture const&);
-	jit_fixture& operator = (jit_fixture const&);
+	jit_fixture(jit_fixture const&) = delete;
+	jit_fixture& operator = (jit_fixture const&) = delete;
 };
 
 #define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);

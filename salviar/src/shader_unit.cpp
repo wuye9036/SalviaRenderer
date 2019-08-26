@@ -9,15 +9,12 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/math.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
 using namespace eflib;
 using std::vector;
-using boost::shared_ptr;
-using boost::shared_array;
-using boost::make_shared;
+using std::shared_ptr;
+using std::make_shared;
 
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 {

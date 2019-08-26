@@ -17,6 +17,12 @@ function(SASL_TEST_CREATE_VCPROJ_USERFILE TARGETNAME)
 	    ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
 	    @ONLY
 	  )
+	elseif(MSVC_VERSION GREATER 1920)
+		configure_file(
+			${SASL_HOME_DIR}/sasl/test/test_resources/vs2019.test.vcxproj.user.in
+			${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
+			@ONLY
+	    )
 	else()
 	  MESSAGE(FATAL_ERROR "Cannot support Microsoft Visual C++ version ${MSVC_VERSION}. Build will be stopped." )
 	endif()

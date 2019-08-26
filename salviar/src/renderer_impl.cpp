@@ -22,7 +22,7 @@
 BEGIN_NS_SALVIAR();
 
 using namespace eflib;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 result renderer_impl::set_input_layout(const input_layout_ptr& layout)
 {

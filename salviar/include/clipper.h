@@ -8,10 +8,7 @@
 #include <eflib/include/memory/pool.h>
 #include <eflib/include/math/math.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/array.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <array>
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -49,7 +46,7 @@ private:
 	typedef void (clipper::*clip_impl_fn)(vs_output**, clip_results*);
 	typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 	
-	boost::array<eflib::vec4, plane_num>	planes_;
+	std::array<eflib::vec4, plane_num>	planes_;
 	
 	clip_context ctxt_;
 	clip_impl_fn clip_impl_;

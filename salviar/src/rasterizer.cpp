@@ -31,7 +31,7 @@
 
 using eflib::num_available_threads;
 
-using boost::atomic;
+using std::atomic;
 
 class shader_reflection;
 
@@ -1289,10 +1289,10 @@ void rasterizer::draw()
 	{
 	case pt_line:
 	case pt_wireframe_tri:
-		rasterize_prims_ = boost::mem_fn(&rasterizer::rasterize_multi_line);
+		rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_line);
 		break;
 	case pt_solid_tri:
-		rasterize_prims_ = boost::mem_fn(&rasterizer::rasterize_multi_triangle);
+		rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_triangle);
 		break;
 	default:
 		EFLIB_ASSERT(false, "Primitive type is not correct.");

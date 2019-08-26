@@ -1,9 +1,7 @@
 #include <salviar/include/surface.h>
 #include <salviar/include/internal_mapped_resource.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
 #include <memory.h>
 
@@ -58,7 +56,7 @@ surface_ptr surface::make_mip_surface(filter_type filter)
 	size_t mip_w = ( width()  + 1 ) / 2;
 	size_t mip_h = ( height() + 1 ) / 2;
 
-	auto ret = boost::make_shared<surface>(mip_w, mip_h, sample_count_, format_);
+	auto ret = std::make_shared<surface>(mip_w, mip_h, sample_count_, format_);
 
 	switch (filter)
 	{

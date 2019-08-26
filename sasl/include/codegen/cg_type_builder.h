@@ -1,9 +1,6 @@
 #ifndef SASL_CODEGEN_CG_TYPE_BUILDER_H
 #define SASL_CODEGEN_CG_TYPE_BUILDER_H
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Support/TypeBuilder.h>
-#include <eflib/include/platform/enable_warnings.h>
 #include <vector>
 
 namespace llvm_tags

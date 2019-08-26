@@ -2250,9 +2250,9 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 		fn(&sin, &bin, (void*)NULL, &bout);
 
 		vec4 ref_v = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-		for(int i = 0; i < 4; ++i)
+		for(int j = 0; j < 4; ++j)
 		{
-			ref_v += my_transform(mats[data.ids[i]], data.pos);
+			ref_v += my_transform(mats[data.ids[j]], data.pos);
 		}
 		ref_v /= 4.0f;
 

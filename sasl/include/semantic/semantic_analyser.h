@@ -9,15 +9,12 @@
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/platform/typedefs.h>
 
+#include <any>
 #include <vector>
+#include <memory>
+#include <unordered_map>
 
 namespace sasl{
 	namespace common{
@@ -104,9 +101,9 @@ public:
 
 private:
 	template <typename NodeT> 
-	boost::shared_ptr<NodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	std::shared_ptr<NodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
 	template <typename ReturnNodeT, typename NodeT> 
-	boost::shared_ptr<ReturnNodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	std::shared_ptr<ReturnNodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
 
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,
@@ -167,7 +164,7 @@ private:
 	sasl::syntax_tree::program*	prog_;
 
 	// Global States
-	typedef std::vector< boost::weak_ptr<
+	typedef std::vector< std::weak_ptr<
 		sasl::syntax_tree::labeled_statement> >	label_list_t;
 	typedef sasl::syntax_tree::function_def_ptr function_def_ptr;
 
@@ -189,7 +186,7 @@ private:
 		lvalue_or_rvalue::id param_lrvs[3];
 	};
 
-	boost::unordered_map<operators, parameter_lrvs>
+	std::unordered_map<operators, parameter_lrvs>
 			operator_parameter_lrvs_;
 	bool	is_global_scope;
 	symbol*	current_symbol;

@@ -36,15 +36,12 @@ namespace eflib{
 
 		void push_token_state()
 		{
-			state_stack_.push_back(boost::make_tuple(indent_, item_splitter_, keyval_splitter_));
+			state_stack_.push_back(std::make_tuple(indent_, item_splitter_, keyval_splitter_));
 		}
 
 		void pop_token_state()
 		{
-			indent_ = state_stack_.back().get<0>();
-			item_splitter_ = state_stack_.back().get<1>();
-			keyval_splitter_ = state_stack_.back().get<2>();
-
+            auto [ident_, item_splitter_, keyval_splitter_] = state_stack_.back();
 			state_stack_.pop_back();
 		}
 
@@ -82,14 +79,14 @@ namespace eflib{
 		}
 
 	private:
-		text_log_serializer& operator = (const text_log_serializer& rhs);
+		text_log_serializer& operator = (const text_log_serializer& rhs) = delete;
 		text_log_serializer(const text_log_serializer&);
 
 		std::_tstring indent_;
 		std::_tstring item_splitter_;
 		std::_tstring keyval_splitter_;
 
-		std::vector<boost::tuple<std::_tstring, std::_tstring, std::_tstring> > state_stack_;
+		std::vector<std::tuple<std::_tstring, std::_tstring, std::_tstring>> state_stack_;
 
 		std::vector<std::_tstring> indent_stack_;
 

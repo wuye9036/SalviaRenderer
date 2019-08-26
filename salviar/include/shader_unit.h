@@ -10,17 +10,13 @@
 
 #include <salviar/include/decl.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/memory/allocator.h>
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <vector>
+#include <unordered_map>
+
 
 BEGIN_NS_SALVIAR();
 
@@ -39,7 +35,7 @@ public:
 	pixel_shader_unit( pixel_shader_unit const& );
 	pixel_shader_unit& operator = ( pixel_shader_unit const& );
 	
-	boost::shared_ptr<pixel_shader_unit> clone() const;
+	std::shared_ptr<pixel_shader_unit> clone() const;
 
 	void initialize( shader_object const* );
 	void reset_pointers();

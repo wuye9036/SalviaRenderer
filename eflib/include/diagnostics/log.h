@@ -30,13 +30,9 @@ slog is a light-weight log system.
 #include <eflib/include/diagnostics/log_serializer.h>
 #include <eflib/include/string/string.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-#include <eflib/include/platform/enable_warnings.h>
-
 #include <vector>
+#include <functional>
+#include <memory>
 
 namespace eflib{
 	//////////////////////////////////////////////////////////////////////////
@@ -104,8 +100,8 @@ namespace eflib{
 
 	private:
 		uint32_t ref_log_level_;
-		boost::function<bool (uint32_t, uint32_t)> loglvlcmp_;
-		boost::shared_ptr<SerializerT> logserializer_ptr;
+		std::function<bool (uint32_t, uint32_t)> loglvlcmp_;
+		std::shared_ptr<SerializerT> logserializer_ptr;
 	};
 
 	// Slog state stack
@@ -115,25 +111,25 @@ namespace eflib{
 	public:
 		typedef log_state<SerializerT> state_t;
 
-		boost::shared_ptr<const state_t> pop()
+		std::shared_ptr<const state_t> pop()
 		{
-			boost::shared_ptr<const state_t > ret = states_.back();
+			std::shared_ptr<const state_t > ret = states_.back();
 			states_.pop_back();
 			return ret;
 		}
 
-		void push(boost::shared_ptr<const state_t> hstate)
+		void push(std::shared_ptr<const state_t> hstate)
 		{
 			states_.push_back(hstate);
 		}
 
 		void push(const state_t* pstate)
 		{
-			states_.push_back(boost::shared_ptr<const state_t>(pstate));
+			states_.push_back(std::shared_ptr<const state_t>(pstate));
 		}
 
 	private:
-		std::vector<boost::shared_ptr<const state_t> > states_;
+		std::vector<std::shared_ptr<const state_t> > states_;
 	};
 
 	/// slog is not only the short name of "soft art log" but also the shorten for "simple log"
@@ -148,9 +144,9 @@ namespace eflib{
 		typedef log<serializier_t> this_type;
 		typedef log_state<serializier_t> state_t;
 
-		static boost::shared_ptr<this_type> create(const uint32_t ref_log_level, uint32_t /*log_open_mode*/)
+		static std::shared_ptr<this_type> create(const uint32_t ref_log_level, uint32_t /*log_open_mode*/)
 		{
-			return boost::make_shared<this_type>( ref_log_level );
+			return std::make_shared<this_type>( ref_log_level );
 		}
 
 		// Default is that all level of logs are enabled.
@@ -158,7 +154,7 @@ namespace eflib{
 		{
 		}
 
-		void set_serializer(boost::shared_ptr<serializier_t> hsrl)
+		void set_serializer(std::shared_ptr<serializier_t> hsrl)
 		{
 			logserializer_ptr = hsrl;
 		}
@@ -168,7 +164,7 @@ namespace eflib{
 			ref_log_level_ = loglvl;
 		}
 
-		void set_comparer(boost::function<bool (uint32_t, uint32_t)> cmpr)
+		void set_comparer(std::function<bool (uint32_t, uint32_t)> cmpr)
 		{
 			loglvlcmp_ = cmpr;
 		}
@@ -221,8 +217,8 @@ namespace eflib{
 
 	private:
 		uint32_t ref_log_level_;
-		boost::function<bool (uint32_t, uint32_t)> loglvlcmp_;
-		boost::shared_ptr<SerializerT> logserializer_ptr;
+		std::function<bool (uint32_t, uint32_t)> loglvlcmp_;
+		std::shared_ptr<SerializerT> logserializer_ptr;
 
 		log_state_stack<SerializerT> state_stack_;
 	};
@@ -283,9 +279,9 @@ namespace eflib{
 	{
 	public:
 		typedef LogT log_t;
-		typedef boost::shared_ptr<typename log_t::serializier_t> serializer_ptr;
+		typedef std::shared_ptr<typename log_t::serializier_t> serializer_ptr;
 
-		static LogT& instance(boost::shared_ptr<std::_tostream> hos = boost::shared_ptr<std::_tostream>())
+		static LogT& instance(std::shared_ptr<std::_tostream> hos = std::shared_ptr<std::_tostream>())
 		{
 			static bool is_first_run = true;
 			static LogT log_instance;

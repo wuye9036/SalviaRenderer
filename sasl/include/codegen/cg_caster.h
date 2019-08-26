@@ -5,10 +5,8 @@
 
 #include <sasl/include/semantic/caster.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
+#include <functional>
 
 namespace sasl{
 	namespace semantic{
@@ -31,10 +29,10 @@ BEGIN_NS_SASL_CODEGEN();
 struct	node_context;
 class	cg_service;
 
-typedef boost::function<
+typedef std::function<
 	node_context* (sasl::syntax_tree::node const*)> get_context_fn;
 
-boost::shared_ptr< ::sasl::semantic::caster_t> create_cg_caster(
+std::shared_ptr< ::sasl::semantic::caster_t> create_cg_caster(
 		get_context_fn const&					get_context,
 		sasl::semantic::get_semantic_fn const&	get_semantic,
 		sasl::semantic::get_tynode_fn const&	get_tynode,
@@ -42,7 +40,7 @@ boost::shared_ptr< ::sasl::semantic::caster_t> create_cg_caster(
 		);
 
 void add_builtin_casts(
-	boost::shared_ptr< ::sasl::semantic::caster_t> caster,
+	std::shared_ptr< ::sasl::semantic::caster_t> caster,
 	sasl::semantic::pety_t* typemgr
 	);
 

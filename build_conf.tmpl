@@ -7,7 +7,7 @@
 #   boost_root:
 #      The root directory of boost.
 #
-#	   Only support boost 1.53 and later.
+#	   Only support boost 1.70 and later.
 #
 #   build_root:
 #      The root directory for build and intermediate files.
@@ -26,18 +26,20 @@
 #   toolset:
 #      Toolset for compiling.
 #      Available values are:
-#            msvc-<major>.<minor>     for e.g.: 'msvc-10.0', 'msvc-11.0'
+#            msvc-<major>.<minor>     for e.g.: 'msvc-14.2'
 #            gcc
 #
 #	   Supported compilers:
-#			 MSVC 10, MSVC 11				
-#			 MinGW (32bit) 4.7 and later	(with 'gcc' toolset)
+#			 MSVC 14.2 or later. (VS 2019.2)
+#			 MinGW (32bit) 9.0 and later	(with 'gcc' toolset)
 #	
 #	toolset_dir:
-#		If you don't use MSVC as your compiler,
-#		or your MinGW/gcc compiler is not located in environment variable "PATH",
-#		please specify toolset_dir for your compiler which includes the gcc/g++.exe.
-#		Additional, if you installed MinGW in C:\MinGW\, script could find it without this variable.
+#		for MSVC:
+#			toolset_dir is the folder includes vcvars64.bat
+#	    for gcc and clang:
+#		    if compiler is not located in environment variable "PATH",
+#		    please specify toolset_dir for your compiler which includes the gcc/g++.exe.
+#		    Additional, if you installed MinGW in C:\MinGW\, script could find it without this variable.
 #
 #   config:
 #      Build configuration.
@@ -49,8 +51,8 @@
 
 build_root		= '.\\build'
 install_root	= './'
-arch			= 'x86'
-toolset			= 'gcc'
-toolset_dir		= 'D:/Software/CodeBlocks/MinGW/bin/'
+arch			= 'x64'
+toolset			= 'msvc-14.2'
+toolset_dir		= r'D:\Software\VS2019\VC\Auxiliary\Build'
 config			= 'RelWithDebInfo'
-cmake			= 'D:/Software/CMake 2.8/bin/cmake.exe'		
+cmake			= r'D:\Software\CMake\bin\cmake.exe'	

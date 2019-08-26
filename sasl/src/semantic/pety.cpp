@@ -9,17 +9,18 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
+
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/polymorphic_cast.h>
-
+#include <eflib/include/utility/hash.h>
 #include <eflib/include/memory/atomic.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
+#include <unordered_map>
 
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
@@ -27,11 +28,10 @@ using eflib::polymorphic_cast;
 using eflib::fixed_string;
 using eflib::spinlock;
 using eflib::scoped_spin_locker;
-using boost::atomic;
-using boost::make_shared;
-using boost::shared_ptr; // prevent conflicting with std::tr1.
-using boost::dynamic_pointer_cast;
-using boost::unordered_map;
+using std::make_shared;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::unordered_map;
 using std::make_pair;
 using std::vector;
 using std::string;
@@ -285,7 +285,7 @@ private:
 	unordered_map<vector<tid_t>, tid_t>			fn_dict_;
 	vector<type_item>							type_items_;
 	unordered_map<vector<tid_t>, std::string>	mangling_cache_;
-	unordered_map< tid_t, vector<tid_t> >		param_tids_cache_;
+	unordered_map<tid_t, vector<tid_t>>	    	param_tids_cache_;
 	unordered_map<operators, fixed_string>		opname_cache_;
 
 	symbol*										root_symbol_;
@@ -527,21 +527,23 @@ void init_builtin_short_name()
 
 	if(builtin_shorten_initialized) { return; }
 
-	boost::assign::insert( btc_decorators )
-		( builtin_types::_void, "O" )
-		( builtin_types::_boolean, "B" )
-		( builtin_types::_sint8, "S1" )
-		( builtin_types::_sint16, "S2" )
-		( builtin_types::_sint32, "S4" )
-		( builtin_types::_sint64, "S8" )
-		( builtin_types::_uint8, "U1" )
-		( builtin_types::_uint16, "U2" )
-		( builtin_types::_uint32, "U4" )
-		( builtin_types::_uint64, "U8" )
-		( builtin_types::_float, "F" )
-		( builtin_types::_double, "D" )
-		;
+    decltype(btc_decorators) tmp
+    {
+        {builtin_types::_void, "O"      },
+        {builtin_types::_boolean, "B"   },
+        {builtin_types::_sint8, "S1"    },
+        {builtin_types::_sint16, "S2"   },
+        {builtin_types::_sint32, "S4"   },
+        {builtin_types::_sint64, "S8"   },
+        {builtin_types::_uint8, "U1"    },
+        {builtin_types::_uint16, "U2"   },
+        {builtin_types::_uint32, "U4"   },
+        {builtin_types::_uint64, "U8"   },
+        {builtin_types::_float, "F"     },
+        {builtin_types::_double, "D"    },
+    };
 
+    std::swap(btc_decorators, tmp);
 	builtin_shorten_initialized = true;
 }
 

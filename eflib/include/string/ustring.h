@@ -5,13 +5,10 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/memory/atomic.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/functional/hash.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/include/utility/hash.h>
 
 #include <string>
+#include <memory>
 
 namespace eflib{
 
@@ -37,31 +34,31 @@ namespace eflib{
 
 	private:
 		size_t							hash_;
-		boost::shared_ptr<string_type>	content_;
+		std::shared_ptr<string_type>	content_;
 
 	public:
 		fixed_basic_string()
 		{
-			content_ = boost::make_shared<string_type>();
-			hash_ = boost::hash_value(*content_);
+			content_ = std::make_shared<string_type>();
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(string_type const& content)
 		{
-			content_ = boost::make_shared<string_type>(content);
-			hash_ = boost::hash_value(*content_);
+			content_ = std::make_shared<string_type>(content);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(const_pointer content)
 		{
-			content_ = boost::make_shared<string_type>(content);
-			hash_ = boost::hash_value(*content_);
+			content_ = std::make_shared<string_type>(content);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(string_type&& content)
 		{
-			content_ = boost::make_shared<string_type>( std::move(content) );
-			hash_ = boost::hash_value(*content_);
+			content_ = std::make_shared<string_type>( std::move(content) );
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string(fixed_basic_string const& rhs)
@@ -77,8 +74,8 @@ namespace eflib{
 		template <typename IteratorT>
 		fixed_basic_string(IteratorT const& begin, IteratorT const& end)
 		{
-			content_ = boost::make_shared<string_type>(begin, end);
-			hash_ = boost::hash_value(*content_);
+			content_ = std::make_shared<string_type>(begin, end);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		fixed_basic_string& operator = (fixed_basic_string const& rhs)
@@ -99,10 +96,10 @@ namespace eflib{
 			}
 			else
 			{
-				content_ = boost::make_shared<string_type>( std::move(content) );
+				content_ = std::make_shared<string_type>( std::move(content) );
 			}
 
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 			return *this;
 		}
 
@@ -151,10 +148,10 @@ namespace eflib{
 			}
 			else
 			{
-				content_ = boost::make_shared<string_type>(begin, end);
+				content_ = std::make_shared<string_type>(begin, end);
 			}
 			
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::hash_value(*content_);
 		}
 
 		void assign (string_type&& content)
@@ -165,43 +162,43 @@ namespace eflib{
 			}
 			else
 			{
-				content_ = boost::make_shared<string_type>( std::move(content) );
+				content_ = std::make_shared<string_type>( std::move(content) );
 			}
 
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::hash_value(*content_);
 		}
 
 		void append(const_pointer content)
 		{
 			if( !content_.unique() )
 			{
-				content_ = boost::make_shared<string_type>(content_);
+				content_ = std::make_shared<string_type>(content_);
 			}
 
 			content_->append(content);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		void append(string_type const& content)
 		{
 			if( !content_.unique() )
 			{
-				content_ = boost::make_shared<string_type>(content_);
+				content_ = std::make_shared<string_type>(content_);
 			}
 
 			content_->append(content);
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		void append(this_type const& content)
 		{
 			if( !content_.unique() )
 			{
-				content_ = boost::make_shared<string_type>( content.raw_string() );
+				content_ = std::make_shared<string_type>( content.raw_string() );
 			}
 
 			content_->append(content.raw_string());
-			hash_ = boost::hash_value(*content_);
+			hash_ = eflib::do_hash(*content_);
 		}
 
 		const_pointer c_str() const

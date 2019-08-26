@@ -13,13 +13,10 @@
 #include <llvm/IR/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <memory>
+#include <functional>
+#include <any>
+#include <unordered_map>
 #include <string>
 
 namespace sasl{

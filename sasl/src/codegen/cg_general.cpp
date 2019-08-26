@@ -19,19 +19,17 @@
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/unref_declarator.h>
+
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/assign/std/vector.hpp>
-#include <boost/bind.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
 
-BEGIN_NS_SASL_CODEGEN();
+BEGIN_NS_SASL_CODEGEN()
 
 using namespace syntax_tree;
 using namespace semantic;
-using namespace boost::assign;
 using namespace llvm;
 using namespace sasl::utility;
 
@@ -43,9 +41,9 @@ using semantic::caster_t;
 using semantic::type_equal;
 using semantic::node_semantic;
 
-using boost::shared_ptr;
-using boost::any;
-using boost::any_cast;
+using std::shared_ptr;
+using std::any;
+using std::any_cast;
 
 using std::vector;
 
@@ -105,4 +103,4 @@ module_vmcode_impl* cg_general::mod_ptr(){
 	return vmcode_.get();
 }
 
-END_NS_SASL_CODEGEN();
+END_NS_SASL_CODEGEN()

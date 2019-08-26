@@ -9,24 +9,22 @@
 #include <salviar/include/renderer.h>
 #include <eflib/include/math/math.h>
 
-#define BOOST_FILESYSTEM_VERSION 3
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/unordered_map.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
 #include <cstring>
+#include <unordered_map>
+#include <filesystem>
+#include <tuple>
 
-using boost::unordered_map;
-using boost::filesystem::path;
-using boost::filesystem::absolute;
-using boost::tuples::tuple;
-using boost::tuples::make_tuple;
-using boost::tuples::get;
+using std::unordered_map;
+using std::filesystem::path;
+using std::filesystem::absolute;
+using std::tuple;
+using std::make_tuple;
+using std::get;
 
 using std::ifstream;
 using std::string;
@@ -36,24 +34,9 @@ using eflib::vec4;
 
 using namespace salviar;
 
-typedef tuple< uint32_t, uint32_t, uint32_t > smooth_id_t;
+using smooth_id_t = tuple<uint32_t, uint32_t, uint32_t>;
 
-namespace boost
-{
-	namespace tuples
-	{
-		std::size_t hash_value( smooth_id_t const& id )
-		{
-			size_t ret = boost::hash_value( get<0>(id) );
-			boost::hash_combine( ret, get<1>(id) );
-			boost::hash_combine( ret, get<2>(id) );
-			return ret;
-		}
-	}
-}
-
-
-BEGIN_NS_SALVIAX_RESOURCE();
+BEGIN_NS_SALVIAX_RESOURCE()
 
 struct obj_mesh_vertex{
 	vec4 pos;
@@ -179,7 +162,7 @@ bool load_obj_mesh_c(
 
 	uint32_t subset = 0;
 
-	unordered_map<smooth_id_t, uint32_t, boost::hash<smooth_id_t>> smooth_id_to_vertex_index;
+	unordered_map<smooth_id_t, uint32_t> smooth_id_to_vertex_index;
 
 	for(;;){
 		fscanf( objf, "%s", obj_cmd );
@@ -344,16 +327,16 @@ bool load_obj_mesh(
 					if( '/' == objf.peek() ){
 						objf.ignore();
 						objf >> normal_index;
-						vert.normal = normals[ normal_index - 1 ];
+						vert.normal = normals[normal_index - 1];
 					}
 				}
 
 				uint32_t vert_index = 0;
-				smooth_id_t smooth_id = make_tuple( pos_index, texcoord_index, normal_index );
-				if( smooth_id_to_vertex_index.count(pos_index) == 0){
-					vert_index = static_cast<uint32_t>( verts.size() );
+				smooth_id_t smooth_id = make_tuple(pos_index, texcoord_index, normal_index);
+				if( smooth_id_to_vertex_index.count(smooth_id) == 0){
+					vert_index = static_cast<uint32_t>(verts.size());
 					smooth_id_to_vertex_index[smooth_id] = vert_index;
-					verts.push_back( vert );
+					verts.push_back(vert);
 				} else {
 					vert_index = smooth_id_to_vertex_index[smooth_id];
 				}

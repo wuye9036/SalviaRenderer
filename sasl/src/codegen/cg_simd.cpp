@@ -43,7 +43,7 @@ using llvm::StructLayout;
 using llvm::PointerType;
 using llvm::FunctionType;
 using llvm::Function;
-using boost::shared_ptr;
+using std::shared_ptr;
 using std::vector;
 
 #define SASL_VISITOR_TYPE_NAME cg_simd
@@ -351,7 +351,7 @@ SASL_VISIT_DEF( compound_statement ){
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 	
-	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+	for ( std::vector< std::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
 		visit_child( *it );
@@ -374,7 +374,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def )
 {
 	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) )
 	{
-		vector<Type*> param_types = generate_ps_entry_param_type( abii, vm_data_layout_, service() );
+		vector<Type*> param_types = generate_ps_entry_param_type( abii, service() );
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
 		Function* fn = Function::Create(
 			fntype, Function::ExternalLinkage,

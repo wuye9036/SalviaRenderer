@@ -9,7 +9,7 @@ class mesh_impl : public mesh
 {
 public:
 	salviar::renderer* device_;
-	boost::shared_ptr<attached_data> attached_;
+	std::shared_ptr<attached_data> attached_;
 
 	// Buffer informations.
 	salviar::buffer_ptr index_buffer_;

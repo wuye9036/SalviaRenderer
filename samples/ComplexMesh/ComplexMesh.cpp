@@ -15,10 +15,6 @@
 #include <eflib/include/utility/unref_declarator.h>
 #include <eflib/include/platform/main.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/assign.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -26,8 +22,6 @@
 #include <tchar.h>
 
 using namespace eflib;
-using namespace boost;
-using namespace boost::assign;
 using namespace std;
 using namespace salviar;
 using namespace salviax;

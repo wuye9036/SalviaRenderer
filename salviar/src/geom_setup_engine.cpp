@@ -9,14 +9,13 @@
 #include <eflib/include/math/math.h>
 #include <eflib/include/platform/cpuinfo.h>
 
-using boost::shared_array;
-using boost::atomic;
+using std::atomic;
 using eflib::clampss;
 
 int const GEOMETRY_SETUP_PACKAGE_SIZE = 8;
 int const COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 geom_setup_engine::geom_setup_engine():
 	ctxt_(NULL),

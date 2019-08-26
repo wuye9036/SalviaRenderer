@@ -47,7 +47,7 @@ public:
 	virtual result                  set_vertex_shader(cpp_vertex_shader_ptr const& hvs);
 	virtual cpp_vertex_shader_ptr   get_vertex_shader() const;
 	
-	virtual result					set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
+	virtual result					set_vertex_shader_code( std::shared_ptr<shader_object> const& );
 	virtual shader_object_ptr		get_vertex_shader_code() const;
 	virtual result					set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz );
 	virtual result					set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz );
@@ -62,7 +62,7 @@ public:
 	virtual result                  set_pixel_shader(cpp_pixel_shader_ptr const& hps);
 	virtual cpp_pixel_shader_ptr    get_pixel_shader() const;
 
-	virtual result                  set_pixel_shader_code( boost::shared_ptr<shader_object> const& );
+	virtual result                  set_pixel_shader_code( std::shared_ptr<shader_object> const& );
 	virtual shader_object_ptr       get_pixel_shader_code() const;
 	virtual result                  set_ps_variable( std::string const& name, void const* data, size_t sz );
 	virtual result                  set_ps_sampler( std::string const& name, sampler_ptr const& samp );

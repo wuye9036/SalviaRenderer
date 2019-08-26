@@ -26,9 +26,9 @@ using sasl::parser::selector_attribute;
 using sasl::parser::sequence_attribute;
 using sasl::parser::terminal_attribute;
 
-using boost::dynamic_pointer_cast;
-using boost::shared_ptr;
-using boost::unordered_map;
+using std::dynamic_pointer_cast;
+using std::shared_ptr;
+using std::unordered_map;
 
 using std::make_pair;
 using std::string;
@@ -1246,7 +1246,7 @@ void syntax_tree_builder::build_semantic(
 	}
 }
 
-shared_ptr<builtin_type> syntax_tree_builder::get_builtin( boost::shared_ptr<sasl::parser::attribute> const& attr )
+shared_ptr<builtin_type> syntax_tree_builder::get_builtin( std::shared_ptr<sasl::parser::attribute> const& attr )
 {
 	initialize_bt_cache();
 	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, term_attr, attr );

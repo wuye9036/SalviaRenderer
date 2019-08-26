@@ -27,10 +27,6 @@ llvm::Intrinsic::ID get_intrinsic_id( char const* Name )
 		|| Name[2] != 'v' || Name[3] != 'm')
 		return llvm::Intrinsic::ID(0);  // All intrinsics start with 'llvm.'
 
-#define GET_FUNCTION_RECOGNIZER
-#include "llvm/IR/Intrinsics.gen"
-#undef GET_FUNCTION_RECOGNIZER
-
 	return llvm::Intrinsic::ID(0);
 }
 

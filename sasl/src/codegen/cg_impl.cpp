@@ -23,18 +23,16 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Constants.h>
-#include <llvm/Target/TargetSubtargetInfo.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetRegistry.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <boost/utility.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <memory>
 #include <vector>
 #include <functional>
 
@@ -48,9 +46,9 @@ using eflib::polymorphic_cast;
 using eflib::scoped_value;
 using eflib::fixed_string;
 
-using boost::addressof;
 using boost::format;
 
+using std::addressof;
 using std::vector;
 using std::make_pair;
 
@@ -61,7 +59,7 @@ TargetMachine* create_local_target_machine()
 	std::string err;
 	auto target = TargetRegistry::lookupTarget(triple_str, err);
 	llvm::TargetOptions options;
-	return target->createTargetMachine(triple_str, "", "", options);
+    return target->createTargetMachine(triple_str, "", "", options, {});
 }
 
 
@@ -140,7 +138,7 @@ cg_function* cg_impl::get_function( std::string const& name ) const
 }
 
 cg_impl::cg_impl()
-	: abii(NULL), vm_data_layout_(NULL), service_(NULL)
+	: abii(NULL), service_(NULL)
 	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
 	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
 {
@@ -663,7 +661,6 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 	EFLIB_UNREF_DECLARATOR(v);
 
 	TargetMachine* tm = create_local_target_machine();
-	vm_data_layout_ = tm->getSubtargetImpl()->getDataLayout();
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
@@ -968,7 +965,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
+			std::string scalar_intrin_name = ( boost::format("sasl.%s.f32") % intr->unmangled_name() ).str();
 			multi_value ret_val = service()->emit_unary_ps( scalar_intrin_name,service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
@@ -988,7 +985,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			multi_value ret_val = service()->emit_unary_ps( ( format("sasl.%s.u32") % intr->unmangled_name() ).str(), service()->fn().arg(0) );
+			multi_value ret_val = service()->emit_unary_ps( ( boost::format("sasl.%s.u32") % intr->unmangled_name() ).str(), service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "ldexp"
@@ -997,7 +994,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( par_tys.size() == 2 );
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
-			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
+			std::string scalar_intrin_name = ( boost::format("sasl.%s.f32") % intr->unmangled_name() ).str();
 			multi_value ret_val = service()->emit_bin_ps_ta_sva( scalar_intrin_name, service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}

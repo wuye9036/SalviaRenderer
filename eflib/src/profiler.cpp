@@ -14,7 +14,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-namespace chrono = boost::chrono;
+namespace chrono = std::chrono;
 
 namespace eflib
 {
@@ -38,7 +38,7 @@ namespace eflib
 
 	void profiling_item::end(profiling_item::clock::time_point end_time)
 	{
-		typedef chrono::duration< double, boost::ratio<1> > dseconds;
+		typedef chrono::duration<double, std::ratio<1>> dseconds;
 		profiling_item::duration_ +=
 			chrono::duration_cast<dseconds>(end_time - start_time_).count();
 	}

@@ -10,11 +10,9 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/variant.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
+#include <unordered_map>
+#include <variant>
 
 namespace sasl{
 	namespace parser{
@@ -28,136 +26,136 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 class builder_context{
 	builder_context( const builder_context& rhs, bool reset_gen_node = true )
-		: parent(rhs.parent), gen_node( reset_gen_node ? boost::shared_ptr<node>() : rhs.gen_node )
+		: parent(rhs.parent), gen_node( reset_gen_node ? std::shared_ptr<node>() : rhs.gen_node )
 	{
 	}
 
 	builder_context(
-		boost::shared_ptr<node> parent = boost::shared_ptr<node>(),
-		boost::shared_ptr<node> gen_node = boost::shared_ptr<node>()
+		std::shared_ptr<node> parent = std::shared_ptr<node>(),
+		std::shared_ptr<node> gen_node = std::shared_ptr<node>()
 		): parent( parent ), gen_node( gen_node )
 	{
 	}
 
-	boost::shared_ptr<node> unqual_type;
-	boost::shared_ptr<node> parent;
-	boost::shared_ptr<node> gen_node;
+	std::shared_ptr<node> unqual_type;
+	std::shared_ptr<node> parent;
+	std::shared_ptr<node> gen_node;
 
 };
 class syntax_tree_builder{
 public:
 	syntax_tree_builder( sasl::parser::lexer& l, sasl::parser::grammars& g );
-	boost::shared_ptr<program> build_prog( boost::shared_ptr< sasl::parser::attribute > attr );
-	boost::shared_ptr<function_full_def> build_fndef( boost::shared_ptr<sasl::parser::attribute> attr );
-	std::vector< boost::shared_ptr<declaration> >
-		build_decl( boost::shared_ptr<sasl::parser::attribute> attr );
-	std::vector< boost::shared_ptr<declaration> > 
-		build_basic_decl( boost::shared_ptr<sasl::parser::attribute> attr );
-	std::vector< boost::shared_ptr<variable_declaration> >
-		build_vardecl( boost::shared_ptr<sasl::parser::attribute> attr );
-	std::vector< boost::shared_ptr<declarator> >
+	std::shared_ptr<program> build_prog( std::shared_ptr< sasl::parser::attribute > attr );
+	std::shared_ptr<function_full_def> build_fndef( std::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< std::shared_ptr<declaration> >
+		build_decl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< std::shared_ptr<declaration> > 
+		build_basic_decl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< std::shared_ptr<variable_declaration> >
+		build_vardecl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< std::shared_ptr<declarator> >
 		build_declarators(
-			boost::shared_ptr<sasl::parser::attribute> attr,
-			boost::shared_ptr<sasl::syntax_tree::tynode> tyn,
-			std::vector< boost::shared_ptr<sasl::syntax_tree::variable_declaration> >& new_decls
+			std::shared_ptr<sasl::parser::attribute> attr,
+			std::shared_ptr<sasl::syntax_tree::tynode> tyn,
+			std::vector< std::shared_ptr<sasl::syntax_tree::variable_declaration> >& new_decls
 			);
 
 	void build_initdecl(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<sasl::syntax_tree::tynode> tyn,
-		std::vector< boost::shared_ptr<sasl::syntax_tree::declarator> >&			declarators,
-		std::vector< boost::shared_ptr<sasl::syntax_tree::variable_declaration> >&	declarations
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<sasl::syntax_tree::tynode> tyn,
+		std::vector< std::shared_ptr<sasl::syntax_tree::declarator> >&			declarators,
+		std::vector< std::shared_ptr<sasl::syntax_tree::variable_declaration> >&	declarations
 		);
 
-	boost::shared_ptr<function_full_def> build_fndecl( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<parameter_full> build_param( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<struct_type> build_struct( boost::shared_ptr<sasl::parser::attribute> attr );
-	void build_struct_body( boost::shared_ptr<sasl::parser::attribute> attr, boost::shared_ptr<struct_type> out );
+	std::shared_ptr<function_full_def> build_fndecl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<parameter_full> build_param( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<struct_type> build_struct( std::shared_ptr<sasl::parser::attribute> attr );
+	void build_struct_body( std::shared_ptr<sasl::parser::attribute> attr, std::shared_ptr<struct_type> out );
 
-	boost::shared_ptr<expression> build_expr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression_list> build_exprlst( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_assignexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_lcomb_expr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> dispatch_lcomb_expr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_rhsexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_condexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_castexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_unaryexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<cast_expression> build_typecastedexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<unary_expression> build_unariedexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_postexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression> build_callexpr(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<expression> expr );
-	boost::shared_ptr<expression> build_indexexpr(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<expression> expr );
-	boost::shared_ptr<expression> build_memexpr(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<expression> expr );
-	boost::shared_ptr<expression> build_pmexpr( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_expr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression_list> build_exprlst( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_assignexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_lcomb_expr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> dispatch_lcomb_expr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_rhsexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_condexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_castexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_unaryexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<cast_expression> build_typecastedexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<unary_expression> build_unariedexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_postexpr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression> build_callexpr(
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<expression> expr );
+	std::shared_ptr<expression> build_indexexpr(
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<expression> expr );
+	std::shared_ptr<expression> build_memexpr(
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<expression> expr );
+	std::shared_ptr<expression> build_pmexpr( std::shared_ptr<sasl::parser::attribute> attr );
 	
-	boost::shared_ptr<tynode> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<tynode> build_unqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<tynode> build_prequaledtype( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<tynode> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<tynode> build_typespec( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<tynode> build_unqualedtype( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<tynode> build_prequaledtype( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<tynode> build_postqualedtype( std::shared_ptr<sasl::parser::attribute> attr );
 
-	boost::shared_ptr<initializer> build_init( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<initializer> build_init( std::shared_ptr<sasl::parser::attribute> attr );
 	
-	boost::shared_ptr<statement> build_stmt( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<compound_statement> build_stmt_compound( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<jump_statement> build_flowctrl( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<expression_statement> build_stmt_expr( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<declaration_statement> build_stmt_decl( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<if_statement> build_stmt_if( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<for_statement> build_stmt_for( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<while_statement> build_stmt_while( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<dowhile_statement> build_stmt_dowhile( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<switch_statement> build_stmt_switch( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<statement> build_stmt_labeled( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<label> build_label( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<statement> build_stmt( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<compound_statement> build_stmt_compound( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<jump_statement> build_flowctrl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<expression_statement> build_stmt_expr( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<declaration_statement> build_stmt_decl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<if_statement> build_stmt_if( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<for_statement> build_stmt_for( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<while_statement> build_stmt_while( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<dowhile_statement> build_stmt_dowhile( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<switch_statement> build_stmt_switch( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<statement> build_stmt_labeled( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<label> build_label( std::shared_ptr<sasl::parser::attribute> attr );
 
-	boost::shared_ptr<for_statement> build_for_loop( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<statement> build_for_init_decl( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<compound_statement> wrap_to_compound( boost::shared_ptr<statement> stmt );
+	std::shared_ptr<for_statement> build_for_loop( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<statement> build_for_init_decl( std::shared_ptr<sasl::parser::attribute> attr );
+	std::shared_ptr<compound_statement> wrap_to_compound( std::shared_ptr<statement> stmt );
 
-	boost::shared_ptr<tynode> bind_typequal(
-		boost::shared_ptr<tynode> unqual,
-		boost::shared_ptr<sasl::parser::attribute> qual
+	std::shared_ptr<tynode> bind_typequal(
+		std::shared_ptr<tynode> unqual,
+		std::shared_ptr<sasl::parser::attribute> qual
 		);
 
-	boost::shared_ptr<tynode> bind_typequal(
-		boost::shared_ptr<sasl::parser::attribute> qual,
-		boost::shared_ptr<tynode> unqual
+	std::shared_ptr<tynode> bind_typequal(
+		std::shared_ptr<sasl::parser::attribute> qual,
+		std::shared_ptr<tynode> unqual
 		);
 
 	operators build_binop(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<token_t>& op_tok );
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<token_t>& op_tok );
 
 	operators build_prefix_op(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<token_t>& op_tok );
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<token_t>& op_tok );
 	
 	operators build_postfix_op(
-		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<token_t>& op_tok );
+		std::shared_ptr<sasl::parser::attribute> attr,
+		std::shared_ptr<token_t>& op_tok );
 
 	void build_semantic(
-		boost::shared_ptr<sasl::parser::attribute> const& attr,
-		boost::shared_ptr<sasl::common::token_t>& out_semantic,
-		boost::shared_ptr<sasl::common::token_t>& out_semantic_index
+		std::shared_ptr<sasl::parser::attribute> const& attr,
+		std::shared_ptr<sasl::common::token_t>& out_semantic,
+		std::shared_ptr<sasl::common::token_t>& out_semantic_index
 		);
 private:
 	void initialize_bt_cache();
-	boost::shared_ptr<builtin_type> get_builtin( boost::shared_ptr<sasl::parser::attribute> const& attr );
+	std::shared_ptr<builtin_type> get_builtin( std::shared_ptr<sasl::parser::attribute> const& attr );
 
 	syntax_tree_builder& operator = ( syntax_tree_builder const& );
 
 	sasl::parser::lexer& l;
 	sasl::parser::grammars& g;
 
-	boost::unordered_map< std::string, boost::shared_ptr<builtin_type> > bt_cache;
+	std::unordered_map< std::string, std::shared_ptr<builtin_type> > bt_cache;
 };
 
 END_NS_SASL_SYNTAX_TREE()

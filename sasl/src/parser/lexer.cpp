@@ -5,32 +5,34 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/lex.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
-#include <boost/unordered_set.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/utility/hash.h>
 #include <eflib/include/diagnostics/assert.h>
+
+#include <unordered_set>
 
 namespace splex = boost::spirit::lex;
 
 using sasl::common::lex_context;
 using sasl::common::token_t;
 
-using boost::make_shared;
-using boost::shared_ptr;
-using boost::unordered_map;
-using boost::unordered_set;
+using std::make_shared;
+using std::shared_ptr;
+using std::unordered_map;
+using std::unordered_set;
 
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SASL_PARSER();
+BEGIN_NS_SASL_PARSER()
 
 class shared_data{
 public:
 	shared_data(): attrs(NULL){}
-	boost::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
+	std::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
 	unordered_set< std::string > skippers;
 	unordered_set< std::string > init_states;
 	token_seq* attrs;
@@ -205,7 +207,7 @@ lexer::init_states_adder const& lexer::init_states_adder::operator()( std::strin
 lexer::lexer()
 {
 	shared_ptr<attr_processor> proc( new attr_processor() );
-	impl = boost::make_shared<lexer_impl>( proc );
+	impl = std::make_shared<lexer_impl>( proc );
 }
 
 lexer::token_definer lexer::define_tokens( std::string const& name, std::string const& patterndef )
@@ -330,4 +332,4 @@ bool lexer::tokenize_with_end( std::string const& code, shared_ptr<lex_context> 
 	return ret;
 }
 
-END_NS_SASL_PARSER();
+END_NS_SASL_PARSER()

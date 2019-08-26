@@ -16,8 +16,8 @@ struct convert_array_t
 {
 	static void op(void* outpixel, const void* inpixel, int count, int outstride, int instride)
 	{
-		byte* o_pbytes = (byte*)outpixel;
-		const byte* i_pbytes = (const byte*)inpixel;
+        uint8_t* o_pbytes = reinterpret_cast<uint8_t*>(outpixel);
+		uint8_t const* i_pbytes = reinterpret_cast<uint8_t const*>(inpixel);
 
 		for(int i = 0; i < count; ++i){
 			*(OutColorType*)(o_pbytes) = *(const InColorType*)(i_pbytes);
@@ -35,8 +35,8 @@ struct convert_array_t<ColorType, ColorType>
 			memcpy(outpixel, inpixel, count * instride);
 		}
 		else{
-			byte* o_pbytes = (byte*)outpixel;
-			const byte* i_pbytes = (const byte*)inpixel;
+			uint8_t* o_pbytes = (uint8_t*)outpixel;
+			const uint8_t* i_pbytes = (const uint8_t*)inpixel;
 
 			for(int i = 0; i < count; ++i){
 				*(ColorType*)(o_pbytes) = *(const ColorType*)(i_pbytes);

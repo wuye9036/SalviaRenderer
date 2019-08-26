@@ -6,14 +6,11 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/atomic.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/array.hpp>
-#include <boost/chrono.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <array>
+#include <chrono>
 
 BEGIN_NS_SALVIAR();
 
@@ -23,8 +20,8 @@ protected:
     int32_t		    	    pending_writes_count_; 
     bool                    started_;               // Mark to prevent invalid call such as BEG-GET-END, END-BEG, BEG-BEG cases.
 	
-	boost::mutex		    pending_writes_mutex_;
-	boost::condition	    pending_writes_condition_;
+	std::mutex		        pending_writes_mutex_;
+	std::condition_variable pending_writes_condition_;
 
 public:
     async_object(): started_(false), pending_writes_count_(0)
@@ -71,7 +68,7 @@ public:
 
 	void stop_counting()
 	{
-        boost::lock_guard<boost::mutex> lock(pending_writes_mutex_);
+        std::lock_guard<std::mutex> lock(pending_writes_mutex_);
 		
         if(--pending_writes_count_ == 0)
 		{
@@ -87,7 +84,7 @@ public:
         }
 		
 		{	
-            boost::lock_guard<boost::mutex> lock(pending_writes_mutex_);
+            std::unique_lock<std::mutex> lock(pending_writes_mutex_);
 			
 			while(pending_writes_count_ > 0)
 			{
@@ -96,7 +93,7 @@ public:
 					return async_status::timeout;
 				}
 				
-				pending_writes_condition_.wait(pending_writes_mutex_);
+				pending_writes_condition_.wait(lock);
 			}
 		}
 		
@@ -151,7 +148,7 @@ public:
     }
 
 protected:
-    boost::array<boost::atomic<uint64_t>, 8> counters_;
+    std::array<std::atomic<uint64_t>, 8> counters_;
 
     void get_value(void* v)
     {
@@ -202,8 +199,8 @@ public:
     }
 
 protected:
-    boost::array<
-        boost::atomic<uint64_t>,
+    std::array<
+        std::atomic<uint64_t>,
         static_cast<uint32_t>(internal_statistics_id::count)
     > counters_;
 
@@ -250,7 +247,7 @@ class async_pipeline_profiles: public async_object
 public:
 	static uint64_t time_stamp()
 	{
-		using namespace boost::chrono;
+		using namespace std::chrono;
 		return static_cast<uint64_t>( duration_cast<nanoseconds>( high_resolution_clock::now().time_since_epoch() ).count() );
 	}
 
@@ -267,8 +264,8 @@ public:
     }
 
 protected:
-    boost::array<
-        boost::atomic<uint64_t>,
+    std::array<
+        std::atomic<uint64_t>,
         static_cast<uint32_t>(pipeline_profile_id::count)
     > counters_;
 

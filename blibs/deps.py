@@ -1,14 +1,12 @@
-﻿from __future__ import print_function
-import os, shutil, subprocess
-from . import env, util, fhash
+﻿import urllib.request
+import os
+import shutil
+import subprocess
+from . import env
+from . import util
+from . import fhash
+from . import download_list
 from . download_list import *
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
-
 
 def GITHUB_RES_URL(commit):
     return "https://raw.githubusercontent.com/wuye9036/SalviaDeps/%s/release/" % commit
@@ -52,9 +50,9 @@ def download_file(url, file_path):
         os.remove(file_path)
 
     if url.startswith("http://") or url.startswith("https://"):
-        u = urlopen(url)
+        u = urllib.request.urlopen(url)
         meta = u.info()
-        file_size = int(meta.getheaders("Content-Length")[0])
+        file_size = int(meta["Content-Length"][0])
     else:
         file_size = os.path.getsize(url)
         u = open(url, "rb")
@@ -76,7 +74,7 @@ def download_file(url, file_path):
                 f.write(buffer)
                 status = r"%7d KB  [%3.1f%%]" % (file_size_dl / 1024, file_size_dl * 100. / file_size)
                 status = status + chr(8)*(len(status)+1)
-                print(status, endwith="")
+                print(status, end="")
     except:
         if os.path.exists(file_path):
             os.remove(file_path)

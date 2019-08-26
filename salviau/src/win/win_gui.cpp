@@ -64,9 +64,9 @@ public:
 		return reinterpret_cast<void*>(hwnd_);
 	}
 
-	boost::any view_handle() override
+	std::any view_handle() override
 	{
-		return boost::any(hwnd_);
+		return std::any(hwnd_);
 	}
 
 	void idle()

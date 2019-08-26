@@ -12,10 +12,6 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/utility/addressof.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <algorithm>
 
 using namespace sasl::syntax_tree;
@@ -33,9 +29,9 @@ using salviar::sv_usage_count;
 
 using eflib::fixed_string;
 
-using boost::addressof;
-using boost::make_shared;
-using boost::shared_ptr;
+using std::addressof;
+using std::make_shared;
+using std::shared_ptr;
 
 using std::lower_bound;
 using std::string;

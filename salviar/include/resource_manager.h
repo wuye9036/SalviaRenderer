@@ -17,7 +17,7 @@ struct mapped_resource;
 class resource_manager
 {
 public:
-	resource_manager(boost::function<void ()> sync)
+	resource_manager(std::function<void ()> sync)
 		: renderer_sync_(sync)
 		, map_mode_ (map_mode_none)
 		, mapped_resource_([this](size_t sz)-> void* { return this->reallocate_buffer(sz); })
@@ -26,7 +26,7 @@ public:
 
 	buffer_ptr create_buffer(size_t size)
 	{
-		return boost::shared_ptr<buffer>(new buffer(size));
+        return std::make_shared<buffer>(size);
 	}
 
 	texture_ptr create_texture_2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
@@ -48,7 +48,7 @@ private:
 	template <typename T> result map_impl(mapped_resource&, T const& res, map_mode mm);
 	void* reallocate_buffer(size_t sz);
 
-	boost::function<void ()>
+	std::function<void ()>
 		renderer_sync_;		// Synchronize/Flush with renderer command queue.
 	std::vector<uint8_t, eflib::aligned_allocator<uint8_t, 16>>
 		mapped_data_;		// Temporary mapped data.

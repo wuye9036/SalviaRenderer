@@ -5,12 +5,10 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node.h>
 
-BEGIN_NS_SASL_SEMANTIC();
+BEGIN_NS_SASL_SEMANTIC()
 
 using namespace ::sasl::syntax_tree;
 using namespace ::std;
-using boost::shared_ptr;
-using boost::unordered_map;
 using boost::bimap;
 
 void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv )
@@ -21,7 +19,7 @@ void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv )
 void caster_t::add_cast( casts ct, int prior, tid_t src, tid_t dest, cast_t conv )
 {
 	assert( ct==caster_t::eql || ct==caster_t::imp || ct==caster_t::exp );
-	cast_infos.push_back( boost::make_tuple(ct, prior, src, dest, conv) );
+	cast_infos.push_back( make_tuple(ct, prior, src, dest, conv) );
 	cast_info_dict.insert( cast_info_dict_t::value_type(make_pair(src,dest),cast_infos.size()-1) );
 	if( ct == eql )
 	{
@@ -57,7 +55,7 @@ caster_t::casts caster_t::try_cast( tid_t dest, tid_t src )
 
 caster_t::casts caster_t::try_cast(int& prior, tid_t dest, tid_t src)
 {
-	prior = std::numeric_limits<int>::max();
+	prior = numeric_limits<int>::max();
 
 	cast_info const* caster1 = NULL;
 	cast_info const* caster2 = NULL;
@@ -66,9 +64,10 @@ caster_t::casts caster_t::try_cast(int& prior, tid_t dest, tid_t src)
 	cast_info const* major_caster = find_caster( caster1, caster2, imm, dest, src, false );
 	if( major_caster )
 	{
-		prior = major_caster->get<1>();
-		return major_caster->get<0>();
+		prior = get<1>(*major_caster);
+		return get<0>(*major_caster);
 	}
+
 	return nocast;
 }
 
@@ -100,15 +99,15 @@ caster_t::casts caster_t::cast( sst::node* dest, sst::node* src )
 	{
 		tynode* tyn = get_tynode_(imm);
 		assert(tyn);
-		caster1->get<4>()(tyn, src);
-		caster2->get<4>()(dest, src);
+		get<4>(*caster1)(tyn, src);
+		get<4>(*caster2)(dest, src);
 	}
 	else
 	{
-		major_caster->get<4>()(dest, src);
+		get<4>(*major_caster)(dest, src);
 	}
 
-	return major_caster->get<0>();
+	return get<0>(*major_caster);
 }
 
 caster_t::caster_t() {}
@@ -168,7 +167,7 @@ caster_t::cast_info const* caster_t::find_caster(
 	cast_info_dict_t::iterator it = cast_info_dict.find( make_pair(src,dest) );
 	if( it != cast_info_dict.end() )
 	{
-		first_caster = boost::addressof(cast_infos[it->second]);
+		first_caster = std::addressof(cast_infos[it->second]);
 		return first_caster;
 	}
 
@@ -245,4 +244,4 @@ void caster_t::set_function_get_semantic( get_semantic_fn fn )
 	get_semantic_ = fn;
 }
 
-END_NS_SASL_SEMANTIC();
+END_NS_SASL_SEMANTIC()

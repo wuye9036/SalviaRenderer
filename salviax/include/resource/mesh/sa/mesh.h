@@ -5,11 +5,8 @@
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/input_layout.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
 
 BEGIN_NS_SALVIAX_RESOURCE();
 

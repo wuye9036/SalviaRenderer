@@ -658,7 +658,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 	{
 		int ml = fast_floori(miplevel + 0.5f);
 
-		ml = clamp(ml, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod()));
+        ml = eflib::clamp(ml, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod()));
 
 		auto subres_index = compute_cube_subresource(dummy, face_sz, ml);
 		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_min);

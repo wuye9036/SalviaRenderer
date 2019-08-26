@@ -3,7 +3,7 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
-using boost::shared_ptr;
+using std::shared_ptr;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 

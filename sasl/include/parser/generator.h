@@ -5,14 +5,11 @@
 
 #include <sasl/include/parser/parser_forward.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <exception>
 #include <vector>
+#include <any>
+#include <memory>
+#include <functional>
 
 namespace sasl{
 	namespace common{
@@ -23,7 +20,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_PARSER();
 
-typedef boost::shared_ptr< sasl::common::token_t > token_ptr;
+typedef std::shared_ptr< sasl::common::token_t > token_ptr;
 typedef std::vector< token_ptr > token_seq;
 typedef token_seq::iterator token_iterator;
 
@@ -57,12 +54,12 @@ public:
 	attribute();
 	virtual ~attribute();
 
-	boost::shared_ptr<attribute> child(size_t idx) const
+	std::shared_ptr<attribute> child(size_t idx) const
 	{
 		return child(static_cast<int>(idx));
 	}
 
-	virtual boost::shared_ptr<attribute> child(int idx) const = 0;
+	virtual std::shared_ptr<attribute> child(int idx) const = 0;
 
 	virtual size_t child_size() const = 0;
 
@@ -83,9 +80,9 @@ protected:
 // Terminal
 class terminal_attribute: public attribute{
 public:
-	virtual boost::shared_ptr<attribute> child( int idx ) const;
+	virtual std::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	boost::shared_ptr<sasl::common::token_t> tok;
+	std::shared_ptr<sasl::common::token_t> tok;
 };
 
 // *rule
@@ -93,9 +90,9 @@ public:
 // -rule
 class sequence_attribute: public attribute{
 public:
-	virtual boost::shared_ptr<attribute> child( int idx ) const;
+	virtual std::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	std::vector< boost::shared_ptr<attribute> > attrs;
+	std::vector< std::shared_ptr<attribute> > attrs;
 };
 
 // rule0 | rule1
@@ -103,9 +100,9 @@ class selector_attribute: public attribute{
 public:
 	selector_attribute();
 
-	virtual boost::shared_ptr<attribute> child( int idx ) const;
+	virtual std::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	boost::shared_ptr<attribute> attr;
+	std::shared_ptr<attribute> attr;
 	int							 selected_idx;
 };
 
@@ -113,9 +110,9 @@ public:
 // rule0 > rule1
 class queuer_attribute: public attribute{
 public:
-	virtual boost::shared_ptr<attribute> child( int idx ) const;
+	virtual std::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	std::vector< boost::shared_ptr<attribute> > attrs;
+	std::vector< std::shared_ptr<attribute> > attrs;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -152,17 +149,17 @@ private:
 	int tag;
 };
 
-typedef boost::function<parse_results ( sasl::common::diag_chat* /*diags*/, token_iterator const& /*origin iter*/, token_iterator& /*current start iter*/ )> error_handler;
+typedef std::function<parse_results ( sasl::common::diag_chat* /*diags*/, token_iterator const& /*origin iter*/, token_iterator& /*current start iter*/ )> error_handler;
 class error_catcher;
 
 class parser{
 public:
 	parser();
-	virtual parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const = 0;
+	virtual parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const = 0;
 	bool is_expected() const;
 	void is_expected( bool v );
 	error_catcher operator []( error_handler on_err );
-	virtual boost::shared_ptr<parser> clone() const = 0;
+	virtual std::shared_ptr<parser> clone() const = 0;
 	virtual ~parser(){}
 private:
 	bool expected;
@@ -172,8 +169,8 @@ class terminal: public parser{
 public:
 	terminal( size_t tok_id, std::string const& desc );
 	terminal( terminal const& rhs );
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 	std::string const& get_desc() const;
 private:
 	terminal& operator = (terminal const &);
@@ -186,15 +183,15 @@ class repeater: public parser{
 public:
 	static size_t const unlimited;
 
-	repeater( size_t lower_bound, size_t upper_bound, boost::shared_ptr<parser> expr);
+	repeater( size_t lower_bound, size_t upper_bound, std::shared_ptr<parser> expr);
 	repeater( repeater const& rhs );
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 
 private:
 	size_t lower_bound;
 	size_t upper_bound;
-	boost::shared_ptr<parser> expr;
+	std::shared_ptr<parser> expr;
 };
 
 class selector: public parser{
@@ -203,13 +200,13 @@ public:
 	selector();
 	selector( selector const& rhs );
 
-	selector& add_branch( boost::shared_ptr<parser> p );
-	std::vector< boost::shared_ptr<parser> > const& branches() const;
+	selector& add_branch( std::shared_ptr<parser> p );
+	std::vector< std::shared_ptr<parser> > const& branches() const;
 
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 private:
-	std::vector< boost::shared_ptr<parser> > slc_branches;
+	std::vector< std::shared_ptr<parser> > slc_branches;
 };
 
 class queuer: public parser{
@@ -217,31 +214,31 @@ public:
 	queuer();
 	queuer( queuer const& rhs );
 
-	queuer& append( boost::shared_ptr<parser> p, bool is_expected = false );
-	std::vector< boost::shared_ptr<parser> > const& exprs() const;
+	queuer& append( std::shared_ptr<parser> p, bool is_expected = false );
+	std::vector< std::shared_ptr<parser> > const& exprs() const;
 
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 private:
-	std::vector< boost::shared_ptr<parser> > exprlst;
+	std::vector< std::shared_ptr<parser> > exprlst;
 };
 
 class negnativer: public parser{
 public:
-	negnativer( boost::shared_ptr<parser> );
+	negnativer( std::shared_ptr<parser> );
 	negnativer( negnativer const& rhs );
 
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 private:
-	boost::shared_ptr<parser> expr;
+	std::shared_ptr<parser> expr;
 };
 
 class rule : public parser{
 public:
 	rule();
 	rule( intptr_t id );
-	rule( boost::shared_ptr<parser> expr, intptr_t id = -1 );
+	rule( std::shared_ptr<parser> expr, intptr_t id = -1 );
 	rule( rule const& rhs );
 	rule( parser const& rhs);
 	rule& operator = ( parser const& rhs );
@@ -251,11 +248,11 @@ public:
 	std::string const& name() const;
 	void name( std::string const & v );
 	parser const* get_parser() const;
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 private:
 	intptr_t preset_id;
-	boost::shared_ptr<parser> expr;
+	std::shared_ptr<parser> expr;
 	std::string rule_name;
 };
 
@@ -263,8 +260,8 @@ class rule_wrapper: public parser{
 public:
 	rule_wrapper( rule_wrapper const& rhs );
 	rule_wrapper( rule const & rhs );
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 	std::string const& name() const;
 	rule const* get_rule() const;
 private:
@@ -276,31 +273,31 @@ class endholder: public parser{
 public:
 	endholder();
 	endholder ( endholder const & );
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
-	boost::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
 };
 
 class error_catcher: public parser
 {
 public:
-	error_catcher( boost::shared_ptr<parser> const& p, error_handler err_handler );
+	error_catcher( std::shared_ptr<parser> const& p, error_handler err_handler );
 	error_catcher( error_catcher const& );
-	boost::shared_ptr<parser> clone() const;
-	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+	std::shared_ptr<parser> clone() const;
+	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 private:
-	boost::shared_ptr<parser>	expr;
+	std::shared_ptr<parser>	expr;
 	error_handler				err_handler;
 };
 
 //class exceptor: public parser
 //{
 //public:
-//	exceptor( boost::shared_ptr<parser> const& p );
+//	exceptor( std::shared_ptr<parser> const& p );
 //	exceptor( exceptor const& );
-//	boost::shared_ptr<parser> clone() const;
-//	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+//	std::shared_ptr<parser> clone() const;
+//	parse_results parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 //private:
-//	boost::shared_ptr<parser>	expr;
+//	std::shared_ptr<parser>	expr;
 //};
 //////////////////////////////////////////////////////////////////////////
 // Operators for building parser combinator.

@@ -6,11 +6,8 @@
 #include <salviar/include/enums.h>
 #include <eflib/include/math/collision_detection.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <memory>
+#include <functional>
 #include <vector>
 
 #define SALVIA_TILED_SURFACE 0
@@ -20,7 +17,7 @@ BEGIN_NS_SALVIAR();
 struct internal_mapped_resource;
 
 class surface;
-typedef boost::shared_ptr<surface> surface_ptr;
+typedef std::shared_ptr<surface> surface_ptr;
 
 class surface
 {
@@ -86,7 +83,7 @@ private:
 	size_t			sample_count_;
 	eflib::uint4	size_;
 	pixel_format	format_;
-	std::vector<byte, eflib::aligned_allocator<byte, 16>>
+	std::vector<uint8_t, eflib::aligned_allocator<uint8_t, 16>>
 					datas_;
 
 #if SALVIA_TILED_SURFACE

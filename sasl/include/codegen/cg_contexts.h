@@ -8,12 +8,9 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/diagnostics/assert.h>
+
+#include <memory>
 
 namespace llvm{
 	class AllocaInst;
@@ -31,11 +28,11 @@ namespace llvm{
 
 	class LLVMContext;
 	class Module;
-	class ConstantFolder;
-	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template <bool preserveNames, typename T, typename Inserter> class IRBuilder;
-	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
-		DefaultIRBuilder;
+
+    class IRBuilderDefaultInserter;
+    template <typename T, typename Inserter> class IRBuilder;
+    class ConstantFolder;
+    using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
 }
 
 namespace sasl
@@ -53,7 +50,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(module_context);
 class module_context
 {
 public:
-	static boost::shared_ptr<module_context> create();
+	static std::shared_ptr<module_context> create();
 
 	virtual node_context*	get_node_context(sasl::syntax_tree::node const*) const = 0;
 	virtual node_context*	get_or_create_node_context(sasl::syntax_tree::node const*) = 0;

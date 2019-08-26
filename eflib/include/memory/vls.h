@@ -143,12 +143,13 @@ namespace eflib
 	struct vls_vector_iterator: public std::iterator<std::random_access_iterator_tag, typename VLSVectorT::value_type>
 	{
 	private:
-		friend typename
-			VLSVectorT;
-		typedef vls_vector_iterator<VLSVectorT>
-			this_type;
-		value_type* p;
-		size_t      stride;
+		friend typename VLSVectorT;
+		
+        using this_type = vls_vector_iterator<VLSVectorT>;
+        using value_type = typename VLSVectorT::value_type;
+
+        typename this_type::pointer p;
+		size_t  stride;
 
 		this_type(value_type* p, size_t stride): p(p), stride(stride)
 		{
@@ -188,12 +189,12 @@ namespace eflib
 			return this_type(advance_bytes(p, stride), -stride);
 		}
 
-		reference  operator *  ()
+        typename this_type::reference  operator *  ()
 		{
 			return *p;
 		}
 
-		pointer    operator -> ()
+        typename this_type::pointer    operator -> ()
 		{
 			return p;
 		}
@@ -228,34 +229,34 @@ namespace eflib
 			return p >= rhs.p;
 		}
 
-		this_type& operator += (difference_type n)
+		this_type& operator += (typename this_type::difference_type n)
 		{
 			p = advance_bytes(p, n * stride);
 			return *this;
 		}
 
-		this_type& operator -= (difference_type n)
+		this_type& operator -= (typename this_type::difference_type n)
 		{
 			p = advance_bytes(p, -n * stride);
 			return *this;
 		}
 
-		this_type operator + (difference_type n)
+		this_type operator + (typename this_type::difference_type n)
 		{
 			return this_type(advance_bytes(p, n * stride), stride);
 		}
 
-		this_type operator - (difference_type n)
+		this_type operator - (typename this_type::difference_type n)
 		{
 			return (*this) + (-n);
 		}
 
-		difference_type operator - (this_type const& rhs)
+        typename this_type::difference_type operator - (this_type const& rhs)
 		{
 			return distance_bytes(&rhs, this) / stride;
 		}
 
-		reference operator [] (difference_type index)
+        typename this_type::reference operator [] (typename this_type::difference_type index)
 		{
 			return *( (*this) + index );
 		}
@@ -280,128 +281,124 @@ namespace eflib
 	template <typename VLSVectorT>
 	struct vls_vector_const_iterator: public std::iterator<std::random_access_iterator_tag, typename VLSVectorT::value_type const>
 	{
-	private:
-		friend typename
-			VLSVectorT;
-		typedef vls_vector_const_iterator<VLSVectorT>
-			this_type;
-		pointer p;
-		size_t  stride;
+    private:
+        friend typename VLSVectorT;
 
-		this_type(pointer p, size_t stride): p(p), stride(stride)
-		{
-		}
+        using this_type = vls_vector_const_iterator<VLSVectorT>;
 
-	public:
-		this_type(this_type const& rhs): p(rhs.p), stride(rhs.stride)
-		{
-		}
+        typename this_type::pointer p;
+        size_t  stride;
 
-		vls_vector_iterator<VLSVectorT> make_mutable_iter()
-		{
-			return *reinterpret_cast(vls_vector_iterator<VLSVectorT>*)(this);
-		}
+        this_type(typename this_type::pointer p, size_t stride) : p(p), stride(stride)
+        {
+        }
 
-		this_type& operator = (this_type const& rhs)
-		{
-			p = rhs.p;
-			stride = rhs.stride;
-			return *this;
-		}
+    public:
+        this_type(this_type const& rhs) : p(rhs.p), stride(rhs.stride)
+        {
+        }
 
-		this_type& operator ++()
-		{
-			p = advance_bytes(p, stride);
-			return *this;
-		}
+        this_type& operator = (this_type const& rhs)
+        {
+            p = rhs.p;
+            stride = rhs.stride;
+            return *this;
+        }
 
-		this_type  operator ++(int)
-		{
-			return this_type(advance_bytes(p, stride), stride);
-		}
+        this_type& operator ++()
+        {
+            p = advance_bytes(p, stride);
+            return *this;
+        }
 
-		this_type& operator --()
-		{
-			p = advance_bytes(p, -stride);
-			return *this;
-		}
+        this_type  operator ++(int)
+        {
+            return this_type(advance_bytes(p, stride), stride);
+        }
 
-		this_type  operator --(int)
-		{
-			return this_type(advance_bytes(p, stride), -stride);
-		}
+        this_type& operator --()
+        {
+            p = advance_bytes(p, -stride);
+            return *this;
+        }
 
-		reference  operator *  ()
-		{
-			return *p;
-		}
+        this_type  operator --(int)
+        {
+            return this_type(advance_bytes(p, stride), -stride);
+        }
 
-		pointer    operator -> ()
-		{
-			return p;
-		}
+        typename this_type::reference  operator *  ()
+        {
+            return *p;
+        }
 
-		bool operator == (this_type const& rhs)
-		{
-			return p == rhs.p;
-		}
+        typename this_type::pointer    operator -> ()
+        {
+            return p;
+        }
 
-		bool operator != (this_type const& rhs)
-		{
-			return p != rhs.p;
-		}
+        bool operator == (this_type const& rhs)
+        {
+            return p == rhs.p;
+        }
 
-		bool operator < (this_type const& rhs)
-		{
-			return p < rhs.p;
-		}
+        bool operator != (this_type const& rhs)
+        {
+            return p != rhs.p;
+        }
 
-		bool operator <= (this_type const& rhs)
-		{
-			return p <= rhs.p;
-		}
+        bool operator < (this_type const& rhs)
+        {
+            return p < rhs.p;
+        }
 
-		bool operator > (this_type const& rhs)
-		{
-			return p > rhs.p;
-		}
+        bool operator <= (this_type const& rhs)
+        {
+            return p <= rhs.p;
+        }
 
-		bool operator >= (this_type const& rhs)
-		{
-			return p >= rhs.p;
-		}
+        bool operator > (this_type const& rhs)
+        {
+            return p > rhs.p;
+        }
 
-		this_type& operator += (difference_type n)
-		{
-			p = advance_bytes(p, n * stride);
-			return *this;
-		}
+        bool operator >= (this_type const& rhs)
+        {
+            return p >= rhs.p;
+        }
 
-		this_type& operator -= (difference_type n)
-		{
-			p = advance_bytes(p, -n * stride);
-			return *this;
-		}
+        this_type& operator += (typename this_type::difference_type n)
+        {
+            p = advance_bytes(p, n * stride);
+            return *this;
+        }
 
-		this_type operator + (difference_type n)
-		{
-			return this_type(advance_bytes(p, n * stride), stride);
-		}
+        this_type& operator -= (typename this_type::difference_type n)
+        {
+            p = advance_bytes(p, -n * stride);
+            return *this;
+        }
 
-		this_type operator - (difference_type n)
-		{
-			return (*this) + (-n);
-		}
+        this_type operator + (typename this_type::difference_type n)
+        {
+            return this_type(advance_bytes(p, n * stride), stride);
+        }
 
-		difference_type operator - (this_type const& rhs)
-		{
-			return distance_bytes(rhs.p, p) / stride;
-		}
+        this_type operator - (typename this_type::difference_type n)
+        {
+            return (*this) + (-n);
+        }
 
-		reference operator [] (difference_type index)
-		{
-			return *( (*this) + index );
-		}
+        typename this_type::difference_type operator - (this_type const& rhs)
+        {
+            return distance_bytes(&rhs, this) / stride;
+        }
+
+        typename this_type::reference operator [] (typename this_type::difference_type index)
+        {
+            return *((*this) + index);
+        }
+
 	};
 
 	template <typename VLSVectorT>

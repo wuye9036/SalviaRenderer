@@ -3,13 +3,9 @@
 #include <eflib/include/platform/config.h>
 #include <eflib/include/utility/unref_declarator.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/type_traits.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <limits>
 #include <vector>
-
+#include <type_traits>
 #include <malloc.h>
 
 #ifdef max
@@ -58,8 +54,8 @@ namespace eflib
 
 		static const int alignment_size = alignment;
 
-		BOOST_STATIC_ASSERT(0 == (alignment & (alignment - 1)));
-		BOOST_STATIC_ASSERT(alignment <= 65536);
+		static_assert(0 == (alignment & (alignment - 1)));
+		static_assert(alignment <= 65536);
 
 		template <typename U>
 		struct rebind
@@ -195,7 +191,7 @@ namespace eflib
 		template <class T>
 		bool check(T p)
 		{
-			BOOST_STATIC_ASSERT(boost::is_pointer<T>::value);
+			static_assert(std::is_pointer<T>::value);
 
 			return ((size_t)p % aligned_size == 0);
 		}

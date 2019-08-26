@@ -6,12 +6,8 @@
 #include <salviar/include/shader_impl.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <functional>
+#include <tuple>
 #include <vector>
 #include <string>
 
@@ -45,7 +41,7 @@ namespace sasl
 
 BEGIN_NS_SASL_DRIVERS();
 
-typedef boost::function<
+typedef std::function<
 	bool/*succeed*/ (
 	std::string& /*[out]content*/, std::string& /*[out]native file name*/,
 	std::string const& /*file name*/, bool /*is system header*/,

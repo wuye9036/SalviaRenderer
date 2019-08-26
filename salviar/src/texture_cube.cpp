@@ -1,13 +1,11 @@
 #include <salviar/include/texture.h>
 #include <salviar/include/surface.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
-using boost::make_shared;
+using std::make_shared;
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 using namespace eflib;
 
@@ -38,4 +36,4 @@ void texture_cube::gen_mipmap(filter_type filter, bool auto_gen)
 	}
 }
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

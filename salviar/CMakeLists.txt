@@ -18,6 +18,7 @@ SET( FOUNDATION_HEADERS
 	include/resource_data.h
 	include/viewport.h
 	include/voidptr.h
+	include/thread_context.h
 )
 
 SET( PIPELINE_HEADERS

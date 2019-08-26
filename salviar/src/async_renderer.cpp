@@ -5,15 +5,13 @@
 #include <eflib/include/memory/bounded_buffer.h>
 #include <eflib/include/diagnostics/assert.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/utility/addressof.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/atomic.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
+#include <mutex>
+#include <atomic>
 
 using std::vector;
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
@@ -42,14 +40,14 @@ public:
 	{
         while(object_count_in_pool() != MAX_COMMAND_QUEUE)
         {
-            boost::thread::yield();
+            std::this_thread::yield();
         }
 		return result::ok;
 	}
 
 	void run()
 	{
-		rendering_thread_ = boost::thread(&async_renderer::do_rendering, this);
+		rendering_thread_ = std::thread(&async_renderer::do_rendering, this);
 	}
 
 private:
@@ -58,7 +56,7 @@ private:
         for(;;)
         {
             {
-                boost::lock_guard<boost::mutex> pool_lock(state_pool_mutex_);
+                std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
 
                 if(!state_pool_.empty())
                 {
@@ -68,19 +66,19 @@ private:
                 }
             }
 
-            boost::thread::yield();
+            std::this_thread::yield();
         }
     }
 
     void free_render_state(render_state_ptr const& state)
     {
-        boost::lock_guard<boost::mutex> pool_lock(state_pool_mutex_);
+        std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
         state_pool_.push_back(state);
     }
 
     size_t object_count_in_pool() const
     {
-        boost::lock_guard<boost::mutex> pool_lock(state_pool_mutex_);
+        std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
         return state_pool_.size();
     }
 
@@ -120,19 +118,19 @@ private:
 		}
 	}
 
-    mutable boost::mutex                            state_pool_mutex_;
+    mutable std::mutex                              state_pool_mutex_;
     mutable eflib::bounded_buffer<render_state_ptr> state_queue_;
 	mutable std::vector<render_state_ptr>           state_pool_;
 
-	boost::thread	                                rendering_thread_;
-    boost::atomic<bool>                             waiting_exit_;                                                          
+	std::thread	                                    rendering_thread_;
+    std::atomic<bool>                               waiting_exit_;                                                          
 };
 
 renderer_ptr create_async_renderer()
 {
-	boost::shared_ptr<async_renderer> ret( new async_renderer() );
+    auto ret = std::make_shared<async_renderer>();
 	ret->run();
 	return ret;
 }
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

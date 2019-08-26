@@ -17,13 +17,13 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/filesystem.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/platform/cpuinfo.h>
 
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 using namespace eflib;
 
@@ -38,10 +38,10 @@ using sasl::semantic::symbol;
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 using boost::format;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 using std::fstream;
 using std::string;
@@ -65,7 +65,7 @@ string make_command( string const& inc, string const& sysinc, string const& file
 
 bool print_diagnostic( diag_chat*, diag_item* item )
 {
-	BOOST_MESSAGE( sasl::common::str(item) );
+	BOOST_TEST_MESSAGE( sasl::common::str(item) );
 	return true;
 }
 

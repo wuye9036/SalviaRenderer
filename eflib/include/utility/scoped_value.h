@@ -14,9 +14,11 @@ namespace eflib
 		{
 			value_ref = stored_value;
 		}
+
 	private:
-		scoped_value<T>& operator = (scoped_value<T> const&);
-		scoped_value<T>(scoped_value<T> const&);
+		scoped_value<T>& operator = (scoped_value<T> const&) = delete;
+		scoped_value<T>(scoped_value<T> const&) = delete;
+
 		T&	value_ref;
 		T	stored_value;
 	};

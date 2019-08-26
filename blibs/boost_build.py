@@ -26,8 +26,8 @@ def boost_version( boost_root ):
 		f = open(version_hpp)
 	except:
 		util.report_error('Cannot find boost/version.hpp. Please specify correct boost directory.')
-	if f is None:
 		return None
+
 	version_lines = f.readlines()
 	f.close()
 	for line in version_lines:

@@ -6,14 +6,11 @@
 #include <sasl/include/codegen/cgs.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/platform/typedefs.h>
 
+#include <memory>
+#include <any>
+#include <functional>
 #include <vector>
 
 namespace salviar{
@@ -73,15 +70,15 @@ protected:
 	
 	multi_value emit_logic_op(
 		operators op,
-		boost::shared_ptr<sasl::syntax_tree::node> const& left,
-		boost::shared_ptr<sasl::syntax_tree::node> const& right
+		std::shared_ptr<sasl::syntax_tree::node> const& left,
+		std::shared_ptr<sasl::syntax_tree::node> const& right
 		);
 
 	/// Create short-circuit evaluation for condition expression. And logic operators will use it.
 	multi_value emit_short_cond(
-		boost::shared_ptr<sasl::syntax_tree::node> const& cond,
-		boost::shared_ptr<sasl::syntax_tree::node> const& yes,
-		boost::shared_ptr<sasl::syntax_tree::node> const& no
+		std::shared_ptr<sasl::syntax_tree::node> const& cond,
+		std::shared_ptr<sasl::syntax_tree::node> const& yes,
+		std::shared_ptr<sasl::syntax_tree::node> const& no
 		);
 
 	// Override node_ctxt of cg_impl

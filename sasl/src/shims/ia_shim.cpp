@@ -6,10 +6,7 @@
 #include <salviar/include/stream_assembler.h>
 
 #include <eflib/include/diagnostics/assert.h>
-
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/functional/hash.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/include/utility/hash.h>
 
 #include <vector>
 #include <utility>
@@ -24,8 +21,8 @@ size_t hash_value(ia_shim_key const& key)
 {
 	size_t seed = 0;
 
-	boost::hash_combine(seed, key.input);		// Input layout we need to hash all fields.
-	boost::hash_combine(seed, key.reflection);	// Shader layout we just use address as hash code.
+	eflib::hash_combine(seed, key.input);		// Input layout we need to hash all fields.
+	eflib::hash_combine(seed, key.reflection);	// Shader layout we just use address as hash code.
 
 	return seed;
 }

@@ -5,11 +5,8 @@
 
 #include <eflib/include/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/static_assert.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/type_traits.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <type_traits>
+#include <unordered_map>
 
 #include <vector>
 
@@ -112,11 +109,11 @@ private:
 	symbol_array find_overloads_impl(eflib::fixed_string const& name, caster_t* conv, expression_array const& args) const;
 	void collapse_vector1_overloads( symbol_array& candidates ) const;
 
-	typedef boost::unordered_map
+	typedef std::unordered_map
 		<node*, symbol*>								children_dict;
-	typedef boost::unordered_map<
+	typedef std::unordered_map<
 		eflib::fixed_string, symbol*>					named_children_dict;
-	typedef boost::unordered_map<eflib::fixed_string,
+	typedef std::unordered_map<eflib::fixed_string,
 		std::pair<symbol_array, std::vector<tid_t> > >	overload_dict;
 	
 	module_semantic*			owner_;

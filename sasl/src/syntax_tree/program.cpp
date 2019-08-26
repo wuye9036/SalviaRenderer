@@ -6,11 +6,11 @@
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 program::program( const std::string& name)
-	: node( node_ids::program, boost::shared_ptr<token_t>(), boost::shared_ptr<token_t>() ), name(name)
+	: node( node_ids::program, std::shared_ptr<token_t>(), std::shared_ptr<token_t>() ), name(name)
 {
 }
 
-program::program( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end )
+program::program( std::shared_ptr<token_t> const& tok_beg, std::shared_ptr<token_t> const& tok_end )
 	: node( node_ids::program, tok_beg, tok_end )
 {
 }
