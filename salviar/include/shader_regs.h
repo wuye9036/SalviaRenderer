@@ -10,9 +10,7 @@
 #include <eflib/include/math/math.h>
 #include <eflib/include/memory/allocator.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/array.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <array>
 
 BEGIN_NS_SALVIAR();
 
@@ -35,7 +33,7 @@ public:
 	}
 
 private:
-	typedef boost::array<
+	typedef std::array<
 		eflib::vec4, MAX_VS_INPUT_ATTRS > attribute_array;
 	attribute_array attributes_;
 
@@ -119,7 +117,7 @@ public:
 	{}
 
 private:
-	typedef boost::array<
+	typedef std::array<
 		eflib::vec4, MAX_VS_OUTPUT_ATTRS+1 > register_array;
 	register_array registers_;
 
@@ -159,7 +157,7 @@ struct triangle_info
 //vs_output compute_derivate
 struct ps_output
 {
-	boost::array<eflib::vec4, MAX_RENDER_TARGETS> color;
+	std::array<eflib::vec4, MAX_RENDER_TARGETS> color;
 };
 
 struct pixel_accessor

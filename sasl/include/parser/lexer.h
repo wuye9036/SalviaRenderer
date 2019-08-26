@@ -5,15 +5,11 @@
 
 #include <sasl/include/common/lex_context.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
+#include <unordered_map>
 
 namespace sasl{
 	namespace common{
@@ -23,7 +19,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_PARSER();
 
-typedef boost::shared_ptr< sasl::common::token_t > token_ptr;
+typedef std::shared_ptr< sasl::common::token_t > token_ptr;
 typedef std::vector< token_ptr > token_seq;
 typedef token_seq::iterator token_iterator;
 
@@ -95,30 +91,30 @@ public:
 	std::string const& get_name( size_t id );
 	size_t get_id( std::string const& name );
 
-	boost::shared_ptr<lexer_impl> get_impl() const;
+	std::shared_ptr<lexer_impl> get_impl() const;
 
 	bool tokenize_with_end(
-		/*INPUTS*/ std::string const& code, boost::shared_ptr<sasl::common::lex_context> ctxt,
+		/*INPUTS*/ std::string const& code, std::shared_ptr<sasl::common::lex_context> ctxt,
 		/*OUTPUT*/ token_seq& seq
 		);
 
 	bool begin_incremental();
 	bool incremental_tokenize(
 		std::string const& word,
-		boost::shared_ptr<sasl::common::lex_context> ctxt,
+		std::shared_ptr<sasl::common::lex_context> ctxt,
 		token_seq& seq
 		);
 	bool end_incremental(
-		boost::shared_ptr<sasl::common::lex_context> ctxt,
+		std::shared_ptr<sasl::common::lex_context> ctxt,
 		token_seq& seq
 		);
 
 private:
 	bool tokenize(
-		/*INPUTS*/ std::string const& code, boost::shared_ptr<sasl::common::lex_context> ctxt,
+		/*INPUTS*/ std::string const& code, std::shared_ptr<sasl::common::lex_context> ctxt,
 		/*OUTPUT*/ token_seq& seq
 		);
-	boost::shared_ptr<lexer_impl> impl;
+	std::shared_ptr<lexer_impl> impl;
 };
 
 END_NS_SASL_PARSER();

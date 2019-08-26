@@ -25,7 +25,7 @@
 BEGIN_NS_SASL_CODEGEN();
 
 using namespace llvm;
-using boost::unordered_map;
+using std::unordered_map;
 using boost::lexical_cast;
 using std::string;
 using std::vector;

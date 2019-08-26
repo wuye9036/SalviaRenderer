@@ -3,7 +3,7 @@
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/rasterizer.h>
 
-using boost::function;
+using std::function;
 
 BEGIN_NS_SALVIAR();
 

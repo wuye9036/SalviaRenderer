@@ -30,12 +30,11 @@ using std::fstream;
 using std::string;
 using std::vector;
 
-using boost::static_pointer_cast;
-using boost::dynamic_pointer_cast;
-using boost::tuple;
-using boost::make_shared;
-using boost::shared_ptr;
-using boost::shared_array;
+using std::static_pointer_cast;
+using std::dynamic_pointer_cast;
+using std::tuple;
+using std::make_shared;
+using std::shared_ptr;
 
 using eflib::fixed_string;
 
@@ -239,7 +238,7 @@ void salvia_compile_shader_impl(
 {
 	out_shader_object.reset();
 
-	boost::shared_ptr<sasl::drivers::compiler> drv;
+	std::shared_ptr<sasl::drivers::compiler> drv;
 	sasl_create_compiler(drv);
 
 	if(from_file)

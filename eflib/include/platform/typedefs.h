@@ -3,21 +3,17 @@
 
 #include <eflib/include/platform/config.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/cstdint.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <cstdint>
 
-using boost::int8_t;
-using boost::int16_t;
-using boost::int32_t;
-using boost::int64_t;
+using std::int8_t;
+using std::int16_t;
+using std::int32_t;
+using std::int64_t;
 
-using boost::uint8_t;
-using boost::uint16_t;
-using boost::uint32_t;
-using boost::uint64_t;
-
-typedef boost::uint8_t byte;
+using std::uint8_t;
+using std::uint16_t;
+using std::uint32_t;
+using std::uint64_t;
 
 #define STATIC_ASSERT_INFO(info) static const bool info = false;
 

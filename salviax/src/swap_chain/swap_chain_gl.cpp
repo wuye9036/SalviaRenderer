@@ -6,11 +6,8 @@
 #include <salviar/include/renderer.h>
 #include <salviar/include/mapped_resource.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
 
 #if defined(EFLIB_WINDOWS)
 #	include <windows.h>
@@ -172,7 +169,7 @@ swap_chain_ptr create_gl_swap_chain(
 		return swap_chain_ptr();
 	}
 
-	return boost::make_shared<gl_swap_chain>(renderer, *params);
+	return std::make_shared<gl_swap_chain>(renderer, *params);
 }
 
 END_NS_SALVIAX();

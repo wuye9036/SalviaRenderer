@@ -7,14 +7,11 @@
 #include <eflib/include/math/matrix.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/function.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
 #include <string>
+
+#include <memory>
+#include <functional>
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
@@ -38,7 +35,7 @@ struct animation_info_impl: public animation_info
 {
 	std::vector<float>					X;
 	std::vector<T>						Y;
-	boost::function<void(T const&)>		applier;
+	std::function<void(T const&)>		applier;
 };
 
 class animation_player
@@ -55,7 +52,7 @@ class animation_player_impl : public animation_player
 {
 public:
 	animation_player_impl()
-		: current_time(0), aninfo( boost::make_shared< animation_info_impl<T> >() )
+		: current_time(0), aninfo( std::make_shared< animation_info_impl<T> >() )
 	{}
 
 	virtual void set_play_time(float t) override
@@ -81,7 +78,7 @@ public:
 	}
 
 	animation_info_ptr anim_info() { return aninfo; }
-	boost::shared_ptr< animation_info_impl<T> >
+	std::shared_ptr< animation_info_impl<T> >
 		anim_info2() { return aninfo; }
 
 private:
@@ -124,7 +121,7 @@ private:
 		}
 	}
 
-	boost::shared_ptr<
+	std::shared_ptr<
 		animation_info_impl<T>
 	>		aninfo;
 	float	current_time;
@@ -163,7 +160,7 @@ public:
 	virtual std::vector<eflib::mat44> bind_inv_matrices() const override;
 
 public:
-	boost::unordered_map<
+	std::unordered_map<
 		std::string, scene_node*>		joint_nodes;
 	std::vector<eflib::mat44>			bind_inv_mats;
 	std::vector<animation_player_ptr>	anims;

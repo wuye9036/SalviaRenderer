@@ -8,10 +8,10 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
+#include <memory>
 
 BEGIN_NS_SASL_COMMON();
 
@@ -87,7 +87,7 @@ private:
 	eflib::fixed_string		item_file;
 	code_span				item_span;
 	diag_template const*	tmpl;
-	boost::scoped_ptr<boost::format>
+	std::unique_ptr<boost::format>
 							fmt;
 	mutable std::vector<diag_data*>
 							fmt_params;

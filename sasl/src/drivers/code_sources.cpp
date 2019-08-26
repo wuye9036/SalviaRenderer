@@ -10,10 +10,10 @@ using sasl::common::diag_chat;
 using sasl::common::code_span;
 using sasl::common::diag_item_committer;
 using eflib::fixed_string;
-using boost::shared_ptr;
-using boost::scoped_ptr;
+using std::shared_ptr;
+using std::unique_ptr;
 using boost::wave::preprocess_exception;
-using boost::unordered_map;
+using std::unordered_map;
 using std::string;
 using std::vector;
 using std::cout;
@@ -21,7 +21,7 @@ using std::endl;
 
 BEGIN_NS_SASL_DRIVERS();
 
-boost::unordered_map<void*, compiler_code_source*> compiler_code_source::ctxt_to_source;
+std::unordered_map<void*, compiler_code_source*> compiler_code_source::ctxt_to_source;
 
 bool compiler_code_source::set_code( string const& code )
 {

@@ -4,9 +4,10 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <any>
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -69,7 +70,7 @@ struct program;
 #define SASL_VISIT_DEF_UNIMPL( node_type_name )	\
 	SASL_SPECIFIC_VISIT_DEF_UNIMPL( visit, node_type_name )
 #define SASL_SPECIFIC_VISIT_DEF_UNIMPL( fn, node_type_name ) \
-	void SASL_VISITOR_TYPE_NAME::fn( ::sasl::syntax_tree::node_type_name &, ::boost::any* ){ \
+	void SASL_VISITOR_TYPE_NAME::fn( ::sasl::syntax_tree::node_type_name &, ::std::any* ){ \
 		EFLIB_ASSERT_UNIMPLEMENTED0( \
 			( ::std::string( BOOST_PP_STRINGIZE( SASL_VISITOR_TYPE_NAME::node_type_name ) ) \
 			+ ::std::string( " was not implemented yet." ) ).c_str()	\
@@ -79,17 +80,17 @@ struct program;
 #define SASL_VISIT_DEF( node_type_name )	\
 	SASL_SPECIFIC_VISIT_DEF( visit, node_type_name )
 #define SASL_SPECIFIC_VISIT_DEF( fn, node_type_name ) \
-	void SASL_VISITOR_TYPE_NAME::fn ( ::sasl::syntax_tree::node_type_name& v, ::boost::any* data )
+	void SASL_VISITOR_TYPE_NAME::fn ( ::sasl::syntax_tree::node_type_name& v, ::std::any* data )
 
 #define SASL_VISIT_DCL( node_type_name )	\
 	SASL_SPECIFIC_VISIT_DCL( visit, node_type_name )
 #define SASL_SPECIFIC_VISIT_DCL( fn, node_type_name ) \
-	virtual void fn ( ::sasl::syntax_tree::node_type_name& v, ::boost::any* data = NULL )
+	virtual void fn ( ::sasl::syntax_tree::node_type_name& v, ::std::any* data = NULL )
 
 #define SASL_VISIT_INLINE_DEF_UNIMPL( node_type_name )	\
 	SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL( visit, node_type_name )
 #define SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL( fn, node_type_name )	\
-	virtual void fn ( ::sasl::syntax_tree::node_type_name &, ::boost::any* = NULL ){	\
+	virtual void fn ( ::sasl::syntax_tree::node_type_name &, ::std::any* = NULL ){	\
 		EFLIB_ASSERT_UNIMPLEMENTED0( \
 			( ::std::string( BOOST_PP_STRINGIZE( node_type_name ) ) \
 			+ ::std::string( " was not implemented yet." ) ).c_str()	\

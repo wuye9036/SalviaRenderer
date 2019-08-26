@@ -17,13 +17,10 @@
 #include <eflib/include/memory/pool.h>
 #include <eflib/include/memory/allocator.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/ref.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <atomic>
 #include <memory>
 #include <iostream>
+#include <functional>
 
 #if defined(EFLIB_MSVC)
 #	include <ppl.h>
@@ -31,12 +28,12 @@
 
 using eflib::num_available_threads;
 
-using boost::atomic;
-using boost::shared_array;
+using std::atomic;
+using std::shared_ptr;
 
 using std::vector;
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
@@ -362,7 +359,7 @@ private:
 	vector<uint32_t>		indices_;
 	vector<uint32_t>		unique_indices_;
 
-	shared_array<vs_output> transformed_verts_;
+	shared_ptr<vs_output[]> transformed_verts_;
 	size_t					transformed_verts_capacity_;
 
 	vector<int32_t>			used_verts_;
@@ -680,4 +677,4 @@ vertex_cache_ptr create_default_vertex_cache()
 	return vertex_cache_ptr( new tls_vertex_cache() );
 }
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

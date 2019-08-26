@@ -23,7 +23,7 @@
 BEGIN_NS_SALVIAR();
 
 using namespace eflib;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 void render_core::update(render_state_ptr const& state)
 {

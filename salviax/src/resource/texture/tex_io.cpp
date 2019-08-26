@@ -19,7 +19,7 @@ using namespace std;
 using namespace salviar;
 using namespace salviax::utility;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+BEGIN_NS_SALVIAX_RESOURCE()
 
 // Copy pixels FIBITMAP to surface as following steps
 //	*> Get color component informations from FIBITMAP
@@ -45,7 +45,7 @@ bool copy_image_to_surface_impl(surface_ptr const& surf, FIBITMAP* image,
 
 	for(size_t y = 0; y < surf->height(); ++y)
 	{
-		byte* src_pixel = source_line;
+		uint8_t* src_pixel = source_line;
 		for(size_t x = 0; x < surf->width(); ++x)
 		{
 			FIUC<FIColorT> uc((typename FIUC<FIColorT>::CompT*)src_pixel, default_alpha);
@@ -185,8 +185,8 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 	mapped_resource mapped;
 	rend->map(mapped, surf, map_read);
 
-	byte* 		 surf_data = reinterpret_cast<byte*>(mapped.data);
-	byte*		 img_data = FreeImage_GetBits(image);
+	uint8_t* 	 surf_data = reinterpret_cast<uint8_t*>(mapped.data);
+	uint8_t*     img_data = FreeImage_GetBits(image);
 	pixel_format surf_format = surf->get_pixel_format();
 	size_t		 height = surf->height();
 	size_t		 width = surf->width();
@@ -207,7 +207,7 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 	FreeImage_Unload(image);
 }
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()
 
 /*
 Copyright (C) 2007-2012 Minmin Gong, Ye Wu

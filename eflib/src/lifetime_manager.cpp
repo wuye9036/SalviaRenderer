@@ -1,5 +1,7 @@
 #include <eflib/include/memory/lifetime_manager.h>
 
+#include <cassert>
+
 namespace eflib{
 
 	lifetime_manager* lifetime_manager::inst = NULL;
@@ -13,7 +15,7 @@ namespace eflib{
 		assert( inst );
 		if ( inst ){
 			inst = NULL;
-			for( std::vector< boost::function<void()> >::reverse_iterator it = exit_callbacks.rbegin();
+			for( std::vector< std::function<void()> >::reverse_iterator it = exit_callbacks.rbegin();
 				it != exit_callbacks.rend(); ++it )
 			{
 				// invoke. FILO.
@@ -22,7 +24,7 @@ namespace eflib{
 		}
 	}
 
-	void lifetime_manager::at_main_exit( boost::function<void()> exit_func ){
+	void lifetime_manager::at_main_exit( std::function<void()> exit_func ){
 		assert( inst && "Error: Lifetime Manager was not initialized or released yet." );
 		inst->exit_callbacks.push_back( exit_func );
 	}

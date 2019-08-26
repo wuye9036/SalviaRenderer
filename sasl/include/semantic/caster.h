@@ -7,12 +7,14 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bimap.hpp>
-#include <boost/function.hpp>
 #include <boost/multi_index_container.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/utility/hash.h>
+
+#include <tuple>
+#include <unordered_map>
+#include <functional>
 #include <vector>
 
 namespace sasl{
@@ -21,16 +23,14 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_SEMANTIC();
+BEGIN_NS_SASL_SEMANTIC()
 
 namespace sst = sasl::syntax_tree;
 
 class node_semantic;
 
-typedef boost::function< sst::tynode* (tid_t) >
-	get_tynode_fn;
-typedef boost::function< node_semantic* (sst::node*) >
-	get_semantic_fn;
+typedef std::function<sst::tynode* (tid_t)> get_tynode_fn;
+typedef std::function<node_semantic* (sst::node*)> get_semantic_fn;
 
 class caster_t{
 public:
@@ -42,7 +42,7 @@ public:
 		nocast = 0xFFFFFFFF
 	};
 
-	typedef boost::function<void (sst::node*, sst::node*)> cast_t;
+	typedef std::function<void (sst::node*, sst::node*)> cast_t;
 
 	caster_t();
 
@@ -56,7 +56,7 @@ public:
 
 	void better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse );
 
-	casts cast(boost::shared_ptr<sst::node> dest, boost::shared_ptr<sst::node> src);
+	casts cast(std::shared_ptr<sst::node> dest, std::shared_ptr<sst::node> src);
 	casts cast(sst::node* dest, sst::node* src);
 
 	void set_function_get_tynode(get_tynode_fn fn);
@@ -64,12 +64,12 @@ public:
 
 	virtual ~caster_t(){}
 private:
-	typedef boost::tuples::tuple<
+	typedef std::tuple<
 		casts/*result*/, int/*prior*/,
 		tid_t/*src*/, tid_t/*dest*/, cast_t/*caster*/
 	> cast_info;
 
-	typedef boost::unordered_map<
+	typedef std::unordered_map<
 		std::pair<tid_t /*src*/, tid_t /*dest*/>, size_t /*cast info index*/
 	> cast_info_dict_t;
 
@@ -79,7 +79,7 @@ private:
 		tid_t dest, tid_t src, bool direct_caster_only
 		); // return non-equal caster.
 
-	boost::unordered_map<tid_t,int>	lowest_priors; // For auto cast priority.
+	std::unordered_map<tid_t,int>	lowest_priors; // For auto cast priority.
 	std::vector<cast_info>			cast_infos;
 	cast_info_dict_t				cast_info_dict;
 	boost::bimap<tid_t, tid_t>		eql_casts;
@@ -89,6 +89,6 @@ private:
 	get_semantic_fn					get_semantic_;
 };
 
-END_NS_SASL_SEMANTIC();
+END_NS_SASL_SEMANTIC()
 
 #endif

@@ -6,12 +6,8 @@
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftglyph.h>
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/scoped_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <eflib/include/platform/boost_end.h>
+
+#include <filesystem>
 
 #if defined(EFLIB_WINDOWS)
 #	include <salviax/include/utility/inc_windows.h>
@@ -252,12 +248,12 @@ private:
 
 font_ptr font::create( std::string const& font_file_path, size_t face_index, size_t size, font::units unit )
 {
-	if ( !boost::filesystem::exists(font_file_path) )
+	if ( !std::filesystem::exists(font_file_path) )
 	{
 		return font_ptr();
 	}
 	
-	boost::shared_ptr<font_impl> ret = boost::make_shared<font_impl>(font_file_path, face_index);
+	std::shared_ptr<font_impl> ret = std::make_shared<font_impl>(font_file_path, face_index);
 	ret->size_and_unit(size, unit);
 	return ret;
 }
@@ -267,10 +263,10 @@ font_ptr font::create_in_system_path( std::string const& font_file_name, size_t 
 	char system_directory[1024];
 #if defined(EFLIB_WINDOWS)
 	GetWindowsDirectoryA(system_directory, 1024);
-	boost::filesystem::path font_path(system_directory);
+	std::filesystem::path font_path(system_directory);
 	font_path /= "Fonts";
 #else
-	boost::filesystem::path font_path("usr/share/fonts/truetype");
+	std::filesystem::path font_path("usr/share/fonts/truetype");
 #endif
 
 	font_path /= font_file_name;
@@ -278,4 +274,4 @@ font_ptr font::create_in_system_path( std::string const& font_file_name, size_t 
 	return create(font_path.string(), face_index, size, unit);
 }
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()

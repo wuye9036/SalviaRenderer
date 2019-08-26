@@ -3,18 +3,14 @@
 
 #include <eflib/include/string/string.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/mpl/identity.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
 namespace eflib
 {
 	class dynamic_lib
 	{
 	public:
-		static boost::shared_ptr<dynamic_lib> load( std::string const& name );
+		static std::shared_ptr<dynamic_lib> load( std::string const& name );
 
 		template <typename PFnT>
 		bool get_function( PFnT& fn, std::string const& name ) const
@@ -37,7 +33,7 @@ namespace eflib
 }
 
 #define EFLIB_IMPORT_DLL_FUNCTION( fn_type, fn_name, dy_lib, sym_name )	\
-	boost::mpl::identity<fn_type>::type fn_name = NULL;	\
+	std::type_identity<fn_type>::type fn_name = NULL;	\
 	(dy_lib)->get_function( (fn_name), #sym_name );
 
 #if defined(EFLIB_WINDOWS)

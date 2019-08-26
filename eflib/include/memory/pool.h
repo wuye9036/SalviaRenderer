@@ -6,15 +6,14 @@
 #include <eflib/include/memory/vls.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <boost/array.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility.hpp>
 #include <boost/mpl/if.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <cassert>
 #include <limits>
 #include <vector>
+#include <array>
+#include <type_traits>
 
 namespace eflib
 {
@@ -39,16 +38,16 @@ namespace eflib
 			}
 
 		protected:
-			void intialize_usage( typename boost::disable_if_c<IsFreeTogether>::type* dummy = 0 ){
+			void intialize_usage( typename std::enable_if<!IsFreeTogether>::type* dummy = 0 ){
 				usage[0] = false;
-				memcpy( boost::addressof(usage[0]), usage[0], sizeof(usage) );
+				memcpy( std::addressof(usage[0]), usage[0], sizeof(usage) );
 			}
 
 			void* malloc_impl(){
 				for ( int i = 0; i < MaxCount; ++i ){
 					if ( usage[i] == false ){
 						usage[i] = true;
-						return boost::addressof( data[ObjectSize*i] );
+						return std::addressof( data[ObjectSize*i] );
 					}
 				}
 				return NULL;
@@ -56,19 +55,19 @@ namespace eflib
 
 			void free_impl( void* const p ){
 				assert( is_from_pool(p) );
-				intptr_t pos = ( (intptr_t)p - (intptr_t)boost::addressof(data[0]) ) / ObjectSize;
+				intptr_t pos = ( (intptr_t)p - (intptr_t)std::addressof(data[0]) ) / ObjectSize;
 				usage[pos] = false;
 			}
 
 			bool is_from_pool(void* const p){
-				intptr_t diff = (intptr_t)p - (intptr_t)boost::addressof(data[0]);
+				intptr_t diff = (intptr_t)p - (intptr_t)std::addressof(data[0]);
 				if ( diff >= 0 && diff % ObjectSize == 0 && ( diff / ObjectSize < MaxCount ) ){
 					return true;
 				}
 			}
 
 			static const int ObjectSize = sizeof(ObjectT);
-			boost::array<bool, MaxCount> usage;
+			std::array<bool, MaxCount> usage;
 			char data[ObjectSize * MaxCount];
 		};
 
@@ -108,7 +107,7 @@ namespace eflib
 			void* malloc_impl()
 			{
 				assert(usage < MaxCount);
-				void* ret = boost::addressof(data[ObjectSize*usage]);
+				void* ret = std::addressof(data[ObjectSize*usage]);
 				++usage;
 				return ret;
 			}
@@ -214,8 +213,8 @@ namespace eflib
 				return vls_vector_iterator<T>(advance_bytes(data_mem, stride*sz), stride);
 			}
 		private:
-			reserved_pool(reserved_pool const&);
-			reserved_pool& operator = (reserved_pool const&);
+			reserved_pool(reserved_pool const&) = delete;
+			reserved_pool& operator = (reserved_pool const&) = delete;
 
 			size_t	align;
 			size_t  stride;

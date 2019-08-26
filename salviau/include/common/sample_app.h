@@ -12,10 +12,6 @@
 #include <salviar/include/renderer.h>
 #include <eflib/include/diagnostics/profiler.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/logic/tribool.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -25,7 +21,7 @@ namespace salviar
 	EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 }
 
-BEGIN_NS_SALVIAU();
+BEGIN_NS_SALVIAU()
 
 class gui;
 
@@ -64,7 +60,7 @@ public:
 	float						screen_aspect_ratio;
 	salviar::viewport			screen_vp;
 
-	boost::tribool				is_sync_renderer;
+	std::optional<bool>		    is_sync_renderer;
 	salviax::swap_chain_types	sc_type;
 
 	salviau::gui*				gui;
@@ -136,4 +132,4 @@ private:
 	void on_gui_draw();
 };
 
-END_NS_SALVIAU();
+END_NS_SALVIAU()

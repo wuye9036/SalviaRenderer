@@ -14,7 +14,6 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Intrinsics.h>
-#include <llvm/IR/TypeBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -56,7 +55,6 @@ using llvm::StructType;
 using llvm::VectorType;
 using llvm::UndefValue;
 using llvm::StoreInst;
-using llvm::TypeBuilder;
 using llvm::SwitchInst;
 using llvm::CmpInst;
 using llvm::PHINode;
@@ -64,11 +62,11 @@ using llvm::DefaultIRBuilder;
 
 namespace Intrinsic = llvm::Intrinsic;
 
-using boost::any;
-using boost::shared_ptr;
-using boost::enable_if;
-using boost::is_integral;
-using boost::unordered_map;
+using std::any;
+using std::shared_ptr;
+using std::enable_if;
+using std::is_integral;
+using std::unordered_map;
 using boost::lexical_cast;
 
 using std::vector;
@@ -79,7 +77,7 @@ BEGIN_NS_SASL_CODEGEN();
 namespace {
 	template <typename T> APInt apint( T v )
 	{
-		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
+		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), std::is_signed<T>::value );
 	}
 
 	void mask_to_indexes( char indexes[4], uint32_t mask ){

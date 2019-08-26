@@ -1,15 +1,15 @@
 ﻿Project build guide
 
 1. Requirements
-  * Windows 7 or later
-    * Visual Studio 2013.
-	* Python 2.7.
-	* CMake 3.x
+  * Windows 10
+    * Visual Studio 2019.
+	* Python 3.5 or later
+	* CMake 3.15+
   * Linux
     * Mint 16 and Mint 17 were tested.
-	* GCC 4.8 or later.
-	* Python 2.7.
-	* CMake 3.x
+	* GCC 8 or later.
+	* Python 3.5 or later
+	* CMake 3.15 or later
 	
 2. Build steps
   * Run build_all.py which is located at root of project.
@@ -18,42 +18,8 @@
   * If build tool is visual studio, vs solution file will be generated in sub folder of 'build'.
  
 3. REMARK
-  * Each configuration was built once build_all.py was run. But visual studio supports multiple configuratoin in one project. You should modify proj.py and execute build_all.py with different configuration, such as RelWithDebInfo or Debug. 
+  * Each configuration was built once build_all.py was run. But visual studio supports multiple configurations in one project. You should modify proj.py and execute build_all.py for each of configurations.
   
-If you have any questions, please contact:
-
-wuye9036 _at_ gmail _dot_ com
-
-----------------------------
-
-如果您是中国用户，您可以从OSChina的Git托管站点上下载：
-
-https://git.oschina.net/wuye9036/SalviaRenderer.git
-
-首先请确认您的机器上具有：
-
-Windows平台：
-1. Visual Studio 2013. Desktop Express/Community/Profession；
-3. Python 2.7；
-4. CMake 3.x
-
-Linux平台：
-
-1. GCC 4.8或以上版本；
-3. Python 2.7；
-4. CMake 3.x。
-
-运行build_all.py文件。如果您是首次运行该脚本，它会生成proj.py文件。
-打开proj.py文件，阅读说明并修改配置。
-再次运行build_all.py，期间可能需要下载一些资源和第三方库，请保持网络连接，等待编译过程其直到编译结束。
-如果发生Boost或者LLVM的编译异常，您可以尝试重新执行build_all.py。
-如果您使用的是Visual Studio，sln文件会生成在您指定的 build_root 的目录下。
-
-注意事项：
-
-和Visual Studio默认的多配置工程不同，脚本一次只会编译一个配置（Debug， RelWithDebInfo等等）。
-如果需要在工程文件中自由切换配置，需要您多次修改proj.py中的config并执行build_all.py，随后您就可以在Solution中自由切换Configuration并编译了。
-
-如果您有任何疑问或建议，请邮件至：
+If you have any question, please contact:
 
 wuye9036 _at_ gmail _dot_ com

@@ -22,7 +22,7 @@ namespace sasl{
 using sasl::common::lex_context;
 using sasl::common::code_source;
 using sasl::common::diag_chat;
-using boost::shared_ptr;
+using std::shared_ptr;
 using std::cout;
 using std::endl;
 

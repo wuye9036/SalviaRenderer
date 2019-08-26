@@ -7,13 +7,9 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/shared_array.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
+#include <unordered_map>
 
 namespace LLVM
 {
@@ -74,4 +70,3 @@ public:
 END_NS_SASL_SHIMS();
 
 #endif
-

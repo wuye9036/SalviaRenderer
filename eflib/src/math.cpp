@@ -1,6 +1,10 @@
 #include <eflib/include/math/math.h>
 
+#include <algorithm>
+
 namespace eflib{
+    using std::clamp;
+
 	vec2 normalize2(const vec2& v)
 	{
 		float length = v.length();

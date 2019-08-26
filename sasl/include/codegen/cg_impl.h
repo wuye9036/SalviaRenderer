@@ -8,13 +8,9 @@
 #include <sasl/enums/operators.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <string>
+#include <type_traits>
+#include <memory>
 #include <unordered_map>
 
 namespace sasl{
@@ -35,13 +31,11 @@ namespace llvm{
 	class LLVMContext;
 	class Module;
 	class Type;
-	class DataLayout;
 	
-	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template< bool preserveNames, typename T, typename Inserter
-        > class IRBuilder;
-    typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
-        DefaultIRBuilder;
+    class IRBuilderDefaultInserter;
+    template <typename T, typename Inserter> class IRBuilder;
+    class ConstantFolder;
+    using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
 }
 
 enum class builtin_types: uint32_t;
@@ -55,9 +49,9 @@ struct node_context;
 class cg_impl: public sasl::syntax_tree::syntax_tree_visitor
 {
 public:
-	boost::shared_ptr<module_vmcode> generated_module() const;
+	std::shared_ptr<module_vmcode> generated_module() const;
 	bool generate(
-		boost::shared_ptr<sasl::semantic::module_semantic> const& msem,
+		std::shared_ptr<sasl::semantic::module_semantic> const& msem,
 		sasl::semantic::reflection_impl const* abii
 		);
 
@@ -118,14 +112,13 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression ) = 0;
 	
 	// Easy to visit child with context data.
-	template <typename NodeT> void visit_child(boost::shared_ptr<NodeT> const& child);
+	template <typename NodeT> void visit_child(std::shared_ptr<NodeT> const& child);
 	void visit_child(sasl::syntax_tree::node* child);
 
 	template <typename NodeT>
-	node_context* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
+	node_context* node_ctxt( std::shared_ptr<NodeT> const&, bool create_if_need = false );
 	template <typename NodeT>
-	node_context* node_ctxt( NodeT const&, bool create_if_need = false,
-		typename boost::disable_if< std::is_pointer<NodeT> >::type* = NULL );
+	node_context* node_ctxt(NodeT const&, bool create_if_need = false, typename std::enable_if<!std::is_pointer<NodeT>::value>::type* = nullptr);
 
 	// Direct access member from module.
 	llvm::DefaultIRBuilder*	builder() const;
@@ -139,14 +132,14 @@ protected:
 	cg_function*			get_function( std::string const& name ) const;
 
 	// Store global informations
-	boost::shared_ptr<sasl::semantic::module_semantic>
+	std::shared_ptr<sasl::semantic::module_semantic>
 											sem_;
-	boost::shared_ptr<module_context>		ctxt_;
-	boost::shared_ptr<module_vmcode_impl>	vmcode_;
+	std::shared_ptr<module_context>		ctxt_;
+	std::shared_ptr<module_vmcode_impl>	vmcode_;
 	sasl::semantic::reflection_impl const*	abii;
-	boost::shared_ptr<sasl::semantic::caster_t>
+	std::shared_ptr<sasl::semantic::caster_t>
 											caster;		///< For type conversation.
-	llvm::DataLayout const *				vm_data_layout_;
+
 	cg_service*								service_;
 
 	// Status

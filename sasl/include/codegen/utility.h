@@ -7,9 +7,7 @@
 #include <llvm/ADT/APInt.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/type_traits/is_signed.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <type_traits>
 
 namespace llvm
 {
@@ -43,7 +41,7 @@ BEGIN_NS_SASL_CODEGEN();
 
 template <typename T>
 llvm::APInt apint( T v ){
-	return llvm::APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
+	return llvm::APInt( sizeof(v) << 3, static_cast<uint64_t>(v), std::is_signed<T>::value );
 }
 
 void		dbg_print_blocks( llvm::Function* fn );

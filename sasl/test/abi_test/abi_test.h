@@ -15,12 +15,11 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/test_tools.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
+#include <memory>
 
 #if defined(EFLIB_WINDOWS)
 #include <excpt.h>
@@ -53,8 +52,8 @@ using eflib::vector_;
 using eflib::matrix_;
 
 using boost::format;
-using boost::shared_ptr;
 
+using std::shared_ptr;
 using std::string;
 using std::vector;
 using std::pair;
@@ -70,7 +69,7 @@ struct compiler_loader
 
 	static void (*create_compiler)( shared_ptr<compiler>& );
 private:
-	boost::shared_ptr<eflib::dynamic_lib> lib_;
+	std::shared_ptr<eflib::dynamic_lib> lib_;
 };
 
 string make_command(string const& file_name, string const& options)
@@ -89,10 +88,10 @@ bool print_diagnostic( diag_chat*, diag_item* item )
 	{
 	case diag_levels::dl_error:
 	case diag_levels::dl_fatal_error:
-		BOOST_MESSAGE( sasl::common::str(item).raw_string() );
+		BOOST_TEST_MESSAGE( sasl::common::str(item).raw_string() );
 		break;
 	default:
-		// BOOST_MESSAGE( sasl::common::str(item).raw_string() );
+		// BOOST_TEST_MESSAGE( sasl::common::str(item).raw_string() );
 		break;
 	}
 	

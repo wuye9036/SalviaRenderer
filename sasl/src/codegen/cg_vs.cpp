@@ -44,8 +44,8 @@ using namespace sasl::syntax_tree;
 using namespace llvm;
 using namespace sasl::utility;
 
-using boost::any;
-using boost::shared_ptr;
+using std::any;
+using std::shared_ptr;
 
 using std::vector;
 using std::sort;
@@ -57,7 +57,7 @@ using std::make_pair;
 	push_fn( (fn) );	\
 	scope_guard<void> pop_fn_on_exit##__LINE__( [this]() { pop_fn(); } );
 
-BEGIN_NS_SASL_CODEGEN();
+BEGIN_NS_SASL_CODEGEN()
 
 // expressions
 SASL_VISIT_DEF_UNIMPL( cast_expression );
@@ -160,7 +160,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def ){
 
 		node_context* ctxt = node_ctxt(v, true);
 
-		vector<Type*> param_types = generate_vs_entry_param_type( abii, vm_data_layout_, service() );
+		vector<Type*> param_types = generate_vs_entry_param_type( abii, service() );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
 		Function* fn = Function::Create(

@@ -6,11 +6,9 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/platform/cpuinfo.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/atomic/atomic.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <atomic>
 
-BEGIN_NS_SALVIAR();
+BEGIN_NS_SALVIAR()
 
 struct thread_context
 {
@@ -64,7 +62,7 @@ struct thread_context
 	size_t					thread_id;
 
 	int32_t					item_count;
-	boost::atomic<int32_t>*	working_package_id;
+	std::atomic<int32_t>*	working_package_id;
 	int32_t					package_size;
 	int32_t					package_count;
 
@@ -81,7 +79,7 @@ struct thread_context
 
 inline void init_thread_context(
 	thread_context* ctxts, size_t N,
-	int32_t item_count, boost::atomic<int32_t>* working_package_id, int32_t package_size)
+	int32_t item_count, std::atomic<int32_t>* working_package_id, int32_t package_size)
 {
 	int32_t package_count = thread_context::compute_package_count(item_count, package_size);
 
@@ -99,8 +97,8 @@ template <typename ThreadFuncT> // ThreadFuncT = function <void (thread_context 
 inline void execute_threads(ThreadFuncT const& fn, int32_t item_count, int32_t package_size, int32_t thread_count)
 {
 	// Compute package information
-	boost::atomic<int32_t>				working_package(0);
-	boost::shared_array<thread_context>	thread_ctxts(new thread_context[thread_count]);
+	std::atomic<int32_t>				working_package(0);
+	std::shared_ptr<thread_context[]>	thread_ctxts(new thread_context[thread_count]);
 
 	// Initialize contexts per thread
 	thread_context* pctxts = thread_ctxts.get();
@@ -123,4 +121,4 @@ inline void execute_threads(ThreadFuncT const& fn, int32_t item_count, int32_t p
 	execute_threads(fn, item_count, package_size, thread_count);
 }
 
-END_NS_SALVIAR();
+END_NS_SALVIAR()

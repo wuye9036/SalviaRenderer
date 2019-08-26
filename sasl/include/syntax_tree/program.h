@@ -4,9 +4,9 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <eflib/include/utility/enable_if.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits.hpp>
+
 #include <vector>
+#include <memory>
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -21,13 +21,13 @@ struct program: public node{
 	// help for creating program syntax tree
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	std::string name;
-	std::vector< boost::shared_ptr<declaration> > decls;
+	std::vector< std::shared_ptr<declaration> > decls;
 
 protected:
 	program(const std::string& name);
-	program( boost::shared_ptr<token_t> const&, boost::shared_ptr<token_t> const& );
-	program& operator = (const program&);
-	program( const program& );
+	program( std::shared_ptr<token_t> const&, std::shared_ptr<token_t> const& );
+	program& operator = (const program&) = delete;
+	program( const program& ) = delete;
 };
 
 END_NS_SASL_SYNTAX_TREE();

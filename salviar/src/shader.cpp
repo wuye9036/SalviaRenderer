@@ -618,7 +618,7 @@ result cpp_shader_impl::find_register( semantic_value const& sv, size_t& index )
 	return result::failed;
 }
 
-boost::unordered_map<semantic_value, size_t> const& cpp_shader_impl::get_register_map()
+std::unordered_map<semantic_value, size_t> const& cpp_shader_impl::get_register_map()
 {
 	return regmap_;
 }

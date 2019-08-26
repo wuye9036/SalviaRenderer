@@ -4,16 +4,17 @@
 #include <salviau/include/salviau_forward.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/any.hpp>
 #include <boost/signals2.hpp>
-#include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <any>
+#include <functional>
 
 BEGIN_NS_SALVIAU();
 
-typedef boost::function<void()> idle_handler_t;
-typedef boost::function<void()> draw_handler_t;
-typedef boost::function<void()> create_handler_t;
+typedef std::function<void()> idle_handler_t;
+typedef std::function<void()> draw_handler_t;
+typedef std::function<void()> create_handler_t;
 
 class window
 {
@@ -29,8 +30,8 @@ public:
 	
 	/** Properties @{ */
 	virtual void* view_handle_as_void() = 0;
-	virtual boost::any view_handle() = 0;
-	virtual void set_title( std::string const& ) = 0;
+	virtual std::any view_handle() = 0;
+	virtual void set_title(std::string const&) = 0;
 	/** @} */
 
 	virtual void refresh() = 0;

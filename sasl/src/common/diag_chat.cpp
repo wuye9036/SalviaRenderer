@@ -4,8 +4,8 @@
 #include <eflib/include/diagnostics/assert.h>
 
 using eflib::fixed_string;
-using boost::scoped_ptr;
-using boost::shared_ptr;
+using std::unique_ptr;
+using std::shared_ptr;
 using std::vector;
 
 BEGIN_NS_SASL_COMMON();

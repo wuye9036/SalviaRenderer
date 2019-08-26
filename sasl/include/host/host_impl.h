@@ -8,13 +8,8 @@
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
-#include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
 
 namespace eflib
 {

@@ -1,18 +1,18 @@
 macro( config_llvm_libs )
 if (MSVC)
 	set( SASL_LLVM_LIBS
-		LLVMMCJIT LLVMInterpreter LLVMExecutionEngine
 		LLVMX86CodeGen LLVMX86Desc LLVMX86Utils LLVMX86AsmPrinter LLVMX86Info
 		LLVMBitWriter LLVMBitReader LLVMAsmParser LLVMAsmPrinter
-		LLVMRuntimeDyld 
-		LLVMSelectionDAG
+		LLVMExecutionEngine LLVMMCJIT
+		LLVMRuntimeDyld
+		LLVMGlobalISel LLVMSelectionDAG
 		LLVMMCParser
 		LLVMCodeGen 
 		LLVMScalarOpts
 		LLVMInstCombine
 		LLVMTransformUtils
-		LLVMipa LLVMAnalysis LLVMTarget LLVMMC LLVMMCDisassembler
-		LLVMObject LLVMCore LLVMSupport
+		LLVMAnalysis LLVMTarget LLVMMC LLVMMCDisassembler LLVMipo LLVMProfileData LLVMDebugInfoCodeView LLVMDemangle
+		LLVMObject LLVMCore LLVMSupport LLVMBinaryFormat
 	)
 else(MSVC)
 	set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SALVIA_LLVM_INSTALL_DIR}/share/llvm/cmake")

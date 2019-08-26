@@ -1,8 +1,8 @@
 #ifndef EFLIB_MEMORY_LIFETIME_MANAGER_H
 #define EFLIB_MEMORY_LIFETIME_MANAGER_H
 
-#include <boost/function.hpp>
 #include <vector>
+#include <functional>
 
 namespace eflib{
 	// This class will used as following:
@@ -17,16 +17,16 @@ namespace eflib{
 	// We can resource release before static object releasing
 	class lifetime_manager{
 	public:
-		static void at_main_exit( boost::function<void()> exit_func );
+		static void at_main_exit( std::function<void()> exit_func );
 		lifetime_manager();
 		~lifetime_manager();
 	private:
 		static lifetime_manager* inst;
 
 		// prevent "new" operator.
-		void* operator new( size_t size );
+		void* operator new( size_t size ) = delete;
 		// storage
-		std::vector<boost::function<void()> > exit_callbacks;
+		std::vector<std::function<void()> > exit_callbacks;
 
 	};
 }

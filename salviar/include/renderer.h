@@ -11,12 +11,10 @@
 #include <eflib/include/math/collision_detection.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/enable_warnings.h>
-
 #include <vector>
+#include <memory>
+#include <any>
+
 #include <salviar/include/salviar_forward.h>
 
 BEGIN_NS_SALVIAR();

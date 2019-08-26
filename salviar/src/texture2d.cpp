@@ -6,17 +6,14 @@
 
 #include <eflib/include/utility/unref_declarator.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
 
 BEGIN_NS_SALVIAR();
 
 using namespace eflib;
 using std::vector;
-using boost::make_shared;
+using std::make_shared;
 
 texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
 {

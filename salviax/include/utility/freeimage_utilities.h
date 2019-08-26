@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-BEGIN_NS_SALVIAX_UTILITY();
+BEGIN_NS_SALVIAX_UTILITY()
 
 FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 
@@ -36,21 +36,21 @@ struct FREE_IMAGE_UNIFORM_COLOR
 template <>
 struct FREE_IMAGE_UNIFORM_COLOR<RGBQUAD>
 {
-	typedef byte CompT;
+	using CompT = uint8_t;
 	const CompT& r;
 	const CompT& g;
 	const CompT& b;
 	const CompT& a;
 	FREE_IMAGE_UNIFORM_COLOR(const CompT* c, CompT /*alpha*/):r(c[FI_RGBA_RED]), g(c[FI_RGBA_GREEN]), b(c[FI_RGBA_BLUE]), a(c[FI_RGBA_ALPHA]){}
 private:
-	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<RGBQUAD>&);
-	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<RGBQUAD>&);
+	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<RGBQUAD>&) = delete;
+	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<RGBQUAD>&) = delete;
 };
 
 template <>
 struct FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE>
 {
-	typedef byte CompT;
+	using CompT = uint8_t;
 	const CompT& r;
 	const CompT& g;
 	const CompT& b;
@@ -58,36 +58,36 @@ struct FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE>
 	FREE_IMAGE_UNIFORM_COLOR(const CompT* c, CompT alpha):r(c[FI_RGBA_RED]), g(c[FI_RGBA_GREEN]), b(c[FI_RGBA_BLUE]), a(alpha){}
 
 private:
-	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE>&);
-	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE>&);
+	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE>&) = delete;
+	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE>&) = delete;
 };
 
 template <>
 struct FREE_IMAGE_UNIFORM_COLOR<FIRGBF>
 {
-	typedef float CompT;
+    using CompT = float;
 	const CompT& r;
 	const CompT& g;
 	const CompT& b;
 	const CompT& a;
 	FREE_IMAGE_UNIFORM_COLOR(const CompT* c, CompT alpha):r(c[0]), g(c[1]), b(c[2]), a(alpha){}
 private:
-	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<FIRGBF>&);
-	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<FIRGBF>&);
+	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<FIRGBF>&) = delete;
+	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<FIRGBF>&) = delete;
 };
 
 template <>
 struct FREE_IMAGE_UNIFORM_COLOR<FIRGBAF>
 {
-	typedef float CompT;
+    using CompT = float;
 	const CompT& r;
 	const CompT& g;
 	const CompT& b;
 	const CompT& a;
 	FREE_IMAGE_UNIFORM_COLOR(const CompT* c, CompT /*alpha*/):r(c[0]), g(c[1]), b(c[2]), a(c[3]){}
 private:
-	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<FIRGBAF>&);
-	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<FIRGBAF>&);
+	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<FIRGBAF>&) = delete;
+	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<FIRGBAF>&) = delete;
 };
 
 #define FIUC FREE_IMAGE_UNIFORM_COLOR

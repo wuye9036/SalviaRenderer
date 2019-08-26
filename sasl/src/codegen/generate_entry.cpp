@@ -70,7 +70,7 @@ void sort_struct_members(
 		++layout_it;
 	}
 
-	sort(layout_ty_pairs.begin(), layout_ty_pairs.end(), compare_layout);
+	std::sort(layout_ty_pairs.begin(), layout_ty_pairs.end(), compare_layout);
 
 	sorted_layouts.clear();
 	sorted_tys.clear();
@@ -83,12 +83,14 @@ void sort_struct_members(
 }
 
 Type* generate_parameter_type(
-	reflection_impl const* abii, sv_usage su, cg_service* cg, DataLayout const* dataLayout
+	reflection_impl const* abii, sv_usage su, cg_service* cg
 	)
 {
 	vector<sv_layout*>		svls = abii->layouts(su);
 	vector<Type*>			sem_tys;
 	vector<builtin_types>	tycodes;
+
+    auto const& dataLayout = cg->module()->getDataLayout();
 
 	for(sv_layout* svl: svls)
 	{
@@ -109,12 +111,12 @@ Type* generate_parameter_type(
 		} else {
 			sem_tys.push_back(value_vm_ty);
 		}
-		svl->size = (size_t)dataLayout->getTypeStoreSize(value_vm_ty);
+		svl->size = static_cast<size_t>(dataLayout.getTypeStoreSize(value_vm_ty));
 	}
 	
 	if(su_buffer_in == su || su_buffer_out == su)
 	{
-		sort_struct_members(svls, sem_tys, svls, sem_tys, dataLayout);
+		sort_struct_members(svls, sem_tys, svls, sem_tys, &dataLayout);
 	}
 
 	char const* param_struct_name = NULL;
@@ -138,7 +140,7 @@ Type* generate_parameter_type(
 	StructType* param_struct = NULL;
 	if ( sem_tys.empty() )
 	{
-		param_struct = StructType::create(param_struct_name, Type::getInt8Ty(cg->context()), NULL);
+		param_struct = StructType::create(param_struct_name, Type::getInt8Ty(cg->context()));
 	}
 	else
 	{
@@ -146,7 +148,7 @@ Type* generate_parameter_type(
 	}
 
 	// Update Layout physical informations.
-	StructLayout const* struct_layout = dataLayout->getStructLayout(param_struct);
+	StructLayout const* struct_layout = dataLayout.getStructLayout(param_struct);
 
 	size_t next_offset = 0;
 	for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
@@ -171,15 +173,15 @@ Type* generate_parameter_type(
 	return param_struct;
 }
 
-vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, DataLayout const* dataLayout, cg_service* cg)
+vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, cg_service* cg)
 {
 	assert(cg->parallel_factor() == 1);
 	vector<Type*> ret(sv_usage_count, NULL);
 
-	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, dataLayout);
-	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg, dataLayout);
-	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg, dataLayout);
-	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg, dataLayout);
+	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg);
+	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg);
+	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg);
+	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg);
 
 	for(size_t i = 1; i < sv_usage_count; ++i)
 	{
@@ -189,15 +191,15 @@ vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, DataLayo
 	return vector<Type*>( ret.begin()+1, ret.end() );
 }
 
-vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, DataLayout const* dataLayout, cg_service* cg)
+vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, cg_service* cg)
 {
 	assert(cg->parallel_factor() > 1);
 	vector<Type*> ret(sv_usage_count, NULL);
 
-	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, dataLayout);
-	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg, dataLayout);
-	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg, dataLayout);
-	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg, dataLayout);
+	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg);
+	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg);
+	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg);
+	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg);
 
 	for(size_t i = 1; i < sv_usage_count; ++i)
 	{

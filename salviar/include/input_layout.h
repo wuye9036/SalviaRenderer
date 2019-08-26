@@ -91,4 +91,23 @@ size_t hash_value(input_layout const&);
 
 END_NS_SALVIAR();
 
+namespace std
+{
+    template <> struct hash<salviar::input_element_desc>
+    {
+        size_t operator()(salviar::input_element_desc const& v) const noexcept
+        {
+            return salviar::hash_value(v);
+        }
+    };
+
+    template <> struct hash<salviar::input_layout>
+    {
+        size_t operator()(salviar::input_layout const& v) const noexcept
+        {
+            return salviar::hash_value(v);
+        }
+    };
+}
+
 #endif

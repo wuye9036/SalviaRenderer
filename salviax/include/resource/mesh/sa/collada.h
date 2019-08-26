@@ -8,17 +8,16 @@
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/unordered_map.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/optional.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
 #include <vector>
+#include <memory>
+#include <optional>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+BEGIN_NS_SALVIAX_RESOURCE()
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_source);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_verts);
@@ -44,26 +43,26 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_matrix);
 
 struct dae_dom
 {
-	boost::unordered_map<std::string, dae_node_ptr> id_nodes;
+	std::unordered_map<std::string, dae_node_ptr> id_nodes;
 
 	template <typename T>
-	boost::shared_ptr<T> get_node( std::string const& name )
+	std::shared_ptr<T> get_node( std::string const& name )
 	{
 		std::string unqual_name = (name[0] == '#' ? name.substr(1) : name);
-		boost::unordered_map<std::string, dae_node_ptr>::iterator it = id_nodes.find(unqual_name);
-		if( it == id_nodes.end() ) { return boost::shared_ptr<T>(); }
-		return boost::dynamic_pointer_cast<T>(it->second);
+		auto it = id_nodes.find(unqual_name);
+		if( it == id_nodes.end() ) { return std::shared_ptr<T>(); }
+		return std::dynamic_pointer_cast<T>(it->second);
 	}
 
 	template <typename T>
-	void get_node( std::string const& name, boost::shared_ptr<T>& ret )
+	void get_node( std::string const& name, std::shared_ptr<T>& ret )
 	{
 		ret = get_node<T>(name);
 		return;
 	}
 
 	template <typename T>
-	boost::shared_ptr<T> load_node(boost::property_tree::ptree& xml_node, dae_node* parent);
+	std::shared_ptr<T> load_node(boost::property_tree::ptree& xml_node, dae_node* parent);
 
 	dae_node_ptr node_by_path(std::string const& path);
 };
@@ -75,7 +74,7 @@ struct dae_node
 	virtual bool parse(boost::property_tree::ptree& xml_node) = 0;
 
 	template <typename T>
-	boost::shared_ptr<T> node_by_id( std::string const& name )
+	std::shared_ptr<T> node_by_id( std::string const& name )
 	{
 		return owner->get_node<T>(name);
 	}
@@ -107,16 +106,16 @@ struct dae_node
 	}
 
 	template <typename T>
-	boost::shared_ptr<T> load_child( boost::property_tree::ptree& xml_node )
+	std::shared_ptr<T> load_child( boost::property_tree::ptree& xml_node )
 	{
 		return owner->load_node<T>(xml_node, this);
 	}
 
 	boost::optional<
-		std::string >	id, sid, name, source;
+		std::string>	id, sid, name, source;
 	dae_dom*			owner;
 	dae_node*			parent;
-	boost::unordered_map<
+	std::unordered_map<
 		std::string,
 		dae_node_ptr >	sid_children;
 
@@ -124,9 +123,9 @@ struct dae_node
 };
 
 template <typename T>
-boost::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree& xml_node, dae_node* parent)
+std::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree& xml_node, dae_node* parent)
 {
-	boost::shared_ptr<T> ret = boost::make_shared<T>();
+	std::shared_ptr<T> ret = std::make_shared<T>();
 	ret->owner	= this;
 	ret->parent	= parent;
 	ret->parse_attribute(xml_node);
@@ -308,6 +307,6 @@ struct dae_matrix: public dae_node
 	eflib::mat44 mat;
 };
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()
 
 #endif

@@ -14,9 +14,9 @@
 
 using namespace eflib;
 
-using boost::make_tuple;
-using boost::get;
-using boost::tuple;
+using std::make_tuple;
+using std::get;
+using std::tuple;
 
 using std::vector;
 using std::pair;
@@ -65,7 +65,7 @@ void stream_assembler::update(render_state const* state)
 }
 
 /// Only used by Cpp Vertex Shader
-void stream_assembler::update_register_map( boost::unordered_map<semantic_value, size_t> const& reg_map )
+void stream_assembler::update_register_map( std::unordered_map<semantic_value, size_t> const& reg_map )
 {
 	register_to_input_element_desc.clear();
 	register_to_input_element_desc.reserve( reg_map.size() );

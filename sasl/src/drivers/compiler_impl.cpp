@@ -24,9 +24,9 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
-#include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <memory>
 #include <fstream>
 #include <math.h>
 
@@ -49,8 +49,8 @@ using salviar::external_function_desc;
 
 using eflib::fixed_string;
 
-using boost::dynamic_pointer_cast;
-using boost::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::shared_ptr;
 
 using std::vector;
 using std::string;

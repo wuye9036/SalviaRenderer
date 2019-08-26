@@ -14,11 +14,9 @@
 #include <eflib/include/memory/pool.h>
 #include <eflib/include/memory/allocator.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/array.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <array>
+#include <functional>
+#include <memory>
 
 BEGIN_NS_SALVIAR();
 
@@ -128,7 +126,7 @@ private:
 	std::vector<cpp_pixel_shader*>	threaded_cpp_ps_;
 	std::vector<pixel_shader_unit*>	threaded_psu_;
 
-	boost::function< void (rasterizer*, rasterize_multi_prim_context*)>
+	std::function< void (rasterizer*, rasterize_multi_prim_context*)>
 									rasterize_prims_;
 	geom_setup_engine				gse_;
 

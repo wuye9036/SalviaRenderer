@@ -11,7 +11,7 @@ using sasl::common::diag_item;
 using sasl::common::str;
 using sasl::common::report_handler_fn;
 using eflib::dynamic_lib;
-using boost::shared_ptr;
+using std::shared_ptr;
 using std::cout;
 using std::endl;
 

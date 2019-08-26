@@ -30,6 +30,7 @@ set (HEADER_FILES
 	include/utility/scoped_value.h
 	include/utility/shared_declaration.h
 	include/utility/enum.h
+	include/utility/hash.h
 	include/platform/config.h
 	include/platform/constant.h
 	include/platform/disable_warnings.h
@@ -40,6 +41,7 @@ set (HEADER_FILES
 	include/platform/win32.h
 	include/platform/dl_loader.h
 	include/platform/intrin.h
+	include/thread_pool/threadpool.h
 	include/string/string.h
 	include/string/ustring.h
 )

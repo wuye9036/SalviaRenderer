@@ -12,7 +12,7 @@ using sasl::parser::attribute;
 using sasl::parser::lexer;
 using sasl::parser::grammars;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 

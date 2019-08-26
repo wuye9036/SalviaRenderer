@@ -6,9 +6,7 @@
 #include <salviar/include/renderer.h>
 #include <salviar/include/mapped_resource.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/make_shared.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <memory>
 
 #ifndef NOMINMAX
 #	define NOMINMAX
@@ -438,7 +436,7 @@ swap_chain_ptr create_d3d11_swap_chain(
 		return swap_chain_ptr();
 	}
 
-	return boost::make_shared<d3d11_swap_chain>(renderer, *params);
+	return std::make_shared<d3d11_swap_chain>(renderer, *params);
 }
 
 END_NS_SALVIAX();

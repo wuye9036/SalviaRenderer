@@ -11,13 +11,13 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
 #include <sstream>
 #include <set>
+#include <memory>
+#include <optional>
 
 typedef salviar::format color_formats;
 
@@ -34,11 +34,12 @@ using eflib::mat44;
 
 using boost::property_tree::ptree;
 using boost::property_tree::read_xml;
-using boost::optional;
-using boost::make_shared;
-using boost::unordered_map;
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+
+using std::optional;
+using std::make_shared;
+using std::unordered_map;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 
 using std::vector;
 using std::string;
@@ -47,7 +48,38 @@ using std::make_pair;
 using std::set;
 using std::pair;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+BEGIN_NS_SALVIAX_RESOURCE()
+
+struct indexes_of_vertex_attributes
+{
+    indexes_of_vertex_attributes() {}
+    indexes_of_vertex_attributes(size_t sz) : indexes(sz) {}
+
+    vector<uint32_t> indexes;
+};
+
+bool operator == (indexes_of_vertex_attributes const& lhs, indexes_of_vertex_attributes const& rhs)
+{
+    return
+        (lhs.indexes.size() == rhs.indexes.size())
+        && std::equal(lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin());
+}
+
+END_NS_SALVIAX_RESOURCE()
+
+namespace std
+{
+    template <>
+    struct hash<salviax::resource::indexes_of_vertex_attributes>
+    {
+        size_t operator ()(salviax::resource::indexes_of_vertex_attributes const& v) const noexcept
+        {
+            return std::hash<decltype(v.indexes)>{}(v.indexes);
+        }
+    };
+}
+
+BEGIN_NS_SALVIAX_RESOURCE()
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh_impl);
 
@@ -166,27 +198,7 @@ void transfer_element( vector<char>& out_buffer, vector<char> const& in_buffer, 
 	out_buffer.insert( out_buffer.end(), src_beg_it, src_end_it );
 }
 
-struct indexes_of_vertex_attributes
-{
-	indexes_of_vertex_attributes(){}
-	indexes_of_vertex_attributes( size_t sz ): indexes(sz){}
 
-	vector<uint32_t> indexes;	
-};
-
-bool operator == (indexes_of_vertex_attributes const& lhs, indexes_of_vertex_attributes const& rhs)
-{
-	return
-		( lhs.indexes.size() == rhs.indexes.size() )
-		&& std::equal( lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin() );
-}
-
-size_t hash_value( indexes_of_vertex_attributes const& v )
-{
-	size_t ret = 0;
-	boost::hash_range( ret, v.indexes.begin(), v.indexes.end() );
-	return ret;
-}
 
 vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 {
@@ -264,7 +276,7 @@ vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render
 
 		// Unified index is the index of final vertex data streams used in graphics pipeline.
 		// Here we merge per-input index to an unified index, and re-order data to matching unified index.
-		typedef unordered_map<indexes_of_vertex_attributes, uint32_t> index_dict_t;
+		using index_dict_t = unordered_map<indexes_of_vertex_attributes, uint32_t>;
 		vector< vector<char> >			buffers_data(skinfo ? vertex_attributes_count + 2 : vertex_attributes_count ); // If skinfo is available, last two buffers for joints and weights.
 		vector<uint32_t>				attribute_merged_indexes;
 		index_dict_t					index_dict; // a map from grouped index to merged index.
@@ -499,7 +511,7 @@ scene_node_ptr build_scene_node(
 	unordered_map<dae_scene_node_ptr,scene_node_ptr>& dae_node_to_joints,
 	unordered_map<dae_matrix_ptr, mat44*>&	dae_node_to_matrix)
 {
-	scene_node_ptr ret = boost::make_shared<scene_node>( (scene_node*)NULL, std::string() );
+	scene_node_ptr ret = std::make_shared<scene_node>( (scene_node*)NULL, std::string() );
 	ret->name = *(scene->id);
 	dae_node_to_joints.insert( make_pair(scene, ret) );
 
@@ -594,18 +606,18 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	read_xml( fstr, dae_doc );
 	fstr.close();
 
-	optional<ptree&> collada_root = dae_doc.get_child_optional( "COLLADA" );
+	auto collada_root = dae_doc.get_child_optional( "COLLADA" );
 	if( !collada_root ) return skin_mesh_impl_ptr();
 
 	dae_dom_ptr pdom = make_shared<dae_dom>();
 
-	optional<ptree&> geometries_root = collada_root->get_child_optional( "library_geometries" );
+	auto geometries_root = collada_root->get_child_optional( "library_geometries" );
 	if( !geometries_root ) return ret;
-	optional<ptree&> controllers_root = collada_root->get_child_optional( "library_controllers" );
+	auto controllers_root = collada_root->get_child_optional( "library_controllers" );
 	if( !controllers_root ) return ret;
-	optional<ptree&> animations_root = collada_root->get_child_optional( "library_animations" );
+	auto animations_root = collada_root->get_child_optional( "library_animations" );
 	if( !animations_root ) return ret;
-	optional<ptree&> scenes_root = collada_root->get_child_optional("library_visual_scenes");
+	auto scenes_root = collada_root->get_child_optional("library_visual_scenes");
 	if( !scenes_root ) return ret;
 	
 	// Build skin infos.
@@ -627,7 +639,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 			skin_info* skinfo = 
 				skin_infos.count(geom_id) > 0 ? skin_infos[geom_id].get() : NULL;
 			
-			optional<ptree&> mesh_node = geom_child.second.get_child_optional("mesh");
+			auto mesh_node = geom_child.second.get_child_optional("mesh");
 			assert(mesh_node);
 
 			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
@@ -678,12 +690,12 @@ vector<mesh_ptr> build_mesh_from_file(renderer* render, std::string const& file_
 	read_xml( fstr, dae_doc );
 	fstr.close();
 
-	optional<ptree&> collada_root = dae_doc.get_child_optional( "COLLADA" );
+	auto collada_root = dae_doc.get_child_optional( "COLLADA" );
 	if( !collada_root ) return ret;
 
 	dae_dom_ptr pdom = make_shared<dae_dom>();
 
-	optional<ptree&> geometries_root = collada_root->get_child_optional( "library_geometries" );
+	auto geometries_root = collada_root->get_child_optional( "library_geometries" );
 	if( !geometries_root ) return ret;
 
 	// Build mesh.
@@ -693,7 +705,7 @@ vector<mesh_ptr> build_mesh_from_file(renderer* render, std::string const& file_
 		{
 			string geom_id = geom_child.second.get<string>("<xmlattr>.id");
 
-			optional<ptree&> mesh_node = geom_child.second.get_child_optional("mesh");
+			auto mesh_node = geom_child.second.get_child_optional("mesh");
 			assert(mesh_node);
 
 			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
@@ -798,4 +810,4 @@ mesh_ptr create_morph_mesh_from_collada( salviar::renderer* render, std::string 
 	return mesh_ptr();
 }
 
-END_NS_SALVIAX_RESOURCE();
+END_NS_SALVIAX_RESOURCE()

@@ -10,18 +10,15 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/preprocessor/seq.hpp>
 #include <boost/preprocessor/for.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 //#include <eflib/include/utility/util.h>
 #include <eflib/include/utility/enable_if.h>
 #include <eflib/include/diagnostics/assert.h>
 
-#include <boost/any.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/scoped_ptr.hpp>
-
+#include <any>
+#include <memory>
+#include <functional>
 #include <vector>
 
 namespace llvm{
@@ -35,13 +32,10 @@ namespace llvm{
 	class ConstantInt;
 	class ConstantVector;
 
-	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template< bool preserveNames, typename T, typename Inserter
-	> class IRBuilder;
-	class ConstantFolder;
-
-	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
-		DefaultIRBuilder;
+    class IRBuilderDefaultInserter;
+    template <typename T, typename Inserter> class IRBuilder;
+    class ConstantFolder;
+    using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
 }
 
 namespace sasl{

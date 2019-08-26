@@ -3,10 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
+#include <memory>
 #include <string>
 
 namespace sasl{
@@ -21,15 +18,15 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct program;
 
-boost::shared_ptr<program> parse(
+std::shared_ptr<program> parse(
 	const std::string& code_text,
-	boost::shared_ptr<sasl::common::lex_context> ctxt,
+	std::shared_ptr<sasl::common::lex_context> ctxt,
 	sasl::common::diag_chat* diags
 	);
 
-boost::shared_ptr<program> parse(
+std::shared_ptr<program> parse(
 	sasl::common::code_source* src,
-	boost::shared_ptr<sasl::common::lex_context> ctxt,
+	std::shared_ptr<sasl::common::lex_context> ctxt,
 	sasl::common::diag_chat* diags
 	);
 

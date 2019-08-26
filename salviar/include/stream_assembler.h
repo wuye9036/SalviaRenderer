@@ -4,14 +4,10 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/unordered_map.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <tuple>
+#include <unordered_map>
+
 
 BEGIN_NS_SALVIAR();
 
@@ -38,7 +34,7 @@ public:
 	void update(render_state const* state);
 
 	// Used by Cpp Vertex Shader
-	void update_register_map( boost::unordered_map<semantic_value, size_t> const& reg_map );
+	void update_register_map( std::unordered_map<semantic_value, size_t> const& reg_map );
 	void fetch_vertex(vs_input& vertex, size_t vert_index) const;
 
 	// Used by Old Shader Unit

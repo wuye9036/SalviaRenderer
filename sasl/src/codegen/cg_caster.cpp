@@ -32,10 +32,10 @@ using sasl::syntax_tree::create_builtin_type;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
 
-using boost::make_shared;
-using boost::dynamic_pointer_cast;
-using boost::shared_ptr;
-using boost::static_pointer_cast;
+using std::make_shared;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
+using std::static_pointer_cast;
 
 using std::vector;
 
@@ -416,7 +416,7 @@ shared_ptr<caster_t> create_cg_caster(
 	cg_service* cgs
 	)
 {
-	shared_ptr<caster_t> ret = boost::make_shared<cg_caster>( get_context, cgs );
+	shared_ptr<caster_t> ret = std::make_shared<cg_caster>( get_context, cgs );
 	ret->set_function_get_semantic(get_semantic);
 	ret->set_function_get_tynode(get_tynode);
 	return ret;

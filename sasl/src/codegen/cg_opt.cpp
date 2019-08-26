@@ -1,24 +1,19 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Analysis/Passes.h>
 #include <llvm/IR/Module.h>
-#include <llvm/PassManager.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/codegen/cg_api.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <vector>
+#include <memory>
 
 using llvm::Function;
-using llvm::FunctionPassManager;
 using llvm::Module;
 using llvm::raw_os_ostream;
 
-using boost::shared_ptr;
+using std::shared_ptr;
 
 using std::vector;
 using std::ostream;
