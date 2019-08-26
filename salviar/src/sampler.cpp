@@ -10,6 +10,12 @@ BEGIN_NS_SALVIAR();
 using namespace eflib;
 using namespace std;
 
+#define LOD_QUALITY_HI   2
+#define LOD_QUALITY_MID  1
+#define LOD_QUALITY_LOW  0
+
+#define LOD_QUALITY LOD_QUALITY_MID
+
 namespace addresser
 {
 	struct wrap
@@ -456,7 +462,7 @@ namespace surface_sampler
 			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
 				int4(static_cast<int>(surf.width()), static_cast<int>(surf.height()), 0, 0));
 
-			// printf("%d, %d\n", pos0[0], pos0[1]);
+			// printf("(%d, %d) - (%d, %d): (%0.3f, %0.3f)\n", pos0[0], pos0[1], pos1[0], pos1[1], t[0], t[1]);
 
 			return surf.get_texel(pos0[0], pos0[1], pos1[0], pos1[1], t[0], t[1], sample);
 		}
@@ -521,7 +527,8 @@ namespace surface_sampler
 
 float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
 {
-#if !defined(EFLIB_NO_SIMD)
+#if LOD_QUALITY == LOD_QUALITY_LOW
+#	if 0 && !defined(EFLIB_NO_SIMD)
 	static const union
 	{
 		int maski;
@@ -555,28 +562,41 @@ float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib
 	float lod;
 	_mm_store_ss(&lod, mlod);
 	return lod;
-#else
-	float rho, lambda;
-
-#if 0
+#	else
+	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
+	
 	vec4 maxD(
 		max(abs(ddx[0]), abs(ddy[0])),
 		max(abs(ddx[1]), abs(ddy[1])),
 		max(abs(ddx[2]), abs(ddy[2])),
 		0.0f);
 	maxD *= vec4(static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0);
-	rho = max(max(maxD[0], maxD[1]), maxD[2]);
+	float rho = max(max(maxD[0], maxD[1]), maxD[2]);
+	float lambda = fast_log2(rho);
+	return lambda + bias;
+#	endif
 #else
 	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
+	vec4 ddx_ts = ddx * size_vec4;										// (1, 0)
+	vec4 ddy_ts = ddy * size_vec4;										// (0, 1)
+	float rho, lambda;
 
-	vec4 ddx_ts = ddx * size_vec4;
-	vec4 ddy_ts = ddy * size_vec4;
-
+#	if LOD_QUALITY == LOD_QUALITY_HI
+	auto A = ddx_ts[0] * ddx_ts[0] + ddy_ts[0] * ddy_ts[0];				// 1
+	auto B = -2.0f * (ddx_ts[0] * ddx_ts[1] + ddy_ts[0] * ddy_ts[1]);	// 0
+	auto C = ddx_ts[1] * ddx_ts[1] + ddy_ts[1] * ddy_ts[1];				// 1
+	auto F = A * C - B * B * 0.25f;										// 1
+	auto invF = 1.0f / F;
+	A *= invF; B *= invF; C *= invF;
+	auto AsubC = A - C;													// 0
+	auto R = sqrt(AsubC * AsubC + B * B);								// 0
+	rho = sqrt( 2.0f / (A + C - R) );									// 1
+#	else
+	static_assert(LOD_QUALITY == LOD_QUALITY_MID, "");
 	float ddx_rho = ddx_ts.xyz().length();
 	float ddy_rho = ddy_ts.xyz().length();
-
 	rho = max(ddx_rho, ddy_rho);
-#endif
+#	endif
 
 	if(rho == 0.0f) rho = 0.000001f;
 	lambda = fast_log2(rho);
@@ -589,11 +609,12 @@ color_rgba32f sampler::sample_surface(
 	float x, float y, size_t sample,
 	sampler_state ss) const
 {
-	return filters_[ss](
+	auto ret = filters_[ss](
 		surf,
 		x, y, sample,
 		desc_.border_color
 		);
+	return ret;
 }
 
 sampler::sampler(sampler_desc const& desc, texture_ptr const& tex)
@@ -871,10 +892,11 @@ void sampler::calc_anisotropic_lod(
 		probe_count = fast_round(probe_count);
 	}
 
+	out_ratio = probe_count;
 	if (probe_count == 1.0f)
 	{
+		out_long_axis.xyzw(0.0f, 0.0f, 0.0f, 0.0f);
 		out_lod = fast_log2(long_axis_len) + bias;
-		out_ratio = 1.0f;
 		return;
 	}
 	else
@@ -884,7 +906,6 @@ void sampler::calc_anisotropic_lod(
 		out_lod = fast_log2(minor_axis_len) + bias;
 		out_long_axis = (*long_axis) * step / long_axis_len;
 		out_long_axis *= (1.0f / size_vec4);
-		out_ratio = probe_count;
 	}
 }
 

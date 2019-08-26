@@ -2,12 +2,9 @@
 import os
 import sys
 import re
-import atexit
-import getopt
-import subprocess
-import multiprocessing
-from functools import *
+import atexit, getopt, subprocess, multiprocessing
 
+from functools import *
 from blibs import *
 from blibs.copy import *
 from blibs.env import *

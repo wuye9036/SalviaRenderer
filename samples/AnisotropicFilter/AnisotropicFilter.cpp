@@ -43,9 +43,9 @@ struct vert
 };
 
 float  const CYLINDER_RADIUS         = 5.0f;
-size_t const CYLINDER_SEGMENTS       = 12;
+size_t const CYLINDER_SEGMENTS       = 36;
 float  const CYLINDER_SEG_ANGLE      = 360.0f / static_cast<float>(CYLINDER_SEGMENTS);
-float  const CYLINDER_SEG_HALF_WIDTH = tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS;
+float  const CYLINDER_SEG_HALF_WIDTH = CYLINDER_SEGMENTS > 2 ? tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS : 2 * CYLINDER_RADIUS;
 
 class vs_cone : public cpp_vertex_shader 
 {
@@ -132,7 +132,7 @@ public:
 	{
 		vec4 pos = in.attribute(0);
 		transform(out.position(), pos, wvp);
-		out.attribute(0) = vec4(in.attribute(0).x() * 1.0f, in.attribute(0).z() * 2.0f, 0, 0);
+		out.attribute(0) = vec4(in.attribute(0).x(), in.attribute(0).z(), 0, 0);
 	}
 
 	uint32_t num_output_attributes() const
@@ -259,7 +259,7 @@ protected:
 		desc.max_anisotropy = 16;
 
 		auto plane_tex_path = find_path(_EFLIB_T("texture_and_blending/chessboard.png"));
-		// auto plane_tex_path = find_path(_EFLIB_T("font/font.png"));
+		// auto plane_tex_path = find_path(_EFLIB_T("font/font_enu.png"));
 		if(plane_tex_path.empty())
 		{
 			throw "Plane texture loading failed.";
@@ -267,7 +267,12 @@ protected:
 
 		plane_tex = load_texture(data_->renderer.get(), plane_tex_path, salviar::pixel_format_color_rgba8);
 		plane_tex->gen_mipmap(filter_linear, true);
-			
+
+		// plane_tex->subresource(2)->fill_texels( color_rgba32f(0.0f, 0.0f, 1.0f, 0.0f) );
+		plane_tex->subresource(3)->fill_texels( color_rgba32f(1.0f, 0.0f, 0.0f, 0.0f) );
+		plane_tex->subresource(4)->fill_texels( color_rgba32f(0.0f, 1.0f, 0.0f, 0.0f) );
+		// plane_tex->subresource(5)->fill_texels( color_rgba32f(0.0f, 0.0f, 1.0f, 0.0f) );
+
 		plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
         pps_plane.reset(new ps_plane(plane_sampler));
 

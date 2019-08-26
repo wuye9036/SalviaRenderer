@@ -90,7 +90,7 @@ surface_ptr surface::make_mip_surface(filter_type filter)
 					};
 
 					color_rgba32f dst_color(
-						(c[0].get_vec4() + c[1].get_vec4() + c[2].get_vec4() + c[3].get_vec4()) * 0.25f
+						(c[0].get_vec4() + c[1].get_vec4() + c[2].get_vec4() + c[3].get_vec4()) * 0.25
 						);
 					ret->set_texel(x, y, s, dst_color);
 				}
