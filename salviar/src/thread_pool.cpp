@@ -9,9 +9,9 @@ using eflib::num_available_threads;
 
 BEGIN_NS_SALVIAR()
 
-eflib::threadpool::pool& global_thread_pool()
+eflib::thread_pool& global_thread_pool()
 {
-	static eflib::threadpool::pool tp(num_available_threads() - 1);
+	static eflib::thread_pool tp(std::thread::hardware_concurrency() - 1);
 	return tp;
 }
 

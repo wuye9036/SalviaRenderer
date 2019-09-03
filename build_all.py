@@ -79,7 +79,7 @@ def make_boost(proj):
     
     #Get boost build command
     # Add configs
-    libs = ["test", "wave", "program_options"]
+    libs = ["test", "wave", "program_options", "locale"]
     address_model = 'address-model=%d' % proj.arch().bits()
     options = ["--build-dir=./", "--hash", "link=shared", "runtime-link=shared", "threading=multi", "stage"]
     toolset = proj.toolset()
@@ -306,11 +306,11 @@ def build(proj_props, cleanBuild):
     proj.print_props()
     proj.check()
 
-    # make_bjam(proj)
+    make_bjam(proj)
     # if cleanBuild: clean_all(proj)
-    # make_boost(proj)
-    # config_and_make_freetype(proj)
-    # config_and_make_freeimage(proj)
+    make_boost(proj)
+    config_and_make_freetype(proj)
+    config_and_make_freeimage(proj)
     config_and_make_llvm(proj)
     config_and_make_salvia(proj)
 
