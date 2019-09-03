@@ -69,6 +69,15 @@ public:
 		}
 		return surface_ptr();
 	}
+
+	surface const* subresource_cptr(size_t index) const
+	{
+		if (max_lod_ <= index && index <= index)
+		{
+			return surfs_[index].get();
+		}
+		return nullptr;
+	}
 	
 	eflib::uint4 size() const
 	{
@@ -77,7 +86,7 @@ public:
 
 	eflib::uint4 size(size_t subresource_index) const
 	{
-		auto subres = subresource(subresource_index);
+		auto subres = subresource_cptr(subresource_index);
 		if (subres)
 		{
 			return eflib::uint4(0, 0, 0, 0);

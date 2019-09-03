@@ -651,7 +651,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 	if(is_mag)
 	{
 		auto subres_index = compute_cube_subresource(dummy, face_sz, tex_->max_lod() );
-		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_mag);
+		return sample_surface(*tex_->subresource_cptr(subres_index), coordx, coordy, sample, sampler_state_mag);
 	}
 
 	if(desc_.mip_filter == filter_point)
@@ -661,7 +661,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
         ml = eflib::clamp(ml, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod()));
 
 		auto subres_index = compute_cube_subresource(dummy, face_sz, ml);
-		return sample_surface(*tex_->subresource(subres_index), coordx, coordy, sample, sampler_state_min);
+		return sample_surface(*tex_->subresource_cptr(subres_index), coordx, coordy, sample, sampler_state_min);
 	}
 
 	if(desc_.mip_filter == filter_linear)
@@ -677,8 +677,8 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 		auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
 		auto subres_index_hi = compute_cube_subresource(dummy, face_sz, hi_sz);
 
-		color_rgba32f c0 = sample_surface(*tex_->subresource(subres_index_lo), coordx, coordy, sample, sampler_state_min);
-		color_rgba32f c1 = sample_surface(*tex_->subresource(subres_index_hi), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c0 = sample_surface(*tex_->subresource_cptr(subres_index_lo), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c1 = sample_surface(*tex_->subresource_cptr(subres_index_hi), coordx, coordy, sample, sampler_state_min);
 
 		return lerp(c0, c1, frac);
 	}
@@ -707,10 +707,10 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 			auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
 			auto subres_index_hi = compute_cube_subresource(dummy, face_sz, hi_sz);
 			color_rgba32f c0 = sample_surface(
-				*tex_->subresource(subres_index_lo), sample_coord_x, sample_coord_y, sample, sampler_state_min
+				*tex_->subresource_cptr(subres_index_lo), sample_coord_x, sample_coord_y, sample, sampler_state_min
 				);
 			color_rgba32f c1 = sample_surface(
-				*tex_->subresource(subres_index_hi), sample_coord_x, sample_coord_y, sample, sampler_state_min
+				*tex_->subresource_cptr(subres_index_hi), sample_coord_x, sample_coord_y, sample, sampler_state_min
 				);
 
 			color += lerp(c0, c1, frac).get_vec4();
