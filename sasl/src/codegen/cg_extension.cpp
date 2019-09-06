@@ -256,7 +256,7 @@ Value* cg_extension::abs_sv( Value* v )
 		else if ( elem_ty->isDoubleTy() )
 		{
 			elem_int_ty = Type::getInt32Ty( context_ );
-			mask = (1ULL << 63) - 1;
+			mask = (1ULL << 63) - 1ULL;
 		}
 		else
 		{
@@ -274,6 +274,21 @@ Value* cg_extension::abs_sv( Value* v )
 		Value* neg = builder_->CreateNeg( v );
 		return builder_->CreateSelect(sign, v, neg);
 	}
+}
+
+Value* cg_extension::sqrt_sv(Value* v)
+{
+	Type* ty = v->getType();
+
+	if (!ty->isFPOrFPVectorTy())
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return nullptr;
+	}
+	
+	auto sqrt_intrin = vm_intrin(static_cast<int>(llvm::Intrinsic::sqrt), FunctionType::get( ty, {ty}, false));
+
+	return builder_->CreateCall(sqrt_intrin, {v});
 }
 
 Value* cg_extension::shrink( Value* vec, size_t vsize )

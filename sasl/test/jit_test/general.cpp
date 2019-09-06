@@ -2195,7 +2195,8 @@ struct array_vs_sin
 
 struct array_vs_bin
 {
-	mat44*	mat_arr;
+	int size;
+	mat44* mat_arr;
 };
 
 struct array_vs_bout
@@ -2230,14 +2231,16 @@ vec4 my_transform(mat44& m, vec4& v)
 
 BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 {
+	constexpr int MAT_ARRAY_SIZE = 50;
+
 	init_vs( "repo/array.svs" );
-	JIT_FUNCTION( void(array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn );
+	JIT_FUNCTION( void (array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn );
 
 	srand(887);
 
-	EFLIB_ALIGN(16) mat44 mats[50];
+	EFLIB_ALIGN(16) mat44 mats[MAT_ARRAY_SIZE];
 
-	for(int i = 0; i < 50; ++i)
+	for(int i = 0; i < MAT_ARRAY_SIZE; ++i)
 	{
 		for( mat44::iterator it = mats[i].begin(); it != mats[i].end(); ++it )
 		{
@@ -2245,27 +2248,35 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 		}
 	}
 
-	array_vertex_data data;
-	data.pos = vec4(-10.0f, 77.8f, 8.3f, -87.3f);
+	auto data = std::make_unique<array_vertex_data>();
+	data->pos = vec4(-10.0f, 77.8f, 8.3f, -87.3f);
 
 	array_vs_sin sin;
-	sin.ids = &data.ids;
-	sin.pos = &data.pos;
+	sin.ids = &data->ids;
+	sin.pos = &data->pos;
 
 	array_vs_bin bin;
-	bin.mat_arr = &mats[0];
-
+	bin.size = MAT_ARRAY_SIZE;
+	bin.mat_arr = mats;
+	
 	array_vs_bout bout;
+	
+	//	 static constexpr auto LOW_BITS_MASK = 0xFFFFFFFFULL;
+	//   printf("&sin:           %08llx\n", reinterpret_cast<std::uintptr_t>(&sin) & LOW_BITS_MASK);
+	//   printf("sin.ids:        %08llx\n", reinterpret_cast<std::uintptr_t>(sin.ids) & LOW_BITS_MASK);
+	//   printf("sin.pos:        %08llx\n", reinterpret_cast<std::uintptr_t>(sin.pos) & LOW_BITS_MASK);
+	//   printf("&bin:           %08llx\n", reinterpret_cast<std::uintptr_t>(&bin) & LOW_BITS_MASK);
+	//   printf("bin.mat_arr:    %08llx\n", reinterpret_cast<std::uintptr_t>(bin.mat_arr) & LOW_BITS_MASK);
 
 	for(int i = 0; i < 100; ++i)
 	{
-		data.ids = int4(rand()%50, rand()%50, rand()%50, rand()%50);
-		fn(&sin, &bin, (void*)NULL, &bout);
+		data->ids = int4(rand()%50, rand()%50, rand()%50, rand()%50);
+		fn(&sin, &bin, nullptr, &bout);
 
 		vec4 ref_v = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		for(int j = 0; j < 4; ++j)
 		{
-			ref_v += my_transform(mats[data.ids[j]], data.pos);
+			ref_v += my_transform(mats[data->ids[j]], data->pos);
 		}
 		ref_v /= 4.0f;
 

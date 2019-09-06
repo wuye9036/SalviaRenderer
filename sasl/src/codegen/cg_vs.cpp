@@ -167,7 +167,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def ){
 			fntype, Function::ExternalLinkage,
 			sem_->get_symbol(&v)->mangled_name().raw_string(), cg_impl::module()
 			);
-		fn->addFnAttr( Attribute::getWithStackAlignment(context(), 16).getAsString() );
+		fn->addFnAttr(Attribute::getWithStackAlignment(context(), 32).getAsString());
+		fn->addFnAttr("stackrealign");
 		entry_fn = fn;
 		entry_sym = sem_->get_symbol(&v);
 
