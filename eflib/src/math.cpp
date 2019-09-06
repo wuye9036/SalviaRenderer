@@ -455,7 +455,7 @@ namespace eflib{
 
 	mat44& mat_scale(mat44& out, float sx, float sy, float sz)
 	{
-		out = mat44::diag(sx, sy, sz, 1.0f);
+        out = mat44::diag({ sx, sy, sz, 1.0f });
 		return out;
 	}
 

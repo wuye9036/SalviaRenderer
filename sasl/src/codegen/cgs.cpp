@@ -1248,16 +1248,12 @@ multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 	if( scalar_hint == builtin_types::_float )
 	{
         Type* float_ty = Type::getFloatTy(context());
-		unary_intrin_functor sqrt_sv = ext_->promote_to_unary_sv(
-			ext_->bind_to_unary(
-                ext_->vm_intrin(
-                    VMIntrin::sqrt, 
-                    FunctionType::get(float_ty, {float_ty}, false)
-                )
-            ),
-			null_unary,
-			ext_->bind_to_unary( ext_->vm_intrin(VMIntrin::sqrt) )
-			);
+        unary_intrin_functor sqrt_sv = ext_->bind_to_unary(
+            ext_->vm_intrin(
+                VMIntrin::sqrt,
+                FunctionType::get(float_ty, { float_ty }, false)
+            )
+        );
 		value_array ret_v = ext_->call_unary_intrin(NULL, v, sqrt_sv);
 		return create_value( arg_value.ty(), arg_value.hint(), ret_v, value_kinds::value, arg_abi );
 	}

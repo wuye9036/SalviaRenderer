@@ -267,8 +267,6 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 {
 	token_iterator iter_beg = iter;
 
-	vector< shared_ptr<diag_chat> > children_diags;
-
 	shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
 	attr = seq_attr;
 	attr->token_range( *iter_beg, *iter_beg );
@@ -283,10 +281,10 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		}
 
 		shared_ptr<attribute> out;
-		shared_ptr<diag_chat> children_diags = diag_chat::create();
+		shared_ptr<diag_chat> children_diag = diag_chat::create();
 
 		token_iterator child_start = iter;
-		parse_results result = expr->parse( iter, end, out, children_diags.get() );
+		parse_results result = expr->parse( iter, end, out, children_diag.get() );
 
 		// Child matched succeed.
 		if( result.is_succeed() ) {
@@ -299,14 +297,14 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		if( matched_count < lower_bound ){
 			iter = iter_beg;
 			seq_attr->token_range( *iter_beg, *iter_beg );
-			diag_chat::merge( diags, children_diags.get(), true );
+			diag_chat::merge( diags, children_diag.get(), true );
 			return parse_results::failed;
 		}
 
 		// if normal failed, maybe it's successful, just recover iterator and return.
 		if( result.is_expected_failed_or_recovered() )
 		{
-			diag_chat::merge( diags, children_diags.get(), true );
+			diag_chat::merge( diags, children_diag.get(), true );
 			final_result = parse_results::worse(result, final_result);
 			continue;
 		}
@@ -705,8 +703,8 @@ endholder::endholder(){}
 
 endholder::endholder( endholder const & ){}
 parse_results endholder::parse( token_iterator& iter, token_iterator end, std::shared_ptr<attribute>& attr, diag_chat* /*diags*/ ) const{
-	if( iter == end ){
-		attr = make_shared<terminal_attribute>();
+    attr = make_shared<terminal_attribute>();
+    if( iter == end ){
 		return parse_results::succeed;
 	}
 	return parse_results::failed;

@@ -281,16 +281,19 @@ typedef vector_<char,4>		bool4;
 typedef vector_<uint32_t,2>	uint2;
 typedef vector_<uint32_t,3>	uint3;
 
-typedef matrix_<char,3,2>		bool2x3;
-typedef matrix_<char,3,3>		bool3x3;
-typedef matrix_<char,4,3>		bool3x4;
-typedef matrix_<int32_t,3,2>	int2x3;
-typedef matrix_<int32_t,3,3>	int3x3;
-typedef matrix_<int32_t,4,3>	int3x4;
-typedef matrix_<uint32_t,3,2>	uint2x3;
-typedef matrix_<float,3,2>		float2x3;
-typedef matrix_<float,3,3>		float3x3;
-typedef matrix_<float,4,3>		float3x4;
+template <typename ScalarT, int ColumnSize, int RowSize>
+using packed_matrix_ = matrix_<ScalarT, ColumnSize, RowSize, ColumnSize>;
+
+using bool2x3  = packed_matrix_<char, 3, 2>;
+using bool3x3  = packed_matrix_<char, 3, 3>;
+using bool3x4  = packed_matrix_<char, 4, 3>;
+using int2x3   = packed_matrix_<int32_t, 3, 2>;
+using int3x3   = packed_matrix_<int32_t, 3, 3>;
+using int3x4   = packed_matrix_<int32_t, 4, 3>;
+using uint2x3  = packed_matrix_<uint32_t, 3, 2>;
+using float2x3 = packed_matrix_<float, 3, 2>;
+using float3x3 = packed_matrix_<float, 3, 3>;
+using float3x4 = packed_matrix_<float, 4, 3>;
 
 
 string	make_command( string const& file_name, string const& options);
