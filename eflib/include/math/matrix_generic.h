@@ -3,12 +3,23 @@
 
 #include <eflib/include/platform/config.h>
 
+#include <type_traits>
+
 namespace eflib
 {
-	template <typename ScalarT, int ColumnSize, int RowSize>
+	template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride=4>
 	struct matrix_;
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
+    template <typename Type>
+    struct is_matrix_type: std::false_type {};
+
+    template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride>
+    struct is_matrix_type<matrix_<ScalarT, ColumnSize, RowSize, ColumnStride>>: std::true_type {};
+
+    template <typename T>
+    inline constexpr bool is_matrix_v = is_matrix_type<T>::value;
+
+	template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride=4>
 	struct matrix_data;
 
 	template <typename ScalarT, int Size>
@@ -39,10 +50,20 @@ namespace eflib
 		}
 	};
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
+	template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride>
 	struct matrix_data
 	{
-		ScalarT data_[RowSize][4];
+        static_assert(ColumnStride >= ColumnSize);
+
+        using scalar_type = ScalarT;
+        static constexpr auto column_size = ColumnSize;
+        static constexpr auto column_stride = ColumnStride;
+        static constexpr auto row_size = RowSize;
+
+        using iterator = ScalarT *;
+        using const_iterator = ScalarT const*;
+
+		ScalarT data_[RowSize][ColumnStride];
 
 		template <typename IndexT>
 		vector_<ScalarT, RowSize> get_column(IndexT i) const
@@ -79,9 +100,6 @@ namespace eflib
 			}
 		}
 
-		typedef float*			iterator;
-		typedef float const*	const_iterator;
-
 		iterator		begin() { return &data_[0][0]; }
 		const_iterator	begin() const { return &data_[0][0]; }
 
@@ -89,13 +107,15 @@ namespace eflib
 		const_iterator	end() const { return begin() + RowSize*ColumnSize; }
 	};
 
-	template <typename ScalarT, int ColumnSize, int RowSize, bool IsSquare>
+	template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride, bool IsSquare>
 	struct matrix_operators: public det_<ScalarT, ColumnSize, RowSize>
 	{
-		static matrix_<ScalarT,ColumnSize,RowSize> zero()
+        using matrix_type = matrix_<ScalarT, ColumnSize, RowSize, ColumnStride>;
+
+		static matrix_type zero()
 		{
-			matrix_<ScalarT,ColumnSize,RowSize> ret;
-			for( size_t i = 0; i < ColumnSize*RowSize; ++i )
+            matrix_type ret;
+			for( size_t i = 0; i < ColumnStride*RowSize; ++i )
 			{
 				(&ret.data_[0][0])[i] = ScalarT(0);
 			}
@@ -103,58 +123,74 @@ namespace eflib
 		}
 	};
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	struct matrix_operators<ScalarT,ColumnSize,RowSize,true>: public matrix_operators<ScalarT,ColumnSize,RowSize,false>
+	template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride>
+	struct matrix_operators<ScalarT, ColumnSize, RowSize, ColumnStride, true>
+        : public matrix_operators<ScalarT, ColumnSize, RowSize, ColumnStride, false>
 	{
-		typedef matrix_operators<ScalarT,ColumnSize,RowSize,true> this_type;
-		static matrix_<ScalarT,ColumnSize,RowSize> diag( ScalarT d0, ScalarT d1 = ScalarT(0), ScalarT d2 = ScalarT(0), ScalarT d3 = ScalarT(0) )
+        using this_type = matrix_operators<ScalarT, ColumnSize, RowSize, ColumnStride, true>;
+        using matrix_type = matrix_<ScalarT, ColumnSize, RowSize, ColumnStride>;
+		static matrix_type diag(std::initializer_list<ScalarT> values)
 		{
-			ScalarT diags[4] = {d0, d1, d2, d3};
-			return diag(diags);
+            return diag(values.begin(), values.end());
 		}
 
-		static matrix_<ScalarT,ColumnSize,RowSize> diag( ScalarT const* v )
+        template <typename ScalarIt>
+		static matrix_type diag(ScalarIt begin, ScalarIt end)
 		{
-			matrix_<ScalarT,ColumnSize,RowSize> ret = this_type::zero();
-			for( size_t i = 0; i < ColumnSize; ++i )
+            matrix_type ret = this_type::zero();
+			for(size_t i = 0; i < ColumnSize && begin != end; ++i, ++begin)
 			{
-				ret.data_[i][i] = v[i];
+				ret.data_[i][i] = *begin;
 			}
 			return ret;
 		}
 
-		static matrix_<ScalarT,ColumnSize,RowSize> identity()
+		static matrix_type identity()
 		{
-			return diag( ScalarT(1), ScalarT(1), ScalarT(1), ScalarT(1) );
+            constexpr ScalarT s = static_cast<ScalarT>(1);
+            return diag({ s, s, s, s });
 		}
 	};
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	struct matrix_: matrix_operators<ScalarT, ColumnSize, RowSize, ColumnSize==RowSize>, matrix_data<ScalarT, ColumnSize, RowSize>
+	template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride>
+	struct matrix_: matrix_operators<ScalarT, ColumnSize, RowSize, ColumnStride, ColumnSize == RowSize>, matrix_data<ScalarT, ColumnSize, RowSize, ColumnStride>
 	{
-		matrix_<ScalarT,ColumnSize,RowSize>(){}
-		matrix_<ScalarT,ColumnSize,RowSize>( matrix_<ScalarT,ColumnSize,RowSize> const& v )
+        using this_type = matrix_<ScalarT, ColumnSize, RowSize, ColumnStride>;
+        template <int ColumnStride2> using assignable_type = matrix_<ScalarT, ColumnSize, RowSize, ColumnStride2>;
+
+		matrix_()
+        {
+        }
+
+        template <int ColumnStride2>
+		matrix_(assignable_type<ColumnStride2> const& v )
 		{
 			for( size_t i = 0; i < RowSize; ++i )
 			{
 				for( size_t j = 0; j < ColumnSize; ++j )
-				this->data_[i][j] = v.data_[i][j];
+                {
+				    this->data_[i][j] = v.data_[i][j];
+                }
 			}
 		}
 	};
 
 	template <typename ScalarT>
-	struct matrix_<ScalarT,4,4>: matrix_operators<ScalarT,4,4,true>, matrix_data<ScalarT,4,4>
+	struct matrix_<ScalarT,4,4,4>: matrix_operators<ScalarT,4,4,4,true>, matrix_data<ScalarT,4,4,4>
 	{
-		matrix_<ScalarT,4,4>(){}
-		matrix_<ScalarT,4,4>( matrix_<ScalarT,4,4> const& v )
+		matrix_(){}
+
+		matrix_(matrix_<ScalarT,4,4> const& v)
 		{
 			for( size_t i = 0; i < 4; ++i )
 			{
-				for( size_t j = 0; j < 4; ++j )
+				for(size_t j = 0; j < 4; ++j)
+                {
 					this->data_[i][j] = v.data_[i][j];
+                }
 			}
 		}
+
 		matrix_<ScalarT,4,4>(
 			ScalarT _11, ScalarT _12, ScalarT _13, ScalarT _14,
 			ScalarT _21, ScalarT _22, ScalarT _23, ScalarT _24,
@@ -184,13 +220,14 @@ namespace eflib
 		}
 	};
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator + (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs)
+    // Element-wise operators
+	template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+	inline MatrixType operator + (MatrixType const& lhs, MatrixType const& rhs)
 	{
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
+		MatrixType ret;
+		for(int i = 0; i < MatrixType::row_size; ++i)
 		{
-			for(int j = 0; j < ColumnSize; ++j)
+			for(int j = 0; j < MatrixType::column_size; ++j)
 			{
 				ret.data_[i][j] = lhs.data_[i][j] + rhs.data_[i][j];
 			}
@@ -198,25 +235,56 @@ namespace eflib
 		return ret;
 	}
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator - (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = lhs.data_[i][j] - rhs.data_[i][j];
-			}
-		}
-		return ret;
-	}
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator - (MatrixType const& lhs, MatrixType const& rhs)
+    {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = lhs.data_[i][j] - rhs.data_[i][j];
+            }
+        }
+        return ret;
+    }
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator + (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator * (MatrixType const& lhs, MatrixType const& rhs)
+    {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = lhs.data_[i][j] * rhs.data_[i][j];
+            }
+        }
+        return ret;
+    }
+
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator / (MatrixType const& lhs, MatrixType const& rhs)
+    {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = lhs.data_[i][j] / rhs.data_[i][j];
+            }
+        }
+        return ret;
+    }
+
+    // Matrix op Scalar
+	template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+	inline MatrixType operator + (MatrixType const& lhs, typename MatrixType::scalar_type s)
+    {
+        MatrixType ret;
+		for(int i = 0; i < MatrixType::row_size; ++i)
 		{
-			for(int j = 0; j < ColumnSize; ++j)
+			for(int j = 0; j < MatrixType::column_size; ++j)
 			{
 				ret.data_[i][j] = lhs.data_[i][j] + s;
 			}
@@ -224,103 +292,93 @@ namespace eflib
 		return ret;
 	}
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator + (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
-		return lhs + s;
-	}
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator - (MatrixType const& lhs, typename MatrixType::scalar_type s)
+    {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = lhs.data_[i][j] - s;
+            }
+        }
+        return ret;
+    }
 
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator - (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator * (MatrixType const& lhs, typename MatrixType::scalar_type s)
+    {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = lhs.data_[i][j] * s;
+            }
+        }
+        return ret;
+    }
+
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator / (MatrixType const& lhs, typename MatrixType::scalar_type s)
+    {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = lhs.data_[i][j] / s;
+            }
+        }
+        return ret;
+    }
+
+    // Scalar op Matrix
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator + (typename MatrixType::scalar_type s, MatrixType const& lhs) {
+        return lhs + s;
+    }
+
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator * (typename MatrixType::scalar_type s, MatrixType const& lhs) {
+        return lhs * s;
+    }
+
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator - (typename MatrixType::scalar_type s, MatrixType const& lhs) {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = s - lhs.data_[i][j];
+            }
+        }
+        return ret;
+    }
+
+    template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+    inline MatrixType operator / (typename MatrixType::scalar_type s, MatrixType const& lhs) {
+        MatrixType ret;
+        for (int i = 0; i < MatrixType::row_size; ++i)
+        {
+            for (int j = 0; j < MatrixType::column_size; ++j)
+            {
+                ret.data_[i][j] = s / lhs.data_[i][j];
+            }
+        }
+        return ret;
+    }
+
+	template <typename MatrixType, typename = std::enable_if<is_matrix_v<MatrixType>>>
+	inline MatrixType operator - (MatrixType const& lhs, float s){
+        MatrixType ret;
+		for(int i = 0; i < MatrixType::row_size; ++i)
 		{
-			for(int j = 0; j < ColumnSize; ++j)
+			for(int j = 0; j < MatrixType::column_size; ++j)
 			{
 				ret.data_[i][j] = lhs.data_[i][j] - s;
-			}
-		}
-		return ret;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator - (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = s - lhs.data_[i][j];
-			}
-		}
-		return ret;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator * (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs)
-	{
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = lhs.data_[i][j] * rhs.data_[i][j];
-			}
-		}
-		return ret;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator / (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = lhs.data_[i][j] / rhs.data_[i][j];
-			}
-		}
-		return ret;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator * (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = lhs.data_[i][j] * s;
-			}
-		}
-		return ret;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator * (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
-		return lhs * s;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator / (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = lhs.data_[i][j] / s;
-			}
-		}
-		return ret;
-	}
-
-	template <typename ScalarT, int ColumnSize, int RowSize>
-	inline matrix_<ScalarT, ColumnSize, RowSize> operator / (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
-		matrix_<ScalarT, ColumnSize, RowSize> ret;
-		for(int i = 0; i < RowSize; ++i)
-		{
-			for(int j = 0; j < ColumnSize; ++j)
-			{
-				ret.data_[i][j] = s / lhs.data_[i][j];
 			}
 		}
 		return ret;

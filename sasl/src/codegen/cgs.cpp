@@ -205,7 +205,8 @@ cg_function* cg_service::fetch_function(function_def* fn_node){
 		fty, Function::ExternalLinkage,
 		sem_->get_symbol(fn_node)->mangled_name().raw_string(), module()
 		);
-
+	ret->fn->addFnAttr(Attribute::getWithStackAlignment(context(), 32).getAsString());
+	ret->fn->addFnAttr("stackrealign");
 	return ret;
 }
 
@@ -1242,23 +1243,11 @@ multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of(hint);
 	abis arg_abi = arg_value.abi();
-
-	value_array v = arg_value.load(arg_abi);
-
+	
 	if( scalar_hint == builtin_types::_float )
 	{
-        Type* float_ty = Type::getFloatTy(context());
-		unary_intrin_functor sqrt_sv = ext_->promote_to_unary_sv(
-			ext_->bind_to_unary(
-                ext_->vm_intrin(
-                    VMIntrin::sqrt, 
-                    FunctionType::get(float_ty, {float_ty}, false)
-                )
-            ),
-			null_unary,
-			ext_->bind_to_unary( ext_->vm_intrin(VMIntrin::sqrt) )
-			);
-		value_array ret_v = ext_->call_unary_intrin(NULL, v, sqrt_sv);
+		value_array v = arg_value.load(arg_abi);
+		value_array ret_v = ext_->call_unary_intrin(v[0]->getType(), v, std::bind(&cg_extension::sqrt_sv, ext_.get(), _1));
 		return create_value( arg_value.ty(), arg_value.hint(), ret_v, value_kinds::value, arg_abi );
 	}
 	else

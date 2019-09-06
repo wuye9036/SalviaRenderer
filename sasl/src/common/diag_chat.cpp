@@ -18,7 +18,7 @@ diag_item_committer* diag_item_committer::p(char const* v)
 
 shared_ptr<diag_chat> diag_chat::create()
 {
-	return shared_ptr<diag_chat>( new diag_chat() );
+    return std::make_shared<diag_chat>();
 }
 
 void diag_chat::add_report_raised_handler( report_handler_fn const& handler )

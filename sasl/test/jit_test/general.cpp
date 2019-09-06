@@ -24,7 +24,8 @@ using std::cout;
 using std::endl;
 using std::numeric_limits;
 
-int const SIMD_ALIGNMENT = 32;
+constexpr int SIMD_ALIGNMENT{ 32 };
+constexpr float RELATIVE_TORLERANCE_NORMAL{ 0.0001f };
 
 float v4_get_float(__m128 v, int i)
 {
@@ -161,8 +162,12 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 #if 1 || ALL_TESTS_ENABLED
 
-BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
-	init_g("repo/intrinsics.ss");
+static_assert(sizeof(mat44) == 64);
+static_assert(sizeof(float2x3) == sizeof(float)*2*3);
+
+BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){    
+    init_g("repo/intrinsics.ss");
+
 #if ALL_TESTS_ENABLED
 	JIT_FUNCTION(float (vec3*, vec3*), test_dot_f3);
 	JIT_FUNCTION(vec4 (mat44*, vec4*), test_mul_m44v4);
@@ -274,22 +279,23 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		for(int i = 0; i < 3; ++i)
 		{
-			BOOST_CHECK_CLOSE(ret0[i], ref0[i], 0.00001f);
-			BOOST_CHECK_CLOSE(ret1[i], ref1[i], 0.00001f);
-			BOOST_CHECK_CLOSE(ret2[i], ref2[i], 0.00001f);
-			BOOST_CHECK_CLOSE(ret3[i], ref3[i], 0.00001f);
-			BOOST_CHECK_CLOSE(ret4[i], ref4[i], 0.02000f);
-			BOOST_CHECK_CLOSE(ret5[i], ref5[i], 0.02000f);
-			BOOST_CHECK_CLOSE(ret6[i], ref6[i], 0.02000f);
-			BOOST_CHECK_CLOSE(ret7[i], ref7[i], 0.02000f);
-			BOOST_CHECK_CLOSE(ret8[i], ref8[i], 0.02000f);
-			BOOST_CHECK_CLOSE(ret9[i], ref9[i], 0.02000f);
-			BOOST_CHECK_CLOSE(ret10[i],ref10[i],0.02000f);
-			BOOST_CHECK_CLOSE(ret11[i],ref11[i],0.00001f);
-			BOOST_CHECK_CLOSE(ret12[i],ref12[i],0.00001f);
-			BOOST_CHECK_CLOSE(ret13[i],ref13[i],0.00001f);
+			BOOST_CHECK_CLOSE(ret0[i], ref0[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret1[i], ref1[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret2[i], ref2[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret3[i], ref3[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret4[i], ref4[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret5[i], ref5[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret6[i], ref6[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret7[i], ref7[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret8[i], ref8[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret9[i], ref9[i],  RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret10[i],ref10[i], RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret11[i],ref11[i], RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret12[i],ref12[i], RELATIVE_TORLERANCE_NORMAL);
+			BOOST_CHECK_CLOSE(ret13[i],ref13[i], RELATIVE_TORLERANCE_NORMAL);
 		}
 	}
+    
 	{
 		mat44 mat( mat44::identity() );
 		mat.data_[0][0] = 1.0f;
@@ -298,7 +304,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		mat.data_[0][3] = 1.0f;
 
 		for( int i = 0; i < 16; ++i){
-			((float*)(&mat))[i] = float(i);
+			((float*)(&mat))[i] = static_cast<float>(i);
 		}
 		mat44 tmpMat;
 		mat_mul( mat, mat_rotX(tmpMat, 0.2f ), mat );
@@ -306,26 +312,26 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		mat_mul( mat, mat_translate(tmpMat, 1.7f, -0.9f, 1.1f ), mat );
 		mat_mul( mat, mat_scale(tmpMat, 0.5f, 1.2f, 2.0f), mat );
 
-		vec4 rhs( 1.0f, 2.0f, 3.0f, 4.0f );
+		vec4 rhs2( 1.0f, 2.0f, 3.0f, 4.0f );
 
-		vec4 f = test_mul_m44v4(&mat, &rhs);
+		vec4 f = test_mul_m44v4(&mat, &rhs2);
 		vec4 refv;
-		eflib::transform( refv, mat, rhs );
+		eflib::transform(refv, mat, rhs2);
 
-		BOOST_CHECK_CLOSE( f[0], refv[0], 0.00001f );
-		BOOST_CHECK_CLOSE( f[1], refv[1], 0.00001f );
-		BOOST_CHECK_CLOSE( f[2], refv[2], 0.00001f );
-		BOOST_CHECK_CLOSE( f[3], refv[3], 0.00001f );
+		BOOST_CHECK_CLOSE(f[0], refv[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE(f[1], refv[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE(f[2], refv[2], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE(f[3], refv[3], RELATIVE_TORLERANCE_NORMAL);
 	}
 	{
 		float p = 123.456f;
-		BOOST_CHECK_CLOSE( fabsf(p), test_abs_f(p), 0.000001f );
+		BOOST_CHECK_CLOSE( fabsf(p), test_abs_f(p), 0.0001f );
 
 		float n = - p;
-		BOOST_CHECK_CLOSE( fabsf(n), test_abs_f(n), 0.000001f );
+		BOOST_CHECK_CLOSE( fabsf(n), test_abs_f(n), 0.0001f );
 
 		float z = 0.0f;
-		BOOST_CHECK_CLOSE( fabsf(z), test_abs_f(z), 0.000001f );
+		BOOST_CHECK_CLOSE( fabsf(z), test_abs_f(z), 0.0001f );
 	}
 	{
 		int p = 0x7fffffff;
@@ -341,22 +347,22 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float x;
 
 		x = -10.0f;
-		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+        BOOST_CHECK_CLOSE(expf(x), test_exp(x), RELATIVE_TORLERANCE_NORMAL);
 
 		x = -1.0f;
-		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), RELATIVE_TORLERANCE_NORMAL);
 
 		x = 0.0f;
-		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), RELATIVE_TORLERANCE_NORMAL);
 
 		x = 1.0f;
-		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), RELATIVE_TORLERANCE_NORMAL);
 
 		x = 10.0f;
-		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), RELATIVE_TORLERANCE_NORMAL);
 	}
 	{
-		float arr[12] =
+		float arr[] =
 		{
 			17.7f, 66.3f, 0.92f,
 			-88.7f, 8.6f, -0.22f,
@@ -389,19 +395,19 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				}
 				else
 				{
-					BOOST_CHECK_CLOSE( ref_v[i*4+j], ret.data_[i][j], 0.000001f );
+					BOOST_CHECK_CLOSE( ref_v[i*4+j], ret.data_[i][j], RELATIVE_TORLERANCE_NORMAL );
 				}
 			}
 		}
 	}
 	{
 		float f = 876.625f;
-		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );
+		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), RELATIVE_TORLERANCE_NORMAL);
 
 		vec2 v2( 1.7f, 986.27f );
 		vec2 sqrt_v2 = test_sqrt_f2( v2 );
-		BOOST_CHECK_CLOSE( sqrtf(v2[0]), sqrt_v2[0], 0.000001f );
-		BOOST_CHECK_CLOSE( sqrtf(v2[1]), sqrt_v2[1], 0.000001f );
+		BOOST_CHECK_CLOSE( sqrtf(v2[0]), sqrt_v2[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( sqrtf(v2[1]), sqrt_v2[1], RELATIVE_TORLERANCE_NORMAL);
 	}
 	{
 		vec3 v3_a(199.7f, -872.5f, 8.63f);
@@ -410,9 +416,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec3 cross_v3 = test_cross_prod(v3_a, v3_b);
 		vec3 ref_v3 = cross_prod3( v3_a, v3_b );
 
-		BOOST_CHECK_CLOSE( cross_v3[0], ref_v3[0], 0.000001f );
-		BOOST_CHECK_CLOSE( cross_v3[1], ref_v3[1], 0.000001f );
-		BOOST_CHECK_CLOSE( cross_v3[2], ref_v3[2], 0.000001f );
+		BOOST_CHECK_CLOSE( cross_v3[0], ref_v3[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( cross_v3[1], ref_v3[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( cross_v3[2], ref_v3[2], RELATIVE_TORLERANCE_NORMAL);
 	}
 	{
 		vec3 v0(227.5f, -0.33f, -76.4f);
@@ -433,19 +439,19 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec3  ret3 = test_rad_deg(v0);
 		vec2  ret4 = test_length( v2, v0.xyzy() );
 
-		BOOST_CHECK_CLOSE( ret0,	ref0,	 0.000001f );
-		BOOST_CHECK_CLOSE( ret1[0], ref1[0], 0.000001f );
-		BOOST_CHECK_CLOSE( ret1[1], ref1[1], 0.000001f );
-		BOOST_CHECK_CLOSE( ret1[2], ref1[2], 0.000001f );
-		BOOST_CHECK_CLOSE( ret1[3], ref1[3], 0.000001f );
-		BOOST_CHECK_CLOSE( ret2[0], ref2[0], 0.00001f );
-		BOOST_CHECK_CLOSE( ret2[1], ref2[1], 0.00001f );
-		BOOST_CHECK_CLOSE( ret2[2], ref2[2], 0.00001f );
-		BOOST_CHECK_CLOSE( ret3[0], ref3[0], 0.00001f );
-		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.00002f );
-		BOOST_CHECK_CLOSE( ret3[2], ref3[2], 0.000001f );
-		BOOST_CHECK_CLOSE( ret4[0], ref4[0], 0.00001f );
-		BOOST_CHECK_CLOSE( ret4[1], ref4[1], 0.00001f );
+		BOOST_CHECK_CLOSE( ret0,	ref0,	 RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ret1[0], ref1[0], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ret1[1], ref1[1], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ret1[2], ref1[2], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ret1[3], ref1[3], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ret2[0], ref2[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( ret2[1], ref2[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( ret2[2], ref2[2], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( ret3[0], ref3[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( ret3[1], ref3[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( ret3[2], ref3[2], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ret4[0], ref4[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( ret4[1], ref4[1], RELATIVE_TORLERANCE_NORMAL);
 	}
 	{
 		vec3 v0( 0.0f,  0.0f,  0.0f );
@@ -537,7 +543,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_log2.data_[i][j];	ref.f = fast_log2(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_log10.data_[i][j];	ref.f = log10f(arr0[i][j]);				BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 				ret.f = ret_rsqrt.data_[i][j];	ref.f = 1.0f/sqrtf(arr0[i][j]);			BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
-				ret.f = ret_rcp.data_[i][j];	ref.f = 1.0f / arr0[i][j];				BOOST_CHECK_CLOSE	     (ret.f, ref.f, 0.00001f);
+				ret.f = ret_rcp.data_[i][j];	ref.f = 1.0f / arr0[i][j];				BOOST_CHECK_CLOSE	     (ret.f, ref.f, RELATIVE_TORLERANCE_NORMAL);
 				ret.f = ret_pow.data_[i][j];	ref.f = powf(arr0[i][j], arr1[i][j]);	BOOST_CHECK_BITWISE_EQUAL(ret.u, ref.u);
 
 				// TODO: ldexp and exp2 are not followed HLSL spec. Should fix them later.
@@ -749,7 +755,14 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				BOOST_CHECK_EQUAL( boost::math::isnan(v[i][j]),		ret_nan.data_[i][j] != 0 );
 				BOOST_CHECK_EQUAL( boost::math::isinf(v[i][j]),		ret_inf.data_[i][j] != 0 );
 				BOOST_CHECK_EQUAL( boost::math::isfinite(v[i][j]),	ret_fin.data_[i][j] != 0 );
-				BOOST_CHECK_EQUAL( v[i][j] > 0.0f ? 1 : (v[i][j] < 0.0f ? -1 : 0), ret_sgn.data_[i][j] );
+                
+                int sign_truth = 0;
+                if (!std::isnan(v[i][j]))
+                {
+                    sign_truth = v[i][j] > 0.0f ? 1 : (v[i][j] < 0.0f ? -1 : 0);
+                }
+                int pos = i * 10 + j + 11;
+				BOOST_CHECK_EQUAL(sign_truth * pos, ret_sgn.data_[i][j] * pos);
 			}
 		}
 	}
@@ -760,13 +773,13 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec3 ret0 = test_frac_f3(v0);
 		vec3 ret1 = test_frac_f3(v1);
 
-		BOOST_CHECK_CLOSE(ret0[0], 0.0f, (0.00001f*fabsf(v0[0])/1.0f) );
-		BOOST_CHECK_CLOSE(ret0[1], 0.7f, (0.00001f*fabsf(v0[1])/0.7f) );
-		BOOST_CHECK_CLOSE(ret0[2], 0.0f, (0.00001f*fabsf(v0[2])/1.0f) );
+		BOOST_CHECK_CLOSE(ret0[0], 0.0f, (RELATIVE_TORLERANCE_NORMAL*fabsf(v0[0])/1.0f) );
+		BOOST_CHECK_CLOSE(ret0[1], 0.7f, (RELATIVE_TORLERANCE_NORMAL*fabsf(v0[1])/0.7f) );
+		BOOST_CHECK_CLOSE(ret0[2], 0.0f, (RELATIVE_TORLERANCE_NORMAL*fabsf(v0[2])/1.0f) );
 
-		BOOST_CHECK_CLOSE(ret1[0], 0.11f, 0.00001f*fabsf(v1[0])/0.11f);
-		BOOST_CHECK_CLOSE(ret1[1], 0.05f, 0.00001f*fabsf(v1[1])/0.05f);
-		BOOST_CHECK_CLOSE(ret1[2], 0.8f , 0.00001f*fabsf(v1[2])/0.8f );
+		BOOST_CHECK_CLOSE(ret1[0], 0.11f, RELATIVE_TORLERANCE_NORMAL*fabsf(v1[0])/0.11f);
+		BOOST_CHECK_CLOSE(ret1[1], 0.05f, RELATIVE_TORLERANCE_NORMAL*fabsf(v1[1])/0.05f);
+		BOOST_CHECK_CLOSE(ret1[2], 0.8f , RELATIVE_TORLERANCE_NORMAL*fabsf(v1[2])/0.8f );
 	}
 #endif
 }
@@ -828,11 +841,11 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	vec4 out_pos;
 	eflib::transform( out_pos, mat, pos );
 
-	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos[0], out_pos[0], 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos[1], out_pos[1], 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos[2], out_pos[2], 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos[3], out_pos[3], 0.0001f );
+	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( bout.pos[0], out_pos[0], RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( bout.pos[1], out_pos[1], RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( bout.pos[2], out_pos[2], RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( bout.pos[3], out_pos[3], RELATIVE_TORLERANCE_NORMAL );
 }
 
 #endif
@@ -912,9 +925,9 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	jit_function<float (int)> test_if;
 	function( test_if, "test_if" );
 
-	BOOST_CHECK_CLOSE( test_if(0), 1.0f, 0.00001f );
-	BOOST_CHECK_CLOSE( test_if(12), 0.0f, 0.00001f );
-	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, 0.00001f );
+	BOOST_CHECK_CLOSE( test_if(0), 1.0f,  RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( test_if(12), 0.0f, RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, RELATIVE_TORLERANCE_NORMAL );
 
 	jit_function<int(int, int)> test_for;
 	function( test_for, "test_for" );
@@ -1124,7 +1137,7 @@ BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 		{
 			for( int j = 0; j < 4; ++j )
 			{
-				BOOST_CHECK_CLOSE( -arr[i][j], ret.data_[i][j], 0.000001f );
+				BOOST_CHECK_CLOSE( -arr[i][j], ret.data_[i][j], RELATIVE_TORLERANCE_NORMAL);
 			}
 		}
 	}
@@ -1206,28 +1219,28 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(-7), 33 );
 
-	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(0), 0.0f, 0.000001f );
-	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(-20), -20.0f, 0.000001f );
-	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(17), 17.0f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(0), 0.0f, RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(-20), -20.0f, RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(17), 17.0f, RELATIVE_TORLERANCE_NORMAL);
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(0.0f), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(19.0f), 33 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(-7.0f), 33 );
 
-	BOOST_CHECK_CLOSE( test_op_add_cast( 33,  87.6f),  33+87.6f, 0.000001f );
-	BOOST_CHECK_CLOSE( test_op_add_cast(-33,  87.6f), -33+87.6f, 0.000001f );
-	BOOST_CHECK_CLOSE( test_op_add_cast( 33, -87.6f),  33-87.6f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_op_add_cast( 33,  87.6f),  33+87.6f, RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( test_op_add_cast(-33,  87.6f), -33+87.6f, RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( test_op_add_cast( 33, -87.6f),  33-87.6f, RELATIVE_TORLERANCE_NORMAL);
 
 	BOOST_CHECK_EQUAL( test_op_sub_cast( 122,  8645),  122-8645 );
 	BOOST_CHECK_EQUAL( test_op_sub_cast(-122,  8645), ((uint8_t)(-122))-8645 );
 	BOOST_CHECK_EQUAL( test_op_sub_cast( 122, -8645),  122+8645 );
 
-	BOOST_CHECK_CLOSE( test_sqrt_cast(0),	  0.0f,			   0.000001f );
-	BOOST_CHECK_CLOSE( test_sqrt_cast(17652), sqrtf(17652.0f), 0.000001f );
+	BOOST_CHECK_CLOSE( test_sqrt_cast(0),	  0.0f,            RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( test_sqrt_cast(17652), sqrtf(17652.0f), RELATIVE_TORLERANCE_NORMAL);
 
 	{
 		int2 xy(86, 99);
-		BOOST_CHECK_CLOSE( (float)86, test_imp_v1_s_cast(xy), 0.000001f );
+		BOOST_CHECK_CLOSE( (float)86, test_imp_v1_s_cast(xy), RELATIVE_TORLERANCE_NORMAL );
 	}
 
 	{
@@ -1406,9 +1419,9 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	fn( src, (void*)NULL, dst, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i][0], dst_data[i][0], 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i][1], dst_data[i][1], 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i][2], dst_data[i][2], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][0], dst_data[i][0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( dest_ref[i][1], dst_data[i][1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( dest_ref[i][2], dst_data[i][2], RELATIVE_TORLERANCE_NORMAL);
 	}
 
 	eflib::aligned_free( src_data );
@@ -1495,12 +1508,12 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out_data[i].out0[0], dest_ref[i].out0[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].out0[1], dest_ref[i].out0[1], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].out0[2], dest_ref[i].out0[2], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out0[0], dest_ref[i].out0[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].out0[1], dest_ref[i].out0[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].out0[2], dest_ref[i].out0[2], RELATIVE_TORLERANCE_NORMAL);
 
-		BOOST_CHECK_CLOSE( out_data[i].out1[0], dest_ref[i].out1[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].out1[1], dest_ref[i].out1[1], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out1[0], dest_ref[i].out1[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].out1[1], dest_ref[i].out1[1], RELATIVE_TORLERANCE_NORMAL);
 	}
 }
 #endif
@@ -1571,8 +1584,8 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out_data[i].out[0], ref_out[i][0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].out[1], ref_out[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out[0], ref_out[i][0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].out[1], ref_out[i][1], RELATIVE_TORLERANCE_NORMAL);
 	}
 }
 #endif
@@ -1673,16 +1686,16 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out_data[i].v0,    ref_out[i].v0,    0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v1[0], ref_out[i].v1[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v1[1], ref_out[i].v1[1], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v2[0], ref_out[i].v2[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v2[1], ref_out[i].v2[1], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v2[2], ref_out[i].v2[2], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v3[0], ref_out[i].v3[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v3[1], ref_out[i].v3[1], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v3[2], ref_out[i].v3[2], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i].v3[3], ref_out[i].v3[3], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].v0,    ref_out[i].v0,    RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v1[0], ref_out[i].v1[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v1[1], ref_out[i].v1[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v2[0], ref_out[i].v2[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v2[1], ref_out[i].v2[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v2[2], ref_out[i].v2[2], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v3[0], ref_out[i].v3[0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v3[1], ref_out[i].v3[1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v3[2], ref_out[i].v3[2], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i].v3[3], ref_out[i].v3[3], RELATIVE_TORLERANCE_NORMAL);
 	}
 }
 
@@ -1739,9 +1752,9 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 	fn(in, (void*)&psmpr, out, (void*)NULL);
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out_ref[i][0], out_data[i][0], 0.00001f );
-		BOOST_CHECK_CLOSE( out_ref[i][1], out_data[i][1], 0.00001f );
-		BOOST_CHECK_CLOSE( out_ref[i][2], out_data[i][2], 0.00001f );
+		BOOST_CHECK_CLOSE( out_ref[i][0], out_data[i][0], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_ref[i][1], out_data[i][1], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_ref[i][2], out_data[i][2], RELATIVE_TORLERANCE_NORMAL);
 	}
 }
 
@@ -1829,8 +1842,8 @@ BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], RELATIVE_TORLERANCE_NORMAL);
 	}
 }
 
@@ -1874,8 +1887,8 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
-		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], RELATIVE_TORLERANCE_NORMAL);
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], RELATIVE_TORLERANCE_NORMAL);
 	}
 }
 
@@ -1920,14 +1933,14 @@ BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
 	BOOST_CHECK_EQUAL( ref_v1[1], v1[1] );
 	BOOST_CHECK_EQUAL( ref_v1[2], v1[2] );
 
-	BOOST_CHECK_CLOSE( ref_v2[0], v2[0], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v2[1], v2[1], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v2[2], v2[2], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v2[0], v2[0], RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( ref_v2[1], v2[1], RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( ref_v2[2], v2[2], RELATIVE_TORLERANCE_NORMAL);
 
-	BOOST_CHECK_CLOSE( ref_v3[0], v3[0], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v3[1], v3[1], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v3[2], v3[2], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v3[3], v3[3], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3[0], v3[0], RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( ref_v3[1], v3[1], RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( ref_v3[2], v3[2], RELATIVE_TORLERANCE_NORMAL);
+	BOOST_CHECK_CLOSE( ref_v3[3], v3[3], RELATIVE_TORLERANCE_NORMAL);
 
 	return ;
 }
@@ -1971,10 +1984,10 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 	int3 ret_i = test_int_arith(vi);
 	int3 ret_zi = test_int_arith(zi);	// A special test for div and mod by zero.
 
-	BOOST_CHECK_CLOSE( ref_f[0], ret_f[0], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_f[1], ret_f[1], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_f[2], ret_f[2], 0.000001f );
-	BOOST_CHECK_CLOSE( ref_f[3], ret_f[3], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f[0], ret_f[0], RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( ref_f[1], ret_f[1], RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( ref_f[2], ret_f[2], RELATIVE_TORLERANCE_NORMAL );
+	BOOST_CHECK_CLOSE( ref_f[3], ret_f[3], RELATIVE_TORLERANCE_NORMAL );
 
 	BOOST_CHECK_EQUAL( ref_i[0], ret_i[0] );
 	BOOST_CHECK_EQUAL( ref_i[1], ret_i[1] );
@@ -2048,7 +2061,7 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 			for( int j = 0; j < 4; ++j ) {
 				float ref_v = 7.0f-y/(arr[i][j]*0.5f)+3.3f;
 				if( *(int*)(&ref_v) != *(int*)(&ret.data_[i][j]) ){
-					BOOST_CHECK_CLOSE( ret.data_[i][j], ref_v, 0.000001f );
+					BOOST_CHECK_CLOSE( ret.data_[i][j], ref_v, RELATIVE_TORLERANCE_NORMAL );
 				}
 			}
 		}
@@ -2150,7 +2163,7 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 		float ref_v[4] = {4.0f,6.0f,8.0f,10.0f};
 		for( int i = 0; i < 4; ++i )
 		{
-			BOOST_CHECK_CLOSE( ret.data_[i], ref_v[i], 0.000001f );
+			BOOST_CHECK_CLOSE( ret.data_[i], ref_v[i], RELATIVE_TORLERANCE_NORMAL );
 		}
 	}
 
@@ -2160,7 +2173,7 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 		float ret = test_vec_index(m34);
 		for( int i = 0; i < 4; ++i )
 		{
-			BOOST_CHECK_CLOSE( ret, 15.0f, 0.000001f );
+			BOOST_CHECK_CLOSE( ret, 15.0f, RELATIVE_TORLERANCE_NORMAL );
 		}
 	}
 }
@@ -2182,7 +2195,8 @@ struct array_vs_sin
 
 struct array_vs_bin
 {
-	mat44*	mat_arr;
+	int size;
+	mat44* mat_arr;
 };
 
 struct array_vs_bout
@@ -2217,14 +2231,16 @@ vec4 my_transform(mat44& m, vec4& v)
 
 BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 {
+	constexpr int MAT_ARRAY_SIZE = 50;
+
 	init_vs( "repo/array.svs" );
-	JIT_FUNCTION( void(array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn );
+	JIT_FUNCTION( void (array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn );
 
 	srand(887);
 
-	EFLIB_ALIGN(16) mat44 mats[50];
+	EFLIB_ALIGN(16) mat44 mats[MAT_ARRAY_SIZE];
 
-	for(int i = 0; i < 50; ++i)
+	for(int i = 0; i < MAT_ARRAY_SIZE; ++i)
 	{
 		for( mat44::iterator it = mats[i].begin(); it != mats[i].end(); ++it )
 		{
@@ -2232,34 +2248,42 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 		}
 	}
 
-	array_vertex_data data;
-	data.pos = vec4(-10.0f, 77.8f, 8.3f, -87.3f);
+	auto data = std::make_unique<array_vertex_data>();
+	data->pos = vec4(-10.0f, 77.8f, 8.3f, -87.3f);
 
 	array_vs_sin sin;
-	sin.ids = &data.ids;
-	sin.pos = &data.pos;
+	sin.ids = &data->ids;
+	sin.pos = &data->pos;
 
 	array_vs_bin bin;
-	bin.mat_arr = &mats[0];
-
+	bin.size = MAT_ARRAY_SIZE;
+	bin.mat_arr = mats;
+	
 	array_vs_bout bout;
+	
+	//	 static constexpr auto LOW_BITS_MASK = 0xFFFFFFFFULL;
+	//   printf("&sin:           %08llx\n", reinterpret_cast<std::uintptr_t>(&sin) & LOW_BITS_MASK);
+	//   printf("sin.ids:        %08llx\n", reinterpret_cast<std::uintptr_t>(sin.ids) & LOW_BITS_MASK);
+	//   printf("sin.pos:        %08llx\n", reinterpret_cast<std::uintptr_t>(sin.pos) & LOW_BITS_MASK);
+	//   printf("&bin:           %08llx\n", reinterpret_cast<std::uintptr_t>(&bin) & LOW_BITS_MASK);
+	//   printf("bin.mat_arr:    %08llx\n", reinterpret_cast<std::uintptr_t>(bin.mat_arr) & LOW_BITS_MASK);
 
 	for(int i = 0; i < 100; ++i)
 	{
-		data.ids = int4(rand()%50, rand()%50, rand()%50, rand()%50);
-		fn(&sin, &bin, (void*)NULL, &bout);
+		data->ids = int4(rand()%50, rand()%50, rand()%50, rand()%50);
+		fn(&sin, &bin, nullptr, &bout);
 
 		vec4 ref_v = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		for(int j = 0; j < 4; ++j)
 		{
-			ref_v += my_transform(mats[data.ids[j]], data.pos);
+			ref_v += my_transform(mats[data->ids[j]], data->pos);
 		}
 		ref_v /= 4.0f;
 
-		BOOST_CHECK_CLOSE( ref_v[0], bout.pos[0], 0.000001f );
-		BOOST_CHECK_CLOSE( ref_v[1], bout.pos[1], 0.000001f );
-		BOOST_CHECK_CLOSE( ref_v[2], bout.pos[2], 0.000001f );
-		BOOST_CHECK_CLOSE( ref_v[3], bout.pos[3], 0.000001f );
+		BOOST_CHECK_CLOSE( ref_v[0], bout.pos[0], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ref_v[1], bout.pos[1], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ref_v[2], bout.pos[2], RELATIVE_TORLERANCE_NORMAL );
+		BOOST_CHECK_CLOSE( ref_v[3], bout.pos[3], RELATIVE_TORLERANCE_NORMAL );
 	}
 }
 #endif
@@ -2298,4 +2322,5 @@ BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture)
 	BOOST_CHECK_EQUAL(out[3], new_out[3]);
 }
 #endif
-BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_AUTO_TEST_SUITE_END()

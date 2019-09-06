@@ -154,6 +154,7 @@ public:
 
 	llvm::Value* safe_idiv_imod_sv( llvm::Value*, llvm::Value*, binary_intrin_functor div_or_mod_sv );
 	llvm::Value* abs_sv(llvm::Value* v);
+	llvm::Value* sqrt_sv(llvm::Value* v);
 	llvm::Value* shrink( llvm::Value* vec, size_t vsize );
 	llvm::Value* extract_elements( llvm::Value* src, size_t start_pos, size_t length );
 	llvm::Value* insert_elements( llvm::Value* dst, llvm::Value* src, size_t start_pos );
