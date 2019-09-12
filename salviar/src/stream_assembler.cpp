@@ -24,7 +24,7 @@ using std::make_pair;
 
 BEGIN_NS_SALVIAR();
 
-vec4 get_vec4(format fmt, semantic_value const& sv, const void* data)
+vec4 get_vec4(format fmt, float default_wcomp, const void* data)
 {
 	assert( data );
 
@@ -32,16 +32,14 @@ vec4 get_vec4(format fmt, semantic_value const& sv, const void* data)
 
 	const float* floats = (const float*)data;
 
-	float w_comp = ( sv.get_system_value() == sv_position ) ? 1.0f : 0.0f;
-		
 	switch(fmt)
 	{
 		case format_r32_float:
-			return vec4(floats[0], 0.0f, 0.0f, w_comp);
+			return vec4(floats[0], 0.0f, 0.0f, default_wcomp);
 		case format_r32g32_float:
-			return vec4(floats[0], floats[1], 0.0f, w_comp);
+			return vec4(floats[0], floats[1], 0.0f, default_wcomp);
 		case format_r32g32b32_float:
-			return vec4(floats[0], floats[1], floats[2], w_comp);
+			return vec4(floats[0], floats[1], floats[2], default_wcomp);
 		case format_r32g32b32a32_float:
 			return vec4(floats[0], floats[1], floats[2], floats[3]);
 		case format_r32g32b32a32_sint:
@@ -67,8 +65,8 @@ void stream_assembler::update(render_state const* state)
 /// Only used by Cpp Vertex Shader
 void stream_assembler::update_register_map( std::unordered_map<semantic_value, size_t> const& reg_map )
 {
-	register_to_input_element_desc.clear();
-	register_to_input_element_desc.reserve( reg_map.size() );
+	reg_ied_extra_.clear();
+	reg_ied_extra_.reserve( reg_map.size() );
 
 	typedef pair<semantic_value, size_t> pair_t;
 	for(auto const& sv_reg_pair: reg_map)
@@ -77,13 +75,15 @@ void stream_assembler::update_register_map( std::unordered_map<semantic_value, s
 		
 		if(elem_desc == nullptr)
 		{
-			register_to_input_element_desc.clear();
+			reg_ied_extra_.clear();
 			return;
 		}
 
-		register_to_input_element_desc.push_back(
-			make_pair(sv_reg_pair.second, elem_desc) 
-			);
+		reg_ied_extra_.push_back(reg_ied_extra_t{
+			sv_reg_pair.second,
+			elem_desc,
+			semantic_value(elem_desc->semantic_name, elem_desc->semantic_index).default_wcomp_value()
+		});
 	}
 }
 
@@ -91,13 +91,13 @@ void stream_assembler::update_register_map( std::unordered_map<semantic_value, s
 void stream_assembler::fetch_vertex(vs_input& rv, size_t vert_index) const
 {
 	typedef tuple<size_t, input_element_desc const*, size_t> tuple_t;
-	for(auto const& reg_ied_pair: register_to_input_element_desc )
+	for(auto const& reg_ied_extra: reg_ied_extra_ )
 	{
-		auto reg_index	= reg_ied_pair.first;
-		auto desc		= reg_ied_pair.second;
+		auto reg_index	= reg_ied_extra.reg_id;
+		auto desc		= reg_ied_extra.desc;
 
 		void const* pdata = element_address(*desc, vert_index);
-		rv.attribute(reg_index) = get_vec4( desc->data_format, semantic_value(desc->semantic_name, desc->semantic_index), pdata);
+		rv.attribute(reg_index) = get_vec4( desc->data_format, reg_ied_extra.default_wcomp, pdata);
 	}
 }
 

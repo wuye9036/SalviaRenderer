@@ -157,6 +157,11 @@ public:
         return sv != sv_none || !name.empty();
     }
 
+	float default_wcomp_value() const
+	{
+		return sv == sv_position ? 1.0f : 0.0f;
+	}
+
 private:
     std::string		name;
     system_values	sv;
