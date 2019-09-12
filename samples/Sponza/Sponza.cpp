@@ -34,7 +34,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-#define SASL_VERTEX_SHADER_ENABLED
+#define SASL_VERTEX_SHADER_ENABLED 1
 
 char const* sponza_vs_code =
 "float4x4 wvpMatrix; \r\n"
@@ -192,7 +192,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-#ifdef SASL_VERTEX_SHADER_ENABLED
+#if defined(SASL_VERTEX_SHADER_ENABLED) && SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
 		sponza_sc = compile( sponza_vs_code, lang_vertex_shader );
 #endif
@@ -262,7 +262,7 @@ protected:
 		data_->renderer->set_rasterizer_state(rs_back);
 
 			// C++ vertex shader and SASL vertex shader are all available.
-#ifdef SASL_VERTEX_SHADER_ENABLED
+#if		defined(SASL_VERTEX_SHADER_ENABLED) && SASL_VERTEX_SHADER_ENABLED
 		data_->renderer->set_vertex_shader_code( sponza_sc );
 #else
 		pvs->set_constant( _T("wvpMatrix"), &wvp );

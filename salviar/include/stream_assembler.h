@@ -46,9 +46,13 @@ public:
 
 private:
 	// Used by Cpp Vertex Shader
-	std::vector<
-		std::pair<size_t, input_element_desc const*>
-	>							register_to_input_element_desc;
+	struct reg_ied_extra_t
+	{
+		size_t reg_id;
+		input_element_desc const* desc;
+		float default_wcomp;
+	};
+	std::vector<reg_ied_extra_t> reg_ied_extra_;
 
 	// Used by new shader unit
 	std::vector<stream_desc>	stream_descs_;
