@@ -2,7 +2,10 @@
 import os
 import sys
 import re
-import atexit, getopt, subprocess, multiprocessing
+import atexit
+import getopt
+import subprocess
+import multiprocessing
 
 from functools import *
 from blibs import *
@@ -14,9 +17,11 @@ from blibs.deps import *
 
 RESOURCE_COMMIT = "f18fc82afd6ca2f64e4a6eac9275553bc47d42a1"
 
+
 def guarded_rmtree(path):
     if os.path.isdir(path):
         shutil.rmtree(path)
+
 
 def make_bjam(prj):
     assert isinstance(prj, project)
@@ -32,9 +37,7 @@ def make_bjam(prj):
         return True
 
     customized_toolset_dir = prj.customized_toolset_dir()
-    env = os.environ.copy()
-    envvar_separator = None
-    bootstrap_script = None
+    env_vars = os.environ.copy()
     if systems.current() == systems.win32:
         envvar_separator = ';'
         bootstrap_script = "bootstrap.bat"
@@ -43,10 +46,10 @@ def make_bjam(prj):
         bootstrap_script = "./bootstrap.sh"
         
     if customized_toolset_dir:
-        env['PATH'] = "%s%s%s" % (env['PATH'], envvar_separator, customized_toolset_dir)
+        env_vars['PATH'] = "%s%s%s" % (env_vars['PATH'], envvar_separator, customized_toolset_dir)
         
     try:
-        subprocess.call(bootstrap_script, env=env)
+        subprocess.call(bootstrap_script, env=env_vars)
     except:
         os.chdir(old_dir)
         report_error("Unknown error occurred when building bjam.")
@@ -57,6 +60,7 @@ def make_bjam(prj):
 
     os.chdir(old_dir)
     return True
+
 
 def clean_boost(proj):
     src = proj.boost_root()
@@ -73,11 +77,12 @@ def clean_boost(proj):
     os.chdir(proj.source_root())
     guarded_rmtree(proj.boost_stage())
 
+
 def make_boost(proj):
     src = proj.boost_root()
     stage = proj.boost_stage()
     
-    #Get boost build command
+    # Get boost build command
     # Add configs
     libs = ["test", "wave", "program_options", "locale"]
     address_model = 'address-model=%d' % proj.arch().bits()
@@ -89,7 +94,7 @@ def make_boost(proj):
         defs = ["_CRT_SECURE_NO_DEPRECATE", "_SCL_SECURE_NO_DEPRECATE"]
         cxxflags = ["-wd4819", "-wd4910", "-wd4244", "-wd4996"]
         
-    #bjam toolset stagedir address-model defs cxxflags libs options
+    # bjam toolset stagedir address-model defs cxxflags libs options
     bjam_executable = None
     if systems.current() == systems.win32:
         bjam_executable = 'bjam'
@@ -97,7 +102,8 @@ def make_boost(proj):
         bjam_executable = './bjam'
     else:
         report_error("Unsupported OS.")
-    #configs to cmd
+
+    # configs to cmd
     libs_cmd = ["--with-%s" % lib for lib in libs]
     defs_cmd = []
     if len(defs) > 0:
@@ -113,9 +119,9 @@ def make_boost(proj):
                 + defs_cmd + cxxflags_cmd + libs_cmd + options + proj.boost_configs()
     report_info('Executing: %s' % boost_cmd)
 
-    env = os.environ
+    env_vars = os.environ
     if not proj.customized_toolset_dir() is None:
-        env = add_binpath(os.environ, [proj.customized_toolset_dir()])
+        env_vars = add_binpath(os.environ, [proj.customized_toolset_dir()])
 
     boost_build_bat = batch_command(src)
     if proj.toolset().short_compiler_name() == "vc":
@@ -124,15 +130,17 @@ def make_boost(proj):
         boost_build_bat.execute(keep_bat=False)
     else:
         os.chdir(src)
-        if subprocess.call(boost_cmd, env=env, stdout = sys.stdout) != 0:
+        if subprocess.call(boost_cmd, env=env_vars, stdout = sys.stdout) != 0:
             report_error("Boost build failed.")
         os.chdir(proj.source_root())
     report_info("Boost build done.")
     return True
-    
+
+
 def clean_llvm(proj):
     guarded_rmtree(proj.llvm_build())
     guarded_rmtree(proj.llvm_install())
+
 
 def config_and_make_cmake_project(project_name, additional_params, source_dir, build_dir, install_dir, proj):
     if additional_params is None:
@@ -188,7 +196,8 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
             report_error("%s make failed." % project_name)
     else:
         report_error("Unsupported toolset or OS.")
-    
+
+
 def config_and_make_llvm(proj):
     # Add definitions here
     configuration = {
@@ -206,16 +215,20 @@ def config_and_make_llvm(proj):
     }
     config_and_make_cmake_project('LLVM', configuration, proj.llvm_root(), proj.llvm_build(), proj.llvm_install(), proj)
 
+
 def config_and_make_freeimage(proj):
     config_and_make_cmake_project('FreeImage', None, proj.freeimage_root(), proj.freeimage_build(), proj.freeimage_install(), proj)
-    
+
+
 def config_and_make_freetype(proj):
     config_and_make_cmake_project('FreeType', None, proj.freetype_root(), proj.freetype_build(), proj.freetype_install(), proj)
-    
+
+
 def clean_salvia(proj):
     guarded_rmtree(proj.salvia_build())
     guarded_rmtree(proj.salvia_lib())
     guarded_rmtree(proj.salvia_bin())
+
 
 def config_and_make_salvia(proj):
     defs = dict()
@@ -235,6 +248,7 @@ def config_and_make_salvia(proj):
         defs["SALVIA_FREETYPE_DIR"] = ("PATH", proj.freetype_install())
     defs["SALVIA_BUILD_WITH_DIRECTX"] = ("BOOL", "TRUE" if proj.directx() else "FALSE")
     config_and_make_cmake_project('SALVIA', defs, proj.source_root(), proj.salvia_build(), None, proj)
+
 
 def install_prebuild_binaries(proj):
     report_info("Installing dependencies ...")
@@ -288,6 +302,7 @@ def install_prebuild_binaries(proj):
     for f in need_copy:
         copy_newer(f, proj.salvia_bin())
 
+
 def clean_all(proj):
     print('clean Boost ...')
     clean_boost(proj)
@@ -297,7 +312,8 @@ def clean_all(proj):
     clean_salvia(proj)
     pass
 
-def build(proj_props, cleanBuild):
+
+def build(proj_props, is_clean_build: bool):
     proj = project(proj_props, os.getcwd())
     
     inst = installer(RESOURCE_COMMIT, proj.source_root())
@@ -307,7 +323,9 @@ def build(proj_props, cleanBuild):
     proj.check()
 
     make_bjam(proj)
-    # if cleanBuild: clean_all(proj)
+    if is_clean_build:
+        clean_all(proj)
+
     make_boost(proj)
     config_and_make_freetype(proj)
     config_and_make_freeimage(proj)
@@ -316,7 +334,8 @@ def build(proj_props, cleanBuild):
 
     install_prebuild_binaries(proj)
 
-if __name__ == "__main__":
+
+def _main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "c", ['clean'])
     except getopt.GetoptError:
@@ -349,7 +368,10 @@ if __name__ == "__main__":
         print("[E] Salvia built failed.")
         os.system("pause")
         sys.exit(1)
-    
+
     report_info("Salvia building done.")
     os.system("pause")
-    
+
+
+if __name__ == "__main__":
+    _main()

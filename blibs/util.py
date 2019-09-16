@@ -1,8 +1,31 @@
-import sys, os, hashlib, datetime
+import os
+import hashlib
+import datetime
 from . import env
 
+
+class scoped_cd:
+	def __init__(self, cd: str):
+		self._new_cwd = cd
+		self._saved_cwd = os.getcwd()
+
+	def __enter__(self):
+		os.chdir(self._new_cwd)
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		os.chdir(self._saved_cwd)
+
+	@property
+	def new_cwd(self):
+		return self._new_cwd
+
+	@property
+	def saved_cwd(self):
+		return self._saved_cwd
+
+
 class batch_command:
-	def __init__( self, working_dir, target_sys = env.systems.current() ):
+	def __init__( self, working_dir, target_sys=env.systems.current()):
 		self.dir_ = working_dir
 		self.commands_ = []
 		
@@ -30,7 +53,7 @@ class batch_command:
 	def add_execmd_with_error_exit(self, cmd):
 		self.commands_ += [self.error_exit_template_ % cmd]
 	
-	def execute(self, keep_bat = False):
+	def execute(self, keep_bat=False):
 		tmp_gen = hashlib.md5()
 		dt = datetime.datetime.now()
 		tmp_gen.update( str(dt).encode('utf-8') )
@@ -46,6 +69,7 @@ class batch_command:
 		os.chdir(curdir)
 		return ret_code
 
+
 def executable_file_name(base_name, target_sys):
 	if target_sys == env.systems.win32:
 		return base_name + ".exe"
@@ -53,14 +77,18 @@ def executable_file_name(base_name, target_sys):
 		return base_name
 	report_error("Unknown system: %s" % target_sys)
 
+
 def report_error(message):
 	raise building_error(message)
+
 
 def report_info(message):
 	print("[I] %s" % message)
 
+
 def report_warning(message):
 	print("[W] %s" % message)
+
 
 class building_error(BaseException):
 	def __init__(self, error_desc):

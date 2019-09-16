@@ -14,6 +14,7 @@
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/predef.h>
 #include <eflib/include/platform/boost_end.h>
 
 #if defined(EFLIB_WINDOWS)
@@ -28,6 +29,23 @@ using namespace salviax;
 using namespace boost::property_tree;
 
 BEGIN_NS_SALVIAU();
+
+std::string compiler_name()
+{
+	std::stringstream s;
+#if defined(BOOST_COMP_MSVC)
+	s << "msvc_" << BOOST_COMP_MSVC;
+#elif defined(BOOST_COMP_GUNC)
+	s << "gcc_" << BOOST_COMP_MSVC;
+#elif defined(BOOST_COMP_CLANG)
+	s << "clang_" << BOOST_COMP_MSVC;
+#elif defined(BOOST_COMP_INTEL)
+	s << "intel_" << BOOST_COMP_MSVC;
+#else
+#	error "Unknown compiler."
+#endif
+	return s.str();
+}
 
 sample_app::sample_app(std::string const& app_name):
 	data_(new sample_app_data)
@@ -526,9 +544,12 @@ void sample_app::save_profiling_result()
 
 	auto root = make_ptree(&data_->prof, OUTPUT_PROFILER_LEVEL);
 
+	// Metadata
+	root.put("compiler", compiler_name());
+
 	// Statistic
 	root.put("frames", data_->frame_count);
-
+	
 	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.cinvocations			;}, root, "async.pipeline_stat.cinvocations");
 	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.cprimitives			;}, root, "async.pipeline_stat.cprimitives");
 	reduce_and_output<uint64_t>(data_->frame_profs.begin(), data_->frame_profs.end(), [](frame_data const& v) { return v.pipeline_stat.ia_primitives		;}, root, "async.pipeline_stat.ia_primitives");
