@@ -7,8 +7,8 @@ from .diagnostic import report_error
 
 class arch(enum.Enum):
     unknown = 0
-    x86 = 32
-    x64 = 64
+    x86 = (32, "x86")
+    x64 = (64, "x64")
 
     @staticmethod
     def from_machine(machine):
@@ -17,9 +17,14 @@ class arch(enum.Enum):
         if machine == 'x64' or machine == 'AMD64':
             return arch.x64
         return arch.unknown
-    
+
+    @property
     def bits(self):
-        return self.value
+        return self.value[0]
+
+    @property
+    def name(self):
+        return self.value[1]
 
     @staticmethod
     def current():
@@ -38,6 +43,10 @@ class systems(enum.Enum):
         if platform.system() == 'Linux':
             return systems.linux
         return systems.unknown
+
+    @property
+    def name(self):
+        return self.value
 
 
 class toolset:

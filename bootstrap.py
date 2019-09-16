@@ -9,7 +9,7 @@ import shutil
 
 from blibs import deps
 from blibs.project import project
-from blibs.diagnostic import report_info, report_error
+from blibs.diagnostic import report_info, report_error, build_error
 from blibs.util import executable_file_name, batch_command, scoped_cd
 from blibs.copy import copy_newer
 from blibs.env import systems, add_binpath
@@ -79,7 +79,7 @@ def make_boost(proj):
     # Get boost build command
     # Add configs
     libs = ["test", "wave", "program_options", "locale"]
-    address_model = 'address-model=%d' % proj.arch().bits()
+    address_model = f'address-model={proj.arch().bits}'
     options = ["--build-dir=./", "--hash", "link=shared", "runtime-link=shared", "threading=multi", "stage"]
     current_toolset = proj.toolset()
     defs = []
@@ -143,7 +143,7 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
         conf_params = additional_params.copy()
     if proj.toolset().short_compiler_name() != "vc":
         conf_params["CMAKE_BUILD_TYPE"] = ("STRING", proj.config_name())
-        conf_params["CMAKE_INFO_ARCH_NAME"] = ("STRING", str(proj.arch()))
+        conf_params["CMAKE_INFO_ARCH_NAME"] = ("STRING", proj.arch().name)
     if install_dir is not None:
         conf_params["CMAKE_INSTALL_PREFIX"] = ("PATH", install_dir)
     
@@ -166,7 +166,7 @@ def config_and_make_cmake_project(project_name, additional_params, source_dir, b
         else:
             report_error("Unsupported OS.")
     conf_cmd.add_execmd_with_error_exit(
-        f'"{proj.cmake_exe()}" -G "{proj.generator()}" -A "{proj.arch()}" {params_cmd} {source_dir}'
+        f'"{proj.cmake_exe()}" -G "{proj.generator()}" -A "{proj.arch().name}" {params_cmd} {source_dir}'
     )
     
     if conf_cmd.execute() != 0:
@@ -318,8 +318,8 @@ def clean_all(proj):
     pass
 
 
-def build(proj_props, is_clean_build: bool):
-    proj = project(proj_props, os.getcwd())
+def build(args):
+    proj = project(args, os.getcwd())
     
     inst = deps.installer(RESOURCE_COMMIT, proj.source_root())
     inst.update_all()
@@ -327,15 +327,21 @@ def build(proj_props, is_clean_build: bool):
     proj.print_props()
     proj.check()
 
-    make_bjam(proj)
-    if is_clean_build:
-        clean_all(proj)
+    if proj.is_target_project_enabled('boost'):
+        make_bjam(proj)
+        make_boost(proj)
 
-    make_boost(proj)
-    config_and_make_freetype(proj)
-    config_and_make_freeimage(proj)
-    config_and_make_llvm(proj)
-    config_and_make_salvia(proj)
+    if proj.is_target_project_enabled('freetype'):
+        config_and_make_freetype(proj)
+
+    if proj.is_target_project_enabled('freeimage'):
+        config_and_make_freeimage(proj)
+
+    if proj.is_target_project_enabled('llvm'):
+        config_and_make_llvm(proj)
+
+    if proj.is_target_project_enabled('salvia'):
+        config_and_make_salvia(proj)
 
     install_prebuild_binaries(proj)
 
@@ -347,7 +353,7 @@ def _main():
 
     parser_build = subparsers.add_parser("build")
     parser_build.add_argument(
-        "targets", choices=["freetype freeimage boost llvm salvia all"], metavar='TARGETS', type=str, nargs='+',
+        "targets", metavar='TARGETS', type=str, nargs='+',
         help="Specify build targets. "
              "Available targets are: freetype freeimage boost llvm salvia all. "
              "if no target is specified, script just outputs environment variables."
@@ -364,12 +370,14 @@ def _main():
         "--toolset-dir", dest="toolset_dir", type=str, required=True, help="Please see BUILD_README.")
     parser_build.add_argument(
         "--build-config", choices=['Debug', 'RelWithDebInfo'], dest="build_config", type=str, required=True)
-    parser_build.add_argument("--cmake", metavar="CMAKE_EXECUTABLE", type=str, required=True, help="Path of CMake executable.")
+    parser_build.add_argument(
+        "--cmake", metavar="CMAKE_EXECUTABLE", type=str, required=True, help="Path of CMake executable.")
 
     parser_benchmark = subparsers.add_parser("benchmark")
-    parser_benchmark.add_argument("--git", metavar="GIT_EXECUTABLE", type=str, required=True, help="Path of git executable.")
     parser_benchmark.add_argument(
-        "--install-root", dest="install_root", type=str, required=True, help="Folder path for placing binaries.")
+        "--git", metavar="GIT_EXECUTABLE", type=str, required=True, help="Path of git executable.")
+    parser_benchmark.add_argument(
+        "--binary-folder", dest="binary_folder", type=str, required=True, help="Folder path for placing binaries.")
 
     subparsers.add_parser("clean")
 
@@ -382,31 +390,17 @@ def _main():
         clean_all(proj)
     elif args.command == "build":
         report_info("Building ...")
+        try:
+            build(args)
+            report_info("Salvia building done.")
+        except build_error as err:
+            print("[E] " + err.message())
+            print("[E] Salvia built failed.")
+            sys.exit(1)
     elif args.command == "benchmark":
         report_info("Benchmarking ...")
     else:
         report_error(f"Command <{args.command}> is unknown..")
-
-    # report_info("Salvia building start.")
-    # # Load Project
-    # prj_props = __import__("proj")
-    #
-    #
-    #     if opt == "-c" or opt == "--clean":
-    #
-    #         os.system("pause")
-    #         sys.exit(0)
-    #
-    # try:
-    #     build(prj_props, False)
-    # except build_error as err:
-    #     print("[E] " + err.message())
-    #     print("[E] Salvia built failed.")
-    #     os.system("pause")
-    #     sys.exit(1)
-    #
-    # report_info("Salvia building done.")
-    # os.system("pause")
 
 
 if __name__ == "__main__":
