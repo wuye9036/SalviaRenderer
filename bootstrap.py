@@ -377,7 +377,10 @@ def _main():
     parser_benchmark.add_argument(
         "--git", metavar="GIT_EXECUTABLE", type=str, required=True, help="Path of git executable.")
     parser_benchmark.add_argument(
-        "--binary-folder", dest="binary_folder", type=str, required=True, help="Folder path for placing binaries.")
+        "--binary-folder", dest="binary_folder", type=str, required=True, help="Folder of binaries.")
+    parser_benchmark.add_argument(
+        "--changes", dest="change_desc", type=str, help="Description for un-commit changes."
+    )
 
     subparsers.add_parser("clean")
 
