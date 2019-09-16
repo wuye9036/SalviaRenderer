@@ -1,14 +1,17 @@
 import os
 import platform
 import subprocess
-from . import util
+import enum
+from .diagnostic import report_error
 
-class arch:
-    def __init__(self, tag):
-        self.__tag = tag
+
+class arch(enum.Enum):
+    unknown = 0
+    x86 = 32
+    x64 = 64
 
     @staticmethod
-    def from_machine( machine ):
+    def from_machine(machine):
         if machine == 'x86' or machine == 'i386':
             return arch.x86
         if machine == 'x64' or machine == 'AMD64':
@@ -16,32 +19,17 @@ class arch:
         return arch.unknown
     
     def bits(self):
-        if self == arch.x86:
-            return 32
-        if self == arch.x64:
-            return 64
-        return 0
+        return self.value
 
     @staticmethod
     def current():
-        return arch.from_machine( platform.machine() )
-
-    def __str__(self):
-        if self == arch.x86:
-            return 'x86'
-        if self == arch.x64:
-            return 'x64'
-        return 'unknown'
+        return arch.from_machine(platform.machine())
 
 
-arch.unknown = arch('arch.unknown')
-arch.x86 = arch('arch.x86')
-arch.x64 = arch('arch.x86-64')
-
-
-class systems:
-    def __init__(self, tag):
-        self.__tag = tag
+class systems(enum.Enum):
+    unknown = 'unknown'
+    win32 = 'nt'
+    linux = 'linux'
 
     @staticmethod
     def current():
@@ -50,18 +38,6 @@ class systems:
         if platform.system() == 'Linux':
             return systems.linux
         return systems.unknown
-
-    def __str__(self):
-        if self == systems.win32:
-            return 'nt'
-        if self == systems.linux:
-            return 'linux'
-        return 'unknown'
-
-
-systems.unknown = systems('system.unknown')
-systems.win32 = systems('system.win32')
-systems.linux = systems('system.linux')
 
 
 class toolset:
@@ -184,14 +160,14 @@ def add_binpath(env, dirs):
 
 def detect_vs_installer():
     if systems.current() != systems.win32:
-        util.report_error("Visual Studio Installer detection only works on Windows OS.")
+        report_error("Visual Studio Installer detection only works on Windows OS.")
     vsJson = subprocess.check_output([r"blibs\vswhere.exe", "-all", "-format", "json"])
     print(vsJson)
 
 
 def windows_kit_dirs():
     if systems.current() != systems.win32:
-        util.report_error("Windows Kits only works on windows system.")
+        report_error("Windows Kits only works on windows system.")
 
     close_key = None
 
@@ -220,10 +196,10 @@ def windows_kit_dirs():
     except ImportError as e:
         if close_key:
             close_key()
-        util.report_error("_winreg library is not existed in Python on Win32 platform.")
+        report_error("_winreg library is not existed in Python on Win32 platform.")
         
     except WindowsError as e:
         if close_key:
             close_key()
-        util.report_error('Windows error occurs: "%s" when reading Windows Kits reg.' % e.strerror)
+        report_error('Windows error occurs: "%s" when reading Windows Kits reg.' % e.strerror)
 

@@ -2,6 +2,7 @@ import os
 import hashlib
 import datetime
 from . import env
+from .diagnostic import report_error
 
 
 class scoped_cd:
@@ -25,7 +26,7 @@ class scoped_cd:
 
 
 class batch_command:
-	def __init__( self, working_dir, target_sys=env.systems.current()):
+	def __init__(self, working_dir, target_sys=env.systems.current()):
 		self.dir_ = working_dir
 		self.commands_ = []
 		
@@ -57,16 +58,16 @@ class batch_command:
 		tmp_gen = hashlib.md5()
 		dt = datetime.datetime.now()
 		tmp_gen.update( str(dt).encode('utf-8') )
-		batch_fname = tmp_gen.hexdigest() + self.file_suffix_
-		curdir = os.path.abspath(os.curdir)
+		batch_file_name = tmp_gen.hexdigest() + self.file_suffix_
+		cur_dir = os.path.abspath(os.curdir)
 		os.chdir(self.dir_)
-		batch_f = open(batch_fname, "w")
-		batch_f.writelines( [cmd_line + "\n" for cmd_line in self.commands_] )
+		batch_f = open(batch_file_name, "w")
+		batch_f.writelines([cmd_line + "\n" for cmd_line in self.commands_])
 		batch_f.close()
-		ret_code = os.system(self.execute_template_ % batch_fname)
+		ret_code = os.system(self.execute_template_ % batch_file_name)
 		if not keep_bat:
-			os.remove(batch_fname)
-		os.chdir(curdir)
+			os.remove(batch_file_name)
+		os.chdir(cur_dir)
 		return ret_code
 
 
@@ -78,21 +79,4 @@ def executable_file_name(base_name, target_sys):
 	report_error("Unknown system: %s" % target_sys)
 
 
-def report_error(message):
-	raise building_error(message)
 
-
-def report_info(message):
-	print("[I] %s" % message)
-
-
-def report_warning(message):
-	print("[W] %s" % message)
-
-
-class building_error(BaseException):
-	def __init__(self, error_desc):
-		self.error_desc = error_desc
-
-	def message(self):
-		return self.error_desc
