@@ -4,8 +4,7 @@ import os
 import platform
 import subprocess
 
-from . import cpuinfo
-from . import diagnostic
+from . import cpuinfo, util, diagnostic
 
 
 class benchmark_runner:
