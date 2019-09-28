@@ -379,7 +379,7 @@ def _main():
     parser_benchmark.add_argument(
         "--binary-folder", dest="binary_folder", type=str, required=True, help="Folder of binaries.")
     parser_benchmark.add_argument(
-        "--change-desc", dest="change_desc", type=str, help="Description for un-commit changes."
+        "--change-desc", dest="change_desc", type=str, default="", help="Description for un-commit changes."
     )
 
     subparsers.add_parser("clean")

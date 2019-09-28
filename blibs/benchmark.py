@@ -29,6 +29,9 @@ class benchmark_runner:
             status = subprocess.check_output([self._git_path, "status"])
             git_commit = subprocess.check_output([self._git_path, "rev-parse", "HEAD"])
 
+            status = status.decode("utf-8")
+            git_commit = git_commit.decode("utf-8")
+            
         has_changed_files = False
         for line in status.split('\n'):
             if line.startswith("Changes to be committed:") or line.startswith("Changes not staged for commit"):
@@ -73,7 +76,7 @@ class benchmark_runner:
 
         return results
 
-    def run_all(self, changes_from_head):
+    def run_all(self, changes_from_head: str):
         BENCHMARKS = [
             "Sponza",
             "PartOfSponza",
