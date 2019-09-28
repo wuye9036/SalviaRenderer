@@ -1,19 +1,19 @@
 ﻿#!/usr/bin/env python
-import os
-import sys
-import subprocess
-import multiprocessing
 import argparse
 import functools
+import multiprocessing
+import os
 import shutil
+import subprocess
+import sys
 
 from blibs import deps
-from blibs.project import project
-from blibs.diagnostic import report_info, report_error, build_error
-from blibs.util import executable_file_name, batch_command, scoped_cd
+from blibs.benchmark import benchmark_runner
 from blibs.copy import copy_newer
-from blibs.env import systems, add_binpath
-
+from blibs.diagnostic import build_error, report_error, report_info
+from blibs.env import add_binpath, systems
+from blibs.project import project
+from blibs.util import batch_command, executable_file_name, scoped_cd
 
 RESOURCE_COMMIT = "f18fc82afd6ca2f64e4a6eac9275553bc47d42a1"
 
@@ -379,7 +379,7 @@ def _main():
     parser_benchmark.add_argument(
         "--binary-folder", dest="binary_folder", type=str, required=True, help="Folder of binaries.")
     parser_benchmark.add_argument(
-        "--changes", dest="change_desc", type=str, help="Description for un-commit changes."
+        "--change-desc", dest="change_desc", type=str, help="Description for un-commit changes."
     )
 
     subparsers.add_parser("clean")
@@ -402,6 +402,9 @@ def _main():
             sys.exit(1)
     elif args.command == "benchmark":
         report_info("Benchmarking ...")
+        source_root_dir = os.path.dirname(os.path.abspath(__file__))
+        bm_runner = benchmark_runner(source_root_dir, args.binary_folder, args.git)
+        bm_runner.run_all(args.change_desc)
     else:
         report_error(f"Command <{args.command}> is unknown..")
 

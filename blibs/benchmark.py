@@ -1,15 +1,15 @@
-import platform
+import datetime
 import json
 import os
+import platform
 import subprocess
-import datetime
-from . import cpuinfo
-from . import util
+
+from . import cpuinfo, util
 
 
 class benchmark_runner:
-    def __init__(self, root_dir, install_dir, git_path):
-        self._root_dir = root_dir
+    def __init__(self, source_root_dir, install_dir, git_path):
+        self._root_dir = source_root_dir
         self._install_dir = install_dir
         self._git_path = git_path
 
