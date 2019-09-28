@@ -120,13 +120,13 @@ class benchmark_runner:
                 "results": None
             }
 
-        util.report_info()
         diagnostic.report_info("Running info:")
-        for k, v in task_result.items:
-            if v is None or len(v) == 0:
+        for k, v in task_result.items():
+            if v is None:
                 continue
-            else:
-                diagnostic.report_info(" -{k}: {v}")
+            if isinstance(v, str) and len(v) == 0:
+                continue
+            diagnostic.report_info(f" - {k}: {str(v)}")
         
         results = {
             benchmark_name: self.run_single(benchmark_name, REPEAT_COUNT)
