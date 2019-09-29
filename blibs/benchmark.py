@@ -4,6 +4,7 @@ import os
 import platform
 import subprocess
 
+from dateutil import tz
 from . import cpuinfo, util, diagnostic
 
 
@@ -41,19 +42,20 @@ class benchmark_runner:
         return git_commit, has_changed_files
 
     def _execute_benchmark(self, benchmark_name):
-        exe_file_relative_path = self._exe_relative_path(benchmark_name)
+        exe_file_relative_path = benchmark_runner._exe_relative_path(benchmark_name)
         try:
             with util.scoped_cd(self._binary_dir):
                 _ = subprocess.check_output([exe_file_relative_path, "-m", "b"])
             return True
-        except OSError as e:
+        except OSError:
             return False
 
-    def _exe_relative_path(self, benchmark_name: str):
+    @staticmethod
+    def _exe_relative_path(benchmark_name: str):
         return f"{benchmark_name}.exe"
 
     def _exe_full_path(self, benchmark_name):
-        exe_file_path = os.path.join(self._binary_dir, _exe_relative_path(benchmark_name))
+        exe_file_path = os.path.join(self._binary_dir, benchmark_runner._exe_relative_path(benchmark_name))
         return exe_file_path
 
     def _result_full_path(self, benchmark_name):
@@ -114,7 +116,7 @@ class benchmark_runner:
 
         task_result = \
             {
-                "date_time": start_time,
+                "date_time": datetime.datetime.now().astimezone(tz.tzlocal()).isoformat(),
                 "end_time": None,
                 "repeat_count": REPEAT_COUNT,
                 "node": platform.node(),
@@ -138,16 +140,20 @@ class benchmark_runner:
             for benchmark_name in BENCHMARKS
         }
 
+        diagnostic.report_info("Benchmark running done. Generating json ...")
         task_result.update({
-            "end_time": datetime.datetime.now(),
+            "end_time": datetime.datetime.now().astimezone(tz.tzlocal()).isoformat(),
             "results": results
         })
 
+        diagnostic.report_info("Dumping performance data ...")
         result_one_line_json = json.dumps(task_result)
 
         with open(BENCHMARK_DATABASE_PATH, "a", encoding="utf-8") as db_file:
             db_file.write(result_one_line_json)
             db_file.write("\n")
+
+        diagnostic.report_info("Done.")
 
 
 def generate_csv_report():
