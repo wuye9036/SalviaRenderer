@@ -381,6 +381,9 @@ def _main():
     parser_benchmark.add_argument(
         "--change-desc", dest="change_desc", type=str, default="", help="Description for un-commit changes."
     )
+    parser_benchmark.add_argument(
+        "--repeat", type=int, default=16, help="Repeat count for each benchmark."
+    )
 
     subparsers.add_parser("clean")
 
@@ -404,7 +407,7 @@ def _main():
         report_info("Benchmarking ...")
         source_root_dir = os.path.dirname(os.path.abspath(__file__))
         bm_runner = benchmark_runner(source_root_dir, args.binary_folder, args.git)
-        bm_runner.run_all(args.change_desc)
+        bm_runner.run_all(args.change_desc, args.repeat)
     else:
         report_error(f"Command <{args.command}> is unknown..")
 

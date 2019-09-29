@@ -73,7 +73,11 @@ class benchmark_runner:
             if not success:
                 raise NotImplementedError
             if not os.path.isfile(result_file_path):
-                raise NotImplementedError
+                diagnostic.report_warning(
+                    f"Benchmark was completed successful, but cannot find benchmark result <{result_file_path}>."
+                    f" Will skip remaining round of benchmark <{benchmark_name}>."
+                    )
+                break
             diagnostic.report_info(f"Done. Collecting data ...")
 
             with open(result_file_path, encoding="utf-8") as result_file:
@@ -83,7 +87,7 @@ class benchmark_runner:
 
         return results
 
-    def run_all(self, changes_from_head: str):
+    def run_all(self, changes_from_head: str, repeat_count: int):
         BENCHMARKS = [
             "Sponza",
             "PartOfSponza",
@@ -96,7 +100,8 @@ class benchmark_runner:
             "StandardShadowMap",
             "StencilMirror"
         ]
-        REPEAT_COUNT = 16
+        assert repeat_count > 0
+        REPEAT_COUNT = repeat_count
         BENCHMARK_DATABASE_PATH = os.path.join(self._root_dir, "doc", "contents", "materials", "benchmark.db.txt")
 
         start_time = datetime.datetime.now()

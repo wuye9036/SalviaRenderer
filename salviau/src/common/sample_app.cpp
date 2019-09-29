@@ -466,9 +466,8 @@ void sample_app::profiling(std::string const& stage_name, std::function<void()> 
 {
 	if(data_->mode == app_modes::benchmark)
 	{
-		data_->prof.start(stage_name, 0);
+		eflib::profiling_scope pscope(&data_->prof, stage_name, 0);
 		fn();
-		data_->prof.end(stage_name);
 	}
 	else
 	{
