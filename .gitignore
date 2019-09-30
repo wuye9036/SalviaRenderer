@@ -12,3 +12,5 @@ salvia-git.sln
 test_main.cpp
 PerformanceAnalysis/
 Advisor/
+.idea/
+.vscode/

@@ -7,6 +7,9 @@ import subprocess
 from dateutil import tz
 from . import cpuinfo, util, diagnostic
 
+def benchmark_db_path(root_dir: str):
+    ret = os.path.join(root_dir, "doc", "contents", "materials", "benchmark.db.txt")
+    return ret
 
 class benchmark_runner:
     def __init__(self, source_root_dir, binary_dir, git_path):
@@ -104,8 +107,7 @@ class benchmark_runner:
         ]
         assert repeat_count > 0
         REPEAT_COUNT = repeat_count
-        BENCHMARK_DATABASE_PATH = os.path.join(self._root_dir, "doc", "contents", "materials", "benchmark.db.txt")
-
+        
         start_time = datetime.datetime.now()
         git_commit, has_changed_files = self._get_git_commit()
         cpu_info = cpuinfo.get_cpu_info()
@@ -149,12 +151,48 @@ class benchmark_runner:
         diagnostic.report_info("Dumping performance data ...")
         result_one_line_json = json.dumps(task_result)
 
-        with open(BENCHMARK_DATABASE_PATH, "a", encoding="utf-8") as db_file:
+        with open(benchmark_db_path(self._root_dir), "a", encoding="utf-8") as db_file:
             db_file.write(result_one_line_json)
             db_file.write("\n")
 
         diagnostic.report_info("Done.")
 
+def flatten_json_to_table(path_to_item, item):
+    if isinstance(item, dict):
+        ret_dict = {}
+        for k, v in item.items():
+            path_to_child = f"{path_to_item}.{k}"
+            child_flatten_items = flatten_json_to_table(path_to_child, v)
+            ret_dict.update(child_flatten_items)
+        return ret_dict
+    else:
+        return {path_to_item: item}
 
-def generate_csv_report():
-    pass
+def generate_csv_report(source_root_dir: str):
+    columns_A = ["date_time", "cpu", "os", "git_commit", "changes"]
+    bm_db_path = benchmark_db_path(source_root_dir)
+    bm_db_csv_path = bm_db_path + ".metrics.csv" 
+    with open(bm_db_path, encoding="utf-8") as db_file, open(bm_db_csv_path, "w", encoding="utf-8") as metrics_file:
+        metrics_file.write(",".join(columns_A) + ",compiler,benchmark,round,metric,value\n")
+        for line in db_file:
+            perf_obj = json.loads(line)
+            for bm_name, bm_rounds in perf_obj["results"].items():
+                for i_round, bm_round in enumerate(bm_rounds):
+                    compiler_name = bm_round["compiler"]
+                    overall_metrics = flatten_json_to_table("App", bm_round[bm_name])
+                    stage_metrics = flatten_json_to_table("async", bm_round["async"])
+                    
+                    performance_metrics = {}
+                    performance_metrics.update(overall_metrics)
+                    performance_metrics.update(stage_metrics)
+
+                    for metric_name, metric_value in performance_metrics.items():
+                        metrics_file.write(
+                            ",".join(f"{perf_obj[field_name]}".strip() for field_name in columns_A))
+                        metrics_file.write(f",{compiler_name},{bm_name},{i_round},{metric_name},{metric_value}\n")
+
+
+
+
+            
+

@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from blibs import deps
-from blibs.benchmark import benchmark_runner
+from blibs.benchmark import benchmark_runner, generate_csv_report
 from blibs.copy import copy_newer
 from blibs.diagnostic import build_error, report_error, report_info
 from blibs.env import add_binpath, systems
@@ -385,6 +385,7 @@ def _main():
         "--repeat", type=int, default=16, help="Repeat count for each benchmark."
     )
 
+    subparsers.add_parser("bm_report")
     subparsers.add_parser("clean")
 
     args = parser.parse_args()
@@ -408,6 +409,9 @@ def _main():
         source_root_dir = os.path.dirname(os.path.abspath(__file__))
         bm_runner = benchmark_runner(source_root_dir, args.binary_folder, args.git)
         bm_runner.run_all(args.change_desc, args.repeat)
+    elif args.command == "bm_report":
+        source_root_dir = os.path.dirname(os.path.abspath(__file__))
+        generate_csv_report(source_root_dir)
     else:
         report_error(f"Command <{args.command}> is unknown..")
 
