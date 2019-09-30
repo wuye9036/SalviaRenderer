@@ -27,10 +27,10 @@ struct voidptr
 		return voidptr_cast<T>(*this);
 	}
 
-	type_id get_id(){return id;}
+	size_t get_id(){return id;}
 private:
-	int			id;
-	void*		pval;
+	size_t	id;
+	void*	pval;
 };
 
 struct const_voidptr
@@ -76,11 +76,11 @@ struct const_voidptr
 		return voidptr_cast<T>(*this);
 	}
 
-	type_id get_id(){return id;}
+	size_t get_id(){return id;}
 
 private:
-	int					id;
-	const void*		pval;
+	size_t		id;
+	const void*	pval;
 };
 
 template<class T>

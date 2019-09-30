@@ -182,7 +182,7 @@ int const TEST_FRAME_COUNT		= 8;
 class ssm: public sample_app
 {
 public:
-	ssm(): sample_app("ShadowMap")
+	ssm(): sample_app("StandardShadowMap")
 	{}
 
 protected:

@@ -1,45 +1,40 @@
 import os
 import platform
 import subprocess
-from . import util
+import enum
+from .diagnostic import report_error
 
-class arch:
-    def __init__(self, tag):
-        self.__tag = tag
+
+class arch(enum.Enum):
+    unknown = 0
+    x86 = (32, "x86")
+    x64 = (64, "x64")
 
     @staticmethod
-    def from_machine( machine ):
+    def from_machine(machine):
         if machine == 'x86' or machine == 'i386':
             return arch.x86
         if machine == 'x64' or machine == 'AMD64':
             return arch.x64
         return arch.unknown
-    
+
+    @property
     def bits(self):
-        if self == arch.x86:
-            return 32
-        if self == arch.x64:
-            return 64
-        return 0
+        return self.value[0]
+
+    @property
+    def name(self):
+        return self.value[1]
 
     @staticmethod
     def current():
-        return arch.from_machine( platform.machine() )
+        return arch.from_machine(platform.machine())
 
-    def __str__(self):
-        if self == arch.x86:
-            return 'x86'
-        if self == arch.x64:
-            return 'x64'
-        return 'unknown'
 
-arch.unknown = arch('arch.unknown')
-arch.x86 = arch('arch.x86')
-arch.x64 = arch('arch.x86-64')
-
-class systems:
-    def __init__(self, tag):
-        self.__tag = tag
+class systems(enum.Enum):
+    unknown = 'unknown'
+    win32 = 'nt'
+    linux = 'linux'
 
     @staticmethod
     def current():
@@ -49,16 +44,9 @@ class systems:
             return systems.linux
         return systems.unknown
 
-    def __str__(self):
-        if self == systems.win32:
-            return 'nt'
-        if self == systems.linux:
-            return 'linux'
-        return 'unknown'
-
-systems.unknown = systems('system.unknown')
-systems.win32 = systems('system.win32')
-systems.linux = systems('system.linux')
+    @property
+    def name(self):
+        return self.value
 
 
 class toolset:
@@ -117,6 +105,7 @@ def detect_cmake(candidate_cmake_executable):
     except:
         return None
 
+
 def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
     gcc_executables = []
     if gcc_dir is not None:
@@ -154,7 +143,6 @@ def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
                 if version_digits[1] < min_minor_ver:
                     continue
 
-            compiler_name = None
             machine_name = subprocess.check_output([gcc_executable, "-dumpmachine"]).strip()
             if machine_name == "x86_64-w64-mingw32":
                 compiler_name = "mingw64"
@@ -181,16 +169,15 @@ def add_binpath(env, dirs):
 
 def detect_vs_installer():
     if systems.current() != systems.win32:
-        util.report_error("Visual Studio Installer detection only works on Windows OS.")
+        report_error("Visual Studio Installer detection only works on Windows OS.")
     vsJson = subprocess.check_output([r"blibs\vswhere.exe", "-all", "-format", "json"])
     print(vsJson)
 
 
 def windows_kit_dirs():
     if systems.current() != systems.win32:
-        util.report_error("Windows Kits only works on windows system.")
-        
-    kits = None
+        report_error("Windows Kits only works on windows system.")
+
     close_key = None
 
     try:
@@ -198,25 +185,30 @@ def windows_kit_dirs():
         winkit_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Kits\Installed Roots")
         if winkit_key is None:
             return None
+
         def CloseKey():
             winreg.CloseKey(winkit_key)
+
         close_key = CloseKey
         kit_key_names = ["KitsRoot", "KitsRoot81", "KitRoots10"]
         kits = []
         for kit_key_name in kit_key_names:
             try:
                 kit_value = winreg.QueryValueEx(winkit_key, kit_key_name)[0]
-                kits.append( str(kit_value) )
+                kits.append(str(kit_value))
             except Exception:
                 continue
-        if close_key: close_key()
+        if close_key:
+            close_key()
         return kits
         
     except ImportError as e:
-        if close_key: close_key()
-        util.report_error("_winreg library is not existed in Python on Win32 platform.")
+        if close_key:
+            close_key()
+        report_error("_winreg library is not existed in Python on Win32 platform.")
         
     except WindowsError as e:
-        if close_key: close_key()
-        util.report_error('Windows error occurs: "%s" when reading Windows Kits reg.' % e.strerror)
-        
+        if close_key:
+            close_key()
+        report_error('Windows error occurs: "%s" when reading Windows Kits reg.' % e.strerror)
+

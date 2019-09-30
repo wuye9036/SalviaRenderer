@@ -17,7 +17,9 @@ namespace eflib
 	public:
 		typedef std::chrono::high_resolution_clock clock;
 
-		profiling_item();
+		explicit profiling_item(profiling_item* parent);
+		profiling_item(profiling_item const&) = delete;
+		profiling_item(profiling_item&&) = default;
 		~profiling_item();
 		
 		void start(clock::time_point start_time);
@@ -27,12 +29,13 @@ namespace eflib
 		double	children_duration() const;
 		double	exclusive_duration() const;
 
-		bool	try_merge(profiling_item const* rhs);
+		bool	try_merge(profiling_item* rhs);
 		
 		size_t							tag;
 		std::string						name;
 		
-		std::vector<profiling_item*>	children;
+		std::vector<std::unique_ptr<profiling_item>>	
+										children;
 		profiling_item*					parent;
 
 	private:
@@ -50,7 +53,8 @@ namespace eflib
 
 		void merge_items();
 
-		profiling_item const* root() const;
+		profiling_item const* root() const noexcept;
+		profiling_item const* current() const noexcept;
 
 	private:
 		profiling_item 	root_;
@@ -65,7 +69,9 @@ namespace eflib
 	private:
 		profiling_scope(const profiling_scope&) = delete;
 		profiling_scope& operator = (const profiling_scope&) = delete;
+
 		profiler*	prof;
+		profiling_item const* current_checkpoint;
 		std::string name;
 	};
 

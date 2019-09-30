@@ -1,30 +1,43 @@
-#ifndef SALVIAR_SHADER_UTILITY_H
-#define SALVIAR_SHADER_UTILITY_H
+#pragma once
 
-#include <eflib/include/platform/typedefs.h>
-
-#include <salviar/include/type_register.h>
-#include <salviar/include/functions_tblhelper.h>
 #include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SALVIAR();
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/math/math.h>
+
+#include <array>
+
+BEGIN_NS_SALVIAR()
 
 namespace shader_constant
 {
-	//reg types
-	/////////////////////////////////////////////
-	#include BEGIN_REGISTER_TYPE()
+	struct empty {};
 
-	#define DECL_REGISTERED_TYPES \
-				(empty)\
-				(bool)\
-				(int8_t)(uint8_t)(int16_t)(uint16_t)(int32_t)(uint32_t)(int64_t)(uint64_t)\
-				(std::string)(std::wstring)\
-				(eflib::vec2)(eflib::vec3)(eflib::vec4)(eflib::mat44)\
-				(std::vector<eflib::mat44>)\
-				/*END REGISTER*/
+	using shader_constant_types = std::tuple<
+		empty,
+		bool, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t,
+		std::string, std::wstring,
+		eflib::vec2, eflib::vec3, eflib::vec4, eflib::mat44,
+		std::vector<eflib::mat44>
+	>;
 
-	#include END_REGISTER_TYPE()
+	template <class T, class Tuple>
+	struct index_in_tuple;
+
+	template <class T, class... Types>
+	struct index_in_tuple<T, std::tuple<T, Types...>> {
+		static const std::size_t value = 0;
+	};
+
+	template <class T, class U, class... Types>
+	struct index_in_tuple<T, std::tuple<U, Types...>> {
+		static const std::size_t value = 1 + index_in_tuple<T, std::tuple<Types...>>::value;
+	};
+
+	template <typename T>
+	struct type_encode {
+		static constexpr size_t id = index_in_tuple<T, shader_constant_types>::value;
+	};
 
 	#include "voidptr.h"
 
@@ -41,11 +54,15 @@ namespace shader_constant
 		return false;
 	}
 
-	FUNCTIONS_INITIALIZE(bool, (voidptr lhs, const_voidptr rhs), assign_impl, _registered_types_count);
+	using assign_impl_functype = bool (*)(voidptr, const_voidptr);
+	extern std::array<assign_impl_functype, std::tuple_size<shader_constant_types>::value> assign_impl_table;
 
 	inline bool assign(voidptr lhs, const_voidptr rhs){
-		if(lhs.get_id() == rhs.get_id()){
-			return FUNC_TABLE(assign_impl) [lhs.get_id()](lhs, rhs);
+		auto const func_id = lhs.get_id();
+		if (rhs.get_id() == func_id)
+		{
+			auto assign_func = assign_impl_table[func_id];
+			return assign_func(lhs, rhs);
 		}
 		return false;
 	}
@@ -90,6 +107,4 @@ namespace detail
 	};
 }
 
-END_NS_SALVIAR();
-
-#endif
+END_NS_SALVIAR()

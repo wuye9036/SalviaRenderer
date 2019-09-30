@@ -18,17 +18,13 @@ namespace chrono = std::chrono;
 
 namespace eflib
 {
-	profiling_item::profiling_item()
-		: duration_(0.0), tag(0), parent(NULL)
+	profiling_item::profiling_item(profiling_item* parent)
+		: duration_(0.0), tag(0), parent(parent)
 	{
 	}
 
 	profiling_item::~profiling_item()
 	{
-		for(size_t i = 0; i < children.size(); ++i)
-		{
-			delete children[i];
-		}
 	}
 
 	void profiling_item::start(profiling_item::clock::time_point start_time)
@@ -63,41 +59,40 @@ namespace eflib
 		return duration() - children_duration();
 	}
 
-	bool profiling_item::try_merge(profiling_item const* rhs)
+	bool profiling_item::try_merge(profiling_item* rhs)
 	{
 		assert(parent == rhs->parent);
 		assert(this != rhs);
 		if(name == rhs->name && tag == rhs->tag)
 		{
-			children.insert(children.end(), rhs->children.begin(), rhs->children.end());
+			std::move(std::begin(rhs->children), std::end(rhs->children), std::back_inserter(children));
 			duration_ += rhs->duration_;
 			return true;
 		}
 		return false;
 	}
 
-	profiler::profiler(): current_(NULL)
+	profiler::profiler() 
+		: current_{ nullptr }
+		, root_{ nullptr }
 	{
 	}
 
 	void profiler::start(string const& name, size_t tag)
 	{
-		profiling_item* parent = current_;
-
 		if(!current_)
 		{
 			current_ = &root_;
 		}
 		else
 		{
-			current_->children.push_back( new profiling_item() );
-			current_ = current_->children.back();
+			current_->children.push_back(std::make_unique<profiling_item>(current_));
+			current_ = current_->children.back().get();
 		}
 
 		current_->name = name;
 		current_->tag = tag;
 		current_->start( profiling_item::clock::now() );
-		current_->parent = parent;
 	}
 
 	void profiler::end(string const& name)
@@ -114,16 +109,15 @@ namespace eflib
 		size_t unique_count = parent->children.size();
 		for(size_t i = 0; i < unique_count; ++i)
 		{
-			profiling_item* processed_item = parent->children[i];
+			profiling_item* processed_item = parent->children[i].get();
 
 			size_t i_processing = i+1;
 			while(i_processing < unique_count)
 			{
-				profiling_item* processing_item = parent->children[i_processing];
+				profiling_item* processing_item = parent->children[i_processing].get();
 				if( processed_item->try_merge(processing_item) )
 				{
 					std::swap(parent->children[i_processing], parent->children.back());
-					delete parent->children.back();
 					parent->children.pop_back();
 					--unique_count;
 				}
@@ -134,10 +128,9 @@ namespace eflib
 			}
 		}
 
-		// Merge recursively.
-		for(size_t i = 0; i < unique_count; ++i)
+		for (auto& child : parent->children)
 		{
-			merge_children(parent->children[i]);
+			merge_children(child.get());
 		}
 	}
 
@@ -146,9 +139,14 @@ namespace eflib
 		merge_children(&root_);
 	}
 
-	profiling_item const* profiler::root() const
+	profiling_item const* profiler::root() const noexcept
 	{
 		return &root_;
+	}
+
+	profiling_item const* profiler::current() const noexcept
+	{
+		return current_;
 	}
 
 	template <typename FuncT>
@@ -168,7 +166,7 @@ namespace eflib
 
 		for(size_t i_child = 0; i_child < item->children.size(); ++i_child)
 		{
-			visit_profiling_items(item->children[i_child], level+1, max_level, fn, root_first);
+			visit_profiling_items(item->children[i_child].get(), level+1, max_level, fn, root_first);
 		}
 
 		if(!root_first)
@@ -275,10 +273,16 @@ namespace eflib
 		this->prof = prof;
 		this->name = name;
 		prof->start(name, tag);
+		current_checkpoint = prof->current();
 	}
 
 	profiling_scope::~profiling_scope()
 	{
+		if (current_checkpoint != prof->current() || prof->current() == nullptr)
+		{
+			cout << "Unmatched profiling scope!" << endl;
+		}
+
 		prof->end(name);
 	}
 }

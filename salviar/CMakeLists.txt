@@ -129,6 +129,7 @@ set(SHADER_SOURCES
 	src/shader.cpp
 	src/shader_unit.cpp
 	src/shader_cbuffer.cpp
+	src/shader_utility.cpp
 )
 
 SOURCE_GROUP( "Header Files" )
