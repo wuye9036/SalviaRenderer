@@ -1,7 +1,7 @@
 ﻿# Project build guide
 
 ## Acknowledgement
-  * The IDE toolsets are sponsored by [JetBrains](http://https://www.jetbrains.com/?from=salvia).
+  * The IDE toolsets are sponsored by [JetBrains](https://www.jetbrains.com/?from=salvia).
   
   * In this project we are using:
     * PyCharm
