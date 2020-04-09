@@ -2,6 +2,7 @@
 
 ## Acknowledgement
   * We would like to thank [JetBrains](https://www.jetbrains.com/?from=salvia) for their donating licenses to their excellent products to develop **Salvia**.
+
 ![JetBrains](res/jetbrains.svg)
   
   * In this project we are using:
