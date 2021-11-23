@@ -7,6 +7,7 @@
 
 BEGIN_NS_SALVIAR();
 
+
 using namespace eflib;
 using namespace std;
 
@@ -636,8 +637,60 @@ inline size_t compute_cube_subresource(std::false_type, size_t /*face*/, size_t 
 	return lod_level;
 }
 
+// The table EWA weights is from blender
+/**************************************************************************
+ * Filtering method based on
+ * "Creating raster omnimax images from multiple perspective views
+ * using the elliptical weighted average filter"
+ * by Ned Greene and Paul S. Heckbert (1986)
+ ***************************************************************************/
+
+ /* Table of (exp(ar) - exp(a)) / (1 - exp(a)) for r in range [0, 1] and a = -2
+  * used instead of actual gaussian,
+  * otherwise at high texture magnifications circular artifacts are visible. */
+#define EWA_MAXIDX 255
+const float EWA_WTS[EWA_MAXIDX + 1] = {
+	1.f,         0.990965f,   0.982f,      0.973105f,   0.96428f,    0.955524f,   0.946836f,
+	0.938216f,   0.929664f,   0.921178f,   0.912759f,   0.904405f,   0.896117f,   0.887893f,
+	0.879734f,   0.871638f,   0.863605f,   0.855636f,   0.847728f,   0.839883f,   0.832098f,
+	0.824375f,   0.816712f,   0.809108f,   0.801564f,   0.794079f,   0.786653f,   0.779284f,
+	0.771974f,   0.76472f,    0.757523f,   0.750382f,   0.743297f,   0.736267f,   0.729292f,
+	0.722372f,   0.715505f,   0.708693f,   0.701933f,   0.695227f,   0.688572f,   0.68197f,
+	0.67542f,    0.66892f,    0.662471f,   0.656073f,   0.649725f,   0.643426f,   0.637176f,
+	0.630976f,   0.624824f,   0.618719f,   0.612663f,   0.606654f,   0.600691f,   0.594776f,
+	0.588906f,   0.583083f,   0.577305f,   0.571572f,   0.565883f,   0.56024f,    0.55464f,
+	0.549084f,   0.543572f,   0.538102f,   0.532676f,   0.527291f,   0.521949f,   0.516649f,
+	0.511389f,   0.506171f,   0.500994f,   0.495857f,   0.490761f,   0.485704f,   0.480687f,
+	0.475709f,   0.470769f,   0.465869f,   0.461006f,   0.456182f,   0.451395f,   0.446646f,
+	0.441934f,   0.437258f,   0.432619f,   0.428017f,   0.42345f,    0.418919f,   0.414424f,
+	0.409963f,   0.405538f,   0.401147f,   0.39679f,    0.392467f,   0.388178f,   0.383923f,
+	0.379701f,   0.375511f,   0.371355f,   0.367231f,   0.363139f,   0.359079f,   0.355051f,
+	0.351055f,   0.347089f,   0.343155f,   0.339251f,   0.335378f,   0.331535f,   0.327722f,
+	0.323939f,   0.320186f,   0.316461f,   0.312766f,   0.3091f,     0.305462f,   0.301853f,
+	0.298272f,   0.294719f,   0.291194f,   0.287696f,   0.284226f,   0.280782f,   0.277366f,
+	0.273976f,   0.270613f,   0.267276f,   0.263965f,   0.26068f,    0.257421f,   0.254187f,
+	0.250979f,   0.247795f,   0.244636f,   0.241502f,   0.238393f,   0.235308f,   0.232246f,
+	0.229209f,   0.226196f,   0.223206f,   0.220239f,   0.217296f,   0.214375f,   0.211478f,
+	0.208603f,   0.20575f,    0.20292f,    0.200112f,   0.197326f,   0.194562f,   0.191819f,
+	0.189097f,   0.186397f,   0.183718f,   0.18106f,    0.178423f,   0.175806f,   0.17321f,
+	0.170634f,   0.168078f,   0.165542f,   0.163026f,   0.16053f,    0.158053f,   0.155595f,
+	0.153157f,   0.150738f,   0.148337f,   0.145955f,   0.143592f,   0.141248f,   0.138921f,
+	0.136613f,   0.134323f,   0.132051f,   0.129797f,   0.12756f,    0.125341f,   0.123139f,
+	0.120954f,   0.118786f,   0.116635f,   0.114501f,   0.112384f,   0.110283f,   0.108199f,
+	0.106131f,   0.104079f,   0.102043f,   0.100023f,   0.0980186f,  0.09603f,    0.094057f,
+	0.0920994f,  0.0901571f,  0.08823f,    0.0863179f,  0.0844208f,  0.0825384f,  0.0806708f,
+	0.0788178f,  0.0769792f,  0.0751551f,  0.0733451f,  0.0715493f,  0.0697676f,  0.0679997f,
+	0.0662457f,  0.0645054f,  0.0627786f,  0.0610654f,  0.0593655f,  0.0576789f,  0.0560055f,
+	0.0543452f,  0.0526979f,  0.0510634f,  0.0494416f,  0.0478326f,  0.0462361f,  0.0446521f,
+	0.0430805f,  0.0415211f,  0.039974f,   0.0384389f,  0.0369158f,  0.0354046f,  0.0339052f,
+	0.0324175f,  0.0309415f,  0.029477f,   0.0280239f,  0.0265822f,  0.0251517f,  0.0237324f,
+	0.0223242f,  0.020927f,   0.0195408f,  0.0181653f,  0.0168006f,  0.0154466f,  0.0141031f,
+	0.0127701f,  0.0114476f,  0.0101354f,  0.00883339f, 0.00754159f, 0.00625989f, 0.00498819f,
+	0.00372644f, 0.00247454f, 0.00123242f, 0.f,
+};
+
 template <bool IsCubeTexture>
-color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t sample, float miplevel, float ratio, vec4 const& long_axis) const
+color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t sample, float miplevel, anisotropic_info const* af_info) const
 {
 	std::integral_constant<bool, IsCubeTexture> dummy;
 	size_t face_sz = static_cast<size_t>(face);
@@ -656,7 +709,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 
 	if(desc_.mip_filter == filter_point)
 	{
-		int ml = fast_floori(miplevel + 0.5f);
+		int ml = fast_floori(0.5 + miplevel);
 
         ml = eflib::clamp(ml, static_cast<int>(tex_->max_lod()), static_cast<int>(tex_->min_lod()));
 
@@ -685,41 +738,32 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 
 	if(desc_.mip_filter == filter_anisotropic)
 	{
-		float start_relative_distance = - 0.5f * (ratio - 1.0f);
+		float start_relative_distance = - 0.5f * (af_info->probe_count - 1.0f);
 
-		float sample_coord_x = coordx + long_axis.x() * start_relative_distance;
-		float sample_coord_y = coordy + long_axis.y() * start_relative_distance;
+		float sample_coord_x = coordx + af_info->delta_uv.x() * start_relative_distance;
+		float sample_coord_y = coordy + af_info->delta_uv.y() * start_relative_distance;
 
-		int lo = fast_floori(miplevel);
-		int hi  = lo + 1;
-
-		float frac = miplevel - lo;
-		lo = max(lo, 0);
-		hi = max(hi, 0);
-
+		int lo = fast_roundi(miplevel);
 		auto lo_sz = clamp(static_cast<size_t>(lo), tex_->max_lod(), tex_->min_lod());
-		auto hi_sz = clamp(static_cast<size_t>(hi), tex_->max_lod(), tex_->min_lod());
-		EFLIB_UNREF_DECLARATOR(hi_sz);
 
 		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
-		for(int i_sample = 0; i_sample < static_cast<int>(ratio); ++i_sample)
+		float w_sum = 0.0f;
+		int probe_count = static_cast<int>(af_info->probe_count);
+		for(int i_sample = - probe_count + 1; i_sample < probe_count; i_sample += 2)
 		{
 			auto subres_index_lo = compute_cube_subresource(dummy, face_sz, lo_sz);
-			auto subres_index_hi = compute_cube_subresource(dummy, face_sz, hi_sz);
 			color_rgba32f c0 = sample_surface(
 				*tex_->subresource_cptr(subres_index_lo), sample_coord_x, sample_coord_y, sample, sampler_state_min
 				);
-			color_rgba32f c1 = sample_surface(
-				*tex_->subresource_cptr(subres_index_hi), sample_coord_x, sample_coord_y, sample, sampler_state_min
-				);
+			float w = EWA_WTS[static_cast<int>(i_sample * i_sample * af_info->weight_D)];
 
-			color += lerp(c0, c1, frac).get_vec4();
-
-			sample_coord_x += long_axis.x();
-			sample_coord_y += long_axis.y();
+			color += c0.get_vec4() * w;
+			w_sum += w;
+			sample_coord_x += af_info->delta_uv.x();
+			sample_coord_y += af_info->delta_uv.y();
 		}
 
-		color /= ratio;
+		color /= w_sum;
 
 		return color_rgba32f(color);
 	}
@@ -727,10 +771,11 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
 	EFLIB_ASSERT(false, "Mip filters is error.");
 	return desc_.border_color;
 }
+#pragma optimize("", on)
 
 color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 {
-	return sample_impl<false>(0, coordx, coordy, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	return sample_impl<false>(0, coordx, coordy, 0, miplevel, nullptr);
 }
 
 color_rgba32f sampler::sample_cube(
@@ -796,7 +841,7 @@ color_rgba32f sampler::sample_cube(
 
 	EFLIB_ASSERT(tex_->get_texture_type() != texture_type_cube , "texture is not a cube texture.");
 
-	return sample_impl<true>(major_dir, s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	return sample_impl<true>(major_dir, s, t, 0, miplevel, nullptr);
 }
 
 float sampler::calc_lod_2d(eflib::vec2 const& ddx, eflib::vec2 const& ddy) const
@@ -806,16 +851,17 @@ float sampler::calc_lod_2d(eflib::vec2 const& ddx, eflib::vec2 const& ddy) const
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
 
-	float lod, ratio;
-	vec4  long_axis;
+	float lod{0.0f};
+
+	anisotropic_info af_info;
 	if( desc_.mip_filter == filter_anisotropic && desc_.max_anisotropy > 1 )
 	{
-		calc_anisotropic_lod(size, ddx_vec4, ddy_vec4, 0.0f, lod, ratio, long_axis);
+		calc_anisotropic_info(size, ddx_vec4, ddy_vec4, 0.0f, af_info);
+		lod = af_info.lod;
 	}
 	else
 	{
 		lod = calc_lod(size, ddx_vec4, ddy_vec4, 0.0f);
-		ratio = 1.0f;
 	}
 
 	return lod;
@@ -833,36 +879,37 @@ color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
 
-	float lod, ratio;
-	vec4  long_axis;
+	anisotropic_info af_info;
+	float lod{ 0.0f };
 	if( desc_.mip_filter == filter_anisotropic && desc_.max_anisotropy > 1 )
 	{
-		calc_anisotropic_lod(size, ddx_vec4, ddy_vec4, lod_bias, lod, ratio, long_axis);
+		calc_anisotropic_info(size, ddx_vec4, ddy_vec4, lod_bias, af_info);
+		lod = af_info.lod;
 	}
 	else
 	{
 		lod = calc_lod(size, ddx_vec4, ddy_vec4, lod_bias);
-		ratio = 1.0f;
 	}
 
-	return sample_impl<false>(0, proj_coord[0], proj_coord[1], 0, lod, ratio, long_axis);
+	return sample_impl<false>(0, proj_coord[0], proj_coord[1], 0, lod, &af_info);
 }
 
-void sampler::calc_anisotropic_lod(
+void sampler::calc_anisotropic_info(
 	eflib::uint4 const& size,
 	eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
-	float& out_lod, float& out_ratio, vec4& out_long_axis ) const
+	anisotropic_info& out_af_info ) const
 {
+	static int i = 0;
 	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
 
 	vec4 ddx_ts = ddx * size_vec4;
 	vec4 ddy_ts = ddy * size_vec4;
 
-	float ddx_len = ddx_ts.xyz().length();
-	float ddy_len = ddy_ts.xyz().length();
+	float ddx_len = ddx_ts.xy().length();
+	float ddy_len = ddy_ts.xy().length();
 
-	float diag0_len = (ddx_ts - ddy_ts).xyz().length();
-	float diag1_len = (ddx_ts + ddy_ts).xyz().length();
+	float diag0_len = (ddx_ts - ddy_ts).xy().length();
+	float diag1_len = (ddx_ts + ddy_ts).xy().length();
 
 	auto minor_axis_len = min( min(diag0_len, diag1_len), min(ddx_len, ddy_len) );
 	
@@ -881,31 +928,59 @@ void sampler::calc_anisotropic_lod(
 		long_axis = &ddy_ts;
 	}
 
-	float probe_count = long_axis_len / minor_axis_len;
+#if 0
+	// EWA axes computation for reference and debugging.
+	float A_nn = ddx_ts.y() * ddx_ts.y() + ddy_ts.y() * ddy_ts.y();
+	float B_nn = -2.0f * (ddx_ts.x() * ddx_ts.y() + ddy_ts.x() * ddy_ts.y());
+	float C_nn = ddx_ts.x() * ddx_ts.x() + ddy_ts.x() * ddy_ts.x();
+	float F = A_nn * C_nn - B_nn * B_nn * 0.25f;
 
-	if ( probe_count > static_cast<float>(desc_.max_anisotropy) )
+	float A = A_nn / F;
+	float B = B_nn / F;
+	float C = C_nn / F;
+
+	float root = sqrtf((A - C) * (A - C) + B * B);
+	float A_prime = (A + C - root) * 0.5f;
+	float C_prime = (A + C + root) * 0.5f;
+
+	float ewa_major = sqrtf(1.0f / A_prime);
+	float ewa_minor = sqrtf(1.0f / C_prime);
+
+	if (i < 32)
 	{
-		probe_count = static_cast<float>(desc_.max_anisotropy);	
+		printf(
+			"%7.4f,%7.4f;%7.4f,%7.4f;%7.4f,%7.4f,%7.4f,%7.4f\n",
+			ddx.x(), ddx.y(), ddy.x(), ddy.y(),
+			minor_axis_len, long_axis_len, ewa_minor, ewa_major
+		);
+		++i;
+	}
+#endif
+
+	float probe_count = (2.0f * long_axis_len / minor_axis_len) - 1.0f;
+	float rounded_probe_count = fast_round(probe_count);
+	rounded_probe_count = std::min(static_cast<float>(desc_.max_anisotropy), rounded_probe_count);
+
+	if (rounded_probe_count < probe_count)
+	{
+		minor_axis_len = 2.0f * long_axis_len / (rounded_probe_count + 1.0f);
+	}
+
+	out_af_info.lod = fast_log2(minor_axis_len) + bias;
+	out_af_info.probe_count = rounded_probe_count;
+	
+	if (rounded_probe_count <= 1.0f)
+	{
+		out_af_info.delta_uv = vec4::zero();
+		out_af_info.weight_D = 0.0f;
 	}
 	else
 	{
-		probe_count = fast_round(probe_count);
-	}
-
-	out_ratio = probe_count;
-	if (probe_count == 1.0f)
-	{
-		out_long_axis.xyzw(0.0f, 0.0f, 0.0f, 0.0f);
-		out_lod = fast_log2(long_axis_len) + bias;
-		return;
-	}
-	else
-	{
-		float step = long_axis_len / probe_count;
-		minor_axis_len = 2 * long_axis_len / (probe_count + 1);
-		out_lod = fast_log2(minor_axis_len) + bias;
-		out_long_axis = (*long_axis) * step / long_axis_len;
-		out_long_axis *= (1.0f / size_vec4);
+		float r = minor_axis_len / long_axis_len;
+		out_af_info.delta_uv = (*long_axis) * (1.0f - r) * 2.0f * (1.0f / (rounded_probe_count - 1.0f));
+		out_af_info.weight_D = static_cast<float>(EWA_MAXIDX + 1) * out_af_info.delta_uv.length_sqr() * 0.25f / (long_axis_len * long_axis_len);
+		out_af_info.delta_uv.x() /= size_vec4.x();
+		out_af_info.delta_uv.y() /= size_vec4.y();
 	}
 }
 
