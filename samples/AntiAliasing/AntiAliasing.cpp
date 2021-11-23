@@ -129,7 +129,7 @@ int const BENCHMARK_TOTAL_FRAME_COUNT = eflib::is_debug_mode ? 3 : 2000;
 class colorized_triangle : public sample_app
 {
 public:
-	colorized_triangle(): sample_app("AntiAliasing")
+	colorized_triangle() : sample_app("AntiAliasing"), camera_angle{0.0f}
 	{
 	}
 	

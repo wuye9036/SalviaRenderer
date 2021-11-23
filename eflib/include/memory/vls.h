@@ -57,6 +57,18 @@ namespace eflib
 		}
 	};
 
+	template <typename T> struct vls_allocator;
+
+	template <>
+	struct vls_allocator<void>
+	{
+		typedef void            value_type;
+		typedef void*           pointer;
+		typedef void const*     const_pointer;
+		typedef std::size_t     size_type;
+		typedef std::ptrdiff_t  difference_type;
+	};
+
 	template <typename T>
 	struct vls_allocator
 	{
@@ -127,16 +139,6 @@ namespace eflib
 
 	private:
 		size_t align_;
-	};
-
-	template <>
-	struct vls_allocator<void>
-	{
-		typedef void            value_type;
-		typedef void*           pointer;
-		typedef void const*     const_pointer;
-		typedef std::size_t     size_type;
-		typedef std::ptrdiff_t  difference_type;
 	};
 
 	template <typename VLSVectorT>

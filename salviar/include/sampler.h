@@ -47,6 +47,14 @@ struct sampler_desc
 	}
 };
 
+struct anisotropic_info
+{
+	float lod;
+	float probe_count;
+	float weight_D;
+	eflib::vec4 delta_uv;
+};
+
 class sampler
 {
 public:
@@ -59,10 +67,10 @@ private:
 
 	float calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const;
 	
-	void calc_anisotropic_lod(
+	void calc_anisotropic_info(
 		eflib::uint4 const& size,
 		eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
-		float& out_lod, float& out_ratio, eflib::vec4& out_long_axis ) const;
+		anisotropic_info& out_af_info ) const;
 
 	color_rgba32f sample_surface(
 		const surface& surf,
@@ -72,8 +80,7 @@ private:
 	template <bool IsCubeTexture>
 	color_rgba32f sample_impl(
 		int face, float coordx, float coordy,
-		size_t sample, float miplevel,
-		float ratio, eflib::vec4 const& long_axis) const;
+		size_t sample, float miplevel, anisotropic_info const* af_info) const;
 
 public:
 	explicit sampler(const sampler_desc& desc, texture_ptr const& tex);

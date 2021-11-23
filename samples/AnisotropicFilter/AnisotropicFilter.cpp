@@ -43,7 +43,7 @@ struct vert
 };
 
 float  const CYLINDER_RADIUS         = 5.0f;
-size_t const CYLINDER_SEGMENTS       = 36;
+size_t const CYLINDER_SEGMENTS       = 8;
 float  const CYLINDER_SEG_ANGLE      = 360.0f / static_cast<float>(CYLINDER_SEGMENTS);
 float  const CYLINDER_SEG_HALF_WIDTH = CYLINDER_SEGMENTS > 2 ? tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS : 2 * CYLINDER_RADIUS;
 
@@ -240,6 +240,12 @@ protected:
 	{
 		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
+		//data_->screen_vp.x = data_->screen_vp.y = 25.0f;
+		//data_->screen_vp.w = static_cast<float>(50.0f);
+		//data_->screen_vp.h = static_cast<float>(50.0f);
+		//data_->screen_vp.minz = 0.0f;
+		//data_->screen_vp.maxz = 1.0f;
+
         data_->renderer->set_viewport(data_->screen_vp);
 
 		planar_mesh = create_planar(
@@ -269,8 +275,8 @@ protected:
 		plane_tex->gen_mipmap(filter_linear, true);
 
 		// plane_tex->subresource(2)->fill_texels( color_rgba32f(0.0f, 0.0f, 1.0f, 0.0f) );
-		plane_tex->subresource(3)->fill_texels( color_rgba32f(1.0f, 0.0f, 0.0f, 0.0f) );
-		plane_tex->subresource(4)->fill_texels( color_rgba32f(0.0f, 1.0f, 0.0f, 0.0f) );
+		// plane_tex->subresource(3)->fill_texels( color_rgba32f(1.0f, 0.0f, 0.0f, 0.0f) );
+		// plane_tex->subresource(4)->fill_texels( color_rgba32f(0.0f, 1.0f, 0.0f, 0.0f) );
 		// plane_tex->subresource(5)->fill_texels( color_rgba32f(0.0f, 0.0f, 1.0f, 0.0f) );
 
 		plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
@@ -349,7 +355,7 @@ protected:
 		{
 			desc.mip_filter = filter_anisotropic;
 			desc.max_anisotropy = 1 << max_aniso;
-			if(data_->gui) { data_->gui->main_window()->set_title(std::string("AF: ") + std::to_string(max_aniso)); }
+			if(data_->gui) { data_->gui->main_window()->set_title(std::string("AF: ") + std::to_string(desc.max_anisotropy)); }
 		}
         plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
 
