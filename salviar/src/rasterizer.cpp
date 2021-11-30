@@ -687,7 +687,7 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 	test_regions[0][0] = (full << 31);
 	test_region_size[0] = 1;
 	int src_stage = 0;
-	int dst_stage = !src_stage;
+	int dst_stage = src_stage == 0 ? 1 : 0;
 
 	const int vpleft0 = fast_floori(vp.x);
 	const int vpright0 = fast_floori(vp.x + vp.w);

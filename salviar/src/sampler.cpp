@@ -528,81 +528,87 @@ namespace surface_sampler
 
 float sampler::calc_lod( eflib::uint4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const
 {
-#if LOD_QUALITY == LOD_QUALITY_LOW
-#	if 0 && !defined(EFLIB_NO_SIMD)
-	static const union
+	vec4 size_vec4(static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0);
+
+	if (desc_.mip_qual == mip_lo_quality)
 	{
-		int maski;
-		float maskf;
-	} MASK = { 0x7FFFFFFF };
-	static const __m128 ABS_MASK = _mm_set1_ps(MASK.maskf);
+#if 0 && !defined(EFLIB_NO_SIMD)
+		static const union
+		{
+			int maski;
+			float maskf;
+		} MASK = { 0x7FFFFFFF };
+		static const __m128 ABS_MASK = _mm_set1_ps(MASK.maskf);
 
-	__m128 mddx = _mm_loadu_ps(&ddx[0]);
-	__m128 mddy = _mm_loadu_ps(&ddy[0]);
-	mddx = _mm_and_ps(mddx, ABS_MASK);
-	mddy = _mm_and_ps(mddy, ABS_MASK);
-	__m128 mmax = _mm_max_ps(mddx, mddy);
-	mmax = _mm_mul_ps(mmax, _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size[0]))));
-	__m128 mmax2 = _mm_shuffle_ps(mmax, mmax, _MM_SHUFFLE(2, 2, 2, 2));
-	mmax = _mm_max_ps(mmax, mmax2);
-	mmax2 = _mm_shuffle_ps(mmax, mmax, _MM_SHUFFLE(1, 1, 1, 1));
-	mmax = _mm_max_ss(mmax, mmax2);
-	__m128 mrho = _mm_max_ss(mmax, _mm_set_ss(0.000001f));
+		__m128 mddx = _mm_loadu_ps(&ddx[0]);
+		__m128 mddy = _mm_loadu_ps(&ddy[0]);
+		mddx = _mm_and_ps(mddx, ABS_MASK);
+		mddy = _mm_and_ps(mddy, ABS_MASK);
+		__m128 mmax = _mm_max_ps(mddx, mddy);
+		mmax = _mm_mul_ps(mmax, _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size[0]))));
+		__m128 mmax2 = _mm_shuffle_ps(mmax, mmax, _MM_SHUFFLE(2, 2, 2, 2));
+		mmax = _mm_max_ps(mmax, mmax2);
+		mmax2 = _mm_shuffle_ps(mmax, mmax, _MM_SHUFFLE(1, 1, 1, 1));
+		mmax = _mm_max_ss(mmax, mmax2);
+		__m128 mrho = _mm_max_ss(mmax, _mm_set_ss(0.000001f));
 
-	// log 2
-	__m128i mx = _mm_castps_si128(mrho);
-	__m128 mlog2 = _mm_cvtepi32_ps(_mm_sub_epi32(_mm_and_si128(_mm_srli_epi32(mx, 23), _mm_set1_epi32(255)), _mm_set1_epi32(128)));
-	mx = _mm_and_si128(mx, _mm_set1_epi32(0x007FFFFF));
-	mx = _mm_or_si128(mx, _mm_set1_epi32(0x3F800000));
-	__m128 tmp = _mm_castsi128_ps(mx);
-	tmp = _mm_sub_ss(_mm_mul_ss(_mm_add_ss(_mm_mul_ss(tmp, _mm_set_ss(-1.0f / 3)), _mm_set_ss(2)), tmp), _mm_set_ss(2.0f / 3));
-	__m128 mlambda = _mm_add_ss(tmp, mlog2);
+		// log 2
+		__m128i mx = _mm_castps_si128(mrho);
+		__m128 mlog2 = _mm_cvtepi32_ps(_mm_sub_epi32(_mm_and_si128(_mm_srli_epi32(mx, 23), _mm_set1_epi32(255)), _mm_set1_epi32(128)));
+		mx = _mm_and_si128(mx, _mm_set1_epi32(0x007FFFFF));
+		mx = _mm_or_si128(mx, _mm_set1_epi32(0x3F800000));
+		__m128 tmp = _mm_castsi128_ps(mx);
+		tmp = _mm_sub_ss(_mm_mul_ss(_mm_add_ss(_mm_mul_ss(tmp, _mm_set_ss(-1.0f / 3)), _mm_set_ss(2)), tmp), _mm_set_ss(2.0f / 3));
+		__m128 mlambda = _mm_add_ss(tmp, mlog2);
 
-	__m128 mlod = _mm_add_ss(mlambda, _mm_set_ss(bias));
+		__m128 mlod = _mm_add_ss(mlambda, _mm_set_ss(bias));
 
-	float lod;
-	_mm_store_ss(&lod, mlod);
-	return lod;
-#	else
-	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
-	
-	vec4 maxD(
-		max(abs(ddx[0]), abs(ddy[0])),
-		max(abs(ddx[1]), abs(ddy[1])),
-		max(abs(ddx[2]), abs(ddy[2])),
-		0.0f);
-	maxD *= vec4(static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0);
-	float rho = max(max(maxD[0], maxD[1]), maxD[2]);
-	float lambda = fast_log2(rho);
-	return lambda + bias;
-#	endif
+		float lod;
+		_mm_store_ss(&lod, mlod);
+		return lod;
 #else
-	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
-	vec4 ddx_ts = ddx * size_vec4;										// (1, 0)
-	vec4 ddy_ts = ddy * size_vec4;										// (0, 1)
-	float rho, lambda;
-
-#	if LOD_QUALITY == LOD_QUALITY_HI
-	auto A = ddx_ts[0] * ddx_ts[0] + ddy_ts[0] * ddy_ts[0];				// 1
-	auto B = -2.0f * (ddx_ts[0] * ddx_ts[1] + ddy_ts[0] * ddy_ts[1]);	// 0
-	auto C = ddx_ts[1] * ddx_ts[1] + ddy_ts[1] * ddy_ts[1];				// 1
-	auto F = A * C - B * B * 0.25f;										// 1
-	auto invF = 1.0f / F;
-	A *= invF; B *= invF; C *= invF;
-	auto AsubC = A - C;													// 0
-	auto R = sqrt(AsubC * AsubC + B * B);								// 0
-	rho = sqrt( 2.0f / (A + C - R) );									// 1
-#	else
-	static_assert(LOD_QUALITY == LOD_QUALITY_MID, "");
-	float ddx_rho = ddx_ts.xyz().length();
-	float ddy_rho = ddy_ts.xyz().length();
-	rho = max(ddx_rho, ddy_rho);
-#	endif
-
-	if(rho == 0.0f) rho = 0.000001f;
-	lambda = fast_log2(rho);
-	return lambda + bias;
+		vec4 maxD(
+			max(abs(ddx[0]), abs(ddy[0])),
+			max(abs(ddx[1]), abs(ddy[1])),
+			max(abs(ddx[2]), abs(ddy[2])),
+			0.0f);
+		maxD *= size_vec4;
+		float rho = max(max(maxD[0], maxD[1]), maxD[2]);
+		float lambda = fast_log2(rho);
+		return lambda + bias;
 #endif
+	}
+	else
+	{
+		vec4 ddx_ts = ddx * size_vec4;										// (1, 0)
+		vec4 ddy_ts = ddy * size_vec4;										// (0, 1)
+		float rho, lambda;
+
+		if (desc_.mip_qual == mip_hi_quality)
+		{
+			auto A = ddx_ts[0] * ddx_ts[0] + ddy_ts[0] * ddy_ts[0];				// 1
+			auto B = -2.0f * (ddx_ts[0] * ddx_ts[1] + ddy_ts[0] * ddy_ts[1]);	// 0
+			auto C = ddx_ts[1] * ddx_ts[1] + ddy_ts[1] * ddy_ts[1];				// 1
+			auto F = A * C - B * B * 0.25f;										// 1
+			auto invF = 1.0f / F;
+			A *= invF; B *= invF; C *= invF;
+			auto AsubC = A - C;													// 0
+			auto R = sqrt(AsubC * AsubC + B * B);								// 0
+
+			// Use major radius of EWA kernel shape as mip radius
+			rho = sqrt(2.0f / (A + C - R));										// 1
+		}
+		else
+		{
+			float ddx_rho = ddx_ts.xyz().length();
+			float ddy_rho = ddy_ts.xyz().length();
+			rho = max(ddx_rho, ddy_rho);
+		}
+
+		if (rho == 0.0f) rho = 0.000001f;
+		lambda = fast_log2(rho);
+		return lambda + bias;
+	}
 }
 
 color_rgba32f sampler::sample_surface(

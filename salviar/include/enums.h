@@ -123,6 +123,14 @@ enum filter_type
 	filter_type_count = 3
 };
 
+enum mip_quality
+{
+	mip_lo_quality = 0,
+	mip_mi_quality = 1,
+	mip_hi_quality = 2,
+	mip_quality_count = 3
+};
+
 enum sampler_state
 {
 	sampler_state_min = 0,
