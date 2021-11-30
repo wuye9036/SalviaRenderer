@@ -43,7 +43,7 @@ struct vert
 };
 
 float  const CYLINDER_RADIUS         = 5.0f;
-size_t const CYLINDER_SEGMENTS       = 8;
+size_t const CYLINDER_SEGMENTS       = 96;
 float  const CYLINDER_SEG_ANGLE      = 360.0f / static_cast<float>(CYLINDER_SEGMENTS);
 float  const CYLINDER_SEG_HALF_WIDTH = CYLINDER_SEGMENTS > 2 ? tanf(eflib::radians(CYLINDER_SEG_ANGLE/2.0f)) * CYLINDER_RADIUS : 2 * CYLINDER_RADIUS;
 
@@ -240,12 +240,6 @@ protected:
 	{
 		create_devices_and_targets(data_->screen_width, data_->screen_height, 1, pixel_format_color_rgba8, pixel_format_color_rg32f);
 
-		//data_->screen_vp.x = data_->screen_vp.y = 25.0f;
-		//data_->screen_vp.w = static_cast<float>(50.0f);
-		//data_->screen_vp.h = static_cast<float>(50.0f);
-		//data_->screen_vp.minz = 0.0f;
-		//data_->screen_vp.maxz = 1.0f;
-
         data_->renderer->set_viewport(data_->screen_vp);
 
 		planar_mesh = create_planar(
@@ -264,8 +258,20 @@ protected:
 		desc.mip_filter = filter_anisotropic;
 		desc.max_anisotropy = 16;
 
-		auto plane_tex_path = find_path(_EFLIB_T("texture_and_blending/chessboard.png"));
-		// auto plane_tex_path = find_path(_EFLIB_T("font/font_enu.png"));
+		filter_params = decltype(filter_params) {
+			// MIP FILTER, FILTER QUALITY
+			{ filter_linear, mip_lo_quality, 0, "Mipmap, Low Quality" },
+			{ filter_linear, mip_mi_quality, 0, "Mipmap, Medium Quality" },
+			{ filter_linear, mip_hi_quality, 0,  "Mipmap, High Quality" },
+			{ filter_anisotropic, mip_mi_quality, 2, "AF 2X"},
+			{ filter_anisotropic, mip_mi_quality, 4, "AF 4X" },
+			{ filter_anisotropic, mip_mi_quality, 8, "AF 8X" },
+			{ filter_anisotropic, mip_mi_quality, 16, "AF 16X" }
+		};
+
+
+		// auto plane_tex_path = find_path(_EFLIB_T("texture_and_blending/chessboard.png"));
+		auto plane_tex_path = find_path(_EFLIB_T("font/font_enu.png"));
 		if(plane_tex_path.empty())
 		{
 			throw "Plane texture loading failed.";
@@ -298,16 +304,13 @@ protected:
 
 	void on_frame() override
 	{
-		int const ANISO_CAPACITY = 5;
-		int const TEST_TOTAL_FRAME_COUNT = ANISO_CAPACITY;
-
 		switch(data_->mode)
 		{
 		case salviau::app_modes::benchmark:
 			data_->quiting = (data_->frame_count == BENCHMARK_TOTAL_FRAME_COUNT);
 			break;
 		case salviau::app_modes::test:
-			data_->quiting = (data_->frame_count == TEST_TOTAL_FRAME_COUNT);
+			data_->quiting = (data_->frame_count == filter_params.size());
 			break;
 		}
 
@@ -330,33 +333,26 @@ protected:
 		desc.min_filter = filter_linear;
 		desc.mag_filter = filter_linear;
 
-		size_t max_aniso = 0;
+		size_t i_param = 0;
 
 		switch(data_->mode)
 		{
 		case salviau::app_modes::benchmark:
 		case salviau::app_modes::test:
-			max_aniso = data_->frame_count % ANISO_CAPACITY;
+			i_param = data_->frame_count % filter_params.size();
 			break;
 		case salviau::app_modes::interactive:
 			break;
 		case salviau::app_modes::replay:
-			max_aniso = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % ANISO_CAPACITY;
+			i_param = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % filter_params.size();
 			break;
 		}
 
-		if(max_aniso == 0)
-		{
-			desc.mip_filter = filter_linear;
-			desc.max_anisotropy = 0;
-			if(data_->gui) { data_->gui->main_window()->set_title("Mipmap"); }
-		}
-		else
-		{
-			desc.mip_filter = filter_anisotropic;
-			desc.max_anisotropy = 1 << max_aniso;
-			if(data_->gui) { data_->gui->main_window()->set_title(std::string("AF: ") + std::to_string(desc.max_anisotropy)); }
-		}
+		std::string window_title;
+		std::tie(desc.mip_filter, desc.mip_qual, desc.max_anisotropy, window_title) = filter_params[i_param];
+
+		if(data_->gui) { data_->gui->main_window()->set_title(window_title); }
+
         plane_sampler = data_->renderer->create_sampler(desc, plane_tex);
 
 		profiling("Rendering", [&](){
@@ -390,7 +386,6 @@ protected:
 	}
 
 protected:
-	/** Properties @{ */
 	texture_ptr             sm_tex;
     
 	mesh_ptr                planar_mesh;
@@ -405,6 +400,8 @@ protected:
 
 	raster_state_ptr        rs_front;
 	raster_state_ptr        rs_back;
+
+	std::vector<std::tuple<filter_type, mip_quality, int/*aniso*/, std::string/*name*/>> filter_params;
 };
 
 EFLIB_MAIN(argc, argv)

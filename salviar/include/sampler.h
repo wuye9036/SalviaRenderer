@@ -20,6 +20,7 @@ struct sampler_desc
     filter_type min_filter;
 	filter_type mag_filter;
 	filter_type mip_filter;
+	mip_quality mip_qual;
     address_mode addr_mode_u;
     address_mode addr_mode_v;
     address_mode addr_mode_w;
@@ -43,6 +44,7 @@ struct sampler_desc
 		, border_color(color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f))
 		, min_lod(-1e20f)
 		, max_lod(1e20f)
+		, mip_qual{mip_mi_quality}
 	{
 	}
 };
