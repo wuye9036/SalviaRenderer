@@ -23,10 +23,19 @@
     
 ## Build steps
   * Running bootstrap.py for build, running benchmark or generating benchmark report CSV file. Example command lines:
-      ** Build: `python bootstrap.py build salvia --build-root .\build --install-root . --arch x64 --toolset msvc-14.2 --toolset-dir D:\Software\VS2019\VC\Auxiliary\Build --build-config RelWithDebInfo --cmake D:\Software\CMake\bin\cmake.exe`
-      ** Run benchmark: `python bootstrap.py benchmark --binary-folder bin\ntx64_msvc142\RelWithDebInfo --git D:\Software\Git\git.exe --change-desc "Performance improved" --repeat 16`
-      ** Generate benchmark report: `python bootstrap.py bm_report`
-   * Run `python bootstrap.py --help` to get more details.
+    * Build
+      ```
+      python bootstrap.py build salvia --build-root .\build --install-root . --arch x64 --toolset msvc-14.2 --toolset-dir D:\Software\VS2019\VC\Auxiliary\Build --build-config RelWithDebInfo --cmake D:\Software\CMake\bin\cmake.exe
+      ```
+    * Run benchmark
+      ```
+      python bootstrap.py benchmark --binary-folder bin\ntx64_msvc142\RelWithDebInfo --git D:\Software\Git\git.exe --change-desc "Performance improved" --repeat 16
+      ```
+    * Generate benchmark report
+      ```
+      python bootstrap.py bm_report
+      ```
+  * Run `python bootstrap.py --help` to get more details.
 
  
 ## REMARK
