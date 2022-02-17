@@ -1,0 +1,32 @@
+{
+    "name": "salvia-renderer",
+    "version-string": "22.02",
+    "dependencies": [
+      "boost-algorithm",
+      "boost-bimap",
+      "boost-circular-buffer",
+      "boost-config",
+      "boost-format",
+      "boost-icl",
+      "boost-locale",
+      "boost-log",
+      "boost-math",
+      "boost-predef",
+      "boost-program-options",
+      "boost-property-tree",
+      "boost-range",
+      "boost-signals2",
+      "boost-spirit",
+      "boost-test",
+      "boost-utility",
+      "boost-uuid",
+      "boost-wave",
+      "freeimage",
+      "freetype",
+      {
+        "name": "llvm",
+        "default-features": false,
+        "features": ["utils", "target-aarch64", "target-amdgpu", "target-x86", "target-nvptx", "target-riscv", "target-webassembly"]
+      }
+    ]
+  }

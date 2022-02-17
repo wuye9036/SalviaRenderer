@@ -19,7 +19,6 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Intrinsics.h>
-#include <llvm/IR/IntrinsicEnums.inc>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
@@ -205,7 +204,7 @@ cg_function* cg_service::fetch_function(function_def* fn_node){
 		fty, Function::ExternalLinkage,
 		sem_->get_symbol(fn_node)->mangled_name().raw_string(), module()
 		);
-	ret->fn->addFnAttr(Attribute::getWithStackAlignment(context(), 32).getAsString());
+	ret->fn->addFnAttr(Attribute::getWithStackAlignment(context(), Align(32)).getAsString());
 	ret->fn->addFnAttr("stackrealign");
 	return ret;
 }
@@ -718,8 +717,8 @@ multi_value cg_service::emit_mul_comp( multi_value const& lhs, multi_value const
 		else { assert(false); }
 	}
 
-	binary_intrin_functor f_mul = std::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_mul = std::bind( &DefaultIRBuilder::CreateMul,  builder(), _1, _2, "", false, false );
+	binary_intrin_functor f_mul = std::bind( &DefaultIRBuilder::CreateFMul, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_mul = std::bind( &DefaultIRBuilder::CreateMul,  std::ref(builder()), _1, _2, "", false, false );
 	return emit_bin_ps_ta_sva( lv, rv, i_mul, i_mul, f_mul );
 }
 
@@ -730,16 +729,16 @@ bool bool_xor(bool l, bool r)
 
 multi_value cg_service::emit_add( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_add = std::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_add = std::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
+	binary_intrin_functor f_add = std::bind( &DefaultIRBuilder::CreateFAdd, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_add = std::bind( &DefaultIRBuilder::CreateAdd, std::ref(builder()), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_add, i_add, f_add );
 }
 
 multi_value cg_service::emit_sub( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_sub = std::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_sub = std::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
+	binary_intrin_functor f_sub = std::bind( &DefaultIRBuilder::CreateFSub, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_sub = std::bind( &DefaultIRBuilder::CreateSub, std::ref(builder()), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_sub, i_sub, f_sub );
 }
@@ -781,9 +780,9 @@ multi_value cg_service::emit_mul_intrin( multi_value const& lhs, multi_value con
 
 multi_value cg_service::emit_div( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_div = std::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
-	binary_intrin_functor i_div = std::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
-	binary_intrin_functor u_div = std::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
+	binary_intrin_functor f_div = std::bind( &DefaultIRBuilder::CreateFDiv, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor i_div = std::bind( &DefaultIRBuilder::CreateSDiv, std::ref(builder()), _1, _2, "", false );
+	binary_intrin_functor u_div = std::bind( &DefaultIRBuilder::CreateUDiv, std::ref(builder()), _1, _2, "", false );
 	binary_intrin_functor i_safe_div = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_div );
 	binary_intrin_functor u_safe_div = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_div );
 
@@ -792,8 +791,8 @@ multi_value cg_service::emit_div( multi_value const& lhs, multi_value const& rhs
 
 multi_value cg_service::emit_mod( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor i_mod = std::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
-	binary_intrin_functor u_mod = std::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
+	binary_intrin_functor i_mod = std::bind( &DefaultIRBuilder::CreateSRem, std::ref(builder()), _1, _2, "" );
+	binary_intrin_functor u_mod = std::bind( &DefaultIRBuilder::CreateURem, std::ref(builder()), _1, _2, "" );
 
 	binary_intrin_functor i_safe_mod = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_mod );
 	binary_intrin_functor u_safe_mod = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_mod );
@@ -810,7 +809,7 @@ multi_value cg_service::emit_mod( multi_value const& lhs, multi_value const& rhs
 multi_value cg_service::emit_bitwise_bin_op(operators op, multi_value const& lhs, multi_value const& rhs)
 {
 	auto vm_op = static_cast<Instruction::BinaryOps>(conv_bin_op_to_vm_[op]);
-	auto bin_op = std::bind(&DefaultIRBuilder::CreateBinOp, builder(), vm_op, _1, _2, "", nullptr);
+	binary_intrin_functor bin_op = std::bind(&DefaultIRBuilder::CreateBinOp, std::ref(builder()), vm_op, _1, _2, "", nullptr);
 	return emit_bin_es_ta_sva( lhs, rhs, bin_op, bin_op, bin_op);
 }
 
@@ -1368,7 +1367,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 		}
 	}
 
-	Value* ret_value = builder().CreateCall(fn.fn, physical_args);
+	Value* ret_value = builder().CreateCall(fn.fn->getFunctionType(), fn.fn, physical_args);
 
 	// Parse result.
 	if( fn.return_via_arg() )
@@ -1581,15 +1580,16 @@ multi_value cg_service::emit_cmp( multi_value const& lhs, multi_value const& rhs
 	binary_intrin_functor cmp_fn;
 	if( is_real(scalar_hint) )
 	{
-		cmp_fn = std::bind(
-            &DefaultIRBuilder::CreateFCmp,
-            builder(), (CmpInst::Predicate)pred_float, _1, _2, "", nullptr
-        );
+		cmp_fn = [this, pred_float](llvm::Value* lhs, llvm::Value* rhs) {
+			return builder().CreateICmp(static_cast<CmpInst::Predicate>(pred_float), lhs, rhs, "");
+		};
 	}
 	else if ( is_integer(scalar_hint) )
 	{
 		int pred = is_signed(scalar_hint) ? pred_signed : pred_unsigned;
-		cmp_fn = std::bind( &DefaultIRBuilder::CreateICmp, builder(), (CmpInst::Predicate)pred, _1, _2, "" );
+		cmp_fn = [this, pred](llvm::Value* lhs, llvm::Value* rhs) {
+			return builder().CreateICmp(static_cast<CmpInst::Predicate>(pred), lhs, rhs, "");
+		};
 	}
 
 	unary_intrin_functor cast_fn = std::bind( &cg_extension::i1toi8_sv, ext_.get(), _1 );

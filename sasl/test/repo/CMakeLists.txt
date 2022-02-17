@@ -1,5 +1,3 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
-
 set( TEST_SHADERS
 	"auto_semantic.svs"
 	"array.svs"
