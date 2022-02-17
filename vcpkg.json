@@ -3,6 +3,7 @@
     "version-string": "22.02",
     "dependencies": [
       "boost-algorithm",
+      "boost-assign",
       "boost-bimap",
       "boost-circular-buffer",
       "boost-config",

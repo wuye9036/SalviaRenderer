@@ -2,9 +2,9 @@ SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 INCLUDE_DIRECTORIES(
 	${SALVIA_HOME_DIR}
-	${SALVIA_BOOST_INCLUDE_DIR}
-	${SALVIA_FREETYPE_INCLUDE_DIR}
-	${SALVIA_FREEIMAGE_INCLUDE_DIR}
+	${Boost_INCLUDE_DIRS}
+	${FreeType_INCLUDE_DIRS}
+	${FreeImage_INCLUDE_DIRS}
 )
 
 set (HEADER_FILES
@@ -79,7 +79,6 @@ if( SALVIA_BUILD_WITH_DIRECTX )
 	)
 endif()
 
-ADD_LIBRARY( salviax STATIC	${HEADER_FILES}	${SOURCE_FILES} )
-TARGET_LINK_LIBRARIES(salviax EFLIB	salviar FreeImage freetype)
-SET_TARGET_PROPERTIES(salviax PROPERTIES FOLDER "SALVIA Renderer")
-SALVIA_CONFIG_OUTPUT_PATHS(salviax)
+add_library( salviax STATIC	${HEADER_FILES}	${SOURCE_FILES} )
+target_link_libraries(salviax EFLIB	salviar freeimage::FreeImage freeimage::FreeImagePlus freetype)
+set_target_properties(salviax PROPERTIES FOLDER "SALVIA Renderer")
