@@ -32,3 +32,4 @@ ADD_LIBRARY( sasl_host SHARED
 
 TARGET_LINK_LIBRARIES( sasl_host sasl_drivers EFLIB )
 SET_TARGET_PROPERTIES( sasl_host PROPERTIES FOLDER "Shader Drivers")
+install(TARGETS sasl_host)

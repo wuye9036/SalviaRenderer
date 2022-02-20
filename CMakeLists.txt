@@ -1,6 +1,6 @@
 project(salvia)
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.21)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(SALVIA_HOME_DIR ${CMAKE_HOME_DIRECTORY})
@@ -20,12 +20,10 @@ find_package(
     atomic
     system
 )
-
 # Workaround for linking failure of Boost.UUID
 if (MSVC)
 	list(APPEND Boost_LIBRARIES bcrypt.lib)
 endif()
-
 find_package(llvm CONFIG REQUIRED)
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 include(HandleLLVMOptions)
@@ -44,23 +42,20 @@ llvm_map_components_to_libnames(LLVM_LIBS
   MCJIT
   X86CodeGen
 )
-
 find_package(freeimage CONFIG REQUIRED)
 
-include (${CMAKE_HOME_DIRECTORY}/cmake/ConfigCompiler.cmake)
-# include (${CMAKE_HOME_DIRECTORY}/cmake/SystemInfo.cmake)
-# include (${CMAKE_HOME_DIRECTORY}/cmake/Variables.cmake)
-# include (${CMAKE_HOME_DIRECTORY}/cmake/ConfigurePath.cmake)
-ADD_SUBDIRECTORY( cmake )
+include (cmake/ConfigCompiler.cmake)
+add_subdirectory( cmake )
 
 # Add projects
-ADD_SUBDIRECTORY( eflib )
-ADD_SUBDIRECTORY( sasl )
-ADD_SUBDIRECTORY( salviar )
-ADD_SUBDIRECTORY( salviax )
-ADD_SUBDIRECTORY( salviau )
-ADD_SUBDIRECTORY( samples )
+add_subdirectory(eflib)
+add_subdirectory(sasl)
+add_subdirectory(salviar)
+add_subdirectory(salviax)
+add_subdirectory(salviau)
+add_subdirectory(samples)
+
 # if( SALVIA_BUILD_SW_DRIVER )
-# 	ADD_SUBDIRECTORY( salvia_d3d_sw_driver )
+# 	add_subdirectory( salvia_d3d_sw_driver )
 # endif()
 

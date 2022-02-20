@@ -19,3 +19,9 @@ if( SALVIA_ENABLE_SAMPLES )
 	ADD_SUBDIRECTORY( StencilMirror )
 	ADD_SUBDIRECTORY( AntiAliasing )
 endif()
+
+# Copy resources required by sample to target folder
+install(
+	DIRECTORY ${SALVIA_HOME_DIR}/resources
+	DESTINATION .
+)

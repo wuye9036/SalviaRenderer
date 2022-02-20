@@ -76,3 +76,9 @@ ADD_CUSTOM_COMMAND(
 		)
 ADD_CUSTOM_TARGET( sasl_test_shader_repo ALL DEPENDS test_repo.deps ${TEST_SHADERS} SOURCES ${TEST_SHADERS} )
 SET_TARGET_PROPERTIES( sasl_test_shader_repo PROPERTIES FOLDER "Shader Tests")
+
+install(
+	DIRECTORY ${SASL_HOME_DIR}/sasl/test/repo 
+	DESTINATION .
+	FILES_MATCHING PATTERN "*.*"
+	)
