@@ -11,24 +11,21 @@
     * Reshaper C++
 
 ## Requirements
-  * Windows 10
-    * Visual Studio 2019.
-    * Python 3.5 or later
+  * Windows 10/11
+    * Git
+      * Need to install LFS plug-in.
+      * [About Git LFS](https://git-lfs.github.com/)
+    * Visual Studio 2019/2022
+      * Need C++17 support.
     * CMake 3.21+
+    * vcpkg (See build steps)
   * Linux
-    * Mint 16 and Mint 17 were tested.
-    * GCC 8 or later.
-    * Python 3.5 or later
-    * CMake 3.15 or later
+    * NOT tested in 22.02. Will be tested in following version.
     
 ## Build steps
   * Install [vcpkg](https://github.com/microsoft/vcpkg).
   * Edit SAMPLE_Build.bat.
   * Run the modified script.
-
- 
-## REMARK
-  * While `bootstrap.py` build was run, only one configuration was avaiable for build. For IDEs which support multiple configurations, such as Visual Studio, you need to run bootstrap several times to make the configurations available for building.
   
   
 ## Support Info
