@@ -1,0 +1,227 @@
+newmtl sponza_00SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_thorn_diff.jpg
+bump textures\sponza_thorn_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.36 0.36 0.36
+Ns 2.00
+newmtl sponza_01SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\vase_plant.jpg
+Ni 1.00
+Ks 0.18 0.18 0.18
+Ns -0.00
+newmtl sponza_01SG1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\vase_round.jpg
+bump textures\vase_round_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.90 0.90 0.90
+Ns 30.00
+newmtl sponza_03SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\background.jpg
+bump textures\background_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.90 0.90 0.90
+Ns 30.00
+newmtl sponza_05SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\spnza_bricks_a_diff.jpg
+bump textures\spnza_bricks_a_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.90 0.90 0.90
+Ns 30.00
+newmtl sponza_07SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_arch_diff.jpg
+bump textures\sponza_arch_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns -0.93
+newmtl sponza_08SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_ceiling_a_diff.jpg
+Ni 1.00
+Ks 0.90 0.90 0.90
+Ns 30.00
+newmtl sponza_09SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_column_a_diff.jpg
+bump textures\sponza_column_a_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns -0.93
+newmtl sponza_18SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_floor_a_diff.jpg
+Ni 1.00
+Ks 0.03 0.03 0.03
+Ns -0.93
+newmtl sponza_22SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_column_c_diff.jpg
+bump textures\sponza_column_c_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns -0.93
+newmtl sponza_70SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_details_diff.jpg
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns -0.93
+newmtl sponza_125SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_column_b_diff.jpg
+bump textures\sponza_column_b_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns -0.93
+newmtl sponza_259SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_flagpole_diff.jpg
+Ni 1.00
+Ks 0.68 0.68 0.68
+Ns 11.93
+newmtl sponza_282SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_fabric_green_diff.jpg
+Ni 1.00
+Ks 0.45 0.45 0.45
+Ns 3.66
+newmtl sponza_283SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_fabric_blue_diff.jpg
+Ni 1.00
+Ks 0.45 0.45 0.45
+Ns 3.66
+newmtl sponza_284SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_fabric_diff.jpg
+Ni 1.00
+Ks 0.45 0.45 0.45
+Ns 3.66
+newmtl sponza_320SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_curtain_blue_diff.jpg
+Ni 1.00
+Ks 0.45 0.45 0.45
+Ns 3.66
+newmtl sponza_321SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_curtain_diff.jpg
+Ni 1.00
+Ks 0.45 0.45 0.45
+Ns 3.66
+newmtl sponza_322SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_curtain_green_diff.jpg
+Ni 1.00
+Ks 0.45 0.45 0.45
+Ns 3.66
+newmtl sponza_330SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\chain_texture.jpg
+bump textures\chain_texture_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.72 0.72 0.72
+Ns 14.00
+newmtl sponza_334SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\vase_hanging.jpg
+Ni 1.00
+Ks 0.72 0.72 0.72
+Ns 14.00
+newmtl sponza_373SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\vase_dif.jpg
+bump textures\vase_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.90 0.90 0.90
+Ns 30.00
+newmtl sponza_377SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\lion.jpg
+bump textures\lion_ddn.jpg -bm 0.02
+Ni 1.00
+Ks 0.90 0.90 0.90
+Ns 30.00
+newmtl sponza_380SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.59 0.59 0.59
+Tf 1.00 1.00 1.00
+map_Kd textures\sponza_roof_diff.jpg
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns -0.93

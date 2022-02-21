@@ -1,0 +1,34 @@
+float4   	cameraPos; 
+float4x4	cameraWvp;
+
+float4		lightPos;
+float4x4	lightWvp;
+ 
+struct VSIn
+{ 
+	float4 pos: POSITION; 
+	float4 norm: NORMAL; 
+	float4 tex: TEXCOORD0;
+}; 
+
+struct VSOut
+{ 
+	float4 pos: sv_position; 
+	float4 tex: TEXCOORD0; 
+	float4 norm: TEXCOORD1; 
+	float4 lightDir: TEXCOORD2; 
+	float4 cameraDir: TEXCOORD3;
+	float4 lightSpacePos: TEXCOORD4;
+};
+ 
+VSOut vs_main(VSIn in)
+{
+	VSOut out; 
+	out.norm = in.norm; 
+	out.pos = mul(in.pos, cameraWvp);
+	out.lightSpacePos = mul(in.pos, lightWvp);
+	out.lightDir = lightPos - in.pos;
+	out.cameraDir = cameraPos - in.pos; 
+	out.tex = in.tex; 
+	return out; 
+}
