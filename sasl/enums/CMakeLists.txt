@@ -5,7 +5,7 @@ include (generate_enum.cmake)
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
 	${SALVIA_HOME_DIR}
-	${SALVIA_BOOST_INCLUDE_DIR}
+	${Boost_INCLUDE_DIRS}
 )
 
 LIST(APPEND enum_confs enums.xgt )
@@ -50,4 +50,3 @@ ADD_LIBRARY( sasl_enums STATIC
 )
 
 SET_TARGET_PROPERTIES( sasl_enums PROPERTIES FOLDER "Shader Libs")
-SALVIA_CONFIG_OUTPUT_PATHS(sasl_enums)

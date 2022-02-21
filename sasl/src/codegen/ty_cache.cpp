@@ -4,11 +4,11 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
-int const PACKAGE_SIZE = 16;
-int SIMD_WIDTH_IN_BYTES(){
+constexpr int PACKAGE_SIZE = 16;
+constexpr int SIMD_WIDTH_IN_BYTES(){
 	return 16;
 }
-int SIMD_FLOAT_SIZE(){
+constexpr int SIMD_FLOAT_SIZE(){
 	return SIMD_WIDTH_IN_BYTES() / sizeof(float);
 }
 
@@ -181,7 +181,7 @@ Type* ty_cache_t::create_abi_ty(LLVMContext& ctxt, builtin_types bt, abis abi)
 				return StructType::create(elem_tys, name(bt, abi), true);
 			}
 		case abis::llvm:
-			return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
+			return VectorType::get(elem_ty, static_cast<unsigned int>(vec_size), false);
 		case abis::regs:
 			return ArrayType::get(elem_ty, vec_size);
 		default:

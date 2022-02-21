@@ -3,13 +3,13 @@ SALVIA_CHECK_BUILD_WITH_UNICODE()
 INCLUDE_DIRECTORIES(
 	${SALVIA_HOME_DIR}
 	${SALVIA_WTL_INCLUDE_DIR}
-	${SALVIA_BOOST_INCLUDE_DIR}
+	${Boost_INCLUDE_DIRS}
 )
 
 LINK_DIRECTORIES(
-	${SALVIA_BOOST_LIB_DIR}
-	${SALVIA_FREETYPE_LIB_DIR}
-	${SALVIA_FREEIMAGE_LIB_DIR}
+	${Boost_LIBRARY_DIRS}
+	${Freetype_LIBRARY_DIRS}
+	${FreeImage_LIBRARY_DIRS}
 )
 
 set( APP_COMMON_HEADERS
@@ -64,7 +64,32 @@ ADD_LIBRARY( salviau SHARED
 )
 endif(MSVC)
 
-TARGET_LINK_LIBRARIES( salviau salviax EFLIB ${SALVIA_BOOST_LIBS}) 
+TARGET_LINK_LIBRARIES( salviau salviax EFLIB ${Boost_LIBRARIES}) 
 SET_TARGET_PROPERTIES( salviau PROPERTIES FOLDER "Samples" )
+install(TARGETS salviau)
+install(
+    CODE [[
+  SET(EXCLUDE_PATTERNS
+	"^libcdpl.*"
+	"^.*linux.*"
+	"^libGL.*"
+	"^libX.*"
+	"^libpython.*"
+    "^.*system32.*"
+    "^.*ms-win-core.*"
+  )
 
-SALVIA_CONFIG_OUTPUT_PATHS(salviau)
+  file(GET_RUNTIME_DEPENDENCIES
+    EXECUTABLES $<$<TARGET_EXISTS:salviau>:$<TARGET_FILE:salviau>>
+    RESOLVED_DEPENDENCIES_VAR _r_deps
+    UNRESOLVED_DEPENDENCIES_VAR _u_deps
+    POST_EXCLUDE_REGEXES ${EXCLUDE_PATTERNS}
+  )
+  file(INSTALL ${_r_deps}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    FOLLOW_SYMLINK_CHAIN
+  )
+  message(STATUS "Resolved deps: ${_r_deps}")
+  message(STATUS "Unresolved deps: ${_u_deps}")
+]]
+)

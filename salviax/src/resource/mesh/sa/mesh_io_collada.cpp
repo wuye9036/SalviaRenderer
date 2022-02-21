@@ -541,6 +541,8 @@ vector<animation_player_ptr> build_animations(
 	unordered_map<dae_matrix_ptr, mat44*>&	dae_node_to_matrix
 	)
 {
+	using namespace std::placeholders;
+
 	vector<animation_player_ptr> ret;
 
 	for(dae_animation_ptr const& anim: animations->anims)
@@ -575,7 +577,7 @@ vector<animation_player_ptr> build_animations(
 			}
 			
 			mat44* target_data = dae_node_to_matrix[dynamic_pointer_cast<dae_matrix>(target_node)];
-			anim_player_mat44->anim_info2()->applier = boost::bind( assign_mat44, target_data, _1 );
+			anim_player_mat44->anim_info2()->applier = std::bind(assign_mat44, target_data, _1);
 		}
 
 		if(anim_player)

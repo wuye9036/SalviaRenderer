@@ -3,30 +3,56 @@ SALVIA_CHECK_BUILD_WITH_UNICODE()
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
 	${SALVIA_HOME_DIR}
-	${SALVIA_LLVM_INCLUDE_DIR}
-	${SALVIA_BOOST_INCLUDE_DIR}
+	${LLVM_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
 )
 
 LINK_DIRECTORIES(
-	${SALVIA_BOOST_LIB_DIR}
-	${SALVIA_LLVM_LIB_DIR}
+	${LLVM_LIBRARY_DIRS}
+	${Boost_LIBRARY_DIRS}
 )
 
 # Configure Dynamic Link Driver.
-ADD_LIBRARY( sasl_drivers
+add_library( sasl_drivers
 	SHARED
 	${SASL_HOME_DIR}/sasl/include/drivers/drivers_api.h
 	drivers_api.cpp
 	)
 	
-TARGET_LINK_LIBRARIES( sasl_drivers
+target_link_libraries( sasl_drivers
 	sasl_drivers_lib sasl_shims sasl_codegen sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common EFLIB
-	${SASL_LLVM_LIBS}
-	${SALVIA_BOOST_LIBS}
+	${Boost_LIBRARIES}
+	${LLVM_LIBS}
 )
-SET_TARGET_PROPERTIES( sasl_drivers PROPERTIES FOLDER "Shader Drivers")
-SALVIA_CONFIG_OUTPUT_PATHS( sasl_drivers )
+set_target_properties(sasl_drivers PROPERTIES FOLDER "Shader Drivers")
 
+install(TARGETS sasl_drivers)
+install(
+    CODE [[
+  SET(EXCLUDE_PATTERNS
+	"^libcdpl.*"
+	"^.*linux.*"
+	"^libGL.*"
+	"^libX.*"
+	"^libpython.*"
+    "^.*system32.*"
+    "^.*ms-win-core.*"
+  )
+
+  file(GET_RUNTIME_DEPENDENCIES
+    EXECUTABLES $<$<TARGET_EXISTS:sasl_drivers>:$<TARGET_FILE:sasl_drivers>>
+    RESOLVED_DEPENDENCIES_VAR _r_deps
+    UNRESOLVED_DEPENDENCIES_VAR _u_deps
+    POST_EXCLUDE_REGEXES ${EXCLUDE_PATTERNS}
+  )
+  file(INSTALL ${_r_deps}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    FOLLOW_SYMLINK_CHAIN
+  )
+  message(STATUS "Resolved deps: ${_r_deps}")
+  message(STATUS "Unresolved deps: ${_u_deps}")
+]]
+)
 # Configure Static Link Driver.
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/drivers/drivers_forward.h
@@ -47,7 +73,6 @@ set( SOURCE_FILES
 	code_sources.cpp
 )
 
-ADD_DEFINITIONS( -DSASL_STATIC_DRIVER )
-ADD_LIBRARY( sasl_drivers_lib STATIC ${HEADER_FILES} ${SOURCE_FILES} )
-SET_TARGET_PROPERTIES( sasl_drivers_lib PROPERTIES FOLDER "Shader Drivers")
-SALVIA_CONFIG_OUTPUT_PATHS( sasl_drivers_lib )
+add_definitions( -DSASL_STATIC_DRIVER )
+add_library(sasl_drivers_lib STATIC ${HEADER_FILES} ${SOURCE_FILES})
+set_target_properties( sasl_drivers_lib PROPERTIES FOLDER "Shader Drivers")

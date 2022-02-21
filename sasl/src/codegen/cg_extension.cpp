@@ -155,14 +155,14 @@ Value* cg_extension::call_unary_intrin( Type* ret_ty, Value* v, unary_intrin_fun
 
 unary_intrin_functor cg_extension::bind_to_unary( Function* fn )
 { 
-	return [this, fn](Value* v) -> CallInst* { return builder_->CreateCall(fn, v); };
+	return [this, fn](Value* v) -> CallInst* { return builder_->CreateCall(fn->getFunctionType(), fn, v); };
 }
 
 binary_intrin_functor cg_extension::bind_to_binary( Function* fn )
 {
 	return [this, fn](Value* v0, Value* v1) -> CallInst* {
         std::array<Value*, 2> args{v0, v1};
-        return builder_->CreateCall(fn, args); 
+        return builder_->CreateCall(fn->getFunctionType(), fn, args); 
     };
 }
 
@@ -235,8 +235,15 @@ Value* cg_extension::abs_sv( Value* v )
 
 	if( ty->isVectorTy() )
 	{
-		elem_ty   = ty->getVectorElementType();
-		elem_size = ty->getVectorNumElements();
+		if (ty->getTypeID() == Type::FixedVectorTyID)
+		{
+			elem_ty = static_cast<FixedVectorType*>(ty)->getElementType();
+			elem_size = static_cast<FixedVectorType*>(ty)->getNumElements();
+		}
+		else
+		{
+			assert(false);
+		}
 	}
 	else
 	{
@@ -263,7 +270,7 @@ Value* cg_extension::abs_sv( Value* v )
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 
-		Type* int_ty = ty->isVectorTy() ? VectorType::get(elem_int_ty, elem_size) : elem_int_ty;
+		Type* int_ty = ty->isVectorTy() ? VectorType::get(elem_int_ty, elem_size, false) : elem_int_ty;
 		Value* i = builder_->CreateBitCast( v, int_ty );
 		i = builder_->CreateAnd(i, mask);
 		return builder_->CreateBitCast(i, ty);
@@ -298,7 +305,7 @@ Value* cg_extension::shrink( Value* vec, size_t vsize )
 
 Value* cg_extension::extract_elements( Value* src, size_t start_pos, size_t length )
 {
-	VectorType* vty = llvm::cast<VectorType>(src->getType());
+	auto vty = llvm::cast<FixedVectorType>(src->getType());
 	auto elem_count = vty->getNumElements();
 	if( start_pos == 0 && length == elem_count ){
 		return src;
@@ -319,7 +326,7 @@ Value* cg_extension::insert_elements( Value* dst, Value* src, size_t start_pos )
 		return src;
 	}
 
-	VectorType* src_ty = llvm::cast<VectorType>(src->getType());
+	auto src_ty = llvm::cast<FixedVectorType>(src->getType());
 	auto count = src_ty->getNumElements();
 
 	// Expand source to dest size
@@ -337,7 +344,7 @@ Value* cg_extension::i8toi1_sv( Value* v )
 	Type* ty = IntegerType::get( v->getContext(), 1 );
 	if( v->getType()->isVectorTy() )
 	{
-		ty = VectorType::get(ty, v->getType()->getVectorNumElements());
+		ty = FixedVectorType::get(ty, llvm::cast<FixedVectorType>(v->getType())->getNumElements());
 	}
 
 	return builder_->CreateTruncOrBitCast(v, ty);
@@ -359,7 +366,7 @@ Value* cg_extension::i1toi8_sv( Value* v )
 	Type* ty = IntegerType::get( v->getContext(), 8 );
 	if( v->getType()->isVectorTy() )
 	{
-		ty = VectorType::get(ty, v->getType()->getVectorNumElements());
+		ty = FixedVectorType::get(ty, llvm::cast<FixedVectorType>(v->getType())->getNumElements());
 	}
 
 	return builder_->CreateZExtOrBitCast(v, ty);
@@ -385,11 +392,11 @@ Value* cg_extension::call_external_2( Function* f, Value* v0, Value* v1 )
 
 Value* cg_extension::cast_sv( Value* v, Type* ty, cast_ops::id op )
 {
-	Type* elem_ty = ty->isVectorTy() ? ty->getVectorElementType() : ty;
+	Type* elem_ty = ty->isVectorTy() ? llvm::cast<FixedVectorType>(v->getType())->getElementType() : ty;
 	assert( !v->getType()->isAggregateType() );
 	Type* ret_ty
 		= v->getType()->isVectorTy()
-		? VectorType::get( elem_ty, v->getType()->getVectorNumElements() )
+		? FixedVectorType::get( elem_ty, llvm::cast<FixedVectorType>(v->getType())->getNumElements() )
 		: elem_ty;
 
 	Instruction::CastOps llvm_op = Instruction::BitCast;
@@ -493,7 +500,7 @@ Type* cg_extension::extract_scalar_type( Type* ty )
 {
 	if( ty->isVectorTy() )
 	{
-		return ty->getVectorElementType();
+		return llvm::cast<FixedVectorType>(ty)->getElementType();
 	}
 	else if( ty->isAggregateType() )
 	{
@@ -528,8 +535,8 @@ Value* cg_extension::get_constant_by_scalar( Type* ty, Value* scalar )
 	if ( ty->isVectorTy() )
 	{
 		// Vector
-		unsigned vector_size = ty->getVectorNumElements();
-		assert( ty->getVectorElementType() == scalar_ty );
+		unsigned vector_size = llvm::cast<FixedVectorType>(ty)->getNumElements();
+		assert( llvm::cast<FixedVectorType>(ty)->getElementType() == scalar_ty );
 
 		vector<Value*> scalar_values(vector_size, scalar);
 		return get_vector( ArrayRef<Value*>(scalar_values) );
@@ -561,7 +568,7 @@ Value* cg_extension::get_constant_by_scalar( Type* ty, Value* scalar )
 Value* cg_extension::get_vector( ArrayRef<Value*> const& elements )
 {
 	assert( !elements.empty() );
-	Type* vector_ty = VectorType::get(
+	Type* vector_ty = FixedVectorType::get(
 		elements.front()->getType(), static_cast<uint32_t>( elements.size() )
 		);
 	Value* ret = UndefValue::get(vector_ty);
@@ -634,7 +641,7 @@ Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 	{
 		if(vfn) { return vfn(lhs, rhs); }
 
-		unsigned elem_count = ty->getVectorNumElements();
+		unsigned elem_count = llvm::cast<FixedVectorType>(ty)->getNumElements();
 
 		// SIMD
 		if( simd_fn && elem_count % SASL_SIMD_ELEMENT_COUNT == 0 )
@@ -648,9 +655,9 @@ Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 				Value* ret_simd_elem = simd_fn( lhs_simd_elem, rhs_simd_elem );
 				if(!ret)
 				{
-					Type* result_element_ty = ret_simd_elem->getType()->getVectorElementType();
-					unsigned result_elements_count = lhs->getType()->getVectorNumElements();
-					Type* result_ty = VectorType::get(result_element_ty, result_elements_count);
+					Type* result_element_ty = llvm::cast<FixedVectorType>(ret_simd_elem->getType())->getElementType();
+					unsigned result_elements_count = llvm::cast<FixedVectorType>(lhs->getType())->getNumElements();
+					Type* result_ty = FixedVectorType::get(result_element_ty, result_elements_count);
 					ret = UndefValue::get(result_ty);
 				}
 				ret = insert_elements( ret, ret_simd_elem, i_batch*SASL_SIMD_ELEMENT_COUNT );
@@ -669,8 +676,8 @@ Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 			Value* ret_elem = sfn(lhs_elem, rhs_elem);
 			if(!ret)
 			{
-				unsigned result_elements_count = lhs->getType()->getVectorNumElements();
-				Type* result_ty = VectorType::get(ret_elem->getType(), result_elements_count);
+				unsigned result_elements_count = llvm::cast<FixedVectorType>(lhs->getType())->getNumElements();
+				Type* result_ty = FixedVectorType::get(ret_elem->getType(), result_elements_count);
 				ret = UndefValue::get(result_ty);
 			}
 			ret = builder_->CreateInsertElement( ret, ret_elem, get_int(i) );
@@ -698,7 +705,7 @@ Value* cg_extension::promote_to_unary_sv_impl(Value* v,
 	{
 		if(vfn) { return vfn(v); }
 
-		unsigned elem_count = ty->getVectorNumElements();
+		unsigned elem_count = llvm::cast<FixedVectorType>(ty)->getNumElements();
 
 		// SIMD
 		if( simd_fn && elem_count % SASL_SIMD_ELEMENT_COUNT == 0 )
@@ -711,9 +718,9 @@ Value* cg_extension::promote_to_unary_sv_impl(Value* v,
 				Value* ret_simd_elem = simd_fn(v_simd_elem);
 				if(!ret)
 				{
-					Type* result_element_ty = ret_simd_elem->getType()->getVectorElementType();
-					unsigned result_elements_count = v->getType()->getVectorNumElements();
-					Type* result_ty = VectorType::get(result_element_ty, result_elements_count);
+					Type* result_element_ty = llvm::cast<FixedVectorType>(ret_simd_elem->getType())->getElementType();
+					unsigned result_elements_count = llvm::cast<FixedVectorType>(v->getType())->getNumElements();
+					Type* result_ty = FixedVectorType::get(result_element_ty, result_elements_count);
 					ret = UndefValue::get(result_ty);
 				}
 				ret = insert_elements( ret, ret_simd_elem, i_batch*SASL_SIMD_ELEMENT_COUNT );
@@ -731,8 +738,8 @@ Value* cg_extension::promote_to_unary_sv_impl(Value* v,
 			Value* ret_elem = sfn(v_elem);
 			if(!ret)
 			{
-				unsigned result_elements_count = v->getType()->getVectorNumElements();
-				Type* result_ty = VectorType::get(ret_elem->getType(), result_elements_count);
+				unsigned result_elements_count = llvm::cast<FixedVectorType>(v->getType())->getNumElements();
+				Type* result_ty = FixedVectorType::get(ret_elem->getType(), result_elements_count);
 				ret = UndefValue::get(result_ty);
 			}
 			ret = builder_->CreateInsertElement( ret, ret_elem, get_int(i) );
@@ -854,7 +861,11 @@ value_array cg_extension::call(
 		{
 			arg_values[i_arg] = args[i_arg][value_index];
 		}
-		ret[value_index] = builder_->CreateCall(fn[value_index], arg_values);
+		ret[value_index] = builder_->CreateCall(
+			llvm::cast<Function>(fn[value_index])->getFunctionType(),
+			fn[value_index],
+			arg_values
+		);
 	}
 	return ret;
 }
@@ -871,7 +882,10 @@ value_array cg_extension::call(
 		{
 			arg_values[i_arg] = (*args[i_arg])[value_index];
 		}
-		ret[value_index] = builder_->CreateCall(fn[value_index], arg_values);
+		ret[value_index] = builder_->CreateCall(
+			llvm::cast<Function>(fn[value_index])->getFunctionType(),
+			fn[value_index],
+			arg_values);
 	}
 	return ret;
 }

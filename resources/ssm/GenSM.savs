@@ -1,0 +1,6 @@
+float4x4 wvpMatrix; 
+
+float4 main(float4 pos: POSITION): SV_Position
+{
+	return mul(pos, wvpMatrix);
+} 

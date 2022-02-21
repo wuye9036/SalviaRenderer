@@ -216,8 +216,8 @@ public:
 
 			int32_t target_region_left   = target_pen_x + bitmap_glyph->left;
 			int32_t target_region_top    = target_pen_y - (face_.get()->size->metrics.y_ppem - bitmap_glyph->top);
-			int32_t target_region_bottom = std::max(target_region_top-bitmap.rows, rc.y);
-			int32_t target_region_right  = std::min(bitmap.width+target_region_left, rc.x+rc.w);
+			int32_t target_region_bottom = std::max(static_cast<int>(target_region_top - bitmap.rows), rc.y);
+			int32_t target_region_right  = std::min(static_cast<int>(bitmap.width + target_region_left), rc.x+rc.w);
 
 			int32_t target_region_width  = target_region_right - target_region_left;
 			int32_t target_region_height = target_region_top - target_region_bottom;

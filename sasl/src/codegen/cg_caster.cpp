@@ -204,6 +204,8 @@ void add_builtin_casts(
 	pety_t* pety
 	)
 {
+	using namespace std::placeholders;
+
 	typedef caster_t::cast_t cast_t;
 	shared_ptr<cg_caster> cst = dynamic_pointer_cast<cg_caster>(caster);
 
