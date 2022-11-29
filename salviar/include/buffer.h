@@ -12,7 +12,7 @@
 #include <vector>
 #include <memory>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct internal_mapped_resource;
 
@@ -36,4 +36,4 @@ public:
 	void transfer(size_t offset, void const* psrcdata, size_t stride_dest, size_t stride_src, size_t size, size_t count);
 };
 
-END_NS_SALVIAR();
+}

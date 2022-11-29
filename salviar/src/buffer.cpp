@@ -2,7 +2,7 @@
 
 #include <salviar/include/internal_mapped_resource.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 result buffer::map(internal_mapped_resource& mapped, map_mode mm)
 {
@@ -71,4 +71,4 @@ void buffer::transfer(size_t offset, void const* psrcdata, size_t stride_dest, s
 	}
 }
 
-END_NS_SALVIAR();
+}

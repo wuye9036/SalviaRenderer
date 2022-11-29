@@ -21,7 +21,7 @@ using std::string;
 using std::cout;
 using std::endl;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 #define USE_ASYNC_RENDERER
 renderer_ptr create_software_renderer()
@@ -118,4 +118,4 @@ shader_object_ptr	compile_from_file(std::string const& file_name, languages lang
 	return compile_from_file(file_name, prof);
 }
 
-END_NS_SALVIAR();
+}

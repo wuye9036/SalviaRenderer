@@ -15,7 +15,7 @@
 
 EFLIB_USING_SHARED_PTR(salviar, surface);
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 class font_library
 {
@@ -274,4 +274,4 @@ font_ptr font::create_in_system_path( std::string const& font_file_name, size_t 
 	return create(font_path.string(), face_index, size, unit);
 }
 
-END_NS_SALVIAX_RESOURCE()
+}

@@ -12,7 +12,7 @@
 
 #define SALVIA_TILED_SURFACE 0
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct internal_mapped_resource;
 
@@ -107,4 +107,4 @@ private:
 	pixel_format_convertor::pixel_lerp_2d           lerp_2d_func_;
 };
 
-END_NS_SALVIAR();
+}

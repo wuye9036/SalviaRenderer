@@ -12,7 +12,7 @@
 #include <vector>
 #include <algorithm>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(texture_2d);
 
@@ -143,4 +143,4 @@ public:
 	virtual void gen_mipmap(filter_type filter, bool auto_gen);
 };
 
-END_NS_SALVIAR();
+}

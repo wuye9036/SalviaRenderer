@@ -21,7 +21,7 @@ void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 	reinterpret_cast<void (*)(void*, void*, void*, void*)>(callee)( psi, pbi, pso, pbo );
 }
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 void pixel_shader_unit::initialize( shader_object const* code )
 {
@@ -205,4 +205,4 @@ void pixel_shader_unit::set_sampler( std::string const& name, sampler_ptr const&
 	set_variable(name, &psamp);
 }
 
-END_NS_SALVIAR();
+}

@@ -8,7 +8,7 @@
 
 #include <array>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 
@@ -38,4 +38,4 @@ struct stream_state
 		);
 };
 
-END_NS_SALVIAR();
+}

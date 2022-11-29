@@ -9,7 +9,7 @@
 #include <vector>
 #include <memory>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace eflib;
 using std::vector;
@@ -39,4 +39,4 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 	}
 }
 
-END_NS_SALVIAR();
+}

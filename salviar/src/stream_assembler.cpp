@@ -22,7 +22,7 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 vec4 get_vec4(format fmt, float default_wcomp, const void* data)
 {
@@ -128,4 +128,4 @@ vector<stream_desc> const& stream_assembler::get_stream_descs(vector<size_t> con
 	return stream_descs_;
 }
 
-END_NS_SALVIAR();
+}

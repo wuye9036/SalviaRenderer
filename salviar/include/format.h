@@ -3,7 +3,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 enum format{
 	
@@ -111,6 +111,6 @@ enum format{
 	DXGI_FORMAT_FORCE_UINT = 0xFFFFFFFFUL,
 };
 
-END_NS_SALVIAR();
+}
 
 #endif

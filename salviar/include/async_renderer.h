@@ -12,12 +12,12 @@
 #include <memory>
 #include <functional>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
 renderer_ptr create_async_renderer();
 
-END_NS_SALVIAR();
+}
 
 #endif

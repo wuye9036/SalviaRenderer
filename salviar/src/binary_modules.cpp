@@ -10,7 +10,7 @@ using std::shared_ptr;
 using std::string;
 using std::vector;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 namespace modules
 {
@@ -105,4 +105,4 @@ namespace modules
 		return ret;
 	}
 }
-END_NS_SALVIAR();
+}

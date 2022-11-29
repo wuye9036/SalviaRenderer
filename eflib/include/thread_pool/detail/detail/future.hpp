@@ -26,7 +26,6 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/utility/result_of.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
 
 namespace boost { namespace threadpool { namespace detail 

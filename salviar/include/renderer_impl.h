@@ -8,7 +8,7 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct vs_input_op;
 struct vs_output_op;
@@ -103,4 +103,4 @@ protected:
     virtual result                  commit_state_and_command() = 0;
 };
 
-END_NS_SALVIAR();
+}

@@ -12,7 +12,7 @@
 
 #include <array>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct viewport;
 
@@ -205,4 +205,4 @@ private:
 	size_t      x_, y_;
 };
 
-END_NS_SALVIAR();
+}

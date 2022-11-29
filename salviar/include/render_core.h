@@ -7,7 +7,7 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct vs_input_op;
 struct vs_output_op;
@@ -44,4 +44,4 @@ private:
     result  async_stop();
 };
 
-END_NS_SALVIAR();
+}

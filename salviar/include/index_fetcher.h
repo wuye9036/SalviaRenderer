@@ -8,7 +8,7 @@
 
 #include <eflib/include/platform/typedefs.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct render_state;
 
@@ -27,4 +27,4 @@ private:
 	uint32_t			stride_;
 };
 
-END_NS_SALVIAR();
+}

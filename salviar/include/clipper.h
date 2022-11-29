@@ -11,7 +11,7 @@
 #include <array>
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class vs_output;
 struct vs_output_op;
@@ -68,4 +68,4 @@ public:
 	}
 };
 
-END_NS_SALVIAR();
+}

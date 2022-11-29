@@ -8,7 +8,7 @@
 #include <utility>
 #include <type_traits>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class register_file
 {
@@ -37,7 +37,7 @@ public:
 	}
 };
 
-END_NS_SALVIAR();
+}
 
 namespace eflib
 {

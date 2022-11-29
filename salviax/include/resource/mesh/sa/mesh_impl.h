@@ -3,7 +3,7 @@
 
 #include <salviax/include/resource/mesh/sa/mesh.h>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 class mesh_impl : public mesh
 {
@@ -47,6 +47,6 @@ public:
 	virtual void set_attached_data( attached_data_ptr const& attached );
 };
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 #endif

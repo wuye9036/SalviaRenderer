@@ -2,7 +2,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct viewport{
 	float x;
@@ -13,4 +13,4 @@ struct viewport{
 	float maxz;
 };
 
-END_NS_SALVIAR();
+}

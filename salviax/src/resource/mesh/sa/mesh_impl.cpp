@@ -8,7 +8,7 @@ using namespace std;
 using namespace eflib;
 using namespace salviar;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 mesh_impl::mesh_impl(salviar::renderer* psr)
 {
@@ -130,7 +130,7 @@ void mesh_impl::set_attached_data( attached_data_ptr const& attached ){
 	attached_ = attached;
 }
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 /*
 Copyright (C) 2007-2012 Ye Wu, Minmin Gong

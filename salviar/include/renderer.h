@@ -17,7 +17,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct shader_profile;
 struct input_element_desc;
@@ -132,6 +132,6 @@ shader_object_ptr	compile_from_file(std::string const& file_name, shader_profile
 shader_object_ptr	compile_from_file(std::string const& file_name, shader_profile const& profile);
 shader_object_ptr	compile_from_file(std::string const& file_name, languages lang);
 
-END_NS_SALVIAR();
+}
 
 #endif

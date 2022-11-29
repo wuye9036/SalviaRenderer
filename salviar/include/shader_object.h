@@ -8,7 +8,7 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class shader_reflection;
 
@@ -32,6 +32,6 @@ public:
 	}
 };
 
-END_NS_SALVIAR();
+}
 
 #endif

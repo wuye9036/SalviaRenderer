@@ -2,7 +2,7 @@
 
 #include <salviar/include/mapped_resource.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 template <typename T>
 result resource_manager::map_impl(mapped_resource& mapped, T const& res, map_mode mm)
@@ -131,4 +131,4 @@ void* resource_manager::reallocate_buffer(size_t sz)
 	return mapped_data_.data();
 }
 
-END_NS_SALVIAR();
+}

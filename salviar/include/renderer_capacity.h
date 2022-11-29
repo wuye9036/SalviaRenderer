@@ -3,7 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 #include <eflib/include/platform/typedefs.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 static uint32_t const MAX_VS_INPUT_ATTRS		= 8;
 static uint32_t const MAX_VS_OUTPUT_ATTRS		= 7;
@@ -15,4 +15,4 @@ static uint32_t const MAX_RENDER_TARGET_HEIGHT  = 8192;
 static uint32_t const MAX_SAMPLE_COUNT			= 16;
 static uint32_t const SAMPLE_MASK				= 0xFFFF;
 
-END_NS_SALVIAR();
+}

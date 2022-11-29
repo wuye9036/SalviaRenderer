@@ -7,7 +7,7 @@
 
 using eflib::int4;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 #if SALVIA_TILED_SURFACE
 const size_t TILE_BITS = 5;
@@ -385,4 +385,4 @@ void const* surface::texel_address(size_t x, size_t y, size_t sample) const
 {
     return reinterpret_cast<void const*>( datas_.data() + texel_offset(x, y, sample) );
 }
-END_NS_SALVIAR();
+}

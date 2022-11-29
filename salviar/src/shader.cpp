@@ -5,7 +5,7 @@
 
 #include <eflib/include/platform/intrin.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace boost;
 using namespace eflib;
@@ -633,4 +633,4 @@ void cpp_shader_impl::bind_semantic( semantic_value const& s, size_t register_in
 	regmap_.insert( make_pair(s, register_index) );
 }
 
-END_NS_SALVIAR();
+}

@@ -31,7 +31,7 @@ Modify Log:
 #include <eflib/include/math/vector.h>
 #include <vector>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 mesh_ptr create_box(salviar::renderer* psr);
 mesh_ptr create_cylinder(salviar::renderer* psr);
@@ -59,6 +59,6 @@ mesh_ptr create_cone(
 	float radius, eflib::vec3 const& up_dir, int segments
 	);
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 #endif //SALVIAX_MESH_IO_H

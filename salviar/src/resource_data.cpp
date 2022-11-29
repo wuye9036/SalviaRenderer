@@ -2,7 +2,7 @@
 
 #include <eflib/include/math/math.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 aligned_array::aligned_array(size_t sz, size_t alignment)
 	: size_(sz)
@@ -40,4 +40,4 @@ size_t aligned_array::alignment() const
 	return alignment_;
 }
 
-END_NS_SALVIAR();
+}

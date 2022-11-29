@@ -6,7 +6,7 @@
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct internal_mapped_resource
 {
@@ -22,4 +22,4 @@ struct internal_mapped_resource
 			reallocator;
 };
 
-END_NS_SALVIAR();
+}

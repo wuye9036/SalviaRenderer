@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace eflib;
 using namespace std;
@@ -780,4 +780,4 @@ void framebuffer::clear_depth_stencil(surface* tar, uint32_t flag, float depth, 
 
 
 
-END_NS_SALVIAR();
+}

@@ -3,7 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 #include <eflib/include/math/vector.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct viewport;
 class  vs_output;
@@ -79,4 +79,4 @@ vs_output_op& get_vs_output_op(uint32_t n);
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 void viewport_transform(eflib::vec4& position, viewport const& vp);
 
-END_NS_SALVIAR();
+}

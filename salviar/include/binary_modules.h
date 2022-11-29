@@ -11,7 +11,7 @@
 #include <string>
 #include <memory>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
@@ -40,6 +40,6 @@ namespace modules
 
 }
 
-END_NS_SALVIAR();
+}
 
 #endif

@@ -18,7 +18,7 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 template <typename T>
 void parse_array( vector<T>& arr, std::string const& content )
@@ -469,4 +469,4 @@ dae_node_ptr dae_dom::node_by_path(string const& path)
 	return ret_node;
 }
 
-END_NS_SALVIAX_RESOURCE()
+}

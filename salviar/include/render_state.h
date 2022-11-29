@@ -12,7 +12,7 @@
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/math/vector.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
@@ -94,4 +94,4 @@ struct render_state
 
 void copy_using_state(render_state* dest, render_state const* src);
 
-END_NS_SALVIAR();
+}

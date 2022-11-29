@@ -18,7 +18,7 @@
 #include <unordered_map>
 
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class  shader_reflection;
 class  shader_object;
@@ -73,4 +73,4 @@ public:
 	virtual ~vx_shader_unit(){}
 };
 
-END_NS_SALVIAR();
+}

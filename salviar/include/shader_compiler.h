@@ -10,7 +10,7 @@
 
 #include <map>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class shader_code;
 
@@ -26,6 +26,6 @@ extern "C"{
 	boost::shared_ptr<compiler> salvia_create_compiler();
 }
 
-END_NS_SALVIAR();
+}
 
 #endif

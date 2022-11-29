@@ -209,7 +209,7 @@ namespace std
     };
 }
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct viewport;
 struct scanline_info;
@@ -386,4 +386,4 @@ public:
 	virtual bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in) = 0;
 };
 
-END_NS_SALVIAR();
+}

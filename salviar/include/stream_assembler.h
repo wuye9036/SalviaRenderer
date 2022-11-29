@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class  vs_input;
 struct input_element_desc;
@@ -60,4 +60,4 @@ private:
 	stream_buffer_desc const*	stream_buffer_descs_;	
 };
 
-END_NS_SALVIAR();
+}

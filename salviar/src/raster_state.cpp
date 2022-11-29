@@ -5,7 +5,7 @@
 
 using std::function;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 bool cull_mode_none(float /*area*/)
 {
@@ -45,4 +45,4 @@ raster_state::raster_state(const raster_desc& desc)
 	}
 }
 
-END_NS_SALVIAR();
+}

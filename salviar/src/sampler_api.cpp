@@ -8,7 +8,7 @@ using salviar::sampler;
 using eflib::vec2;
 using eflib::vec4;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 void tex2Dgrad_ps(
 	vec4* result, uint32_t mask,
@@ -70,4 +70,4 @@ void texCUBElod(vec4& result, sampler* samp, vec4& coord)
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
-END_NS_SALVIAR();
+}

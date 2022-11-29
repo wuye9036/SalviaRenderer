@@ -3,7 +3,7 @@
 
 #include <slaviax/include/resource/resource_forward.h>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 class model{
 public:
@@ -15,6 +15,6 @@ private:
 	std::vector<h_mesh> meshes;
 };
 
-END_NS_SALVIAX_RESOURCE();
+}};
 
 #endif

@@ -27,7 +27,7 @@ using namespace boost;
 using namespace salviax::utility;
 using namespace salviar;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 {
@@ -130,4 +130,4 @@ mesh_ptr create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const 
 	return ret;
 }
 
-END_NS_SALVIAX_RESOURCE();
+}};

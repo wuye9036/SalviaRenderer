@@ -2,7 +2,7 @@
 
 using std::distance;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 void stream_state::update(
 	size_t starts_slot,
@@ -28,4 +28,4 @@ void stream_state::update(
 	}
 }
 
-END_NS_SALVIAR();
+}

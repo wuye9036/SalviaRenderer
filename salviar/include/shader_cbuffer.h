@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <type_traits>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(texture);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
@@ -77,4 +77,4 @@ private:
 	std::vector<texture_ptr>	textures_;
 };
 
-END_NS_SALVIAR();
+}

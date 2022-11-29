@@ -6,7 +6,7 @@ using eflib::mat44;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 scene_node::scene_node( scene_node* parent, string const& name )
 	: parent(parent)
@@ -122,4 +122,4 @@ float skin_mesh_impl::animation_length() const
 	return max_length;
 }
 
-END_NS_SALVIAX_RESOURCE();
+}

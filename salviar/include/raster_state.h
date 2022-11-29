@@ -10,7 +10,7 @@
 #include <functional>
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct raster_desc
 {
@@ -75,4 +75,4 @@ public:
 	}
 };
 
-END_NS_SALVIAR();
+}

@@ -21,7 +21,7 @@ using salviar::renderer;
 
 using std::vector;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 void normalize_terrain(vector<float>& field);
 void filter_terrain_band(float* band, int stride, int count, float filter);
@@ -263,4 +263,4 @@ texture_ptr make_terrain_texture(renderer* rend, std::vector<float>& normalized_
 	return ret;
 }
 
-END_NS_SALVIAX_RESOURCE();
+}

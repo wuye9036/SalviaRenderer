@@ -10,7 +10,7 @@
 
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
@@ -89,7 +89,7 @@ private:
 size_t hash_value(input_element_desc const&);
 size_t hash_value(input_layout const&);
 
-END_NS_SALVIAR();
+}
 
 namespace std
 {

@@ -2,7 +2,7 @@
 #include <salviar/include/render_state.h>
 #include <salviar/include/index_fetcher.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 void index_fetcher::update(render_state const* state)
 {
@@ -150,4 +150,4 @@ void index_fetcher::fetch_indexes(uint32_t* indexes_of_prim, uint32_t* min_index
 	*max_index += base_vert_;
 }
 
-END_NS_SALVIAR();
+}

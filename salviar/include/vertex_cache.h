@@ -16,7 +16,7 @@
 #include <vector>
 #include <utility>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class  stream_assembler;
 struct render_stages;
@@ -41,6 +41,6 @@ public:
 
 vertex_cache_ptr create_default_vertex_cache();
 
-END_NS_SALVIAR();
+}
 
 #endif

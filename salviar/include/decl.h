@@ -3,7 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct ps_output;
 class  vs_output;
@@ -34,4 +34,4 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(clipper);
 EFLIB_DECLARE_CLASS_SHARED_PTR(raster_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(depth_stencil_state);
 
-END_NS_SALVIAR();
+}

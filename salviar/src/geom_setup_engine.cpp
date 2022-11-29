@@ -176,4 +176,4 @@ void geom_setup_engine::threaded_compact_geometries(thread_context const* thread
 	}
 }
 
-END_NS_SALVIAR();
+}

@@ -14,7 +14,7 @@
 #include <eflib/include/platform/boost_end.h>
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 #define SALVIA_LVT_VECTOR_OF( scalar, length )
 #define SALVIA_LVT_MATRIX_OF( scalar, vector_size, vector_count )
@@ -304,6 +304,6 @@ public:
 	virtual reg_name			find_reg(reg_categories cat, semantic_value const& sv)		const = 0;
 	virtual size_t				reg_addr(reg_name const& rname)			const = 0;
 };
-END_NS_SALVIAR();
+}
 
 #endif

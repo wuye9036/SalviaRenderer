@@ -7,7 +7,7 @@
 #include <salviax/include/resource/mesh/sa/mesh.h>
 #include <string>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 class obj_material: public attached_data{
 public:
@@ -29,6 +29,6 @@ public:
 	~obj_material(){}
 };
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 #endif

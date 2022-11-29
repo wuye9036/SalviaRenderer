@@ -3,7 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 EFLIB_DECLARE_CLASS_SHARED_PTR(geom_setup_engine);
@@ -22,4 +22,4 @@ struct render_stages
 	host_ptr				host;
 };
 
-END_NS_SALVIAR();
+}

@@ -1,6 +1,6 @@
 #include <salviax/include/resource/mesh/sa/material.h>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 obj_material::obj_material()
 	: name("default")
 	, ambient( 0.2f, 0.2f, 0.2f, 1.0f )
@@ -11,4 +11,4 @@ obj_material::obj_material()
 	, tex_name("")
 {
 }
-END_NS_SALVIAX_RESOURCE();
+}

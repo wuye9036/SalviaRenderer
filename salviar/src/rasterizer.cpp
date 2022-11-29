@@ -35,7 +35,7 @@ using std::atomic;
 
 class shader_reflection;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace std;
 using namespace eflib;
@@ -75,7 +75,7 @@ struct drawing_triangle_context
 };
 
 /*************************************************
- *   Steps for line rasterization£º
+ *   Steps for line rasterizationï¿½ï¿½
  *			1 Find major direction and computing distance and differential on major direction.
  *			2 Calculate ddx and ddy for mip-mapping.
  *			3 Computing pixel position and interpolated attribute by DDA with major direction and differential.
@@ -630,7 +630,7 @@ void rasterizer::subdivide_tile(
 }
 
 /*************************************************
-*   Steps of triangle rasterization£º
+*   Steps of triangle rasterizationï¿½ï¿½
 *			1 Generate scan line and compute derivation of scanlines
 *			2 Rasterize scan line by rasterizer_scanline_impl
 *			3 Generate vs_output/ps_input for pixels.
@@ -1572,4 +1572,4 @@ void rasterizer::draw_quad(
 #endif
 }
 
-END_NS_SALVIAR();
+}

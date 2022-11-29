@@ -19,7 +19,7 @@
 #include <salviar/include/shader_object.h>
 #include <salviar/include/async_object.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace eflib;
 using std::shared_ptr;
@@ -487,4 +487,4 @@ result renderer_impl::unmap()
 	return resource_pool_->unmap();
 }
 
-END_NS_SALVIAR();
+}

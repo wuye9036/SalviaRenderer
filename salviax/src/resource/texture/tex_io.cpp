@@ -7,10 +7,6 @@
 #include <salviar/include/mapped_resource.h>
 #include <FreeImage.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/static_assert.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <algorithm>
 #include <memory>
 
@@ -19,7 +15,7 @@ using namespace std;
 using namespace salviar;
 using namespace salviax::utility;
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 // Copy pixels FIBITMAP to surface as following steps
 //	*> Get color component informations from FIBITMAP
@@ -207,7 +203,7 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 	FreeImage_Unload(image);
 }
 
-END_NS_SALVIAX_RESOURCE()
+}
 
 /*
 Copyright (C) 2007-2012 Minmin Gong, Ye Wu

@@ -10,7 +10,7 @@
 
 struct FIBITMAP;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 salviar::texture_ptr	load_texture(
 	salviar::renderer* rend,
@@ -27,4 +27,4 @@ void					save_surface(
 	salviar::surface_ptr const& surf, std::_tstring const& filename, salviar::pixel_format image_format
 	);
 
-END_NS_SALVIAX_RESOURCE();
+}

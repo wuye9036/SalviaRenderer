@@ -2,7 +2,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_cbuffer.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 void copy_using_state(render_state* dest, render_state const* src)
 {
@@ -43,4 +43,4 @@ void copy_using_state(render_state* dest, render_state const* src)
     }
 }
 
-END_NS_SALVIAR();
+}

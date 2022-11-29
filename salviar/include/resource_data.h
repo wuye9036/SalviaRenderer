@@ -13,7 +13,7 @@
 
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class aligned_array
 {
@@ -150,4 +150,4 @@ public:
 	}
 };
 
-END_NS_SALVIAR();
+}

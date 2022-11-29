@@ -11,7 +11,7 @@
 
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct pixel_accessor;
 struct render_stages;
@@ -116,4 +116,4 @@ public:
 	static void clear_depth_stencil(surface* tar, uint32_t flag, float depth, uint32_t stencil);
 };
 
-END_NS_SALVIAR();
+}

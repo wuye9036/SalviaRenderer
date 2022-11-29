@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace eflib;
 using namespace std;
@@ -464,4 +464,4 @@ void clipper::clip_triangle_to_poly_simple(vs_output** tri_verts, clip_results* 
 	}
 }
 
-END_NS_SALVIAR();
+}

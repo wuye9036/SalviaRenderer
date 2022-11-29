@@ -1,7 +1,7 @@
 #include <salviar/include/shader_cbuffer.h>
 using eflib::fixed_string;
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 void shader_cbuffer::set_sampler(eflib::fixed_string const& name, sampler_ptr const& samp)
 {
@@ -55,4 +55,4 @@ void shader_cbuffer::set_variable(eflib::fixed_string const& name, void const* d
 	memcpy(data_memory_.data()+offset, data, data_length);
 }
 
-END_NS_SALVIAR();
+}

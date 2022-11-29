@@ -36,7 +36,7 @@ using namespace salviar;
 
 using smooth_id_t = tuple<uint32_t, uint32_t, uint32_t>;
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 struct obj_mesh_vertex{
 	vec4 pos;
@@ -60,7 +60,7 @@ void ignore( FILE* f, int max_count, char delim )
 	}
 }
 
-bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_file, path const& base_path ){
+bool load_material( renderer* rend, vector<obj_material>& mtls, string const& mtl_file, path const& base_path ){
 
 	std::string mtl_fullpath = ( base_path / mtl_file ).string();
 
@@ -118,7 +118,7 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 			boost::algorithm::replace_all(pmtl->tex_name, "\\", "/");
 			std::_tstring tex_fullpath = eflib::to_tstring( (base_path/pmtl->tex_name).generic_string() );
 			pmtl->tex = load_texture(
-				r, tex_fullpath,
+				rend, tex_fullpath,
 				salviar::pixel_format_color_rgba8
 				);
 			if( pmtl->tex )
@@ -447,4 +447,4 @@ vector<mesh_ptr> create_mesh_from_obj( salviar::renderer* render, std::string co
 	return meshes;
 }
 
-END_NS_SALVIAX_RESOURCE();
+}

@@ -12,9 +12,9 @@ namespace salviar
 	class renderer;
 }
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 typedef std::shared_ptr<class mesh> mesh_ptr;
 std::vector<mesh_ptr> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v );
-END_NS_SALVIAX_RESOURCE();
+}
 
 #endif

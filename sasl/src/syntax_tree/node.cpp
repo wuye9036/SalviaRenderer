@@ -33,10 +33,10 @@ node::~node(){
 	// DO NOTHING
 }
 
-void node::token_range( token_t_ptr const& tok_beg, token_t_ptr const& tok_end )
+void node::token_range(token_t_ptr const& beg, token_t_ptr const& end)
 {
-	this->tok_beg = tok_beg;
-	this->tok_end = tok_end;
+	this->tok_beg = beg;
+	this->tok_end = end;
 }
 
 END_NS_SASL_SYNTAX_TREE();

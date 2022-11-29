@@ -5,7 +5,7 @@
 
 #include <string>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 enum interpolation_modifiers
 {
@@ -28,6 +28,6 @@ struct external_function_desc
 	bool		is_raw_name;
 };
 
-END_NS_SALVIAR();
+}
 
 #endif

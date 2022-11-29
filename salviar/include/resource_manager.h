@@ -10,7 +10,7 @@
 
 #include <vector>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct mapped_resource;
 
@@ -62,4 +62,4 @@ private:
 		mapped_buf_;
 };
 
-END_NS_SALVIAR();
+}

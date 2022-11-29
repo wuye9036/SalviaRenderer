@@ -12,7 +12,7 @@
 #include <array>
 #include <chrono>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class async_object
 {
@@ -308,4 +308,4 @@ struct accumulate_fn
     }
 };
 
-END_NS_SALVIAR();
+}

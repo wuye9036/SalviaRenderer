@@ -5,7 +5,7 @@
 
 #include <eflib/include/math/vector.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class sampler;
 
@@ -28,6 +28,6 @@ void tex2Dproj_ps(
 	salviar::sampler* samp, eflib::vec4* coords,
 	eflib::vec4 const* ddxs, eflib::vec4 const* ddys );
 
-END_NS_SALVIAR();
+}
 
 #endif

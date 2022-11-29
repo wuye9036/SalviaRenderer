@@ -8,7 +8,7 @@
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(texture);
 EFLIB_DECLARE_CLASS_SHARED_PTR(texture_1d);
@@ -109,4 +109,4 @@ public:
 		) const;
 };
 
-END_NS_SALVIAR();
+}

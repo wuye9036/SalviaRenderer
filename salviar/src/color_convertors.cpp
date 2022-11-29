@@ -1,7 +1,7 @@
 #include <salviar/include/colors.h>
 #include <memory.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 static pixel_format_convertor pfc_instance;
 

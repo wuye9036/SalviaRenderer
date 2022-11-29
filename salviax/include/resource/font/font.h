@@ -20,7 +20,7 @@ namespace salviar
 	struct color_rgba32f;
 }
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(font);
 
@@ -94,6 +94,6 @@ public:
 		font::render_hints hint) = 0;
 };
 
-END_NS_SALVIAX_RESOURCE()
+}
 
 #endif

@@ -17,7 +17,7 @@
 #include <memory>
 #include <optional>
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_source);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_verts);
@@ -307,6 +307,6 @@ struct dae_matrix: public dae_node
 	eflib::mat44 mat;
 };
 
-END_NS_SALVIAX_RESOURCE()
+}
 
 #endif

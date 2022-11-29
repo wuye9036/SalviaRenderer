@@ -8,7 +8,7 @@
 
 #include <memory>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 class  stream_assembler;
 struct renderer_parameters;
@@ -38,6 +38,6 @@ public:
 };
 
 
-END_NS_SALVIAR();
+}
 
 #endif

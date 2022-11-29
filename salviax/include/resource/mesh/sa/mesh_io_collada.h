@@ -10,7 +10,7 @@
 
 namespace salviar { class renderer; }
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
@@ -18,6 +18,6 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
 skin_mesh_ptr	create_mesh_from_collada( salviar::renderer* render, std::string const& file_name );
 mesh_ptr		create_morph_mesh_from_collada( salviar::renderer* render, std::string const& src, std::string const& dst);
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 #endif

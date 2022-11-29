@@ -48,7 +48,7 @@ using std::make_pair;
 using std::set;
 using std::pair;
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 struct indexes_of_vertex_attributes
 {
@@ -65,7 +65,7 @@ bool operator == (indexes_of_vertex_attributes const& lhs, indexes_of_vertex_att
         && std::equal(lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin());
 }
 
-END_NS_SALVIAX_RESOURCE()
+}
 
 namespace std
 {
@@ -79,7 +79,7 @@ namespace std
     };
 }
 
-BEGIN_NS_SALVIAX_RESOURCE()
+namespace salviax::resource{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh_impl);
 
@@ -812,4 +812,4 @@ mesh_ptr create_morph_mesh_from_collada( salviar::renderer* render, std::string 
 	return mesh_ptr();
 }
 
-END_NS_SALVIAX_RESOURCE()
+}

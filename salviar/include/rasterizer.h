@@ -18,7 +18,7 @@
 #include <functional>
 #include <memory>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
 
@@ -179,4 +179,4 @@ public:
 	void update_prim_info(render_state const* state);
 };
 
-END_NS_SALVIAR();
+}

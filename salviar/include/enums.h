@@ -7,7 +7,9 @@
 
 #include <string>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
+
+
 
 enum class result: uint32_t
 {
@@ -225,4 +227,11 @@ enum class async_status: uint32_t
     ready
 };
 
-END_NS_SALVIAR();
+enum class shading_rate: uint32_t
+{
+	axis_1x,
+	axis_2x,
+	axis_4x
+};
+
+}

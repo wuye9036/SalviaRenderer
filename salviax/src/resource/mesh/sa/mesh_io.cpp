@@ -29,7 +29,7 @@ using namespace std;
 using namespace eflib;
 using namespace salviar;
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 //0, 0, 0 - 1, 1, 1
 mesh_ptr create_box(salviar::renderer* psr)
@@ -429,4 +429,4 @@ mesh_ptr create_cone(
 	return mesh_ptr(pmesh);
 }
 
-END_NS_SALVIAX_RESOURCE();
+}

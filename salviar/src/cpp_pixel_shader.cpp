@@ -2,7 +2,7 @@
 #include <salviar/include/shader_regs_op.h>
 #include <salviar/include/shader.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace boost;
 using namespace eflib;

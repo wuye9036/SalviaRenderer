@@ -13,7 +13,7 @@
 #include <memory>
 #include <functional>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(animation_player);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(animation_info);
@@ -170,6 +170,6 @@ public:
 	std::vector<scene_node_ptr>			roots;
 };
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 #endif

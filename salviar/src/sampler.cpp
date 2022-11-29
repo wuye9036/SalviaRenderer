@@ -5,7 +5,7 @@
 
 #include <eflib/include/platform/intrin.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 
 using namespace eflib;
@@ -990,4 +990,4 @@ void sampler::calc_anisotropic_info(
 	}
 }
 
-END_NS_SALVIAR();
+}

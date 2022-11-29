@@ -18,7 +18,7 @@
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 using namespace eflib;
 using std::shared_ptr;
@@ -43,4 +43,4 @@ renderer_ptr create_sync_renderer()
 	return renderer_ptr(new sync_renderer());
 }
 
-END_NS_SALVIAR();
+}

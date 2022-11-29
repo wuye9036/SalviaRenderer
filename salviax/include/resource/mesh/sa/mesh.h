@@ -8,7 +8,7 @@
 #include <vector>
 #include <memory>
 
-BEGIN_NS_SALVIAX_RESOURCE();
+namespace salviax::resource{
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(attached_data);
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
@@ -53,7 +53,7 @@ public:
 	virtual ~skin_mesh(){}
 };
 
-END_NS_SALVIAX_RESOURCE();
+}
 
 /********************************************************************
 Copyright (C) 2007-2012 Ye Wu

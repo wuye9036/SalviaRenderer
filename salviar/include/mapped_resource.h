@@ -1,6 +1,6 @@
 #pragma once
 
-BEGIN_NS_SALVIAR();
+namespace salviar{
 
 struct mapped_resource
 {
@@ -9,4 +9,4 @@ struct mapped_resource
 	uint32_t	depth_pitch;
 };
 
-END_NS_SALVIAR();
+}
