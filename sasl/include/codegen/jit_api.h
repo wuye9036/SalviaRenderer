@@ -13,7 +13,7 @@
 
 #include <vector>
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class codegen_context;
 
@@ -29,6 +29,6 @@ private:
 	jit_engine& operator = (const jit_engine& );
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

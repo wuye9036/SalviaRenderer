@@ -155,7 +155,7 @@ public:
 	callee_type callee;
 
 	std::string name;
-	jit_function_forward_base():callee(NULL){}
+	jit_function_forward_base():callee(nullptr){}
 	void on_error(char const* desc) { BOOST_ERROR( (std::string(desc) + " @ " + name).c_str() ); }
 };
 

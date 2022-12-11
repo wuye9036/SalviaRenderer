@@ -34,7 +34,7 @@ using std::pair;
 using std::vector;
 using std::make_pair;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 bool compare_layout(
 	pair<sv_layout*, Type*> const& lhs,
@@ -119,7 +119,7 @@ Type* generate_parameter_type(
 		sort_struct_members(svls, sem_tys, svls, sem_tys, &dataLayout);
 	}
 
-	char const* param_struct_name = NULL;
+	char const* param_struct_name = nullptr;
 	switch( su ){
 	case su_stream_in:
 		param_struct_name = ".s.stri";
@@ -137,7 +137,7 @@ Type* generate_parameter_type(
 	assert( param_struct_name );
 
 	// If tys is empty, placeholder (int8) will be inserted 
-	StructType* param_struct = NULL;
+	StructType* param_struct = nullptr;
 	if ( sem_tys.empty() )
 	{
 		param_struct = StructType::create(param_struct_name, Type::getInt8Ty(cg->context()));
@@ -176,7 +176,7 @@ Type* generate_parameter_type(
 vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, cg_service* cg)
 {
 	assert(cg->parallel_factor() == 1);
-	vector<Type*> ret(sv_usage_count, NULL);
+	vector<Type*> ret(sv_usage_count, nullptr);
 
 	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg);
 	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg);
@@ -194,7 +194,7 @@ vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, cg_servi
 vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, cg_service* cg)
 {
 	assert(cg->parallel_factor() > 1);
-	vector<Type*> ret(sv_usage_count, NULL);
+	vector<Type*> ret(sv_usage_count, nullptr);
 
 	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg);
 	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg);
@@ -220,4 +220,4 @@ vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, cg_servi
 	return vector<Type*>( ret.begin()+1, ret.end() );
 }
 
-END_NS_SASL_CODEGEN();
+}

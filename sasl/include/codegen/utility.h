@@ -37,7 +37,7 @@ namespace llvm
 #define VARIABLE_TO_INIT_SCOPE( var_to_init ) \
 	scoped_value<node*> __sasl_var_to_init_scope_##__LINE__( variable_to_initialize_, (var_to_init) );
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 template <typename T>
 llvm::APInt apint( T v ){
@@ -46,6 +46,6 @@ llvm::APInt apint( T v ){
 
 void		dbg_print_blocks( llvm::Function* fn );
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

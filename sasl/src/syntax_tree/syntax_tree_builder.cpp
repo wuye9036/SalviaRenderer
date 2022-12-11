@@ -472,7 +472,7 @@ shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribu
 	shared_ptr<binary_expression> binexpr;
 	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
 	for( shared_ptr<attribute> follow_pair: follows->attrs ){
-		assert( dynamic_cast<queuer_attribute*>(follow_pair.get()) != NULL );
+		assert( dynamic_cast<queuer_attribute*>(follow_pair.get()) != nullptr );
 		binexpr = create_node<binary_expression>( lexpr->token_begin(), follow_pair->child(1)->token_end() );
 		binexpr->left_expr = lexpr;
 		shared_ptr<token_t> op_token;

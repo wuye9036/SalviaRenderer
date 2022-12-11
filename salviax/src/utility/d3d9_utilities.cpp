@@ -27,7 +27,7 @@ d3d9_device::d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& 
 		param.adapter,	param.devtype,	param.focuswnd, param.behavior | D3DCREATE_FPU_PRESERVE, 
 		&present_params, &pd3ddev9_
 		))) {
-		pd3ddev9_ = NULL;
+		pd3ddev9_ = nullptr;
 	}
 }
 

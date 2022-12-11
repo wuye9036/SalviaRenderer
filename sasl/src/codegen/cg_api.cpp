@@ -14,7 +14,7 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 EFLIB_USING_SHARED_PTR(sasl::semantic, module_semantic);
 EFLIB_USING_SHARED_PTR(sasl::semantic, reflection_impl);
@@ -67,4 +67,4 @@ module_vmcode_ptr generate_vmcode(
 	return ret;
 }
 
-END_NS_SASL_CODEGEN();
+}

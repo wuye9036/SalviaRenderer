@@ -94,7 +94,7 @@ struct dae_node
 	template <typename T>
 	bool is_a() const
 	{
-		return dynamic_cast<T const*>(this) != NULL;
+		return dynamic_cast<T const*>(this) != nullptr;
 	}
 
 	template <typename T> T* as() {

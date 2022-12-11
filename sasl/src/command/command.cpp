@@ -39,7 +39,7 @@ int main (int argc, char **argv)
 	shared_ptr<diag_chat> diags = diag_chat::create();
 	diags->add_report_raised_handler( report_handler_fn(on_diag_item_reported) );
 
-	void (*pfn)( shared_ptr<compiler>& ) = NULL;
+	void (*pfn)( shared_ptr<compiler>& ) = nullptr;
 	shared_ptr<dynamic_lib> driver_lib = dynamic_lib::load( std::string(DRIVER_NAME) + std::string(DRIVER_EXT) );
 	driver_lib->get_function( pfn, "sasl_create_compiler" );
 	shared_ptr<compiler> drv;

@@ -37,7 +37,7 @@ namespace llvm{
 
 enum class builtin_types: uint32_t;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class module_vmcode_impl;
 class module_vmcode;
@@ -68,6 +68,6 @@ private:
 	module_vmcode_impl* mod_ptr();
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

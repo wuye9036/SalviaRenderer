@@ -24,7 +24,7 @@ namespace llvm{
 	class Value;
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 struct	node_context;
 class	cg_service;
@@ -44,6 +44,6 @@ void add_builtin_casts(
 	sasl::semantic::pety_t* typemgr
 	);
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

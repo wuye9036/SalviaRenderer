@@ -183,7 +183,7 @@ public:
 		assert(v);
 		semantics_dict::const_iterator it = semantics_dict_.find(v);
 		if( it == semantics_dict_.end() ){ 
-			return NULL;
+			return nullptr;
 		}
 		return it->second;
 	}
@@ -214,7 +214,7 @@ public:
 			return it->second;
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	virtual symbol* alloc_symbol()
@@ -229,16 +229,16 @@ public:
 		// Only available for symbol create by this module.
 		assert( sym->owner() == this );
 		// symbol* ref_sym = get_symbol(v);
-		assert( get_symbol(v) == NULL );	// v was not connected to symbol.
+		assert( get_symbol(v) == nullptr );	// v was not connected to symbol.
 
 		node* old_assoc_node = sym->associated_node();
 		
-		if(old_assoc_node != NULL)
+		if(old_assoc_node != nullptr)
 		{
 			symbols_dict_.erase(old_assoc_node);	
 		}
 
-		if( v != NULL )
+		if( v != nullptr )
 		{
 			symbols_dict_.insert( make_pair(const_cast<node const*>(v), sym) );
 		}
@@ -366,25 +366,25 @@ node_semantic::~node_semantic()
 	if( semantic_value_ )
 	{
 		delete semantic_value_;
-		semantic_value_ = NULL;
+		semantic_value_ = nullptr;
 	}
 
 	if( function_name_ )
 	{
 		delete function_name_;
-		function_name_ = NULL;
+		function_name_ = nullptr;
 	}
 
 	if( labeled_statements_ )
 	{
 		delete labeled_statements_;
-		labeled_statements_ = NULL;
+		labeled_statements_ = nullptr;
 	}
 
 	if( string_constant_ )
 	{
 		delete string_constant_;
-		string_constant_ = NULL;
+		string_constant_ = nullptr;
 	}
 }
 
@@ -443,7 +443,7 @@ std::string node_semantic::const_string() const
 
 void node_semantic::const_value( std::string const& v )
 {
-	if( string_constant_ == NULL )
+	if( string_constant_ == nullptr )
 	{
 		string_constant_ = new string(v);
 	}
@@ -485,17 +485,17 @@ node_semantic& node_semantic::operator=( node_semantic const& v )
 	memcpy( this, &v, sizeof(node_semantic) );
 	if(string_constant_)
 	{
-		string_constant_ = NULL;
+		string_constant_ = nullptr;
 		const_value( v.const_string() );
 	}
 	if(semantic_value_)
 	{
-		semantic_value_ = NULL;
+		semantic_value_ = nullptr;
 		semantic_value( v.semantic_value_ref() );
 	}
 	if(function_name_)
 	{
-		function_name_ = NULL;
+		function_name_ = nullptr;
 		function_name( v.function_name() );
 	}
 	return *this;

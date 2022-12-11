@@ -37,7 +37,7 @@ using std::string;
 
 #define OUTPUT_GRAMMAR_MATCHING_PATH 0
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 parse_results::parse_results(): tag(-1){}
 
@@ -577,7 +577,7 @@ void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, i
 	}
 }
 
-std::fstream* pf = NULL;
+std::fstream* pf = nullptr;
 
 #endif
 
@@ -641,7 +641,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 		print_path_tree( *pf,current_path );
 		pf->close();
 		delete pf;
-		pf = NULL;
+		pf = nullptr;
 	}
 #endif
 
@@ -794,4 +794,4 @@ parse_results error_catcher::parse( token_iterator& iter, token_iterator end, st
 	return result;
 }
 
-END_NS_SASL_PARSER();
+}

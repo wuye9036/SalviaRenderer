@@ -101,9 +101,9 @@ public:
 
 private:
 	template <typename NodeT> 
-	std::shared_ptr<NodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	std::shared_ptr<NodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = nullptr );
 	template <typename ReturnNodeT, typename NodeT> 
-	std::shared_ptr<ReturnNodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	std::shared_ptr<ReturnNodeT> visit_child( std::shared_ptr<NodeT> const& child, node_semantic** return_sem = nullptr );
 
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,

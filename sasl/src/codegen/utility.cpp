@@ -6,7 +6,7 @@
 
 using llvm::Function;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 void dbg_print_blocks( Function* fn )
 {
@@ -21,4 +21,4 @@ void dbg_print_blocks( Function* fn )
 #endif
 }
 
-END_NS_SASL_CODEGEN();
+}

@@ -48,21 +48,21 @@ fixed_string symbol::null_name;
 
 symbol* symbol::create_root(module_semantic* owner, node* root_node){
 	null_name = fixed_string("");
-	return create(owner, NULL, root_node);
+	return create(owner, nullptr, root_node);
 }
 
 symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node, fixed_string const& mangled)
 {
-	assert( owner->get_symbol(assoc_node) == NULL );
-	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, NULL, &mangled);
+	assert( owner->get_symbol(assoc_node) == nullptr );
+	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, nullptr, &mangled);
 	owner->link_symbol(assoc_node, ret);
 	return ret;
 }
 
 symbol* symbol::create( module_semantic* owner, symbol* parent, node* assoc_node )
 {
-	assert( owner->get_symbol(assoc_node) == NULL );
-	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, NULL, NULL);
+	assert( owner->get_symbol(assoc_node) == nullptr );
+	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, nullptr, nullptr);
 	owner->link_symbol(assoc_node, ret);
 	return ret;
 }
@@ -76,14 +76,14 @@ symbol::symbol(module_semantic* owner, symbol* parent, node* assoc_node, fixed_s
 symbol* symbol::find_this( fixed_string const& mangled ) const
 {
 	named_children_dict::const_iterator iter = named_children_.find(mangled);
-	return iter == named_children_.end() ? NULL : iter->second;
+	return iter == named_children_.end() ? nullptr : iter->second;
 }
 
 symbol* symbol::find( fixed_string const& mangled ) const
 {
 	symbol* ret = find_this(mangled);
 	if (ret) {	return ret; }
-	if ( !parent_ ) { return NULL;	}
+	if ( !parent_ ) { return nullptr;	}
 	return parent_->find(mangled);
 }
 
@@ -128,7 +128,7 @@ symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 	named_children_dict::iterator iter = named_children_.find(mangled);
 	if ( iter != named_children_.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	symbol* ret = add_child(child_node);
@@ -139,15 +139,15 @@ symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 }
 
 symbol* symbol::add_function_begin(function_def* child_fn){
-	if( !child_fn ){ return NULL; }
-	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, NULL);
+	if( !child_fn ){ return nullptr; }
+	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, nullptr);
 	ret->unmangled_name_ = child_fn->name->str;
 	return ret;
 }
 
 bool symbol::add_function_end(symbol* sym, tid_t fn_tid)
 {
-	EFLIB_ASSERT_AND_IF( sym, "Input symbol is NULL." ){
+	EFLIB_ASSERT_AND_IF( sym, "Input symbol is nullptr." ){
 		return false;
 	}
 
@@ -155,7 +155,7 @@ bool symbol::add_function_end(symbol* sym, tid_t fn_tid)
 
 	EFLIB_ASSERT_AND_IF(
 		sym_node,
-		"Node of input symbol is NULL. Maybe the symbol is not created by add_function_begin()."
+		"Node of input symbol is nullptr. Maybe the symbol is not created by add_function_begin()."
 		)
 	{
 		return false;
@@ -184,8 +184,8 @@ bool symbol::add_function_end(symbol* sym, tid_t fn_tid)
 	// If associated node of symbol is not null,
 	// the old node will remove from symbol-node dictionary firstly.
 	// In normal case, we assume that associated node of symbol has not been added to dictionary yet.
-	// So we set associated node to NULL to prevent old node erasing.
-	sym->associated_node(NULL);
+	// So we set associated node to nullptr to prevent old node erasing.
+	sym->associated_node(nullptr);
 	owner_->link_symbol(sym_node, sym);
 	return true;
 }
@@ -245,7 +245,7 @@ fixed_string const& symbol::unmangled_name() const
 
 symbol* symbol::add_child(node* child_node){
 	children_dict::iterator iter = children_.find(child_node);
-	if( iter != children_.end() ) { return NULL; }
+	if( iter != children_.end() ) { return nullptr; }
 
 	symbol* ret = create(owner_, this, child_node);
 	children_.insert( make_pair(child_node, ret) );

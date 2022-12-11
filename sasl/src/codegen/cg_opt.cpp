@@ -18,7 +18,7 @@ using std::shared_ptr;
 using std::vector;
 using std::ostream;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 #if TODO
 void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_options )
@@ -52,4 +52,4 @@ void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_
 }
 #endif
 
-END_NS_SASL_CODEGEN();
+}

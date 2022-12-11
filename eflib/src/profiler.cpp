@@ -227,7 +227,7 @@ namespace eflib
 
 		// Print percentage
 		double percent = 1.0f;
-		if(item->parent != NULL && item->parent->duration() > 0)
+		if(item->parent != nullptr && item->parent->duration() > 0)
 		{
 			percent = item->duration() / item->parent->duration();
 		}

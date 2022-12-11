@@ -57,7 +57,7 @@ using std::make_pair;
 	push_fn( (fn) );	\
 	scope_guard<void> pop_fn_on_exit##__LINE__( [this]() { pop_fn(); } );
 
-BEGIN_NS_SASL_CODEGEN()
+namespace sasl::codegen{
 
 // expressions
 SASL_VISIT_DEF_UNIMPL( cast_expression );
@@ -268,7 +268,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 
 						salviar::semantic_value const& sem_value = dclr_sem->semantic_value_ref();
 						sv_layout* psvl = abii->input_sv_layout(sem_value);
-						layout_to_node_context(NULL, psvl, false, is_param_modified);
+						layout_to_node_context(nullptr, psvl, false, is_param_modified);
 					}
 				}
 			}
@@ -285,7 +285,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 
 		// Global is filled by offset value with null parent.
 		// The parent is filled when it is referred.
-		sv_layout* svl = NULL;
+		sv_layout* svl = nullptr;
 		if( pssi->semantic_value_ref() == salviar::sv_none ){
 			svl = abii->input_sv_layout( gsym );
 		} else {
@@ -344,7 +344,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 }
 
 cg_vs::cg_vs()
-	: entry_fn(NULL), entry_sym(NULL)
+	: entry_fn(nullptr), entry_sym(nullptr)
 {
 	service_ = new cgs_sisd();
 }
@@ -480,4 +480,4 @@ bool cg_vs::layout_to_node_context(
 
 cg_vs::~cg_vs(){}
 
-END_NS_SASL_CODEGEN();
+}

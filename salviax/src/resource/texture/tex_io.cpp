@@ -28,7 +28,7 @@ template<typename FIColorT>
 bool copy_image_to_surface_impl(surface_ptr const& surf, FIBITMAP* image,
 	typename FIUC<FIColorT>::CompT default_alpha = (typename FIUC<FIColorT>::CompT)(0) )
 {
-	if (image == NULL)
+	if (image == nullptr)
 	{
 		return false;
 	}
@@ -157,7 +157,7 @@ void save_surface(renderer* rend, surface_ptr const& surf, _tstring const& filen
 	FREE_IMAGE_TYPE fit = FIT_UNKNOWN;
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
-	FIBITMAP* image = NULL;
+	FIBITMAP* image = nullptr;
 	int surface_width  = static_cast<int>( surf->width() );
 	int surface_height = static_cast<int>( surf->height() );
 

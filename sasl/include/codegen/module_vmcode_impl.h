@@ -31,7 +31,7 @@ namespace sasl
 #include <boost/shared_ptr.hpp>
 #include <string>
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_context);
 
@@ -70,4 +70,4 @@ protected:
 	bool								finalized_;
 };
 
-END_NS_SASL_CODEGEN();
+}

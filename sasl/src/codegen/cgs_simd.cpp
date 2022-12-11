@@ -82,7 +82,7 @@ using boost::lexical_cast;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 cgs_simd::cgs_simd()
 	: cg_service(PACKAGE_ELEMENT_COUNT)
@@ -94,7 +94,7 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 	assert( lhs.value_count() == rhs.value_count() );
 
 	value_array selected_value;
-	value_array address(selected_value.size(), NULL);
+	value_array address(selected_value.size(), nullptr);
 	value_kinds kind = lhs.kind();
 	Value* mask = exec_masks.back();
 
@@ -250,8 +250,8 @@ void cgs_simd::function_body_beg()
 {
 	cg_service::function_body_beg();
 	exec_masks.push_back( fn().partial_execution ? fn().execution_mask().load()[0] : all_one_mask() );
-	break_masks.push_back(NULL);
-	continue_masks.push_back(NULL);
+	break_masks.push_back(nullptr);
+	continue_masks.push_back(nullptr);
 }
 
 void cgs_simd::function_body_end()
@@ -320,7 +320,7 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 	assert( parallel_factor_ == 4 );
 
 	value_array values = v.load();
-	value_array diff_values(parallel_factor_, NULL);
+	value_array diff_values(parallel_factor_, nullptr);
 
 	multi_value source0 = create_value(
 		v.ty(), hint, value_array(1, nullptr), value_kinds::value, v.abi()
@@ -407,7 +407,7 @@ void cgs_simd::apply_continue()
 void cgs_simd::break_()
 {
 	Value* break_mask = break_masks.back();
-	if( break_mask == NULL ){
+	if( break_mask == nullptr ){
 		break_mask = exec_masks.back();
 	} else {
 		break_mask = builder().CreateOr( exec_masks.back(), break_mask );
@@ -419,7 +419,7 @@ void cgs_simd::break_()
 void cgs_simd::continue_()
 {
 	Value* continue_mask = continue_masks.back();
-	if( continue_mask == NULL ){
+	if( continue_mask == nullptr ){
 		continue_mask = exec_masks.back();
 	} else {
 		continue_mask = builder().CreateOr( exec_masks.back(), continue_mask );
@@ -449,8 +449,8 @@ void cgs_simd::enter_loop()
 {
 	mask_vars.push_back( restore( exec_masks.back() ) );
 	exec_masks.push_back( exec_masks.back() );
-	break_masks.push_back(NULL);
-	continue_masks.push_back(NULL);
+	break_masks.push_back(nullptr);
+	continue_masks.push_back(nullptr);
 }
 
 void cgs_simd::exit_loop()
@@ -470,8 +470,8 @@ void cgs_simd::apply_loop_condition( multi_value const& cond )
 	}
 
 	exec_masks.back() = exec_mask;
-	break_masks.back() = NULL;
-	continue_masks.back() = NULL;
+	break_masks.back() = nullptr;
+	continue_masks.back() = nullptr;
 }
 
 void cgs_simd::do_beg(){ enter_loop(); }
@@ -500,7 +500,7 @@ llvm::Value* cgs_simd::load_loop_execution_mask()
 
 void cgs_simd::save_loop_execution_mask(Value* mask)
 {
-	if (mask == NULL )
+	if (mask == nullptr )
 	{
 		mask = exec_masks.back();
 	}
@@ -530,4 +530,4 @@ Value* cgs_simd::current_execution_mask() const
 	return exec_masks.back();
 }
 
-END_NS_SASL_CODEGEN();
+}

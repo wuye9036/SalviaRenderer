@@ -49,7 +49,7 @@ pixel_shader_unit::~pixel_shader_unit()
 {
 }
 
-pixel_shader_unit::pixel_shader_unit() : code(NULL)
+pixel_shader_unit::pixel_shader_unit() : code(nullptr)
 {
 }
 
@@ -66,7 +66,7 @@ void pixel_shader_unit::reset_pointers()
 		size_t pixel_data_size = (data_stream.size() - pointers_size) / PACKAGE_ELEMENT_COUNT;
 		for(size_t i_pixel = 0; i_pixel < PACKAGE_ELEMENT_COUNT; ++i_pixel)
 		{
-			void* ppixel = NULL;
+			void* ppixel = nullptr;
 			if(pixel_data_size > 0)
 			{
 				ppixel = &(data_stream[pointers_size+pixel_data_size*i_pixel]);
@@ -157,10 +157,10 @@ void pixel_shader_unit::update( vs_output* inputs, shader_reflection const* vs_a
 
 void pixel_shader_unit::execute(ps_output* outs, float* depths)
 {
-	void* psi = stream_data.empty() ? NULL : &(stream_data[0]);
-	void* pbi = buffer_data.empty() ? NULL : &(buffer_data[0]);
-	void* pso = stream_odata.empty() ? NULL : &(stream_odata[0]);
-	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
+	void* psi = stream_data.empty() ? nullptr : &(stream_data[0]);
+	void* pbi = buffer_data.empty() ? nullptr : &(buffer_data[0]);
+	void* pso = stream_odata.empty() ? nullptr : &(stream_odata[0]);
+	void* pbo = buffer_odata.empty() ? nullptr : &(buffer_odata[0]);
 
 	invoke( code->native_function(), psi, pbi, pso, pbo );
 

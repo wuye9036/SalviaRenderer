@@ -50,7 +50,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class  module_context;
 using  sasl::semantic::elem_indexes;
@@ -163,7 +163,7 @@ public:
 	value_kinds	kind() const;					///< Get kind.
 	void			kind(value_kinds vkind);	///< Set kind.
 
-	multi_value*	parent() const;					///< Get parent. If value is not a member of aggragation, it return NULL.
+	multi_value*	parent() const;					///< Get parent. If value is not a member of aggragation, it return nullptr.
 	void			parent(multi_value const& v);
 	void			parent(multi_value const* v);
 
@@ -236,14 +236,14 @@ private:
 
 struct insert_point_t{
 	insert_point_t();
-	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != NULL; }
+	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != nullptr; }
 	llvm::BasicBlock* block;
 };
 
 struct cg_function{
 	cg_function();
 
-	EFLIB_OPERATOR_BOOL( cg_function ){ return NULL != fn; }
+	EFLIB_OPERATOR_BOOL( cg_function ){ return nullptr != fn; }
 
 	/// Get argument's value by index.
 	multi_value arg(size_t logical_index) const;
@@ -311,6 +311,6 @@ struct cg_function{
 	cg_service*							cg;
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

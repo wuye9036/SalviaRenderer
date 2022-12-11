@@ -53,7 +53,7 @@ HINSTANCE get_dll_instance()
 	{
 		return static_cast<HINSTANCE>(mbi.AllocationBase);
 	}
-	return NULL;
+	return nullptr;
 }
 
 char const ps_data[] =
@@ -106,52 +106,52 @@ public:
 
 		if (vs_){
 			vs_->Release();
-			vs_ = NULL;
+			vs_ = nullptr;
 		}
 		if (ps_){
 			ps_->Release();
-			ps_ = NULL;
+			ps_ = nullptr;
 		}
 		if (buftex_){
 			buftex_->Release();
-			buftex_ = NULL;
+			buftex_ = nullptr;
 		}
 		if (buftex_srv_){
 			buftex_srv_->Release();
-			buftex_srv_ = NULL;
+			buftex_srv_ = nullptr;
 		}
 		if (point_sampler_state_){
 			point_sampler_state_->Release();
-			point_sampler_state_ = NULL;
+			point_sampler_state_ = nullptr;
 		}
 		if (vb_){
 			vb_->Release();
-			vb_ = NULL;
+			vb_ = nullptr;
 		}
 		if (input_layout_){
 			input_layout_->Release();
-			input_layout_ = NULL;
+			input_layout_ = nullptr;
 		}
 
 		if (d3d_imm_ctx_){
 			d3d_imm_ctx_->Release();
-			d3d_imm_ctx_ = NULL;
+			d3d_imm_ctx_ = nullptr;
 		}
 		if (d3d_device_){
 			d3d_device_->Release();
-			d3d_device_ = NULL;
+			d3d_device_ = nullptr;
 		}
 		if (swap_chain_){
 			swap_chain_->Release();
-			swap_chain_ = NULL;
+			swap_chain_ = nullptr;
 		}
 		if (back_buffer_rtv_){
 			back_buffer_rtv_->Release();
-			back_buffer_rtv_ = NULL;
+			back_buffer_rtv_ = nullptr;
 		}
 		if (gi_factory_){
 			gi_factory_->Release();
-			gi_factory_ = NULL;
+			gi_factory_ = nullptr;
 		}
 	}
 
@@ -159,17 +159,17 @@ public:
 	{
 		// Dynamic loading because these dlls can't be loaded on WinXP
 		mod_dxgi_ = ::LoadLibraryW(L"dxgi.dll");
-		if (NULL == mod_dxgi_)
+		if (nullptr == mod_dxgi_)
 		{
-			::MessageBoxW(NULL, L"Can't load dxgi.dll", L"Error", MB_OK);
+			::MessageBoxW(nullptr, L"Can't load dxgi.dll", L"Error", MB_OK);
 		}
 		mod_d3d11_ = ::LoadLibraryW(L"D3D11.dll");
-		if (NULL == mod_d3d11_)
+		if (nullptr == mod_d3d11_)
 		{
-			::MessageBoxW(NULL, L"Can't load d3d11.dll", L"Error", MB_OK);
+			::MessageBoxW(nullptr, L"Can't load d3d11.dll", L"Error", MB_OK);
 		}
 
-		if (mod_dxgi_ != NULL)
+		if (mod_dxgi_ != nullptr)
 		{
 			DynamicCreateDXGIFactory1_ =
 				reinterpret_cast<CreateDXGIFactory1Func>(
@@ -177,7 +177,7 @@ public:
 				);
 		}
 
-		if (mod_d3d11_ != NULL)
+		if (mod_d3d11_ != nullptr)
 		{
 			DynamicD3D11CreateDeviceAndSwapChain_ =
 				reinterpret_cast<D3D11CreateDeviceAndSwapChainFunc>(
@@ -227,17 +227,17 @@ public:
 			size_t const num_feature_levels = sizeof(feature_levels) / sizeof(feature_levels[0]);
 
 			D3D_FEATURE_LEVEL out_feature_level;
-			DynamicD3D11CreateDeviceAndSwapChain_(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, create_device_flags,
+			DynamicD3D11CreateDeviceAndSwapChain_(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_device_flags,
 				feature_levels, num_feature_levels, D3D11_SDK_VERSION, &sc_desc, &swap_chain_, &d3d_device_,
 				&out_feature_level, &d3d_imm_ctx_);
 
 			ID3D11Texture2D* back_buffer;
 			swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<void**>(&back_buffer));
 
-			d3d_device_->CreateRenderTargetView(back_buffer, NULL, &back_buffer_rtv_);
+			d3d_device_->CreateRenderTargetView(back_buffer, nullptr, &back_buffer_rtv_);
 			back_buffer->Release();
 
-			d3d_imm_ctx_->OMSetRenderTargets(1, &back_buffer_rtv_, NULL);
+			d3d_imm_ctx_->OMSetRenderTargets(1, &back_buffer_rtv_, nullptr);
 
 			// Setup the viewport
 			D3D11_VIEWPORT vp;
@@ -277,13 +277,13 @@ public:
 			UINT offsets[] = { 0 };
 			d3d_imm_ctx_->IASetVertexBuffers(0, 1, &vb_, strides, offsets);
 
-			ID3D10Blob* vs_code = NULL;
-			ID3D10Blob* err_msg = NULL;
+			ID3D10Blob* vs_code = nullptr;
+			ID3D10Blob* err_msg = nullptr;
 
 #if WINVER >= 0x0602
-			D3DCompile(vs_data, sizeof(vs_data), NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, &vs_code, &err_msg);
+			D3DCompile(vs_data, sizeof(vs_data), nullptr, nullptr, nullptr, "VSMain", "vs_4_0", 0, 0, &vs_code, &err_msg);
 #else
-			D3DX11CompileFromMemory(vs_data, sizeof(vs_data), NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, NULL, &vs_code, &err_msg, NULL);
+			D3DX11CompileFromMemory(vs_data, sizeof(vs_data), nullptr, nullptr, nullptr, "VSMain", "vs_4_0", 0, 0, nullptr, &vs_code, &err_msg, nullptr);
 #endif
 
 			if (err_msg)
@@ -291,17 +291,17 @@ public:
 				std::cerr << err_msg->GetBufferPointer() << std::endl;
 			}
 
-			d3d_device_->CreateVertexShader(vs_code->GetBufferPointer(), vs_code->GetBufferSize(), NULL, &vs_);
+			d3d_device_->CreateVertexShader(vs_code->GetBufferPointer(), vs_code->GetBufferSize(), nullptr, &vs_);
 
-			d3d_imm_ctx_->VSSetShader(vs_, NULL, 0);
+			d3d_imm_ctx_->VSSetShader(vs_, nullptr, 0);
 
-			ID3D10Blob* ps_code = NULL;
-			err_msg = NULL;
+			ID3D10Blob* ps_code = nullptr;
+			err_msg = nullptr;
 
 #if WINVER >= 0x0602
-			D3DCompile(ps_data, sizeof(ps_data), NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, &ps_code, &err_msg);
+			D3DCompile(ps_data, sizeof(ps_data), nullptr, nullptr, nullptr, "PSMain", "ps_4_0", 0, 0, &ps_code, &err_msg);
 #else
-			D3DX11CompileFromMemory(ps_data, sizeof(ps_data), NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, NULL, &ps_code, &err_msg, NULL);
+			D3DX11CompileFromMemory(ps_data, sizeof(ps_data), nullptr, nullptr, nullptr, "PSMain", "ps_4_0", 0, 0, nullptr, &ps_code, &err_msg, nullptr);
 #endif
 
 			if (err_msg)
@@ -309,10 +309,10 @@ public:
 				std::cerr << err_msg->GetBufferPointer() << std::endl;
 			}
 
-			d3d_device_->CreatePixelShader(ps_code->GetBufferPointer(), ps_code->GetBufferSize(), NULL, &ps_);
+			d3d_device_->CreatePixelShader(ps_code->GetBufferPointer(), ps_code->GetBufferSize(), nullptr, &ps_);
 			ps_code->Release();
 
-			d3d_imm_ctx_->PSSetShader(ps_, NULL, 0);
+			d3d_imm_ctx_->PSSetShader(ps_, nullptr, 0);
 
 			D3D11_INPUT_ELEMENT_DESC elems[1];
 			elems[0].SemanticName = "POSITION";
@@ -359,7 +359,7 @@ public:
 			tex_desc.BindFlags = D3D10_BIND_SHADER_RESOURCE;
 			tex_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			tex_desc.MiscFlags = 0;
-			d3d_device_->CreateTexture2D(&tex_desc, NULL, &buftex_);
+			d3d_device_->CreateTexture2D(&tex_desc, nullptr, &buftex_);
 
 			D3D11_SHADER_RESOURCE_VIEW_DESC sr_desc;
 			sr_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;

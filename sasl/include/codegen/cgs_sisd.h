@@ -46,7 +46,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class llvm_intrin_cache;
 
@@ -139,9 +139,9 @@ public:
 	bool prefer_scalar_code() const;
 	/// @}
 
-	llvm::Value* current_execution_mask() const { return NULL; }
+	llvm::Value* current_execution_mask() const { return nullptr; }
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

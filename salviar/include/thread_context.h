@@ -25,7 +25,7 @@ struct thread_context
 		{
 		}
 	public:
-		package_cursor(): owner(NULL), cur(0)
+		package_cursor(): owner(nullptr), cur(0)
 		{
 		}
 

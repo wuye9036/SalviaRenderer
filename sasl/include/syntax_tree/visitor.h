@@ -85,12 +85,12 @@ struct program;
 #define SASL_VISIT_DCL( node_type_name )	\
 	SASL_SPECIFIC_VISIT_DCL( visit, node_type_name )
 #define SASL_SPECIFIC_VISIT_DCL( fn, node_type_name ) \
-	virtual void fn ( ::sasl::syntax_tree::node_type_name& v, ::std::any* data = NULL )
+	virtual void fn ( ::sasl::syntax_tree::node_type_name& v, ::std::any* data = nullptr )
 
 #define SASL_VISIT_INLINE_DEF_UNIMPL( node_type_name )	\
 	SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL( visit, node_type_name )
 #define SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL( fn, node_type_name )	\
-	virtual void fn ( ::sasl::syntax_tree::node_type_name &, ::std::any* = NULL ){	\
+	virtual void fn ( ::sasl::syntax_tree::node_type_name &, ::std::any* = nullptr ){	\
 		EFLIB_ASSERT_UNIMPLEMENTED0( \
 			( ::std::string( BOOST_PP_STRINGIZE( node_type_name ) ) \
 			+ ::std::string( " was not implemented yet." ) ).c_str()	\

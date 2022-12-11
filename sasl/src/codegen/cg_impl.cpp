@@ -65,7 +65,7 @@ TargetMachine* create_local_target_machine()
 
 #define SASL_VISITOR_TYPE_NAME cg_impl
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 llvm::DefaultIRBuilder* cg_impl::builder() const
 {
@@ -107,7 +107,7 @@ bool cg_impl::generate( shared_ptr<module_semantic> const& mod, reflection_impl 
 	if(sem_){
 		assert( sem_->root_symbol() );
 		assert( sem_->get_program() );
-		sem_->get_program()->accept( this, NULL );
+		sem_->get_program()->accept( this, nullptr );
 		return true;
 	}
 
@@ -119,7 +119,7 @@ cg_impl::~cg_impl()
 	if( service_ )
 	{
 		delete service_;
-		service_ = NULL;
+		service_ = nullptr;
 	}
 	
 	// if( target_data ){ delete target_data; }
@@ -138,9 +138,9 @@ cg_function* cg_impl::get_function( std::string const& name ) const
 }
 
 cg_impl::cg_impl()
-	: abii(NULL), service_(NULL)
-	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
-	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
+	: abii(nullptr), service_(nullptr)
+	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(nullptr)
+	, parent_struct_(nullptr), block_(nullptr), current_symbol_(nullptr), variable_to_initialize_(nullptr)
 {
 	std::function<void (char const*, operators)>
 		op_name_inserter = [this](char const* name, operators v)
@@ -159,7 +159,7 @@ cg_impl::cg_impl()
 
 void cg_impl::visit_child( sasl::syntax_tree::node* child )
 {
-	child->accept(this, NULL);
+	child->accept(this, nullptr);
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -475,7 +475,7 @@ SASL_VISIT_DEF(function_def)
 
 	if(!fn_ctxt->function_scope)
 	{
-		create_fnsig(v, NULL);
+		create_fnsig(v, nullptr);
 	}
 
 	if ( v.body )
@@ -484,8 +484,8 @@ SASL_VISIT_DEF(function_def)
 		service()->fn().allocation_block( service()->new_block(".alloc", true) );
 
 		service()->function_body_beg();
-		create_fnargs(v, NULL);
-		create_fnbody(v, NULL);
+		create_fnargs(v, nullptr);
+		create_fnbody(v, nullptr);
 		service()->function_body_end();
 	}
 }
@@ -561,11 +561,11 @@ SASL_VISIT_DEF( declarator ){
 	// local or member.
 	// TODO: TBD - Support member function and nested structure ?
 	if( service()->in_function() ){
-		visit_local_declarator(v, NULL);
+		visit_local_declarator(v, nullptr);
 	} else if(parent_struct_){
-		visit_member_declarator(v, NULL);
+		visit_member_declarator(v, nullptr);
 	} else {
-		visit_global_declarator(v, NULL);
+		visit_global_declarator(v, nullptr);
 	}
 }
 
@@ -609,11 +609,11 @@ SASL_VISIT_DEF( jump_statement )
 	}
 
 	if ( v.code == jump_mode::_return ){
-		visit_return(v, NULL);
+		visit_return(v, nullptr);
 	} else if ( v.code == jump_mode::_continue ){
-		visit_continue(v, NULL);
+		visit_continue(v, nullptr);
 	} else if ( v.code == jump_mode::_break ){
-		visit_break(v, NULL);
+		visit_break(v, nullptr);
 	}
 
 	// Restart a new block for sealing the old block.
@@ -642,10 +642,10 @@ SASL_VISIT_DEF( program )
 	caster = create_cg_caster( get_context, get_semantic, get_proto, service() );
 	add_builtin_casts( caster, sem_->pety() );
 	
-	process_intrinsics(v, NULL);
+	process_intrinsics(v, nullptr);
 
 	// Some other initializations.
-	before_decls_visit(v, NULL);
+	before_decls_visit(v, nullptr);
 
 	// visit declarations
 	for( vector< shared_ptr<declaration> >::iterator
@@ -1166,7 +1166,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".deg");
 			float deg2rad = (float)(eflib::PI/180.0f);
-			multi_value deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
+			multi_value deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, nullptr, builtin_types::_float);
 			multi_value deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).ty(), fn.arg(0).ty()->hint() );
 			service()->emit_return( service()->emit_mul_comp( deg2rad_v, fn.arg(0) ), service()->param_abi(false) );
 		}
@@ -1176,7 +1176,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".rad");
 			float rad2deg = (float)(180.0f/eflib::PI);
-			multi_value rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
+			multi_value rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, nullptr, builtin_types::_float);
 			multi_value rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).ty(), fn.arg(0).ty()->hint() );
 			service()->emit_return( service()->emit_mul_comp( rad2deg_v, fn.arg(0) ), service()->param_abi(false) );
 		}
@@ -1209,7 +1209,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.logical_args_count() == 2 );
 			fn.arg_name(0, ".sqr");
 			fn.arg_name(1, ".inv");
-			multi_value x2 = service()->create_constant_scalar(1.0f, NULL, builtin_types::_float);
+			multi_value x2 = service()->create_constant_scalar(1.0f, nullptr, builtin_types::_float);
 			multi_value y0 = service()->emit_extract_val( fn.arg(0), 1 );
 			multi_value y1 = service()->emit_extract_val( fn.arg(1), 1 );
 			multi_value z0 = service()->emit_extract_val( fn.arg(0), 2 );
@@ -1384,7 +1384,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			multi_value i = fn.arg(0);
 			multi_value n = fn.arg(1);
 
-			multi_value two = service()->create_constant_scalar( 2.0f, NULL, scalar_of( i.hint() ) );
+			multi_value two = service()->create_constant_scalar( 2.0f, nullptr, scalar_of( i.hint() ) );
 			multi_value double_dot = service()->emit_mul_comp( two, service()->emit_dot(i, n) );
 			multi_value ret = service()->emit_sub( i, service()->emit_mul_comp(double_dot, n) );
 
@@ -1578,4 +1578,4 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 	}
 }
 
-END_NS_SASL_CODEGEN();
+}

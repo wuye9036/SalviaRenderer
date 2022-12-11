@@ -54,7 +54,7 @@ using std::make_pair;
 
 #define SASL_VISITOR_TYPE_NAME cg_sisd
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 cg_sisd::~cg_sisd(){
 }
@@ -101,7 +101,7 @@ multi_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 	value_array no_ref =
 		( no_value.abi() == yes_value.abi() )
 			? no_value.load_ref()
-			: value_array(service()->parallel_factor(), NULL);
+			: value_array(service()->parallel_factor(), nullptr);
 	value_array no_v = no_value.load( yes_value.abi() );
 	insert_point_t no_ip_end = service()->insert_point();
 
@@ -188,7 +188,7 @@ SASL_VISIT_DEF(unary_expression)
 	} else if( v.op == operators::logic_not ) {
 		ctxt->node_value = service()->emit_not(inner_value);
 	} else if( v.op == operators::bit_not ) {
-		multi_value all_one_value = service()->create_constant_int( NULL, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
+		multi_value all_one_value = service()->create_constant_int( nullptr, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
 		ctxt->node_value = service()->emit_bitwise_bin_op(operators::bit_xor, all_one_value, inner_value);
 	} else {
 
@@ -544,4 +544,4 @@ abis cg_sisd::local_abi( bool is_c_compatible ) const
 	return is_c_compatible ? abis::c : abis::llvm;
 }
 
-END_NS_SASL_CODEGEN();
+}

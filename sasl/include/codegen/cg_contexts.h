@@ -43,7 +43,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_context);
 
@@ -66,9 +66,9 @@ struct node_context
 {
 	node_context(module_context* owner)
 		: owner(owner)
-		, function_scope(NULL)
+		, function_scope(nullptr)
 		, is_semantic_mode(false)
-		, ty(NULL)
+		, ty(nullptr)
 		, declarator_count(0)
 		, node_value(0)
 	{
@@ -83,6 +83,6 @@ struct node_context
 	int				declarator_count;	///< The declarator count of declaration.
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

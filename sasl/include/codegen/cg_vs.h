@@ -29,7 +29,7 @@ namespace llvm{
 	class DataLayout;
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class cg_vs: public cg_sisd
 {
@@ -75,7 +75,7 @@ private:
 
 	multi_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
 
-	// If ctxt is NULL, the generated value and type will be cached.
+	// If ctxt is nullptr, the generated value and type will be cached.
 	// Return true if context is fetched from cache.
 	bool layout_to_node_context(
 		node_context* ctxt, salviar::sv_layout* si,
@@ -93,6 +93,6 @@ private:
 	input_copies_dict input_copies_;
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

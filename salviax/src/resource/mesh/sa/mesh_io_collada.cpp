@@ -511,7 +511,7 @@ scene_node_ptr build_scene_node(
 	unordered_map<dae_scene_node_ptr,scene_node_ptr>& dae_node_to_joints,
 	unordered_map<dae_matrix_ptr, mat44*>&	dae_node_to_matrix)
 {
-	scene_node_ptr ret = std::make_shared<scene_node>( (scene_node*)NULL, std::string() );
+	scene_node_ptr ret = std::make_shared<scene_node>( (scene_node*)nullptr, std::string() );
 	ret->name = *(scene->id);
 	dae_node_to_joints.insert( make_pair(scene, ret) );
 
@@ -626,7 +626,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	unordered_map<string, skin_info_ptr> skin_infos;
 	for( ptree::value_type& ctrl_child: controllers_root.get() ){
 		if( ctrl_child.first == "controller" ){
-			dae_controller_ptr ctrl_node = pdom->load_node<dae_controller>(ctrl_child.second, NULL);
+			dae_controller_ptr ctrl_node = pdom->load_node<dae_controller>(ctrl_child.second, nullptr);
 			skin_info_ptr skinfo = build_skin_info(ctrl_node->skin);
 			skin_infos[skinfo->source] = skinfo;
 		}
@@ -639,12 +639,12 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 		{
 			string geom_id = geom_child.second.get<string>("<xmlattr>.id");
 			skin_info* skinfo = 
-				skin_infos.count(geom_id) > 0 ? skin_infos[geom_id].get() : NULL;
+				skin_infos.count(geom_id) > 0 ? skin_infos[geom_id].get() : nullptr;
 			
 			auto mesh_node = geom_child.second.get_child_optional("mesh");
 			assert(mesh_node);
 
-			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
+			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, nullptr);
 			if( !dae_mesh_node ) return skin_mesh_impl_ptr();
 
 			ret->submeshes = build_mesh(dae_mesh_node, skinfo, render);
@@ -657,7 +657,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	unordered_map<dae_scene_node_ptr, scene_node_ptr>	dae_scene_node_to_scene_node;
 	unordered_map<dae_matrix_ptr, mat44*>				dae_matrix_to_matrix;
 	{
-		dae_visual_scenes_ptr scenes = pdom->load_node<dae_visual_scenes>(*scenes_root, NULL);
+		dae_visual_scenes_ptr scenes = pdom->load_node<dae_visual_scenes>(*scenes_root, nullptr);
 		for( dae_scene_node_ptr const& child: scenes->scenes )
 		{
 			ret->roots.push_back( build_scene_node(child, dae_scene_node_to_scene_node, dae_matrix_to_matrix) );
@@ -675,7 +675,7 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	
 	// Build animations
 	{
-		dae_animations_ptr anims_node = pdom->load_node<dae_animations>(*animations_root, NULL);
+		dae_animations_ptr anims_node = pdom->load_node<dae_animations>(*animations_root, nullptr);
 		ret->anims = build_animations(anims_node, dae_matrix_to_matrix);
 	}
 	
@@ -710,10 +710,10 @@ vector<mesh_ptr> build_mesh_from_file(renderer* render, std::string const& file_
 			auto mesh_node = geom_child.second.get_child_optional("mesh");
 			assert(mesh_node);
 
-			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
+			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, nullptr);
 			if( !dae_mesh_node ) return ret;
 
-			return build_mesh( dae_mesh_node, NULL, render );
+			return build_mesh( dae_mesh_node, nullptr, render );
 		}
 	}
 

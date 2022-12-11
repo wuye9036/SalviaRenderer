@@ -26,7 +26,7 @@
 
 #include <string>
 
-BEGIN_NS_SASL_CODEGEN()
+namespace sasl::codegen{
 
 using namespace syntax_tree;
 using namespace semantic;
@@ -103,4 +103,4 @@ module_vmcode_impl* cg_general::mod_ptr(){
 	return vmcode_.get();
 }
 
-END_NS_SASL_CODEGEN()
+}

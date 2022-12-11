@@ -68,7 +68,7 @@ public:
 		overload_array* pos;
 	};
 
-	static symbol* create_root(module_semantic* owner, node* root_node = NULL);
+	static symbol* create_root(module_semantic* owner, node* root_node = nullptr);
 
 	module_semantic* owner() const;
 

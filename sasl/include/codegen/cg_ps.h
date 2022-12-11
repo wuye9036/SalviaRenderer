@@ -3,11 +3,11 @@
 
 #include <sasl/include/codegen/cg_simd.h>
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class cg_ps: public cg_simd{
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

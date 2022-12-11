@@ -31,7 +31,7 @@ BEGIN_NS_SASL_PARSER()
 
 class shared_data{
 public:
-	shared_data(): attrs(NULL){}
+	shared_data(): attrs(nullptr){}
 	std::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
 	unordered_set< std::string > skippers;
 	unordered_set< std::string > init_states;

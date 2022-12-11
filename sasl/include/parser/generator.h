@@ -1,11 +1,11 @@
-#ifndef SASL_PARSER_GENERATOR_H
-#define SASL_PARSER_GENERATOR_H
+#pragma once
 
 #include <eflib/include/platform/config.h>
 
 #include <sasl/include/parser/parser_forward.h>
 
 #include <exception>
+#include <string>
 #include <vector>
 #include <any>
 #include <memory>
@@ -18,7 +18,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 typedef std::shared_ptr< sasl::common::token_t > token_ptr;
 typedef std::vector< token_ptr > token_seq;
@@ -312,6 +312,4 @@ queuer operator > ( parser const& expr0, parser const& expr1 );
 queuer operator > ( queuer const& expr0, parser const& expr1 );
 negnativer operator !( parser const& expr1 );
 
-END_NS_SASL_PARSER();
-
-#endif
+}

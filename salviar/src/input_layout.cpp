@@ -52,7 +52,7 @@ input_element_desc const* input_layout::find_desc( size_t slot ) const{
 			return &( descs[i_desc] );
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 input_element_desc const* input_layout::find_desc( semantic_value const& v ) const{
@@ -61,7 +61,7 @@ input_element_desc const* input_layout::find_desc( semantic_value const& v ) con
 			return &( descs[i_desc] );
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 input_layout_ptr input_layout::create( input_element_desc const* pdesc, size_t desc_count, shader_object_ptr const& /*vs*/ ){

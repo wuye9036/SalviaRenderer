@@ -42,7 +42,7 @@ struct llvm_options
 	}
 };
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
 {
@@ -102,7 +102,7 @@ void module_vmcode_impl::dump_ir() const
 void module_vmcode_impl::dump_ir( std::ostream& ostr ) const
 {
 	llvm::raw_os_ostream raw_os(ostr);
-	vm_module_->print( raw_os, NULL );
+	vm_module_->print( raw_os, nullptr );
 	raw_os.flush();
 }
 
@@ -151,4 +151,4 @@ void module_vmcode_impl::inject_function(void* pfn, fixed_string const& name)
 }
 
 
-END_NS_SASL_CODEGEN();
+}

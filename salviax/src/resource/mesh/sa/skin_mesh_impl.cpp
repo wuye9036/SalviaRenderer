@@ -19,7 +19,7 @@ scene_node::scene_node( scene_node* parent, string const& name )
 
 void scene_node::update_world_matrix()
 {
-	if(parent == NULL)
+	if(parent == nullptr)
 	{
 		world_matrix = local_matrix;
 	}

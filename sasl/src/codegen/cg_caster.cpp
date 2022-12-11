@@ -41,7 +41,7 @@ using std::vector;
 
 using namespace sasl::utility;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class cg_service;
 
@@ -424,4 +424,4 @@ shared_ptr<caster_t> create_cg_caster(
 	return ret;
 }
 
-END_NS_SASL_CODEGEN();
+}

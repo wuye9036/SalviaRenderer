@@ -17,7 +17,7 @@ public:
 	lockfree_queue()
 	{
 		node_t* node = new node_t;
-		node->next = NULL;
+		node->next = nullptr;
 		head_ = tail_ = atomic<node_t*>(node);
 	}
 
@@ -29,7 +29,7 @@ public:
 	~lockfree_queue()
 	{
 		atomic<node_t*> node = head_;
-		while (node.value() != NULL)
+		while (node.value() != nullptr)
 		{
 			atomic<node_t*> next = node.value()->next;
 			delete node.value();
@@ -50,11 +50,11 @@ public:
 	void copy_from(const lockfree_queue& rhs)
 	{
 		node_t* node = new node_t;
-		node->next = NULL;
+		node->next = nullptr;
 		head_ = tail_ = atomic<node_t*>(node);
 
 		atomic<node_t*> rhs_node = rhs.head_.value()->next;
-		while (rhs_node.value() != NULL)
+		while (rhs_node.value() != nullptr)
 		{
 			this->enqueue(rhs_node.value()->value);
 			rhs_node = rhs_node.value()->next;
@@ -70,7 +70,7 @@ public:
 	{
 		node_t* node = new node_t;
 		node->value = value;
-		node->next = NULL;
+		node->next = nullptr;
 
 		for (;;)
 		{
@@ -78,7 +78,7 @@ public:
 			atomic<node_t*> next = tail.value()->next;
 			if (tail == tail_)
 			{
-				if (NULL == next.value())
+				if (nullptr == next.value())
 				{
 					if (tail.value()->next.cas(next.value(), node))
 					{
@@ -105,7 +105,7 @@ public:
 			{
 				if (head == tail)
 				{
-					if (NULL == next.value())
+					if (nullptr == next.value())
 					{
 						return false;
 					}
@@ -131,7 +131,7 @@ public:
 		atomic<node_t*> head = head_;
 		atomic<node_t*> tail = tail_;
 		atomic<node_t*> next = head.value()->next;
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			*begin = next.value()->value;
 			++ begin;

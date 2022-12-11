@@ -43,7 +43,7 @@ BEGIN_NS_SASL_SEMANTIC()
 using namespace sasl::utility::ops;
 
 reflection_impl::reflection_impl()
-	: module_sem_(NULL), entry_point_(NULL), position_output_(NULL)
+	: module_sem_(nullptr), entry_point_(nullptr), position_output_(nullptr)
 {
 	memset( counts_,  0, sizeof(counts_)  );
 	memset( offsets_, 0, sizeof(offsets_) );
@@ -159,7 +159,7 @@ sv_layout* reflection_impl::input_sv_layout( salviar::semantic_value const& sem 
 	auto it = semantic_input_layouts_.find( sem );
 	if ( it == semantic_input_layouts_.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return const_cast<sv_layout*>( addressof(it->second) );
 }
@@ -174,7 +174,7 @@ sv_layout* reflection_impl::input_sv_layout( symbol* v ) const
 	auto it = uniform_input_layouts_.find(v);
 	if ( it == uniform_input_layouts_.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return const_cast<sv_layout*>( addressof( it->second ) );
 }
@@ -184,7 +184,7 @@ sv_layout* reflection_impl::input_sv_layout(fixed_string const& name) const
 	auto it = name_layouts_.find(name);
 	if( it == name_layouts_.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second;
 }
@@ -197,7 +197,7 @@ sv_layout* reflection_impl::alloc_input_layout( symbol* v )
 sv_layout* reflection_impl::output_sv_layout( salviar::semantic_value const& sem ) const{
 	auto it = semantic_output_layouts_.find(sem);
 	if ( it == semantic_output_layouts_.end() ){
-		return NULL;
+		return nullptr;
 	}
 	return const_cast<sv_layout*>( addressof( it->second ) );
 }
@@ -261,7 +261,7 @@ void reflection_impl::update_size(size_t sz, salviar::sv_usage usage)
 
 bool reflection_impl::has_position_output() const
 {
-	return position_output_ != NULL;
+	return position_output_ != nullptr;
 }
 
 salviar::languages reflection_impl::get_language() const

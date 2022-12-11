@@ -31,8 +31,8 @@ namespace salviax::resource{
 
 mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 {
-	vec3* dx_verts = NULL;
-	byte* dx_indices = NULL;
+	vec3* dx_verts = nullptr;
+	byte* dx_indices = nullptr;
 
 	dx_mesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)(&dx_verts));
 	dx_mesh->LockIndexBuffer(D3DLOCK_READONLY, (void**)(&dx_indices));
@@ -60,7 +60,7 @@ mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 		// The end of declarations
 		if(decl->Stream == 0xFF) break;
 
-		const char* semantic_name = NULL;
+		const char* semantic_name = nullptr;
 
 		switch(decl->Usage){
 			case(D3DDECLUSAGE_POSITION):
@@ -73,7 +73,7 @@ mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 				semantic_name = "TEXCOORD";
 				break;
 			default:
-				semantic_name = NULL;
+				semantic_name = nullptr;
 		}
 
 		if( semantic_name ){
@@ -86,7 +86,7 @@ mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 	}
 
 	// Copy index buffer and vertex buffer
-	void* dx_verts_data = NULL;
+	void* dx_verts_data = nullptr;
 	dx_mesh->LockVertexBuffer(D3DLOCK_READONLY, &dx_verts_data);
 	verts->transfer( 0, dx_verts_data, 0, 0, vert_size * nverts, 1 );
 	dx_mesh->UnlockVertexBuffer();
@@ -111,7 +111,7 @@ mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 mesh_ptr create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _tstring& filename)
 {
 	IDirect3DDevice9* d3ddev = dev->get_d3d_device9();
-	if(d3ddev == NULL) return mesh_ptr();
+	if(d3ddev == nullptr) return mesh_ptr();
 
 	DWORD material_counts;
 	LPD3DXMESH pmesh;

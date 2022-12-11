@@ -145,8 +145,8 @@ namespace vs_output_op_funcs
 	{
 		const float inv_w = 1.0f / in.position().w();
 #if defined(VSO_INTERP_SSE_ENABLED)
-		__m128*			dst = NULL;
-		__m128 const*	src = NULL;
+		__m128*			dst = nullptr;
+		__m128 const*	src = nullptr;
 
 		__m128 inv_w4 = _mm_load_ps1(&inv_w);
 

@@ -17,7 +17,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 typedef std::shared_ptr< sasl::common::token_t > token_ptr;
 typedef std::vector< token_ptr > token_seq;
@@ -117,6 +117,6 @@ private:
 	std::shared_ptr<lexer_impl> impl;
 };
 
-END_NS_SASL_PARSER();
+}
 
 #endif

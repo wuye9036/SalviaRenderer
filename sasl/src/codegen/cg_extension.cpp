@@ -43,10 +43,10 @@ using std::vector;
 
 static int const SASL_SIMD_ELEMENT_COUNT = 4;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 cg_extension::cg_extension( DefaultIRBuilder* builder, LLVMContext& context, Module* module, size_t parallel_factor )
-	: builder_(builder), context_(context), module_(module), alloc_point_(NULL)
+	: builder_(builder), context_(context), module_(module), alloc_point_(nullptr)
 {
 	initialize_external_intrinsics(parallel_factor);
 }
@@ -63,7 +63,7 @@ value_array cg_extension::call_binary_intrin(
 	assert( sv_fn );
 
 	size_t parallel_factor = lhs.size();
-	value_array ret(parallel_factor, NULL);
+	value_array ret(parallel_factor, nullptr);
 	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
 	{
 		ret[value_index] = call_binary_intrin_mono(
@@ -108,7 +108,7 @@ Value* cg_extension::call_binary_intrin_mono(
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return nullptr;
 }
 
 value_array cg_extension::call_unary_intrin( Type* ret_ty, value_array const& v, unary_intrin_functor sv_fn )
@@ -116,7 +116,7 @@ value_array cg_extension::call_unary_intrin( Type* ret_ty, value_array const& v,
 	assert( valid_all(v) );
 	assert( sv_fn );
 	size_t parallel_factor = v.size();
-	value_array ret(parallel_factor, NULL);
+	value_array ret(parallel_factor, nullptr);
 	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
 	{
 		ret[value_index] = call_unary_intrin(ret_ty, v[value_index], sv_fn);
@@ -150,7 +150,7 @@ Value* cg_extension::call_unary_intrin( Type* ret_ty, Value* v, unary_intrin_fun
 	}
 
 	assert(false);
-	return NULL;
+	return nullptr;
 }
 
 unary_intrin_functor cg_extension::bind_to_unary( Function* fn )
@@ -230,7 +230,7 @@ Value* cg_extension::abs_sv( Value* v )
 	Type* ty = v->getType();
 	assert( !ty->isAggregateType() );
 
-	Type*    elem_ty   = NULL;
+	Type*    elem_ty   = nullptr;
 	unsigned elem_size = 0;
 
 	if( ty->isVectorTy() )
@@ -253,7 +253,7 @@ Value* cg_extension::abs_sv( Value* v )
 	
 	if( ty->isFPOrFPVectorTy() )
 	{
-		Type* elem_int_ty = NULL;
+		Type* elem_int_ty = nullptr;
 		uint64_t mask = 0;
 		if( elem_ty->isFloatTy() )
 		{
@@ -353,7 +353,7 @@ Value* cg_extension::i8toi1_sv( Value* v )
 value_array cg_extension::i8toi1_sv(value_array const& v)
 {
 	assert( valid_all(v) );
-	value_array ret(v.size(), NULL);
+	value_array ret(v.size(), nullptr);
 	for(size_t value_index = 0; value_index < v.size(); ++value_index)
 	{
 		ret[value_index] = i8toi1_sv(v[value_index]);
@@ -456,7 +456,7 @@ Value* cg_extension::select( Value* flag, Value* v0, Value* v1 )
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return nullptr;
 }
 
 value_array cg_extension::select(
@@ -469,7 +469,7 @@ value_array cg_extension::select(
 	assert( flag.size() == v0.size() );
 	assert( v0.size() == v1.size() );
 
-	value_array ret(flag.size(), NULL);
+	value_array ret(flag.size(), nullptr);
 	for(size_t value_index = 0; value_index < flag.size(); ++value_index)
 	{
 		ret[value_index] = select(flag[value_index], v0[value_index], v1[value_index]);
@@ -481,12 +481,12 @@ value_array cg_extension::select(
 	Value* mask, value_array const& v0, value_array const& v1
 	)
 {
-	assert( mask != NULL );
+	assert( mask != nullptr );
 	assert( valid_all(v0) );
 	assert( valid_all(v1) );
 	assert( v0.size() == v1.size() );
 
-	value_array ret(v0.size(), NULL);
+	value_array ret(v0.size(), nullptr);
 	for(size_t value_index = 0; value_index < v0.size(); ++value_index)
 	{
 		uint32_t flag_mask = (1U << value_index);
@@ -561,7 +561,7 @@ Value* cg_extension::get_constant_by_scalar( Type* ty, Value* scalar )
 	else
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -612,7 +612,7 @@ value_array cg_extension::split_array(llvm::Value* v)
 	Type* ty = v->getType();
 	assert( ty->isArrayTy() );
 	size_t parallel_factor = static_cast<size_t>(ty->getArrayNumElements());
-	value_array ret(parallel_factor, NULL);
+	value_array ret(parallel_factor, nullptr);
 	unsigned value_index[] = {0};
 	for(; value_index[0] < parallel_factor; ++value_index[0])
 	{
@@ -648,7 +648,7 @@ Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 		{
 			int batch_count = elem_count / SASL_SIMD_ELEMENT_COUNT;
 
-			Value* ret = NULL;
+			Value* ret = nullptr;
 			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
 				Value* lhs_simd_elem = extract_elements( lhs, i_batch*SASL_SIMD_ELEMENT_COUNT, SASL_SIMD_ELEMENT_COUNT );
 				Value* rhs_simd_elem = extract_elements( rhs, i_batch*SASL_SIMD_ELEMENT_COUNT, SASL_SIMD_ELEMENT_COUNT );
@@ -668,7 +668,7 @@ Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 
 		// Scalar
 		assert( sfn );
-		Value* ret = NULL;
+		Value* ret = nullptr;
 		for( unsigned i = 0; i < elem_count; ++i )
 		{
 			Value* lhs_elem = builder_->CreateExtractElement( lhs, get_int(i) );
@@ -687,7 +687,7 @@ Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return nullptr;
 }
 
 Value* cg_extension::promote_to_unary_sv_impl(Value* v,
@@ -712,7 +712,7 @@ Value* cg_extension::promote_to_unary_sv_impl(Value* v,
 		{
 			int batch_count = elem_count / SASL_SIMD_ELEMENT_COUNT;
 
-			Value* ret = NULL;
+			Value* ret = nullptr;
 			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
 				Value* v_simd_elem = extract_elements( v, i_batch*SASL_SIMD_ELEMENT_COUNT, SASL_SIMD_ELEMENT_COUNT );
 				Value* ret_simd_elem = simd_fn(v_simd_elem);
@@ -731,7 +731,7 @@ Value* cg_extension::promote_to_unary_sv_impl(Value* v,
 
 		// Scalar
 		assert( sfn );
-		Value* ret = NULL;
+		Value* ret = nullptr;
 		for( unsigned i = 0; i < elem_count; ++i )
 		{
 			Value* v_elem = builder_->CreateExtractElement( v, get_int(i) );
@@ -749,7 +749,7 @@ Value* cg_extension::promote_to_unary_sv_impl(Value* v,
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return nullptr;
 }
 
 void cg_extension::set_stack_alloc_point(BasicBlock* alloc_point)
@@ -760,15 +760,15 @@ void cg_extension::set_stack_alloc_point(BasicBlock* alloc_point)
 AllocaInst* cg_extension::stack_alloc(Type* ty, Twine const& name)
 {
 	assert(alloc_point_);
-	return new AllocaInst(ty, NULL, name, alloc_point_);
+	return new AllocaInst(ty, nullptr, name, alloc_point_);
 }
 
 value_array cg_extension::stack_alloc(Type* ty, size_t parallel_factor, llvm::Twine const& name)
 {
-	value_array ret(parallel_factor, NULL);
+	value_array ret(parallel_factor, nullptr);
 	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
 	{
-		ret[value_index] = new AllocaInst(ty, NULL, name, alloc_point_);
+		ret[value_index] = new AllocaInst(ty, nullptr, name, alloc_point_);
 	}
 	return ret;
 }
@@ -778,7 +778,7 @@ value_array cg_extension::extract_element(value_array const& agg, value_array co
 	assert( agg.size() == index.size() );
 	assert( valid_all(agg) );
 	assert( valid_all(index) );
-	value_array ret(agg.size(), NULL);
+	value_array ret(agg.size(), nullptr);
 
 	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
 	{
@@ -790,7 +790,7 @@ value_array cg_extension::extract_element(value_array const& agg, value_array co
 value_array cg_extension::extract_value(value_array const& agg, size_t index)
 {
 	assert( valid_all(agg) );
-	value_array ret(agg.size(), NULL);
+	value_array ret(agg.size(), nullptr);
 	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
 	{
 		ret[value_index] = builder_->CreateExtractValue(agg[value_index], static_cast<uint32_t>(index));
@@ -804,7 +804,7 @@ value_array cg_extension::gep(value_array const& agg_addr, value_array const& in
 	assert( valid_all(agg_addr) );
 	assert( valid_all(index) );
 	
-	value_array ret(agg_addr.size(), NULL);
+	value_array ret(agg_addr.size(), nullptr);
 	for(size_t value_index = 0; value_index < agg_addr.size(); ++value_index)
 	{
 		ret[value_index] = builder_->CreateGEP(agg_addr[value_index], index[value_index] );
@@ -816,7 +816,7 @@ value_array cg_extension::struct_gep(value_array const& agg, size_t index)
 {
 	assert( valid_all(agg) );
 	
-	value_array ret(agg.size(), NULL);
+	value_array ret(agg.size(), nullptr);
 	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
 	{
 		ret[value_index] = builder_->CreateStructGEP(agg[value_index], static_cast<unsigned int>(index));
@@ -827,7 +827,7 @@ value_array cg_extension::struct_gep(value_array const& agg, size_t index)
 value_array cg_extension::load(value_array const& addr)
 {
 	assert( valid_all(addr) );
-	value_array ret(addr.size(), NULL);
+	value_array ret(addr.size(), nullptr);
 	for(size_t value_index = 0; value_index < addr.size(); ++value_index)
 	{
 		ret[value_index] = builder_->CreateLoad(addr[value_index]);
@@ -841,7 +841,7 @@ value_array cg_extension::store(value_array const& values, value_array const& ad
 	assert( valid_all(addr) );
 	assert( valid_all(values) );
 	
-	value_array ret(values.size(), NULL);
+	value_array ret(values.size(), nullptr);
 	for(size_t value_index = 0; value_index < values.size(); ++value_index)
 	{
 		ret[value_index] = builder_->CreateStore(values[value_index], addr[value_index]);
@@ -853,8 +853,8 @@ value_array cg_extension::call(
 	value_array const& fn, ArrayRef<value_array> const& args
 	)
 {	
-	value_array ret(fn.size(), NULL);
-	vector<Value*> arg_values(args.size(), NULL);
+	value_array ret(fn.size(), nullptr);
+	vector<Value*> arg_values(args.size(), nullptr);
 	for(size_t value_index = 0; value_index < fn.size(); ++value_index)
 	{
 		for(size_t i_arg = 0; i_arg < args.size(); ++i_arg)
@@ -874,8 +874,8 @@ value_array cg_extension::call(
 	value_array const& fn, ArrayRef<value_array const*> const& args
 	)
 {	
-	value_array ret(fn.size(), NULL);
-	vector<Value*> arg_values(args.size(), NULL);
+	value_array ret(fn.size(), nullptr);
+	vector<Value*> arg_values(args.size(), nullptr);
 	for(size_t value_index = 0; value_index < fn.size(); ++value_index)
 	{
 		for(size_t i_arg = 0; i_arg < args.size(); ++i_arg)
@@ -899,7 +899,7 @@ value_array cg_extension::shuffle_vector(value_array const& v1, value_array cons
 	assert( v1.size() == mask.size() );
 	size_t parallel_factor = v1.size();
 
-	value_array ret(parallel_factor, NULL);
+	value_array ret(parallel_factor, nullptr);
 	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
 	{
 		ret[value_index] = builder_->CreateShuffleVector(v1[value_index], v2[value_index], mask[value_index]);
@@ -927,19 +927,19 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 	Type* v3f32_ty		= get_llvm_type(context_, v3f32_hint, abis::llvm);
 	Type* v2f32_ty		= get_llvm_type(context_, v2f32_hint, abis::llvm);
 
-	FunctionType* f_f = NULL;
+	FunctionType* f_f = nullptr;
 	{
 		Type* arg_tys[2] = { f32ptr_ty, f32_ty };
 		f_f = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* f_ff = NULL;
+	FunctionType* f_ff = nullptr;
 	{
 		Type* arg_tys[3] = { f32ptr_ty, f32_ty, f32_ty };
 		f_ff = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* vs_texlod_ty = NULL;
+	FunctionType* vs_texlod_ty = nullptr;
 	{
 		Type* arg_tys[3] =
 		{
@@ -950,7 +950,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		vs_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* ps_texlod_ty = NULL;
+	FunctionType* ps_texlod_ty = nullptr;
 	{
 		Type* arg_tys[4] =
 		{
@@ -962,7 +962,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		ps_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* ps_tex2dgrad_ty = NULL;
+	FunctionType* ps_tex2dgrad_ty = nullptr;
 	{
 		Type* arg_tys[6] =
 		{
@@ -976,7 +976,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		ps_tex2dgrad_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* ps_texCUBEgrad_ty = NULL;
+	FunctionType* ps_texCUBEgrad_ty = nullptr;
 	{
 		Type* arg_tys[6] =
 		{
@@ -990,7 +990,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		ps_texCUBEgrad_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* ps_tex2dbias_ty = NULL;
+	FunctionType* ps_tex2dbias_ty = nullptr;
 	{
 		Type* arg_tys[6] =
 		{
@@ -1004,7 +1004,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		ps_tex2dbias_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* ps_texCUBEbias_ty = NULL;
+	FunctionType* ps_texCUBEbias_ty = nullptr;
 	{
 		Type* arg_tys[6] =
 		{
@@ -1018,7 +1018,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		ps_texCUBEbias_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* ps_texproj_ty = NULL;
+	FunctionType* ps_texproj_ty = nullptr;
 	{
 		Type* arg_tys[6] =
 		{
@@ -1032,7 +1032,7 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 		ps_texproj_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-	FunctionType* u32_u32_ty = NULL;
+	FunctionType* u32_u32_ty = nullptr;
 	{
 		Type* arg_tys[2] = { u32ptr_ty, u32_ty };
 		u32_u32_ty = FunctionType::get(void_ty, arg_tys, false);
@@ -1080,5 +1080,5 @@ bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 
 	return true;
 }
-END_NS_SASL_CODEGEN();
+}
 

@@ -131,12 +131,12 @@ class reflector
 {
 public:
 	reflector(module_semantic* sem, eflib::fixed_string const& entry_name, diag_chat* diags)
-		: sem_(sem), current_entry_(NULL), reflection_(NULL), entry_name_(entry_name), diags_(diags)
+		: sem_(sem), current_entry_(nullptr), reflection_(nullptr), entry_name_(entry_name), diags_(diags)
 	{
 	}
 
 	reflector(module_semantic* sem, diag_chat* diags)
-		: sem_(sem), current_entry_(NULL), reflection_(NULL), diags_(diags)
+		: sem_(sem), current_entry_(nullptr), reflection_(nullptr), diags_(diags)
 	{
 	}
 
@@ -154,7 +154,7 @@ public:
 		}
 		else
 		{
-			symbol*				candidate = NULL;
+			symbol*				candidate = nullptr;
 			reflection_impl_ptr	candidate_reflection;
 			for( symbol* fn_sym: sem_->functions() )
 			{

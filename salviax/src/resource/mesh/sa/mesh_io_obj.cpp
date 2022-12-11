@@ -69,7 +69,7 @@ bool load_material( renderer* rend, vector<obj_material>& mtls, string const& mt
 
 	std::string cmd;
 
-	obj_material* pmtl = NULL;
+	obj_material* pmtl = nullptr;
 	for(;;){
 		mtlf >> cmd;
 		if( !mtlf ){ break; }

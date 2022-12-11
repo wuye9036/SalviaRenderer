@@ -14,7 +14,7 @@ using namespace eflib;
 using namespace std;
 
 clip_context::clip_context()
-	: vert_pool(NULL), prim(pt_none), vso_ops(NULL), cull(NULL)
+	: vert_pool(nullptr), prim(pt_none), vso_ops(nullptr), cull(nullptr)
 {
 }
 

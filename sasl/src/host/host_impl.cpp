@@ -116,8 +116,8 @@ void host_impl::update(render_state const* state)
 		vso_types_,
 		psi_offsets_,
 		psi_types_,
-		vx_shader_ ? vx_shader_->get_reflection() : NULL,
-		px_shader_ ? px_shader_->get_reflection() : NULL
+		vx_shader_ ? vx_shader_->get_reflection() : nullptr,
+		px_shader_ ? px_shader_->get_reflection() : nullptr
 		);
 
 	// Update vertex buffers from state.
@@ -180,8 +180,8 @@ vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 		vx_reflection->total_size(salviar::su_stream_out),
 		vso2reg_func_,
 		static_cast<uint32_t>(attrs_count),
-		vso_offsets_.empty() ? NULL : &(vso_offsets_[0]),
-		vso_types_.empty()   ? NULL : &(vso_types_[0])
+		vso_offsets_.empty() ? nullptr : &(vso_offsets_[0]),
+		vso_types_.empty()   ? nullptr : &(vso_types_[0])
 		);
 	return vx_shader_unit_ptr(ret);
 }
@@ -250,7 +250,7 @@ void salvia_compile_shader_impl(
 		drv->set_code(code_or_file_name);
 	}
 
-	const char* lang_name = NULL;
+	const char* lang_name = nullptr;
 	switch(profile.language)
 	{
 	case lang_pixel_shader:

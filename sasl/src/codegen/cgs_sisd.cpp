@@ -72,7 +72,7 @@ using boost::lexical_cast;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 namespace {
 	template <typename T> APInt apint( T v )
@@ -127,8 +127,8 @@ void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 	
 	assert(parallel_factor_ == 1);
 
-	value_array src(parallel_factor_, NULL);
-	value_array address(parallel_factor_, NULL);
+	value_array src(parallel_factor_, nullptr);
+	value_array address(parallel_factor_, nullptr);
 
 	value_kinds kind = lhs.kind();
 
@@ -137,7 +137,7 @@ void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 		address = lhs.raw();
 	} else if ( kind == value_kinds::elements ){
 		elem_indexes indexes;
-		multi_value const* root = NULL;
+		multi_value const* root = nullptr;
 		bool is_swizzle = merge_swizzle(root, indexes, lhs);
 
 		if( is_swizzle && is_vector( root->hint()) ){
@@ -253,7 +253,7 @@ void cgs_sisd::emit_return( multi_value const& ret_v, abis abi ){
 	}
 	else
 	{
-		Value* ret_value = NULL;
+		Value* ret_value = nullptr;
 		if ( fn().multi_value_args() ) {
 			ret_value = ext_->get_array( ret_v.load(abi) );
 		} else {
@@ -340,4 +340,4 @@ Value* cgs_sisd::phi_( BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1 )
 	return phi;
 }
 
-END_NS_SASL_CODEGEN();
+}

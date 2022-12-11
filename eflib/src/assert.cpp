@@ -32,7 +32,7 @@ namespace eflib{
 			if(exp) return false;
 			static char buf[1024];
 			sprintf(buf, " Expression: %s \r\n Description: %s \r\n SourceFile: %s \r\n Line: %05d \r\n Function: %s \r\n ", expstr, desc, file, line, func);  
-			int rv = MessageBoxA(NULL, buf, "Assert!", MB_ABORTRETRYIGNORE | MB_SYSTEMMODAL);
+			int rv = MessageBoxA(nullptr, buf, "Assert!", MB_ABORTRETRYIGNORE | MB_SYSTEMMODAL);
 			switch (rv)
 			{
 			case IDABORT:

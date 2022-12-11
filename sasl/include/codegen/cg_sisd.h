@@ -36,7 +36,7 @@ namespace llvm{
 	class Value;
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 // Code generation for SISD( Single Instruction Single Data )
 class cg_sisd: public cg_impl
@@ -87,6 +87,6 @@ protected:
 	module_vmcode_impl* mod_ptr();
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

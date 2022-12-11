@@ -19,7 +19,7 @@ namespace llvm{
 	class Type;
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 // Code generation for SIMD( Single Instruction Multiple Data )
 class cg_simd: public cg_impl
@@ -83,6 +83,6 @@ protected:
 	multi_value		entry_values[salviar::sv_usage_count];
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

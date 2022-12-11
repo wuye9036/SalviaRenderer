@@ -10,7 +10,7 @@ using namespace sasl::codegen;
 BEGIN_NS_SASL_HOST();
 
 shader_object_impl::shader_object_impl()
-	:entry_(NULL)
+	:entry_(nullptr)
 {
 }
 

@@ -45,8 +45,8 @@ namespace sasl::codegen
 		llvm::Intrinsic::ID IID = llvm::Intrinsic::ID(id);
 		assert(!Intrinsic::isOverloaded(IID));
 
-		if (intrin_fns[IID] == NULL) {
-			intrin_fns[IID] = ((IID == 0) ? NULL : Intrinsic::getDeclaration(mod, IID));
+		if (intrin_fns[IID] == nullptr) {
+			intrin_fns[IID] = ((IID == 0) ? nullptr : Intrinsic::getDeclaration(mod, IID));
 		}
 		return intrin_fns[IID];
 	}

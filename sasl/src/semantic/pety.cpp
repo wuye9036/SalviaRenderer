@@ -45,7 +45,7 @@ public:
 	typedef int type_item::*id_ptr_t;
 
 	type_item()
-		: u_qual(-1), a_qual(-1), ty_sem(NULL) {}
+		: u_qual(-1), a_qual(-1), ty_sem(nullptr) {}
 
 	tynode_ptr		stored;
 	node_semantic*	ty_sem;
@@ -102,7 +102,7 @@ public:
 
 		// Otherwise create a new type and push into type manager.
 		tid_t btc_tid = -1;
-		register_builtin_type(btc, NULL, &btc_tid);
+		register_builtin_type(btc, nullptr, &btc_tid);
 		bt_dict_.insert( make_pair(btc, btc_tid) );
 
 		return btc_tid;
@@ -140,7 +140,7 @@ public:
 
 		// Register function type prototype.
 		tid_t ret(-1);
-		register_proto_tynode(fn_proto, NULL, &ret);
+		register_proto_tynode(fn_proto, nullptr, &ret);
 
 		// Update cache.
 		param_tids_cache_.insert(
@@ -151,7 +151,7 @@ public:
 	// Get prototype or node semantic from tid or builtin_type
 	tynode* get_proto(tid_t id)
 	{
-		return id < 0 ? NULL : type_items_[id].stored.get();
+		return id < 0 ? nullptr : type_items_[id].stored.get();
 	}
 	tynode* get_proto_by_builtin(builtin_types bt)
 	{
@@ -244,7 +244,7 @@ private:
 #endif
 
 		tynode_ptr tyn = create_builtin_type(btc);
-		node_semantic* sem = NULL;
+		node_semantic* sem = nullptr;
 		register_proto_tynode(tyn, &sem, out_tid);
 		if(out_sem) { *out_sem = sem; }
 		assert( sem->associated_node() == tyn.get() );
@@ -388,7 +388,7 @@ bool peel_qualifier(tynode* src, tynode*& naked, type_item::id_ptr_t& qual)
 	}
 
 	naked = src;
-	qual = NULL;
+	qual = nullptr;
 	return false;
 }
 
@@ -457,7 +457,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 			return type_items_[decoratee_id].*qual;
 		} else {
 			// else allocate an new node.
-			register_tynode(v, attach_tid_to_input, NULL, &ret);
+			register_tynode(v, attach_tid_to_input, nullptr, &ret);
 			return ret;
 		}
 	}
@@ -467,7 +467,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 		// Look up the name of type in symbol.
 		// If it did not exist, throw an error or add it into symbol(as an swallow copy).
 		fixed_string name = name_of_unqualified_type(scope->owner(), v, bt_names_);
-		symbol* sym = name.empty() ? NULL : scope->find(name);
+		symbol* sym = name.empty() ? nullptr : scope->find(name);
 		if(sym)
 		{
 			return get_symbol_tid(tynode_dict_, sym);
@@ -502,7 +502,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 			}
 
 			tid_t tid = -1;
-			register_tynode(v, attach_tid_to_input, NULL, &tid);
+			register_tynode(v, attach_tid_to_input, nullptr, &tid);
 
 			if( !name.empty() )
 			{

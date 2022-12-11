@@ -18,13 +18,13 @@ namespace modules
 		shader_object_ptr&, shader_log_ptr&,
 		string const&, shader_profile const&,
 		vector<external_function_desc> const&
-		) = NULL;
+		) = nullptr;
 	static void (*compile_from_file_func)(
 		shader_object_ptr&, shader_log_ptr&,
 		string const&, shader_profile const&,
 		vector<external_function_desc> const&
-		) = NULL;
-	static void (*create_host_func)(host_ptr& out) = NULL;
+		) = nullptr;
+	static void (*create_host_func)(host_ptr& out) = nullptr;
 
 	static shared_ptr<dynamic_lib> host_lib;
 

@@ -28,7 +28,7 @@ using std::shared_ptr;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm)
 	: tyn(tyn)
@@ -37,7 +37,7 @@ cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm)
 	tys[static_cast<int>(abis::llvm)]	= ty_llvm;
 }
 
-cg_type::cg_type(): tyn(NULL)
+cg_type::cg_type(): tyn(nullptr)
 {
 	memset( tys, 0, sizeof(tys) );
 }
@@ -67,8 +67,8 @@ void cg_type::vm_type(abis abi, Type* t)
 }
 
 multi_value::multi_value(size_t num_value)
-	: ty_(NULL), val_(num_value, NULL)
-	, cg_(NULL), kind_(value_kinds::unknown)
+	: ty_(nullptr), val_(num_value, nullptr)
+	, cg_(nullptr), kind_(value_kinds::unknown)
 	, builtin_ty_(builtin_types::none), abi_(abis::unknown)
 {
 }
@@ -85,7 +85,7 @@ multi_value::multi_value(
 multi_value::multi_value(
 	builtin_types hint, value_array const& val,
 	value_kinds k, abis abi, cg_service* cg)
-	: ty_(NULL), val_(val)
+	: ty_(nullptr), val_(val)
 	, builtin_ty_(hint), abi_(abi)
 	, kind_(k), cg_(cg)
 {
@@ -219,7 +219,7 @@ multi_value multi_value::slice(multi_value const& vec, elem_indexes const& index
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
-	multi_value ret( scalar_of(hint), value_array(vec.value_count(), NULL), value_kinds::elements, vec.abi_, vec.cg_ );
+	multi_value ret( scalar_of(hint), value_array(vec.value_count(), nullptr), value_kinds::elements, vec.abi_, vec.cg_ );
 	ret.elem_indexes_ = indexes;
 	ret.parent(vec);
 
@@ -231,7 +231,7 @@ multi_value multi_value::slice(multi_value const& vec, multi_value const& index)
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
-	multi_value ret( scalar_of(hint), value_array(vec.value_count(), NULL), value_kinds::elements, vec.abi_, vec.cg_ );
+	multi_value ret( scalar_of(hint), value_array(vec.value_count(), nullptr), value_kinds::elements, vec.abi_, vec.cg_ );
 	ret.index(index);
 	ret.parent(vec);
 
@@ -291,7 +291,7 @@ value_array multi_value::load_i1() const{
 	}
 	
 	assert(false);
-	return value_array(val_.size(), (Value*)NULL);
+	return value_array(val_.size(), (Value*)nullptr);
 }
 
 void cg_function::allocation_block( insert_point_t const& ip )
@@ -403,8 +403,8 @@ multi_value cg_function::execution_mask() const
 }
 
 cg_function::cg_function()
-	: fn(NULL), fn_def(NULL), ret_void(true), partial_execution(false)
-	, c_compatible(false), cg(NULL)
+	: fn(nullptr), fn_def(nullptr), ret_void(true), partial_execution(false)
+	, c_compatible(false), cg(nullptr)
 {
 }
 
@@ -451,7 +451,7 @@ value_array cg_function::return_address() const
 			return value_array(1, addr_value);
 		}
 	}
-	return value_array(cg->parallel_factor(), NULL);
+	return value_array(cg->parallel_factor(), nullptr);
 }
 
 void cg_function::return_name( std::string const& s )
@@ -471,7 +471,7 @@ bool cg_function::need_mask() const
 	return cg->parallel_factor() > 1 && partial_execution;
 }
 
-insert_point_t::insert_point_t(): block(NULL)
+insert_point_t::insert_point_t(): block(nullptr)
 {
 }
 
@@ -485,7 +485,7 @@ bool valid_any(value_array const& arr)
 	if (arr.size() == 0) return false;
 	for(value_array::const_iterator it = arr.begin(); it != arr.end(); ++it)
 	{
-		if(*it != NULL)
+		if(*it != nullptr)
 		{
 			return true;
 		}
@@ -498,9 +498,9 @@ bool valid_all(value_array const& arr)
 	if (arr.size() == 0) return false;
 	for(value_array::const_iterator it = arr.begin(); it != arr.end(); ++it)
 	{
-		if(*it == NULL) return false;
+		if(*it == nullptr) return false;
 	}
 	return true;
 }
 
-END_NS_SASL_CODEGEN();
+}

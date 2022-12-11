@@ -14,7 +14,7 @@ constexpr int SIMD_FLOAT_SIZE(){
 
 using namespace sasl::utility;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class ty_cache_t{
 public:
@@ -31,7 +31,7 @@ private:
 
 Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis abi )
 {
-	if( abi == abis::unknown ) { return NULL; }
+	if( abi == abis::unknown ) { return nullptr; }
 
 	unordered_map<builtin_types, Type*>& ty_table = cache[static_cast<int>(abi)][&ctxt];
 	unordered_map<builtin_types, Type*>::iterator ty_table_it = ty_table.find( bt );
@@ -196,7 +196,7 @@ Type* ty_cache_t::create_abi_ty(LLVMContext& ctxt, builtin_types bt, abis abi)
 		return StructType::create( row_tys, name(bt, abi), true );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 ty_cache_t cache;
@@ -210,4 +210,4 @@ void initialize_cache( LLVMContext& ctxt )
 	cache.initialize(ctxt);
 }
 
-END_NS_SASL_CODEGEN();
+}

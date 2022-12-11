@@ -4,7 +4,7 @@
 #include <sasl/include/parser/parser_forward.h>
 #include <sasl/include/common/diag_item.h>
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 // Boost.Wave Errors
 extern sasl::common::diag_template boost_wave_exception_warning;
@@ -19,6 +19,6 @@ extern sasl::common::diag_template end_of_file;
 extern sasl::common::diag_template unmatched_token;
 extern sasl::common::diag_template unmatched_expected_token;
 
-END_NS_SASL_PARSER();
+}
 
 #endif

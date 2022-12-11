@@ -18,7 +18,7 @@ int const COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
 BEGIN_NS_SALVIAR()
 
 geom_setup_engine::geom_setup_engine():
-	ctxt_(NULL),
+	ctxt_(nullptr),
 	clipping_package_count_(0),
 	clipped_verts_cap_(0),
 	clipped_package_verts_count_cap_(0),

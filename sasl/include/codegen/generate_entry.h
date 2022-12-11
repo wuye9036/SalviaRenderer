@@ -16,7 +16,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class cg_service;
 
@@ -27,7 +27,7 @@ std::vector<llvm::Type*> generate_ps_entry_param_type(
 	sasl::semantic::reflection_impl const* abii, cg_service* cg
 	);
 
-END_NS_SASL_CODEGEN();
+}
 
 
 #endif

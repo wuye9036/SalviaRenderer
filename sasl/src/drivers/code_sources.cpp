@@ -185,7 +185,7 @@ void compiler_code_source::set_diag_chat( sasl::common::diag_chat* diags )
 }
 
 compiler_code_source::compiler_code_source()
-	: diags(NULL)
+	: diags(nullptr)
 {
 
 }
@@ -221,7 +221,7 @@ compiler_code_source* compiler_code_source::get_code_source( void* ctxt )
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool compiler_code_source::failed()
@@ -406,7 +406,7 @@ wave_context_wrapper::~wave_context_wrapper()
 	{
 		compiler_code_source::ctxt_to_source.erase(wctxt.get());
 	}
-	wctxt.reset(NULL);
+	wctxt.reset(nullptr);
 }
 
 wcontext_t* wave_context_wrapper::get_wctxt() const

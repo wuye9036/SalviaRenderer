@@ -48,9 +48,9 @@ using std::vector;
 
 #define SASL_VISITOR_TYPE_NAME cg_simd
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
-cg_simd::cg_simd(): entry_fn(NULL)
+cg_simd::cg_simd(): entry_fn(nullptr)
 {
 	service_ = new cgs_simd();
 }
@@ -129,7 +129,7 @@ SASL_VISIT_DEF( variable_expression ){
 	}
 
 	// Argument("virtual args") or local variable or not in entry
-	parent_class::visit(v, NULL);
+	parent_class::visit(v, nullptr);
 }
 
 // declaration & type specifier
@@ -473,7 +473,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 
 		// Global is filled by offset value with null parent.
 		// The parent is filled when it is referred.
-		sv_layout* psi = NULL;
+		sv_layout* psi = nullptr;
 		if( pssi->semantic_value_ref() == salviar::sv_none ){
 			psi = abii->input_sv_layout( gsym );
 		} else {
@@ -557,4 +557,4 @@ abis cg_simd::local_abi( bool /*is_c_compatible*/ ) const
 	return abis::llvm;
 }
 
-END_NS_SASL_CODEGEN();
+}

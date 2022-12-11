@@ -10,7 +10,7 @@ struct voidptr
 	template<class T> friend T* voidptr_cast(const voidptr& ptr);
 
 	voidptr():
-		pval(NULL),
+		pval(nullptr),
 		id(type_encode<empty>::id)
 	{
 	}
@@ -39,7 +39,7 @@ struct const_voidptr
 	template<class T> friend const T* voidptr_cast(const const_voidptr& ptr);
 
 	const_voidptr():
-		pval(NULL),
+		pval(nullptr),
 		id(type_encode<empty>::id)
 	{}
 
@@ -89,7 +89,7 @@ T* voidptr_cast(const voidptr& ptr){
 	{
 		return static_cast<T*>(ptr.pval);
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<class T>
@@ -98,7 +98,7 @@ const T* voidptr_cast(const const_voidptr& ptr){
 	{
 		return static_cast<const T*>(ptr.pval);
 	}
-	return NULL;
+	return nullptr;
 }
 
 inline voidptr voidptr_const_cast(const const_voidptr& ptr){

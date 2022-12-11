@@ -11,7 +11,7 @@ namespace llvm{
 	class FunctionType;
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class llvm_intrin_cache{
 public:
@@ -23,7 +23,7 @@ private:
 	std::vector<llvm::Function*> intrin_fns;
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 
 #endif

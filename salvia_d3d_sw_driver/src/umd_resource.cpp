@@ -23,7 +23,7 @@ umd_resource::umd_resource(umd_device* dev, const D3D11DDIARG_CREATERESOURCE* cr
 	
 	mip_info_list_.assign(create_resource->pMipInfoList, create_resource->pMipInfoList + create_resource->MipLevels);
 	creation_param_.pMipInfoList = &mip_info_list_[0];
-	if (create_resource->pInitialDataUP != NULL)
+	if (create_resource->pInitialDataUP != nullptr)
 	{
 		initial_data_up_.assign(create_resource->pInitialDataUP, create_resource->pInitialDataUP + surfs);
 		creation_param_.pInitialDataUP = &initial_data_up_[0];

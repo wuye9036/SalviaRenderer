@@ -86,8 +86,8 @@ main( int argc, char* argv[] )
 	normal_exit = false;
 	atexit(&check_on_exit);
 
-	setvbuf( stdout, NULL, _IONBF, 0 );
-	setvbuf( stderr, NULL, _IONBF, 0 );
+	setvbuf( stdout, nullptr, _IONBF, 0 );
+	setvbuf( stderr, nullptr, _IONBF, 0 );
 
 	int ret = 0;
 	{

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 using namespace llvm;
 using std::unordered_map;
@@ -33,6 +33,6 @@ using std::vector;
 void initialize_cache( LLVMContext& ctxt );
 Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi );
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

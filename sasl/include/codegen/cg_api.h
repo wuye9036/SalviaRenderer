@@ -26,7 +26,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class module_context;
 
@@ -59,6 +59,6 @@ module_vmcode_ptr generate_vmcode(
 	sasl::semantic::reflection_impl const*
 	);
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

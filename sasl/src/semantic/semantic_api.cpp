@@ -12,7 +12,7 @@ BEGIN_NS_SASL_SEMANTIC();
 shared_ptr<module_semantic> analysis_semantic( shared_ptr<node> const& root, diag_chat* diags, uint32_t lang ){
 	semantic_analyser saimpl;
 	saimpl.language(lang);
-	root->accept(&saimpl, NULL);
+	root->accept(&saimpl, nullptr);
 	diag_chat::merge( diags, saimpl.get_diags(), true );
 	return saimpl.get_module_semantic();
 }

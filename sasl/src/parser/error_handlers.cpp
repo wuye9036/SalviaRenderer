@@ -5,7 +5,7 @@
 
 using sasl::common::diag_chat;
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 error_handler get_expected_failed_handler( std::string const& expected_str )
 {
@@ -39,4 +39,4 @@ parse_results expected_failed_handler( diag_chat* diags, token_iterator const& o
 	return parse_results::recovered_expected_failed;
 }
 
-END_NS_SASL_PARSER();
+}

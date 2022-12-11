@@ -64,10 +64,10 @@ using salviar::SIMD_ELEMENT_COUNT;
 
 using namespace eflib;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 cg_service::cg_service(size_t parallel_factor)
-	: vmcode_(NULL), ctxt_(NULL), sem_(NULL)
+	: vmcode_(nullptr), ctxt_(nullptr), sem_(nullptr)
 	, parallel_factor_(parallel_factor)
 {
 }
@@ -230,7 +230,7 @@ multi_value cg_service::null_value( builtin_types bt, abis abi )
 
 value_array cg_service::invalid_value_array()
 {
-	return value_array(parallel_factor_, NULL);
+	return value_array(parallel_factor_, nullptr);
 }
 
 multi_value cg_service::create_value(
@@ -317,7 +317,7 @@ cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 {
 	if( !agg )
 	{
-		return NULL;
+		return nullptr;
 	} 
 	else if ( agg->tyn_ptr()->is_struct() )
 	{
@@ -344,13 +344,13 @@ cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 multi_value cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* vty = type_( bt, abi );
-	value_array values(parallel_factor_, NULL);
+	value_array values(parallel_factor_, nullptr);
 	std::generate(
 		values.begin(), values.end(),
 		[this, vty, &name]() { return ext_.get()->stack_alloc(vty, name); }
@@ -361,7 +361,7 @@ multi_value cg_service::create_variable( builtin_types bt, abis abi, std::string
 multi_value cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
 {
 	Type* vty = type_( ty, abi );
-	value_array values(parallel_factor_, NULL);
+	value_array values(parallel_factor_, nullptr);
 	std::generate(
 		values.begin(), values.end(),
 		[this, vty, &name]() { return ext_.get()->stack_alloc(vty, name); }
@@ -480,7 +480,7 @@ value_array cg_service::load(multi_value const& v)
 	value_kinds kind = v.kind();
 	value_array		raw = v.raw();
 	elem_indexes	mem_indexes = v.indexes();
-	value_array		ret = value_array(v.value_count(), NULL);
+	value_array		ret = value_array(v.value_count(), nullptr);
 
 	assert( kind != value_kinds::unknown && kind != value_kinds::ty_only );
 
@@ -553,7 +553,7 @@ value_array cg_service::load_ref( multi_value const& v )
 		}
 	}
 
-	return value_array(parallel_factor_, NULL);
+	return value_array(parallel_factor_, nullptr);
 }
 
 value_array cg_service::load_ref( multi_value const& v, abis abi )
@@ -564,7 +564,7 @@ value_array cg_service::load_ref( multi_value const& v, abis abi )
 	}
 	else
 	{
-		return value_array(parallel_factor_, NULL);
+		return value_array(parallel_factor_, nullptr);
 	}
 }
 
@@ -589,7 +589,7 @@ value_array cg_service::load_as( multi_value const& v, abis abi )
 	}
 
 	assert(false);
-	return value_array(parallel_factor_, NULL);
+	return value_array(parallel_factor_, nullptr);
 }
 
 value_array cg_service::load_as_llvm_c(multi_value const& v, abis abi)
@@ -616,7 +616,7 @@ value_array cg_service::load_as_llvm_c(multi_value const& v, abis abi)
 
 		return ret_value.load();
 	} else {
-		// NOTE: We assume that, if tyinfo is null and hint is none, it is only the entry of vs/ps. Otherwise, tyinfo must be not NULL.
+		// NOTE: We assume that, if tyinfo is null and hint is none, it is only the entry of vs/ps. Otherwise, tyinfo must be not nullptr.
 		if( !v.ty() && hint == builtin_types::none ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else {
@@ -624,14 +624,14 @@ value_array cg_service::load_as_llvm_c(multi_value const& v, abis abi)
 		}
 	}
 
-	return value_array(parallel_factor_, NULL);
+	return value_array(parallel_factor_, nullptr);
 }
 
 multi_value cg_service::emit_insert_val( multi_value const& lhs, multi_value const& idx, multi_value const& elem_value )
 {
 	value_array indexes = idx.load();
 	value_array agg = lhs.load();
-	value_array new_value(parallel_factor_, NULL);
+	value_array new_value(parallel_factor_, nullptr);
 	value_array elem = elem_value.load();
 
 	for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
@@ -659,7 +659,7 @@ multi_value cg_service::emit_insert_val(multi_value const& lhs, size_t index, mu
 	assert(index >= 0);
 
 	value_array agg = lhs.load();
-	value_array new_value = value_array(parallel_factor_, NULL);
+	value_array new_value = value_array(parallel_factor_, nullptr);
 	value_array elem_vm_values = elem_value.load(lhs.abi());
 	for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 	{
@@ -717,7 +717,7 @@ multi_value cg_service::emit_mul_comp( multi_value const& lhs, multi_value const
 		else { assert(false); }
 	}
 
-	binary_intrin_functor f_mul = std::bind( &DefaultIRBuilder::CreateFMul, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor f_mul = std::bind( &DefaultIRBuilder::CreateFMul, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(nullptr) );
 	binary_intrin_functor i_mul = std::bind( &DefaultIRBuilder::CreateMul,  std::ref(builder()), _1, _2, "", false, false );
 	return emit_bin_ps_ta_sva( lv, rv, i_mul, i_mul, f_mul );
 }
@@ -729,7 +729,7 @@ bool bool_xor(bool l, bool r)
 
 multi_value cg_service::emit_add( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_add = std::bind( &DefaultIRBuilder::CreateFAdd, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor f_add = std::bind( &DefaultIRBuilder::CreateFAdd, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(nullptr) );
 	binary_intrin_functor i_add = std::bind( &DefaultIRBuilder::CreateAdd, std::ref(builder()), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_add, i_add, f_add );
@@ -737,7 +737,7 @@ multi_value cg_service::emit_add( multi_value const& lhs, multi_value const& rhs
 
 multi_value cg_service::emit_sub( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_sub = std::bind( &DefaultIRBuilder::CreateFSub, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor f_sub = std::bind( &DefaultIRBuilder::CreateFSub, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(nullptr) );
 	binary_intrin_functor i_sub = std::bind( &DefaultIRBuilder::CreateSub, std::ref(builder()), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_sub, i_sub, f_sub );
@@ -780,7 +780,7 @@ multi_value cg_service::emit_mul_intrin( multi_value const& lhs, multi_value con
 
 multi_value cg_service::emit_div( multi_value const& lhs, multi_value const& rhs )
 {
-	binary_intrin_functor f_div = std::bind( &DefaultIRBuilder::CreateFDiv, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(NULL) );
+	binary_intrin_functor f_div = std::bind( &DefaultIRBuilder::CreateFDiv, std::ref(builder()), _1, _2, "", (llvm::MDNode*)(nullptr) );
 	binary_intrin_functor i_div = std::bind( &DefaultIRBuilder::CreateSDiv, std::ref(builder()), _1, _2, "", false );
 	binary_intrin_functor u_div = std::bind( &DefaultIRBuilder::CreateUDiv, std::ref(builder()), _1, _2, "", false );
 	binary_intrin_functor i_safe_div = std::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_div );
@@ -801,7 +801,7 @@ multi_value cg_service::emit_mod( multi_value const& lhs, multi_value const& rhs
 	binary_intrin_functor f_mod_sv =
 		ext_->promote_to_binary_sv(intrin_mod_f32, null_binary, null_binary);
 	binary_intrin_functor f_mod =
-		std::bind(&cg_extension::call_binary_intrin_mono, ext_.get(), (Type*)NULL, _1, _2, f_mod_sv, null_unary);
+		std::bind(&cg_extension::call_binary_intrin_mono, ext_.get(), (Type*)nullptr, _1, _2, f_mod_sv, null_unary);
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_mod, u_safe_mod, f_mod );
 }
@@ -854,7 +854,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, size_t idx )
 	{
 		value_array agg_address = lhs.load_ref();
 
-		value_array elem_address(value_parallel_factor, NULL);
+		value_array elem_address(value_parallel_factor, nullptr);
 		for(size_t value_index = 0; value_index < value_parallel_factor; ++value_index)
 		{
 			elem_address[value_index] = builder().CreateStructGEP(
@@ -862,7 +862,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, size_t idx )
 				);
 		}
 
-		cg_type* tyinfo = NULL;
+		cg_type* tyinfo = nullptr;
 		if( lhs.ty() )
 		{
 			tyinfo = member_tyinfo( lhs.ty(), (size_t)idx );
@@ -893,7 +893,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, multi_value co
 		case abis::llvm:
 			{
 				value_array index_values = idx.load();
-				value_array elem_ptr(parallel_factor_, NULL);
+				value_array elem_ptr(parallel_factor_, nullptr);
 				for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 				{
 					Type*  value_ty = addr[value_index]->getType()->getPointerElementType();
@@ -903,7 +903,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, multi_value co
 					Value* indexes[] = { index_values[value_index] };
 					elem_ptr[value_index] = builder().CreateGEP(first_elem_ptr, indexes);
 				}
-				return create_value(NULL, row_vector_of(lhs.hint()), elem_ptr, value_kinds::reference, lhs.abi() );
+				return create_value(nullptr, row_vector_of(lhs.hint()), elem_ptr, value_kinds::reference, lhs.abi() );
 			}
 		default:
 			assert(false);
@@ -929,7 +929,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, multi_value co
 			{
 				cg_type* elem_tyinfo = ctxt_->get_node_context( array_tyn->elem_type.get() )->ty;
 				value_array index_values = idx.load();
-				value_array elem_addr(parallel_factor_, NULL);
+				value_array elem_addr(parallel_factor_, nullptr);
 				for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 				{
 					elem_addr[value_index] = builder().CreateGEP(addr[value_index], index_values[value_index]);
@@ -947,10 +947,10 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, size_t idx )
 {
 	builtin_types agg_hint = lhs.hint();
 	value_array val = lhs.load();
-	value_array elem_val(parallel_factor_, NULL);
+	value_array elem_val(parallel_factor_, nullptr);
 	abis abi = abis::unknown;
 	builtin_types elem_hint = builtin_types::none;
-	cg_type* elem_tyi = NULL;
+	cg_type* elem_tyi = nullptr;
 
 	if( agg_hint == builtin_types::none ){
 		elem_val = ext_->extract_value(val, idx);
@@ -997,11 +997,11 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, multi_value co
 {
 	builtin_types agg_hint = lhs.hint();
 
-	value_array elem_val(parallel_factor_, NULL);
+	value_array elem_val(parallel_factor_, nullptr);
 	abis abi = promote_abi(lhs.abi(), idx.abi());
 
 	builtin_types elem_hint = builtin_types::none;
-	cg_type* elem_tyi = NULL;
+	cg_type* elem_tyi = nullptr;
 
 	if( agg_hint == builtin_types::none ){
 		// Array only
@@ -1078,7 +1078,7 @@ multi_value cg_service::emit_extract_elem_mask(multi_value const& vec, elem_inde
 	}
 
 	if( vec.storable() ){
-		multi_value swz_proxy = create_value( NULL, swz_hint, invalid_value_array(), value_kinds::elements, vec.abi() );
+		multi_value swz_proxy = create_value( nullptr, swz_hint, invalid_value_array(), value_kinds::elements, vec.abi() );
 		swz_proxy.parent(vec);
 		swz_proxy.indexes(indexes);
 		return swz_proxy;
@@ -1094,7 +1094,7 @@ multi_value cg_service::emit_extract_elem_mask(multi_value const& vec, elem_inde
 					Value* mask_mono = ext_->get_vector<int>( ArrayRef<char>(indexes.data, idx_len) );
 					value_array mask(parallel_factor_, mask_mono);
 					value_array v = ext_->shuffle_vector(vec_v, vec_v, mask);
-					return create_value(NULL, swz_hint, v, value_kinds::value, abis::llvm);
+					return create_value(nullptr, swz_hint, v, value_kinds::value, abis::llvm);
 				}
 			default:
 				assert(false);
@@ -1266,7 +1266,7 @@ multi_value cg_service::undef_value( builtin_types bt, abis abi )
 
 multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args )
 {
-	return emit_call(fn, args, NULL);
+	return emit_call(fn, args, nullptr);
 }
 
 /**
@@ -1292,8 +1292,8 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 {
 	abis arg_abi = fn.c_compatible ? abis::c : abis::llvm;
 
-	vector<Value*>	arg_multi_values(fn.physical_args_count(), NULL);
-	vector<Value*>	physical_args   (fn.physical_args_count(), NULL);
+	vector<Value*>	arg_multi_values(fn.physical_args_count(), nullptr);
+	vector<Value*>	physical_args   (fn.physical_args_count(), nullptr);
 
 	// Create temporary variable for catching result.
 	multi_value ret_variable(parallel_factor_);
@@ -1633,7 +1633,7 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 	builtin_types hint( lhs.hint() );
 	assert( hint == rhs.hint() );
 
-	value_array ret(parallel_factor_, NULL);
+	value_array ret(parallel_factor_, nullptr);
 
 	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
 	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
@@ -1735,7 +1735,7 @@ multi_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin
 		ext_->bind_external_to_unary(scalar_intrin), null_unary, null_unary
 		);
 
-	value_array ret_v = ext_->call_unary_intrin(NULL, v.load(), intrin_sv);
+	value_array ret_v = ext_->call_unary_intrin(nullptr, v.load(), intrin_sv);
 	return create_value( v.ty(), v.hint(), ret_v, value_kinds::value, v.abi() );
 }
 
@@ -1754,7 +1754,7 @@ multi_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_i
 		ext_->bind_external_to_binary(scalar_intrin), null_binary, null_binary
 		);
 
-	value_array ret_v = ext_->call_binary_intrin(NULL, v0.load(abi), v1.load(abi), intrin_sv, null_unary);
+	value_array ret_v = ext_->call_binary_intrin(nullptr, v0.load(abi), v1.load(abi), intrin_sv, null_unary);
 
 	return create_value(v0.ty(), v0.hint(), ret_v, value_kinds::value, abi);
 }
@@ -1858,7 +1858,7 @@ multi_value cg_service::emit_tex_lod_impl( multi_value const& samp, multi_value 
 		ext_->call(intrin_fn, args);
 	}
 
-	return create_value(NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi);
+	return create_value(nullptr, v4f32_hint, ret_ptr, value_kinds::reference, abi);
 }
 
 multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value const& coord, multi_value const& ddx, multi_value const& ddy, externals::id ps_intrin )
@@ -1891,7 +1891,7 @@ multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value
 	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
 	ext_->call( intrin_fn, ArrayRef<value_array>(args) );
 
-	return create_value(NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi);
+	return create_value(nullptr, v4f32_hint, ret_ptr, value_kinds::reference, abi);
 }
 
 multi_value cg_service::emit_tex_bias_impl( multi_value const& /*samp*/, multi_value const& /*coord*/, externals::id /*ps_intrin*/ )
@@ -1931,7 +1931,7 @@ multi_value cg_service::emit_tex_proj_impl( multi_value const& samp, multi_value
 	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
 	ext_->call( intrin_fn, ArrayRef<value_array>(args) );
 
-	return create_value( NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi );
+	return create_value( nullptr, v4f32_hint, ret_ptr, value_kinds::reference, abi );
 }
 
 multi_value cg_service::emit_texCUBElod( multi_value const& samp, multi_value const& coord )
@@ -1980,7 +1980,7 @@ multi_value cg_service::emit_select( multi_value const& flag, multi_value const&
 
 multi_value cg_service::emit_not( multi_value const& v )
 {
-	multi_value mask_value = create_constant_int( NULL, v.hint(), v.abi(), 1 );
+	multi_value mask_value = create_constant_int( nullptr, v.hint(), v.abi(), 1 );
 	return emit_bitwise_bin_op(operators::bit_xor, mask_value, v);
 }
 
@@ -2047,7 +2047,7 @@ multi_value cg_service::emit_saturate( multi_value const& v )
 
 multi_value cg_service::numeric_value(multi_value const& proto, double fp, uint64_t ui)
 {
-	Type* ty = NULL;
+	Type* ty = nullptr;
 	if( proto.ty() ){
 		ty = proto.ty()->ty( proto.abi() );
 	} else {
@@ -2056,7 +2056,7 @@ multi_value cg_service::numeric_value(multi_value const& proto, double fp, uint6
 
 	Type* scalar_ty = ext_->extract_scalar_type(ty);
 
-	Value* scalar_value = NULL;
+	Value* scalar_value = nullptr;
 	if( scalar_ty->isFloatingPointTy() )
 	{
 		scalar_value = ConstantFP::get(scalar_ty, fp);
@@ -2085,7 +2085,7 @@ void cg_service::function_body_beg()
 
 void cg_service::function_body_end()
 {
-	ext_->set_stack_alloc_point(NULL);
+	ext_->set_stack_alloc_point(nullptr);
 }
 
 Value* cg_service::restore(Value* v)
@@ -2098,7 +2098,7 @@ Value* cg_service::restore(Value* v)
 value_array cg_service::restore(value_array const& v)
 {
 	assert( valid_all(v) );
-	value_array addr(v.size(), NULL);
+	value_array addr(v.size(), nullptr);
 	for(size_t value_index = 0; value_index < v.size(); ++value_index)
 	{
 		addr[value_index] = restore(v[value_index]);
@@ -2136,7 +2136,7 @@ Value* cg_service::combine_flags(value_array const& flags)
 
 value_array cg_service::split_mask(Value* mask)
 {
-	value_array ret(parallel_factor_, NULL);
+	value_array ret(parallel_factor_, nullptr);
 	for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
 	{
 		uint32_t flag_mask = (1U << value_index);
@@ -2144,4 +2144,4 @@ value_array cg_service::split_mask(Value* mask)
 	}
 	return ret;
 }
-END_NS_SASL_CODEGEN();
+}

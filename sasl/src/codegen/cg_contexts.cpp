@@ -17,7 +17,7 @@ using std::make_pair;
 using std::vector;
 using std::ostream;
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class cg_caster;
 
@@ -28,7 +28,7 @@ public:
 	{
 		node_context_dict::const_iterator it = context_dict_.find(v);
 		if( it != context_dict_.end() ) return it->second;
-		return NULL;
+		return nullptr;
 	}
 
 	virtual node_context* get_or_create_node_context(node const* v)
@@ -68,7 +68,7 @@ public:
 		: contexts_pool_( sizeof(node_context) )
 		, types_pool_( sizeof(cg_type) )
 		, functions_pool_( sizeof(cg_function) )
-		, caster_(NULL)
+		, caster_(nullptr)
 	{
 	}
 
@@ -121,4 +121,4 @@ shared_ptr<module_context> module_context::create()
 	return shared_ptr<module_context>( new module_context_impl() );
 }
 
-END_NS_SASL_CODEGEN();
+}

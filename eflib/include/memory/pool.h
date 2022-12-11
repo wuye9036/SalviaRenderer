@@ -50,7 +50,7 @@ namespace eflib
 						return std::addressof( data[ObjectSize*i] );
 					}
 				}
-				return NULL;
+				return nullptr;
 			}
 
 			void free_impl( void* const p ){
@@ -122,7 +122,7 @@ namespace eflib
 		class reserved_pool
 		{
 		public:
-			reserved_pool(): data_mem(NULL), sz(0), cap(0), align(0), stride(0)
+			reserved_pool(): data_mem(nullptr), sz(0), cap(0), align(0), stride(0)
 			{}
 
 			~reserved_pool()
@@ -188,7 +188,7 @@ namespace eflib
 				if(sz >= cap)
 				{
 					assert(false);
-					return NULL;
+					return nullptr;
 				}
 #endif
 				T* ret = advance_bytes(data_mem, stride * sz);

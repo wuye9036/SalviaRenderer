@@ -4,7 +4,7 @@
 #include <sasl/include/parser/generator.h>
 #include <sasl/include/parser/parser_forward.h>
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 class lexer;
 class grammars{
@@ -92,6 +92,6 @@ private:
 	lexer& lxr;
 };
 
-END_NS_SASL_PARSER();
+}
 
 #endif

@@ -40,7 +40,7 @@ namespace llvm
 	template <typename T> class ArrayRef;
 }
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 typedef std::vector<llvm::Value*> value_array;
 
@@ -249,6 +249,6 @@ private:
 	llvm_intrin_cache		intrins_cache_;
 };
 
-END_NS_SASL_CODEGEN();
+}
 
 #endif

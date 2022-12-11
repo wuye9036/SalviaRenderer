@@ -92,11 +92,11 @@ private:
 		wcex.lpfnWndProc	= &win_proc;
 		wcex.cbClsExtra		= 0;
 		wcex.cbWndExtra		= 0;
-		wcex.hInstance		= GetModuleHandle(NULL);
+		wcex.hInstance		= GetModuleHandle(nullptr);
 		wcex.hIcon			= LoadIcon(hinst, MAKEINTRESOURCE(IDI_APP));
-		wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
+		wcex.hCursor		= LoadCursor(nullptr, IDC_ARROW);
 		wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-		wcex.lpszMenuName	= NULL;
+		wcex.lpszMenuName	= nullptr;
 		wcex.lpszClassName	= wnd_class_name_;
 		wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
 
@@ -142,7 +142,7 @@ class win_gui: public gui
 public:
 	win_gui()
 	{
-		::DefWindowProc(NULL, 0, 0, 0L);
+		::DefWindowProc(nullptr, 0, 0, 0L);
 		hinst_ = GetModuleHandle(nullptr);
 		main_wnd_ = new win_window(this);
 	}
@@ -180,7 +180,7 @@ public:
 		MSG msg;
 		for (;;)
 		{
-			if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			if (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				if (WM_QUIT == msg.message)
 				{
@@ -214,7 +214,7 @@ bool win_window::create(uint32_t width, uint32_t height)
 	RECT rc = {0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
 	AdjustWindowRect(&rc, style, false);
 	hwnd_ = CreateWindow(wnd_class_name_, _EFLIB_T(""), style,
-		CW_USEDEFAULT, 0, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, app_->instance(), NULL);
+		CW_USEDEFAULT, 0, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, app_->instance(), nullptr);
 	if (!hwnd_)
 	{
 		auto err = GetLastError();
@@ -224,11 +224,11 @@ bool win_window::create(uint32_t width, uint32_t height)
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 			FORMAT_MESSAGE_FROM_SYSTEM |
 			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
+			nullptr,
 			err,
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPTSTR) &lpMsgBuf,
-			0, NULL );
+			0, nullptr );
 
 		// Display the error message and exit the process
 		std::wstringstream ss;

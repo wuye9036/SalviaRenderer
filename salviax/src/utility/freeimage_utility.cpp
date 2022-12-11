@@ -20,12 +20,12 @@ FIBITMAP* load_image(const std::_tstring& filename, int flag)
 		return FreeImage_Load(fif, ansi_filename.c_str(), flag);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool check_image_type_support(FIBITMAP* image)
 {
-	if (NULL == image){ return false; }
+	if (nullptr == image){ return false; }
 
 	FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(image);
 
@@ -62,8 +62,8 @@ FIBITMAP* make_bitmap_copy(
 	FIBITMAP* image, const rect<size_t>& src_region
 	)
 {
-	if(image == NULL || ! check_image_type_support(image) ) {
-		return NULL;
+	if(image == nullptr || ! check_image_type_support(image) ) {
+		return nullptr;
 	}
 	
 	size_t img_w = FreeImage_GetWidth(image);
@@ -77,7 +77,7 @@ FIBITMAP* make_bitmap_copy(
 	}
 
 	// If only part of image is copied, region should be copied to a new image.
-	FIBITMAP* sub_image = NULL;
+	FIBITMAP* sub_image = nullptr;
 	if(src_region.x == 0 && src_region.y == 0 && src_region.w == img_w && src_region.h == img_h)
 	{
 		sub_image = image;
@@ -88,11 +88,11 @@ FIBITMAP* make_bitmap_copy(
 			image, (int)src_region.x, (int)src_region.y, (int)(src_region.x+src_region.w), int(src_region.y+src_region.h)
 			);
 		FreeImage_Unload(image);
-		if(!sub_image) return NULL;
+		if(!sub_image) return nullptr;
 	}
 
 	// scale
-	FIBITMAP* scaled_image = NULL;
+	FIBITMAP* scaled_image = nullptr;
 	scaled_image = FreeImage_Rescale(sub_image, int(dest_width), int(dest_height), FILTER_BILINEAR);
 	FreeImage_Unload(sub_image);
 

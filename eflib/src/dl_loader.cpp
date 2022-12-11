@@ -22,7 +22,7 @@ namespace eflib{
 		win_dl(std::string const& name)
 		{
 			mod = ::LoadLibraryA( name.c_str() );
-			void (*loaded_hook)() = NULL;
+			void (*loaded_hook)() = nullptr;
 			dynamic_lib::get_function(loaded_hook, "_eflib_dynlib_loaded");
 			if(loaded_hook)
 			{
@@ -32,7 +32,7 @@ namespace eflib{
 
 		~win_dl()
 		{
-			void (*unloading_hook)() = NULL;
+			void (*unloading_hook)() = nullptr;
 			dynamic_lib::get_function(unloading_hook, "_eflib_dynlib_unloading");
 			if(unloading_hook)
 			{
@@ -45,13 +45,13 @@ namespace eflib{
 
 		virtual void* get_function( std::string const& name ) const
 		{
-			if ( !mod ) return NULL;
+			if ( !mod ) return nullptr;
 			return (void*)( ::GetProcAddress( mod, name.c_str() ) );
 		}
 
 		virtual bool available() const
 		{
-			return mod != NULL;
+			return mod != nullptr;
 		}
 
 		HMODULE mod;
@@ -63,7 +63,7 @@ namespace eflib{
 		linux_dl(std::string const& name)
 		{
 			mod = ::dlopen(name.c_str(), RTLD_NOW);
-			void (*loaded_hook)() = NULL;
+			void (*loaded_hook)() = nullptr;
 			dynamic_lib::get_function(loaded_hook, "_eflib_dynlib_loaded");
 			if(loaded_hook)
 			{
@@ -73,7 +73,7 @@ namespace eflib{
 
 		~linux_dl()
 		{
-			void (*unloading_hook)() = NULL;
+			void (*unloading_hook)() = nullptr;
 			dynamic_lib::get_function(unloading_hook, "_eflib_dynlib_unloading");
 			if(unloading_hook)
 			{
@@ -86,13 +86,13 @@ namespace eflib{
 
 		virtual void* get_function( std::string const& name ) const
 		{
-			if ( !mod ) return NULL;
+			if ( !mod ) return nullptr;
 			return (void*)( dlsym( mod, name.c_str() ) );
 		}
 
 		virtual bool available() const
 		{
-			return mod != NULL;
+			return mod != nullptr;
 		}
 
 		void* mod;

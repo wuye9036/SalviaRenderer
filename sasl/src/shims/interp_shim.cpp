@@ -59,9 +59,9 @@ void interp_shim::get_shim_functions(
 	shader_reflection const*	vs_reflection,
 	shader_reflection const*	ps_reflection )
 {
-	*out_vso2reg_fn = NULL;
-	*out_interp_fn = NULL;
-	*out_reg2psi_fn = NULL;
+	*out_vso2reg_fn = nullptr;
+	*out_interp_fn = nullptr;
+	*out_reg2psi_fn = nullptr;
 	out_interp_modifiers.clear();
 	out_vso_offsets.clear();
 	out_vso_types.clear();

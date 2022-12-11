@@ -20,7 +20,7 @@ namespace eflib
 				fn = (PFnT)(pfn);
 				return true;
 			}
-			fn = NULL;
+			fn = nullptr;
 			return false;
 		}
 
@@ -33,7 +33,7 @@ namespace eflib
 }
 
 #define EFLIB_IMPORT_DLL_FUNCTION( fn_type, fn_name, dy_lib, sym_name )	\
-	std::type_identity<fn_type>::type fn_name = NULL;	\
+	std::type_identity<fn_type>::type fn_name = nullptr;	\
 	(dy_lib)->get_function( (fn_name), #sym_name );
 
 #if defined(EFLIB_WINDOWS)

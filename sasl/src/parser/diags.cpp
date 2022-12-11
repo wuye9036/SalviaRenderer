@@ -2,7 +2,7 @@
 
 using namespace sasl::common;
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 // Boost.Wave
 diag_template boost_wave_exception_warning		( dl_warning,		"token: %s");
@@ -17,4 +17,4 @@ diag_template end_of_file( dl_error, "end of file found but '%s' needed." );
 diag_template unmatched_token( dl_error, "syntax error: '%s'" );
 diag_template unmatched_expected_token( dl_error, "syntax error: missing '%s' before '%s'." ); 
 
-END_NS_SASL_PARSER();
+}

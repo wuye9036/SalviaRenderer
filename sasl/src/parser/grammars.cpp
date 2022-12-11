@@ -10,7 +10,7 @@
 	rule_name = def;	\
 	rule_name.name( #rule_name );
 
-BEGIN_NS_SASL_PARSER();
+namespace sasl::parser{
 
 grammars::grammars( lexer& lxr ):lxr(lxr){
 	set_terms();
@@ -206,5 +206,5 @@ void grammars::set_terms()
 	SRULE( eof,			endholder() );
 }
 
-END_NS_SASL_PARSER();
+}
 

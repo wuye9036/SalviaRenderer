@@ -210,7 +210,7 @@ public:
 
 			FT_Get_Glyph(glyph_slot_.get(), &ch_glyph);
 
-			FT_Glyph_To_Bitmap(&ch_glyph, FT_RENDER_MODE_NORMAL, NULL, 1);
+			FT_Glyph_To_Bitmap(&ch_glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
 			FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)ch_glyph;
 			FT_Bitmap& bitmap = bitmap_glyph->bitmap;
 

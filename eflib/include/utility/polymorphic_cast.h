@@ -8,7 +8,7 @@ namespace eflib
 	template <typename T, typename U>
 	T polymorphic_cast(U const* v)
 	{
-		T ret = NULL;
+		T ret = nullptr;
 
 #if defined(EFLIB_DEBUG)
 		ret = dynamic_cast<T>(v);
@@ -22,7 +22,7 @@ namespace eflib
 	template <typename T, typename U>
 	T polymorphic_cast(U* v)
 	{
-		T ret = NULL;
+		T ret = nullptr;
 
 #if defined(EFLIB_DEBUG)
 		ret = dynamic_cast<T>(v);

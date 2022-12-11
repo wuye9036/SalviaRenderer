@@ -225,7 +225,7 @@ private:
 void follow_up_traversal( std::shared_ptr<node> root, std::function<void( node&, ::std::any* )> on_visit ){
 	follow_up_visitor fuv( on_visit );
 	if( root ){
-		root->accept( &fuv, NULL );
+		root->accept( &fuv, nullptr );
 	}
 }
 
@@ -278,7 +278,7 @@ template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& 
 
 #define SASL_CLONE_NODE_FUNCTION_DEF( clone_mode, node_type, member_seq )	\
 	SASL_VISIT_DCL( node_type ){	\
-		EFLIB_ASSERT( data, "Data parameter must not be NULL, it is used to feedback cloned node." );	\
+		EFLIB_ASSERT( data, "Data parameter must not be nullptr, it is used to feedback cloned node." );	\
 		SASL_##clone_mode##_CLONE_NODE( data, v, node_type, member_seq );	\
 	}
 

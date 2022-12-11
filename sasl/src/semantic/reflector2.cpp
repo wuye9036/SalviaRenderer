@@ -429,11 +429,11 @@ class reflector2
 {
 public:
 	reflector2(module_semantic* sem, eflib::fixed_string const& entry_name)
-		: sem_(sem), current_entry_(NULL), reflection_(NULL), entry_name_(entry_name)
+		: sem_(sem), current_entry_(nullptr), reflection_(nullptr), entry_name_(entry_name)
 	{
 	}
 
-	reflector2(module_semantic* sem) : sem_(sem), current_entry_(NULL), reflection_(NULL)
+	reflector2(module_semantic* sem) : sem_(sem), current_entry_(nullptr), reflection_(nullptr)
 	{
 	}
 
@@ -451,7 +451,7 @@ public:
 		}
 		else
 		{
-			symbol*					candidate = NULL;
+			symbol*					candidate = nullptr;
 			reflection_impl2_ptr	candidate_reflection;
 			for( symbol* fn_sym: sem_->functions() )
 			{

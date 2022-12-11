@@ -5,7 +5,7 @@
 
 #include <sasl/include/codegen/cgs.h>
 
-BEGIN_NS_SASL_CODEGEN();
+namespace sasl::codegen {
 
 class cgs_simd: public cg_service
 {
@@ -83,7 +83,7 @@ public:
 
 private:
 	llvm::Value*	load_loop_execution_mask();
-	void			save_loop_execution_mask(llvm::Value* mask = NULL);
+	void			save_loop_execution_mask(llvm::Value* mask = nullptr);
 	virtual void	enter_loop();
 	virtual void	exit_loop();
 	virtual void	apply_loop_condition( multi_value const& );
@@ -113,5 +113,5 @@ private:
 	std::vector<llvm::Value*>	exec_masks;
 };
 
-END_NS_SASL_CODEGEN();
+}
 #endif

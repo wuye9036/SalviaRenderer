@@ -122,8 +122,8 @@ semantic_analyser::semantic_analyser()
 	is_global_scope = true;
 	declaration_tid = -1;
 	member_counter = -1;
-	label_list = NULL;
-	generated_sem = NULL;
+	label_list = nullptr;
+	generated_sem = nullptr;
 }
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser
@@ -135,9 +135,9 @@ shared_ptr<ReturnNodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const&
 	node_semantic* old_semantic = generated_sem;
 
 	generated_node.reset();
-	generated_sem = NULL;
+	generated_sem = nullptr;
 
-	child->accept(this, NULL);
+	child->accept(this, nullptr);
 
 	// Node semantic is looked up by node pointer,
 	// And Windows 7 used pool based object allocation,
@@ -194,7 +194,7 @@ SASL_VISIT_DEF( unary_expression ){
 	shared_ptr<unary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<unary_expression>();
 	generated_node = dup_expr;
 
-	node_semantic* inner_sem = NULL;
+	node_semantic* inner_sem = nullptr;
 	dup_expr->expr = visit_child(v.expr, &inner_sem);
 	assert(inner_sem);
 
@@ -230,8 +230,8 @@ SASL_VISIT_DEF( cast_expression ){
 
 	shared_ptr<cast_expression> dup_cexpr = duplicate(v.as_handle())->as_handle<cast_expression>();
 
-	node_semantic* src_tsi		= NULL;
-	node_semantic* casted_tsi	= NULL;
+	node_semantic* src_tsi		= nullptr;
+	node_semantic* casted_tsi	= nullptr;
 
 	dup_cexpr->casted_type = visit_child(v.casted_type, &casted_tsi);
 	dup_cexpr->expr = visit_child(v.expr, &src_tsi);
@@ -263,8 +263,8 @@ SASL_VISIT_DEF( binary_expression )
 	generated_node = dup_expr;
 
 	// Visit child
-	node_semantic* left_expr_sem = NULL;
-	node_semantic* right_expr_sem = NULL;
+	node_semantic* left_expr_sem = nullptr;
+	node_semantic* right_expr_sem = nullptr;
 
 	dup_expr->left_expr  = visit_child(v.left_expr, &left_expr_sem);
 	dup_expr->right_expr = visit_child(v.right_expr, &right_expr_sem);
@@ -276,7 +276,7 @@ SASL_VISIT_DEF( binary_expression )
         dup_expr->right_expr.get() 
     };
 
-	if(	left_expr_sem == NULL ||  right_expr_sem == NULL )
+	if(	left_expr_sem == nullptr ||  right_expr_sem == nullptr )
 	{
 		return;
 	}
@@ -362,9 +362,9 @@ SASL_VISIT_DEF( cond_expression ){
 		= duplicate( v.as_handle() )->as_handle<cond_expression>();
 	generated_node = dup_expr;
 
-	node_semantic* cond_sem= NULL;
-	node_semantic* yes_sem	= NULL;
-	node_semantic* no_sem	= NULL;
+	node_semantic* cond_sem= nullptr;
+	node_semantic* yes_sem	= nullptr;
+	node_semantic* no_sem	= nullptr;
 
 	dup_expr->cond_expr	= visit_child(v.cond_expr,	&cond_sem);
 	dup_expr->yes_expr	= visit_child(v.yes_expr,	&yes_sem);
@@ -441,7 +441,7 @@ SASL_VISIT_DEF( index_expression )
 		diags->report(not_an_acceptable_operator)
 			->token_range( *v.token_begin(), *v.token_end() )
 			->p("[")->p( type_repr(agg_tyn).str() );
-		agg_sem = NULL;
+		agg_sem = nullptr;
 	}
 
 	dup_idxexpr->index_expr = visit_child(v.index_expr);
@@ -455,7 +455,7 @@ SASL_VISIT_DEF( index_expression )
 	{
 		diags->report( subscript_not_integral )
 			->token_range( *v.token_begin(), *v.token_end() );
-		index_sem = NULL;
+		index_sem = nullptr;
 	}
 
 	if( !(agg_sem && index_sem) ) { return; }
@@ -498,7 +498,7 @@ SASL_VISIT_DEF( call_expression )
 	node_semantic* expr_sem = get_node_semantic(dup_callexpr->expr);
 	node_semantic* fnsi = expr_sem;
 
-	if( expr_sem == NULL ){ return; }
+	if( expr_sem == nullptr ){ return; }
 
 	if( expr_sem->is_function_pointer() ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -823,8 +823,8 @@ SASL_VISIT_DEF( builtin_type ){
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	tynode*			proto_node = NULL;
-	node_semantic*	proto_sem = NULL;
+	tynode*			proto_node = nullptr;
+	node_semantic*	proto_sem = nullptr;
 
 	module_semantic_->pety()->get2(v.tycode, &proto_node, &proto_sem);
 
@@ -839,7 +839,7 @@ SASL_VISIT_DEF(array_type)
 	tid_t array_tid = module_semantic_->pety()->get( &v, current_symbol );
 	assert(array_tid != -1);
 
-	tynode* proto_tyn = NULL;
+	tynode* proto_tyn = nullptr;
 	module_semantic_->pety()->get2(array_tid, &proto_tyn, &generated_sem);
 	array_type_ptr dup_array = proto_tyn->as_handle<array_type>();
 	if( !get_node_semantic(dup_array->elem_type) )
@@ -869,7 +869,7 @@ SASL_VISIT_DEF( struct_type ){
 
 	assert( dup_struct_id != -1 );
 
-	tynode* tyn = NULL;
+	tynode* tyn = nullptr;
 	module_semantic_->pety()->get2(dup_struct_id, &tyn, &generated_sem);
 
 	shared_ptr<struct_type> dup_struct = tyn->as_handle<struct_type>();
@@ -920,7 +920,7 @@ SASL_VISIT_DEF( alias_type ){
 		return;
 	}
 
-	tynode* proto_node = NULL;
+	tynode* proto_node = nullptr;
 	module_semantic_->pety()->get2(dup_struct_id, &proto_node, &generated_sem);
 	generated_node = proto_node->as_handle();
 }
@@ -957,13 +957,13 @@ SASL_VISIT_DEF( parameter_full )
 
 	generated_node = dup_par;
 
-	symbol* sym = NULL;
+	symbol* sym = nullptr;
 	if( v.name )
 	{
 		sym = current_symbol->add_named_child( v.name->str, dup_par.get() );
 	}
 
-	node_semantic* par_sem = NULL;
+	node_semantic* par_sem = nullptr;
 	visit_child(v.param_type, &par_sem);
 
 	if ( v.init ){ dup_par->init = visit_child(v.init); }
@@ -996,7 +996,7 @@ SASL_VISIT_DEF( function_full_def )
 
 	generated_node = def_node;
 
-	node_semantic* result_type_sem = NULL;
+	node_semantic* result_type_sem = nullptr;
 	tid_t fn_tid = -1;
 	symbol* sym = current_symbol->add_function_begin( def_node.get() );
 	{
@@ -1011,7 +1011,7 @@ SASL_VISIT_DEF( function_full_def )
 		bool successful = true;
 		for(size_t i_param = 0; i_param < v.params.size(); ++i_param)
 		{
-			node_semantic* param_sem = NULL;
+			node_semantic* param_sem = nullptr;
 			shared_ptr<parameter> param = visit_child<parameter>(v.params[i_param], &param_sem);
 			def_node->params.push_back(param);
 			

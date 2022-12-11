@@ -4,7 +4,7 @@
 
 namespace eflib{
 
-	lifetime_manager* lifetime_manager::inst = NULL;
+	lifetime_manager* lifetime_manager::inst = nullptr;
 
 	lifetime_manager::lifetime_manager(){
 		assert( !inst );
@@ -14,7 +14,7 @@ namespace eflib{
 	lifetime_manager::~lifetime_manager(){
 		assert( inst );
 		if ( inst ){
-			inst = NULL;
+			inst = nullptr;
 			for( std::vector< std::function<void()> >::reverse_iterator it = exit_callbacks.rbegin();
 				it != exit_callbacks.rend(); ++it )
 			{
