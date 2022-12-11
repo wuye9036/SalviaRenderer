@@ -375,7 +375,7 @@ multi_value cg_function::arg(size_t index) const
 	// Dereference array if need.
 	if( multi_value_arg_as_ref() )
 	{
-		physical_arg_value = cg->builder().CreateLoad(physical_arg_value);
+		physical_arg_value = cg->builder().CreateLoad(physical_arg_value->getType(), physical_arg_value);
 	}
 
 	// Split array or just consider as mono value.
@@ -444,7 +444,7 @@ value_array cg_function::return_address() const
 		Value* addr_value = &(*fn->arg_begin());
 		if( multi_value_arg_as_ref() )
 		{
-			return cg->extension()->split_array( cg->builder().CreateLoad(addr_value) );
+			return cg->extension()->split_array( cg->builder().CreateLoad(addr_value->getType(), addr_value) );
 		}
 		else
 		{

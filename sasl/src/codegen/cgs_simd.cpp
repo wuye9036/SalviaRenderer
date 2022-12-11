@@ -2,8 +2,8 @@
 
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/codegen/utility.h>
-#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/syntax_tree/declaration.h>
 
 #include <sasl/enums/enums_utility.h>
 
@@ -13,15 +13,15 @@
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Function.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Intrinsics.h>
-#include <llvm/IR/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
+#include <llvm/IR/CFG.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/Module.h>
 
-#include <eflib/include/platform/boost_begin.h>
 #include <boost/lexical_cast.hpp>
+#include <eflib/include/platform/boost_begin.h>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/diagnostics/assert.h>
@@ -29,505 +29,457 @@
 
 #include <unordered_map>
 
-using sasl::syntax_tree::node;
-using sasl::syntax_tree::function_full_def;
-using sasl::syntax_tree::parameter_full;
-using sasl::syntax_tree::tynode;
 using sasl::syntax_tree::declaration;
-using sasl::syntax_tree::variable_declaration;
+using sasl::syntax_tree::function_full_def;
+using sasl::syntax_tree::node;
+using sasl::syntax_tree::parameter_full;
 using sasl::syntax_tree::struct_type;
+using sasl::syntax_tree::tynode;
+using sasl::syntax_tree::variable_declaration;
 
-using sasl::semantic::node_semantic;
 using sasl::semantic::node_semantic;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 
-using eflib::support_feature;
-using eflib::cpu_sse2;
 using eflib::ceil_to_pow2;
+using eflib::cpu_sse2;
+using eflib::support_feature;
 
 using namespace sasl::utility;
 
-using llvm::ArrayRef;
 using llvm::APInt;
 using llvm::Argument;
-using llvm::LLVMContext;
-using llvm::Function;
-using llvm::FunctionType;
-using llvm::IntegerType;
-using llvm::Type;
-using llvm::PointerType;
-using llvm::Value;
+using llvm::ArrayRef;
 using llvm::BasicBlock;
+using llvm::CmpInst;
 using llvm::Constant;
 using llvm::ConstantInt;
 using llvm::ConstantVector;
-using llvm::StructType;
-using llvm::VectorType;
-using llvm::UndefValue;
+using llvm::Function;
+using llvm::FunctionType;
+using llvm::IntegerType;
+using llvm::LLVMContext;
+using llvm::PointerType;
 using llvm::StoreInst;
+using llvm::StructType;
 using llvm::SwitchInst;
-using llvm::CmpInst;
+using llvm::Type;
+using llvm::UndefValue;
+using llvm::Value;
+using llvm::VectorType;
 
 namespace Intrinsic = llvm::Intrinsic;
 
+using boost::lexical_cast;
 using std::any;
-using std::shared_ptr;
 using std::enable_if;
 using std::is_integral;
+using std::shared_ptr;
 using std::unordered_map;
-using boost::lexical_cast;
 
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace sasl::codegen {
 
-cgs_simd::cgs_simd()
-	: cg_service(PACKAGE_ELEMENT_COUNT)
-{
+cgs_simd::cgs_simd() : cg_service(PACKAGE_ELEMENT_COUNT) {}
+
+void cgs_simd::store(multi_value &lhs, multi_value const &rhs) {
+  assert(lhs.value_count() == rhs.value_count());
+
+  value_array selected_value;
+  value_array address(selected_value.size(), nullptr);
+  value_kinds kind = lhs.kind();
+  Value *mask = exec_masks.back();
+
+  if (kind == value_kinds::reference) {
+    address = lhs.raw();
+    value_array new_value = rhs.load(lhs.abi());
+    value_array old_value = ext_->load(address);
+    selected_value = ext_->select(mask, new_value, old_value);
+  } else if (kind == value_kinds::elements) {
+    if (is_vector(lhs.parent()->hint())) {
+      assert(lhs.parent()->storable());
+
+      elem_indexes indexes = lhs.indexes();
+      uint32_t indexes_length = indexes.length();
+
+      if (lhs.abi() == abis::c) {
+        value_array parent_address = lhs.parent()->load_ref();
+        for (size_t i_write_idx = 0; i_write_idx < indexes_length;
+             ++i_write_idx) {
+          value_array mem_ptr =
+              ext_->struct_gep(parent_address, indexes[i_write_idx]);
+          value_array old_elem = ext_->load(mem_ptr);
+          multi_value new_element_val =
+              emit_extract_val(rhs, static_cast<int>(i_write_idx));
+          value_array masked_new_elem =
+              ext_->select(mask, new_element_val.load(lhs.abi()), old_elem);
+          ext_->store(masked_new_elem, mem_ptr);
+        }
+        return;
+      } else if (lhs.abi() == abis::llvm) {
+        multi_value old_parent = lhs.parent()->to_rvalue();
+        multi_value selected_parent = old_parent;
+
+        for (size_t i_write_idx = 0; i_write_idx < indexes_length;
+             ++i_write_idx) {
+          multi_value new_elem_val =
+              emit_extract_val(rhs, static_cast<int>(i_write_idx));
+          multi_value old_elem_val = emit_extract_val(
+              old_parent, static_cast<int>(indexes[i_write_idx]));
+
+          value_array selected_new_elem = ext_->select(
+              mask, new_elem_val.load(lhs.abi()), old_elem_val.load());
+          multi_value selected_new_elem_val =
+              create_value(new_elem_val.hint(), selected_new_elem,
+                           value_kinds::value, new_elem_val.abi());
+
+          selected_parent = emit_insert_val(
+              selected_parent, indexes[i_write_idx], selected_new_elem_val);
+        }
+        lhs.parent()->store(selected_parent);
+        return;
+      } else {
+        assert(false);
+      }
+    } else {
+      address = lhs.load_ref();
+      value_array new_value = rhs.load(lhs.abi());
+      value_array old_value = ext_->load(address);
+      selected_value = ext_->select(mask, new_value, old_value);
+    }
+  }
+
+  ext_->store(selected_value, address);
 }
 
-void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
-{
-	assert( lhs.value_count() == rhs.value_count() );
+multi_value cgs_simd::cast_ints(multi_value const &v, cg_type *dest_tyi) {
+  EFLIB_UNREF_DECLARATOR(v);
+  EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-	value_array selected_value;
-	value_array address(selected_value.size(), nullptr);
-	value_kinds kind = lhs.kind();
-	Value* mask = exec_masks.back();
-
-	if( kind == value_kinds::reference )
-	{
-		address = lhs.raw();
-		value_array new_value = rhs.load( lhs.abi() );
-		value_array old_value = ext_->load(address);
-		selected_value = ext_->select(mask, new_value, old_value);
-	}
-	else if ( kind == value_kinds::elements )
-	{
-		if( is_vector( lhs.parent()->hint()) )
-		{
-			assert( lhs.parent()->storable() );
-
-			elem_indexes indexes = lhs.indexes();
-			uint32_t	 indexes_length = indexes.length();
-
-			if(lhs.abi() == abis::c)
-			{
-				value_array parent_address = lhs.parent()->load_ref();
-				for( size_t i_write_idx = 0; i_write_idx < indexes_length; ++i_write_idx )
-				{
-					value_array mem_ptr = ext_->struct_gep(parent_address, indexes[i_write_idx]);
-					value_array old_elem = ext_->load(mem_ptr);
-					multi_value new_element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
-					value_array masked_new_elem = ext_->select(mask, new_element_val.load( lhs.abi() ), old_elem);
-					ext_->store(masked_new_elem, mem_ptr);
-				}
-				return;
-			}
-			else if(lhs.abi() == abis::llvm)
-			{
-				multi_value old_parent = lhs.parent()->to_rvalue();
-				multi_value selected_parent = old_parent;
-
-				for( size_t i_write_idx = 0; i_write_idx < indexes_length; ++i_write_idx )
-				{
-					multi_value new_elem_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
-					multi_value old_elem_val = emit_extract_val( old_parent, static_cast<int>(indexes[i_write_idx]) );
-
-					value_array selected_new_elem = ext_->select( mask, new_elem_val.load( lhs.abi() ), old_elem_val.load() );
-					multi_value selected_new_elem_val = create_value(
-						new_elem_val.hint(),
-						selected_new_elem,
-						value_kinds::value,
-						new_elem_val.abi()
-						);
-
-					selected_parent = emit_insert_val(selected_parent, indexes[i_write_idx], selected_new_elem_val);
-				}
-				lhs.parent()->store(selected_parent);
-				return;
-			}
-			else
-			{
-				assert(false);
-			}
-		}
-		else
-		{
-			address = lhs.load_ref();
-			value_array new_value = rhs.load( lhs.abi() );
-			value_array old_value = ext_->load(address);
-			selected_value = ext_->select(mask, new_value, old_value);
-		}
-	}
-
-	ext_->store(selected_value, address);
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::cast_ints( multi_value const& v, cg_type* dest_tyi )
-{
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_UNREF_DECLARATOR(dest_tyi);
+multi_value cgs_simd::cast_i2f(multi_value const &v, cg_type *dest_tyi) {
+  EFLIB_UNREF_DECLARATOR(v);
+  EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::cast_i2f( multi_value const& v, cg_type* dest_tyi )
-{
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_UNREF_DECLARATOR(dest_tyi);
+multi_value cgs_simd::cast_f2i(multi_value const &v, cg_type *dest_tyi) {
+  EFLIB_UNREF_DECLARATOR(v);
+  EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::cast_f2i( multi_value const& v, cg_type* dest_tyi )
-{
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_UNREF_DECLARATOR(dest_tyi);
+multi_value cgs_simd::cast_f2f(multi_value const &v, cg_type *dest_tyi) {
+  EFLIB_UNREF_DECLARATOR(v);
+  EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::cast_f2f( multi_value const& v, cg_type* dest_tyi )
-{
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_UNREF_DECLARATOR(dest_tyi);
+multi_value cgs_simd::cast_i2b(multi_value const &v) {
+  EFLIB_UNREF_DECLARATOR(v);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::cast_i2b( multi_value const& v )
-{
-	EFLIB_UNREF_DECLARATOR(v);
+multi_value cgs_simd::cast_f2b(multi_value const &v) {
+  EFLIB_UNREF_DECLARATOR(v);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::cast_f2b( multi_value const& v )
-{
-	EFLIB_UNREF_DECLARATOR(v);
+multi_value cgs_simd::create_vector(vector<multi_value> const &scalars,
+                                    abis abi) {
+  EFLIB_UNREF_DECLARATOR(scalars);
+  EFLIB_UNREF_DECLARATOR(abi);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::create_vector( vector<multi_value> const& scalars, abis abi )
-{
-	EFLIB_UNREF_DECLARATOR(scalars);
-	EFLIB_UNREF_DECLARATOR(abi);
+void cgs_simd::emit_return() { builder().CreateRetVoid(); }
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+void cgs_simd::emit_return(multi_value const &ret_v, abis abi) {
+  if (abi == abis::unknown) {
+    abi = fn().abi();
+  }
+
+  value_array ret_value = ret_v.load(abi);
+  if (fn().return_via_arg()) {
+    ext_->store(ret_value, fn().return_address());
+    builder().CreateRetVoid();
+  } else {
+    builder().CreateRet(ext_->get_array(ret_value));
+  }
 }
 
-void cgs_simd::emit_return()
-{
-	builder().CreateRetVoid();
+void cgs_simd::function_body_beg() {
+  cg_service::function_body_beg();
+  exec_masks.push_back(fn().partial_execution ? fn().execution_mask().load()[0]
+                                              : all_one_mask());
+  break_masks.push_back(nullptr);
+  continue_masks.push_back(nullptr);
 }
 
-void cgs_simd::emit_return( multi_value const& ret_v, abis abi )
-{
-	if( abi == abis::unknown ){ abi = fn().abi(); }
-
-	value_array ret_value = ret_v.load(abi);
-	if( fn().return_via_arg() ){
-		ext_->store( ret_value, fn().return_address() );
-		builder().CreateRetVoid();
-	} else {
-		builder().CreateRet( ext_->get_array(ret_value) );
-	}
+void cgs_simd::function_body_end() {
+  cg_service::function_body_end();
+  // Do nothing
 }
 
-void cgs_simd::function_body_beg()
-{
-	cg_service::function_body_beg();
-	exec_masks.push_back( fn().partial_execution ? fn().execution_mask().load()[0] : all_one_mask() );
-	break_masks.push_back(nullptr);
-	continue_masks.push_back(nullptr);
+Value *cgs_simd::all_one_mask() {
+  uint64_t mask = (1ULL << parallel_factor_) - 1;
+  return ext_->get_int(static_cast<uint32_t>(mask));
 }
 
-void cgs_simd::function_body_end()
-{
-	cg_service::function_body_end();
-	// Do nothing
+void cgs_simd::if_cond_beg() {
+  // Do nothing
 }
 
-Value* cgs_simd::all_one_mask()
-{
-	uint64_t mask = (1ULL << parallel_factor_) - 1;
-	return ext_->get_int( static_cast<uint32_t>(mask) );
+void cgs_simd::if_cond_end(multi_value const &cond) {
+  cond_exec_masks.push_back(combine_flags(cond.load(abis::llvm)));
 }
 
-void cgs_simd::if_cond_beg()
-{
-	// Do nothing
+void cgs_simd::then_beg() {
+  Value *then_mask = builder().CreateAnd(cond_exec_masks.back(),
+                                         exec_masks.back(), "mask.then");
+  exec_masks.push_back(then_mask);
 }
 
-void cgs_simd::if_cond_end( multi_value const& cond )
-{
-	cond_exec_masks.push_back( combine_flags( cond.load(abis::llvm) ) );
+void cgs_simd::then_end() {
+  exec_masks.pop_back();
+  apply_break_and_continue();
 }
 
-void cgs_simd::then_beg()
-{
-	Value* then_mask = builder().CreateAnd( cond_exec_masks.back(), exec_masks.back(), "mask.then" );
-	exec_masks.push_back( then_mask );
+void cgs_simd::else_beg() {
+  Value *inv_cond_exec_mask =
+      builder().CreateNot(cond_exec_masks.back(), "cond.inv");
+  Value *else_mask =
+      builder().CreateAnd(inv_cond_exec_mask, exec_masks.back(), "mask.else");
+  exec_masks.push_back(else_mask);
 }
 
-void cgs_simd::then_end()
-{
-	exec_masks.pop_back();
-	apply_break_and_continue();
+void cgs_simd::else_end() {
+  exec_masks.pop_back();
+  apply_break_and_continue();
 }
 
-void cgs_simd::else_beg()
-{
-	Value* inv_cond_exec_mask = builder().CreateNot( cond_exec_masks.back(), "cond.inv" );
-	Value* else_mask =  builder().CreateAnd( inv_cond_exec_mask, exec_masks.back(), "mask.else" );
-	exec_masks.push_back( else_mask );
+multi_value cgs_simd::emit_ddx(multi_value const &v) {
+  return derivation(v, dd_horizontal);
 }
 
-void cgs_simd::else_end()
-{
-	exec_masks.pop_back();
-	apply_break_and_continue();
+multi_value cgs_simd::emit_ddy(multi_value const &v) {
+  return derivation(v, dd_vertical);
 }
 
-multi_value cgs_simd::emit_ddx( multi_value const& v )
-{
-	return derivation( v, dd_horizontal );
+multi_value cgs_simd::derivation(multi_value const &v,
+                                 derivation_directional dd) {
+  // int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT /
+  // PACKAGE_LINE_ELEMENT_COUNT;
+
+  builtin_types hint = v.hint();
+
+  assert(parallel_factor_ == 4);
+
+  value_array values = v.load();
+  value_array diff_values(parallel_factor_, nullptr);
+
+  multi_value source0 = create_value(v.ty(), hint, value_array(1, nullptr),
+                                     value_kinds::value, v.abi());
+  multi_value source1 = source0;
+
+  for (size_t i = 0; i < 2; i += 2) {
+    for (size_t j = 0; j < 2; ++j) {
+      size_t value_index0(0);
+      size_t value_index1(0);
+
+      if (dd == dd_horizontal) {
+        value_index0 = j * 2 + i;
+        value_index1 = value_index0 + 1;
+      } else {
+        value_index0 = i * 2 + j;
+        value_index1 = value_index0 + 2;
+      }
+
+      Value *source_vm_value[2] = {values[value_index0], values[value_index1]};
+      source0.emplace(value_array(1, source_vm_value[0]), value_kinds::value,
+                      v.abi());
+      source1.emplace(value_array(1, source_vm_value[1]), value_kinds::value,
+                      v.abi());
+
+      multi_value diff = emit_sub(source1, source0);
+      diff_values[value_index0] = diff_values[value_index1] = diff.load()[0];
+    }
+  }
+
+  return create_value(v.ty(), v.hint(), diff_values, value_kinds::value,
+                      v.abi());
 }
 
-multi_value cgs_simd::emit_ddy( multi_value const& v )
-{
-	return derivation( v, dd_vertical );
-}
-
-multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd)
-{
-	// int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
-
-	builtin_types hint = v.hint();
-
-	assert( parallel_factor_ == 4 );
-
-	value_array values = v.load();
-	value_array diff_values(parallel_factor_, nullptr);
-
-	multi_value source0 = create_value(
-		v.ty(), hint, value_array(1, nullptr), value_kinds::value, v.abi()
-		);
-	multi_value source1 = source0;
-
-	for(size_t i = 0; i < 2; i+=2)
-	{
-		for(size_t j = 0; j < 2; ++j)
-		{
-			size_t value_index0(0);
-			size_t value_index1(0);
-
-			if(dd == dd_horizontal)
-			{
-				value_index0 = j * 2 + i;
-				value_index1 = value_index0 + 1;
-			}
-			else
-			{
-				value_index0 = i * 2 + j;
-				value_index1 = value_index0 + 2;
-			}
-
-			Value* source_vm_value[2] = {values[value_index0], values[value_index1] };
-			source0.emplace( value_array(1, source_vm_value[0]), value_kinds::value, v.abi() );
-			source1.emplace( value_array(1, source_vm_value[1]), value_kinds::value, v.abi() );
-
-			multi_value diff = emit_sub(source1, source0);
-			diff_values[value_index0]
-			= diff_values[value_index1]
-			= diff.load()[0];
-		}
-	}
-
-	return create_value( v.ty(), v.hint(), diff_values, value_kinds::value, v.abi() );
-}
-
-void cgs_simd::for_init_beg() {	enter_loop(); }
+void cgs_simd::for_init_beg() { enter_loop(); }
 void cgs_simd::for_init_end() {}
 void cgs_simd::for_cond_beg() {}
-void cgs_simd::for_cond_end( multi_value const& cond ) { apply_loop_condition( cond ); }
-void cgs_simd::for_body_beg(){}
-void cgs_simd::for_body_end(){}
-void cgs_simd::for_iter_beg(){}
-void cgs_simd::for_iter_end(){ save_next_iteration_exec_mask(); exit_loop(); }
-
-llvm::Value* cgs_simd::all_zero_mask()
-{
-	return ext_->get_int<uint32_t>(0);
+void cgs_simd::for_cond_end(multi_value const &cond) {
+  apply_loop_condition(cond);
+}
+void cgs_simd::for_body_beg() {}
+void cgs_simd::for_body_end() {}
+void cgs_simd::for_iter_beg() {}
+void cgs_simd::for_iter_end() {
+  save_next_iteration_exec_mask();
+  exit_loop();
 }
 
-void cgs_simd::apply_break_and_continue()
-{
-	apply_break();
-	apply_continue();
+llvm::Value *cgs_simd::all_zero_mask() { return ext_->get_int<uint32_t>(0); }
+
+void cgs_simd::apply_break_and_continue() {
+  apply_break();
+  apply_continue();
 }
 
-void cgs_simd::if_beg(){}
+void cgs_simd::if_beg() {}
 
-void cgs_simd::if_end()
-{
-	cond_exec_masks.pop_back();
+void cgs_simd::if_end() { cond_exec_masks.pop_back(); }
+
+void cgs_simd::apply_break() {
+  Value *mask = exec_masks.back();
+  if (break_masks.back()) {
+    mask = builder().CreateAnd(builder().CreateNot(break_masks.back()), mask);
+  }
+  exec_masks.back() = mask;
 }
 
-void cgs_simd::apply_break()
-{
-	Value* mask = exec_masks.back();
-	if( break_masks.back() ){
-		mask = builder().CreateAnd( builder().CreateNot( break_masks.back() ), mask );
-	}
-	exec_masks.back() = mask;
+void cgs_simd::apply_continue() {
+  Value *mask = exec_masks.back();
+  if (continue_masks.back()) {
+    mask =
+        builder().CreateAnd(builder().CreateNot(continue_masks.back()), mask);
+  }
+  exec_masks.back() = mask;
 }
 
-void cgs_simd::apply_continue()
-{
-	Value* mask = exec_masks.back();
-	if( continue_masks.back() ){
-		mask = builder().CreateAnd( builder().CreateNot( continue_masks.back() ), mask );
-	}
-	exec_masks.back() = mask;
+void cgs_simd::break_() {
+  Value *break_mask = break_masks.back();
+  if (break_mask == nullptr) {
+    break_mask = exec_masks.back();
+  } else {
+    break_mask = builder().CreateOr(exec_masks.back(), break_mask);
+  }
+  break_masks.back() = break_mask;
+  apply_break();
 }
 
-void cgs_simd::break_()
-{
-	Value* break_mask = break_masks.back();
-	if( break_mask == nullptr ){
-		break_mask = exec_masks.back();
-	} else {
-		break_mask = builder().CreateOr( exec_masks.back(), break_mask );
-	}
-	break_masks.back() = break_mask;
-	apply_break();
+void cgs_simd::continue_() {
+  Value *continue_mask = continue_masks.back();
+  if (continue_mask == nullptr) {
+    continue_mask = exec_masks.back();
+  } else {
+    continue_mask = builder().CreateOr(exec_masks.back(), continue_mask);
+  }
+  continue_masks.back() = continue_mask;
+  apply_continue();
 }
 
-void cgs_simd::continue_()
-{
-	Value* continue_mask = continue_masks.back();
-	if( continue_mask == nullptr ){
-		continue_mask = exec_masks.back();
-	} else {
-		continue_mask = builder().CreateOr( exec_masks.back(), continue_mask );
-	}
-	continue_masks.back() = continue_mask;
-	apply_continue();
+multi_value cgs_simd::any_mask_true() {
+  Value *mask = exec_masks.back();
+  Value *ret_value = builder().CreateICmpNE(mask, ext_->get_int(0));
+  return create_value(builtin_types::_boolean, value_array(1, ret_value),
+                      value_kinds::value, abis::llvm);
 }
 
-multi_value cgs_simd::any_mask_true()
-{
-	Value* mask = exec_masks.back();
-	Value* ret_value = builder().CreateICmpNE( mask, ext_->get_int(0) );
-	return create_value(builtin_types::_boolean, value_array(1, ret_value), value_kinds::value, abis::llvm);
-}
-
-void cgs_simd::while_beg(){ enter_loop(); }
-void cgs_simd::while_end(){ exit_loop(); }
-void cgs_simd::while_cond_beg(){}
-void cgs_simd::while_cond_end( multi_value const& cond )
-{
-	apply_loop_condition(cond);
+void cgs_simd::while_beg() { enter_loop(); }
+void cgs_simd::while_end() { exit_loop(); }
+void cgs_simd::while_cond_beg() {}
+void cgs_simd::while_cond_end(multi_value const &cond) {
+  apply_loop_condition(cond);
 }
 void cgs_simd::while_body_beg() {}
 void cgs_simd::while_body_end() { save_next_iteration_exec_mask(); }
 
-void cgs_simd::enter_loop()
-{
-	mask_vars.push_back( restore( exec_masks.back() ) );
-	exec_masks.push_back( exec_masks.back() );
-	break_masks.push_back(nullptr);
-	continue_masks.push_back(nullptr);
+void cgs_simd::enter_loop() {
+  mask_vars.push_back(restore(exec_masks.back()));
+  exec_masks.push_back(exec_masks.back());
+  break_masks.push_back(nullptr);
+  continue_masks.push_back(nullptr);
 }
 
-void cgs_simd::exit_loop()
-{
-	exec_masks.pop_back();
-	break_masks.pop_back();
-	continue_masks.pop_back();
+void cgs_simd::exit_loop() {
+  exec_masks.pop_back();
+  break_masks.pop_back();
+  continue_masks.pop_back();
 }
 
-void cgs_simd::apply_loop_condition( multi_value const& cond )
-{
-	Value* exec_mask = load_loop_execution_mask();
-	if( cond.abi() != abis::unknown ){
-		value_array cond_exec_flags = cond.load();
-		Value* cond_exec_mask = combine_flags(cond_exec_flags);
-		exec_mask = builder().CreateAnd(exec_mask, cond_exec_mask);
-	}
+void cgs_simd::apply_loop_condition(multi_value const &cond) {
+  Value *exec_mask = load_loop_execution_mask();
+  if (cond.abi() != abis::unknown) {
+    value_array cond_exec_flags = cond.load();
+    Value *cond_exec_mask = combine_flags(cond_exec_flags);
+    exec_mask = builder().CreateAnd(exec_mask, cond_exec_mask);
+  }
 
-	exec_masks.back() = exec_mask;
-	break_masks.back() = nullptr;
-	continue_masks.back() = nullptr;
+  exec_masks.back() = exec_mask;
+  break_masks.back() = nullptr;
+  continue_masks.back() = nullptr;
 }
 
-void cgs_simd::do_beg(){ enter_loop(); }
-void cgs_simd::do_end(){ exit_loop(); }
-void cgs_simd::do_body_beg(){ exec_masks.back() = load_loop_execution_mask(); }
-void cgs_simd::do_body_end(){ save_next_iteration_exec_mask(); }
-void cgs_simd::do_cond_beg(){}
-void cgs_simd::do_cond_end( multi_value const& cond ) {
-	apply_loop_condition( cond );
-	save_loop_execution_mask( exec_masks.back() );
+void cgs_simd::do_beg() { enter_loop(); }
+void cgs_simd::do_end() { exit_loop(); }
+void cgs_simd::do_body_beg() { exec_masks.back() = load_loop_execution_mask(); }
+void cgs_simd::do_body_end() { save_next_iteration_exec_mask(); }
+void cgs_simd::do_cond_beg() {}
+void cgs_simd::do_cond_end(multi_value const &cond) {
+  apply_loop_condition(cond);
+  save_loop_execution_mask(exec_masks.back());
 }
 
-void cgs_simd::save_next_iteration_exec_mask()
-{
-	Value* next_iter_exec_mask = exec_masks.back();
-	if( continue_masks.back() ){
-		next_iter_exec_mask = builder().CreateOr( exec_masks.back(), continue_masks.back() );
-	}
-	save_loop_execution_mask(next_iter_exec_mask);
+void cgs_simd::save_next_iteration_exec_mask() {
+  Value *next_iter_exec_mask = exec_masks.back();
+  if (continue_masks.back()) {
+    next_iter_exec_mask =
+        builder().CreateOr(exec_masks.back(), continue_masks.back());
+  }
+  save_loop_execution_mask(next_iter_exec_mask);
 }
 
-llvm::Value* cgs_simd::load_loop_execution_mask()
-{
-	return builder().CreateLoad( mask_vars.back() );
+llvm::Value *cgs_simd::load_loop_execution_mask() {
+  return builder().CreateLoad(mask_vars.back()->getType(), mask_vars.back());
 }
 
-void cgs_simd::save_loop_execution_mask(Value* mask)
-{
-	if (mask == nullptr )
-	{
-		mask = exec_masks.back();
-	}
-	builder().CreateStore( mask, mask_vars.back() );
+void cgs_simd::save_loop_execution_mask(Value *mask) {
+  if (mask == nullptr) {
+    mask = exec_masks.back();
+  }
+  builder().CreateStore(mask, mask_vars.back());
 }
 
-multi_value cgs_simd::emit_and( multi_value const& lhs, multi_value const& rhs )
-{
-	EFLIB_UNREF_DECLARATOR(lhs);
-	EFLIB_UNREF_DECLARATOR(rhs);
+multi_value cgs_simd::emit_and(multi_value const &lhs, multi_value const &rhs) {
+  EFLIB_UNREF_DECLARATOR(lhs);
+  EFLIB_UNREF_DECLARATOR(rhs);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-multi_value cgs_simd::emit_or( multi_value const& lhs, multi_value const& rhs )
-{
-	EFLIB_UNREF_DECLARATOR(lhs);
-	EFLIB_UNREF_DECLARATOR(rhs);
+multi_value cgs_simd::emit_or(multi_value const &lhs, multi_value const &rhs) {
+  EFLIB_UNREF_DECLARATOR(lhs);
+  EFLIB_UNREF_DECLARATOR(rhs);
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return multi_value();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return multi_value();
 }
 
-Value* cgs_simd::current_execution_mask() const
-{
-	return exec_masks.back();
-}
+Value *cgs_simd::current_execution_mask() const { return exec_masks.back(); }
 
-}
+} // namespace sasl::codegen
