@@ -4,93 +4,44 @@
 
 #include <sasl/common/token.h>
 
-#include <boost/format.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
+#include <fmt/format.h>
 
 #include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace sasl::common {
 
-enum diag_levels {
-  dl_fatal_error, // Fatal Error
-  dl_error,       // Error
-  dl_warning,     // Warning
-  dl_info,        // Information
-  dl_text         // Text.
-};
+enum class diag_levels { fatal_error, error, warning, info, debug };
 
-class diag_template;
-
-class diag_data {
-public:
-  virtual void apply(boost::format &fmt) = 0;
-  virtual ~diag_data() {}
-  virtual void release() { delete this; }
-};
-
-template <typename T> class diag_data_impl : public diag_data {
-public:
-  diag_data_impl(T const &v) : value(v) {}
-  void apply(boost::format &fmt) { fmt % value; }
-
-private:
-  diag_data_impl(diag_data_impl<T> const &);
-  diag_data_impl<T> &operator=(diag_data_impl<T> const &);
-  T value;
+struct diag_template {
+  size_t uid;
+  diag_levels level;
+  std::string_view content;
 };
 
 class diag_item {
 public:
-  diag_item(diag_template const *tmpl);
-  ~diag_item();
+  constexpr diag_item() noexcept = default;
+  constexpr diag_item(diag_template t, std::string_view file_name, code_span span, std::string resolved_diag) noexcept
+      : template_{t}, file_name_{file_name}, span_{span}, resolved_diag_(std::move(resolved_diag)) {}
+  constexpr diag_item(diag_item const&) = default;
+  constexpr diag_item(diag_item && rhs) noexcept = default;
+  constexpr diag_item& operator = (diag_item && rhs) noexcept = default;
+  constexpr diag_item& operator = (diag_item const& rhs) = default;
 
-  template <typename T> diag_item &operator%(T const &v) {
-    fmt_params.push_back(new diag_data_impl<T>(v));
-    return *this;
-  }
-
-  diag_item &eval();
-  diag_item &file(std::string_view f);
-  diag_item &span(token_t const &beg, token_t const &end);
-  diag_item &span(code_span const &s);
-
-  bool is_template(diag_template const &v) const;
-  diag_levels level() const;
-  std::string_view str() const;
-  code_span span() const;
-  std::string_view file() const;
-  size_t id() const;
-
-  void release();
+  constexpr diag_levels level() const noexcept { return template_.level; }
+  constexpr size_t id() const noexcept { return template_.uid; };
+  constexpr std::string_view file_name() const noexcept { return file_name_; }
+  constexpr code_span span() const noexcept { return span_; }
+  constexpr std::string_view str() const noexcept { return resolved_diag_; }
 
 private:
-  boost::format &formatter();
-  boost::format const &formatter() const;
-
-  std::string_view item_file;
-  code_span item_span;
-  diag_template const *tmpl;
-  std::unique_ptr<boost::format> fmt;
-  mutable std::vector<diag_data *> fmt_params;
+  std::string_view file_name_;
+  code_span span_;
+  std::string resolved_diag_;
+  diag_template template_;
 };
 
-class diag_template {
-public:
-  diag_template(size_t uid, diag_levels lvl, std::string const &str);
-  diag_template(diag_levels lvl, std::string const &str);
-
-  std::string const &template_str() const;
-  diag_levels level() const;
-  size_t id() const;
-
-  static size_t automatic_id();
-
-private:
-  size_t uid;
-  diag_levels lvl;
-  std::string tmpl;
-};
-
-}
+} // namespace sasl::common

@@ -5,11 +5,9 @@ set( HEADER_LIST
 	../../include/sasl/parser/generator.h
 	../../include/sasl/parser/grammars.h
 	../../include/sasl/parser/parse_api.h
-	../../include/sasl/parser/parser_forward.h
 )
 
 set( SOURCE_LIST
-	diags.cpp
 	error_handlers.cpp
 	generator.cpp
 	grammars.cpp

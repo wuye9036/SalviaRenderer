@@ -81,7 +81,7 @@ void jit_fixture::init(string const& file_name, string const& options)
 
 	if( !drv->get_root() || !drv->get_semantic() || !drv->get_vmcode() )
 	{
-		for(auto const& diag_item: diags->diag_items())
+		for(auto const& diag_item: diags->items())
 		{
 			BOOST_ERROR( sasl::common::str(diag_item).c_str() );
 		}

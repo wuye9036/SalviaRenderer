@@ -269,10 +269,10 @@ void salvia_compile_shader_impl(
 
 	shader_log_impl_ptr log_impl = make_shared<shader_log_impl>();
 	out_logs = log_impl;
-	for(size_t i = 0; i < results->diag_items().size(); ++i)
+	for(size_t i = 0; i < results->items().size(); ++i)
 	{
 		log_impl->append(
-			sasl::common::str(results->diag_items()[i])
+			sasl::common::str(results->items()[i])
 			);
 	}
 

@@ -243,7 +243,7 @@ parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_
 		return parse_results::succeed;
 	}
 
-	diags->report( unmatched_token )->token_range(**iter, **iter)->p( (*iter)->s );
+	diags->report(unmatched_token, iter->get()->file_name, iter->get()->span, fmt::make_format_args(fmt::arg("syntax_error", (*iter)->s)));
 	return parse_results::failed;
 }
 
@@ -618,7 +618,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	parse_results result = expr->parse(iter, end, attr, diags);
 
 #if OUTPUT_GRAMMAR_MATCHING_PATH
-	current_path->attributes.push_back( make_pair( "diag_count", boost::format("\"%d\"") % chat->diag_items().size() ) );
+	current_path->attributes.push_back( make_pair( "diag_count", boost::format("\"%d\"") % chat->items().size() ) );
 	if( result.is_succeed() ) {
 		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "succeed" ) );
 	} else if ( result.is_recovered() ) {

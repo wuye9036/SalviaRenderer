@@ -1,5 +1,4 @@
-#ifndef SASL_COMMON_DIAG_FORMATTER_H
-#define SASL_COMMON_DIAG_FORMATTER_H
+#pragma
 
 #include <sasl/common/common_fwd.h>
 #include <string>
@@ -8,14 +7,8 @@ namespace sasl::common {
 
 class diag_item;
 
-enum compiler_compatibility
-{
-	cc_msvc,
-	cc_gcc
-};
+enum compiler_compatibility { cc_msvc, cc_gcc };
 
-std::string str(diag_item const*, compiler_compatibility cc = cc_msvc);
+std::string str(diag_item const *, compiler_compatibility cc = cc_msvc);
 
-}
-
-#endif
+} // namespace sasl::common

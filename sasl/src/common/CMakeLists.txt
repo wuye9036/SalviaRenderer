@@ -7,7 +7,7 @@ set( HEADER_LIST
 	../../include/sasl/common/token.h
 )
 
-set( SOURCE_LIST diag_chat.cpp diag_item.cpp token.cpp diag_formatter.cpp)
+set( SOURCE_LIST diag_chat.cpp token.cpp diag_formatter.cpp)
 
 add_library(sasl_common ${HEADER_LIST} ${SOURCE_LIST})
 target_include_directories(sasl_common PUBLIC ../../include)

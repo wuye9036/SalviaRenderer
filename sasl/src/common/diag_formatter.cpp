@@ -14,16 +14,16 @@ std::string str(diag_item const *item, compiler_compatibility cc) {
   std::string error_level;
 
   switch (item->level()) {
-  case dl_info:
+  case diag_levels::info:
     error_level = "info";
     break;
-  case dl_warning:
+  case diag_levels::warning:
     error_level = "warning";
     break;
-  case dl_error:
+  case diag_levels::error:
     error_level = "error";
     break;
-  case dl_fatal_error:
+  case diag_levels::fatal_error:
     error_level = "fatal error";
     break;
   }
@@ -31,14 +31,12 @@ std::string str(diag_item const *item, compiler_compatibility cc) {
   switch (cc) {
   case cc_msvc:
     switch (item->level()) {
-    case dl_text:
-      return std::string{item->str()};
-    case dl_info:
-    case dl_warning:
-    case dl_error:
-    case dl_fatal_error:
-      return fmt::format("{}({}): {} C{:04d}: {}", item->file(),
-                         item->span().line_beg, error_level, item->id(),
+    case diag_levels::debug:
+    case diag_levels::info:
+    case diag_levels::warning:
+    case diag_levels::error:
+    case diag_levels::fatal_error:
+      return fmt::format("{}({}): {} C{:04d}: {}", item->file_name(), item->span().begin.line, error_level, item->id(),
                          item->str());
     }
 

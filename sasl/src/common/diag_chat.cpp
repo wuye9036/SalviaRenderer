@@ -2,156 +2,65 @@
 
 #include <sasl/common/diag_item.h>
 #include <eflib/diagnostics/assert.h>
+#include <vector>
 
-using std::unique_ptr;
 using std::shared_ptr;
 using std::string_view;
+using std::unique_ptr;
+using std::make_unique;
 using std::vector;
 
 namespace sasl::common {
 
-diag_item_committer* diag_item_committer::p(char const* v)
-{
-	(*item) % std::string(v);
-	return this;
+shared_ptr<diag_chat> diag_chat::create() { return std::make_shared<diag_chat>(); }
+
+void diag_chat::add_report_raised_handler(report_handler_fn const &handler) { handlers_.push_back(handler); }
+
+void diag_chat::report(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args) {
+  std::string resolved_diag_message = fmt::vformat(tmpl.content, std::move(args));
+  diags_.emplace_back(tmpl, file_name, span, std::move(resolved_diag_message));
 }
 
-shared_ptr<diag_chat> diag_chat::create()
-{
-    return std::make_shared<diag_chat>();
+diag_chat *diag_chat::merge(diag_chat *dest, diag_chat *src, bool trigger_callback) {
+  dest->diags_.insert(dest->diags_.end(), src->diags_.begin(), src->diags_.end());
+
+  if (trigger_callback) {
+    for (auto& diag : src->diags_) {
+      for (auto handler : dest->handlers_) {
+        handler(dest, &diag);
+      }
+    }
+  }
+
+  src->diags_.clear();
+  return dest;
 }
 
-void diag_chat::add_report_raised_handler( report_handler_fn const& handler )
-{
-	handlers.push_back( handler );
+void diag_chat::restore() {
+  diags_.erase(diags_.begin() + cursors_.back());
+  cursors_.pop_back();
 }
 
-diag_chat::committer_pointer diag_chat::report( diag_template const& tmpl )
-{
-	diag_item* diag = new diag_item(&tmpl);
-	diag_item_committer* ret( new diag_item_committer(diag, this) );
-	return committer_pointer(ret);
+void diag_chat::save() { cursors_.push_back(diags_.size()); }
+
+diag_chat::~diag_chat() {}
+
+void diag_chat::clear() {
+  diags_.clear();
 }
 
-diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src, bool trigger_callback )
-{
-	dest->diags.insert( dest->diags.end(), src->diags.begin(), src->diags.end() );
-	
-	if( trigger_callback )
-	{
-		for( vector<diag_item*>::iterator diag_it = src->diags.begin(); diag_it != src->diags.end(); ++diag_it )
-		{
-			for( vector<report_handler_fn>::iterator handler_it = dest->handlers.begin(); handler_it != dest->handlers.end(); ++handler_it )
-			{
-				(*handler_it)( dest, (*diag_it) );
-			}
-		}
-	}
+size_t error_count(diag_chat const* chat, bool warning_as_error) {
+  size_t count = 0;
 
-	src->diags.clear();
-	return dest; 
+  for(auto const& diag: chat->items()) {
+	if (diag.level() == diag_levels::error || diag.level() == diag_levels::fatal_error) {
+      ++count;
+    } else if (warning_as_error && diag.level() == diag_levels::warning) {
+      ++count;
+    }
+  }
+
+  return count;
 }
 
-void diag_chat::restore()
-{
-	for(size_t i_diag = cursors.back(); i_diag < diags.size(); ++i_diag)
-	{
-		diags[i_diag]->release();
-	}
-	diags.resize( cursors.back() );
-	cursors.pop_back();
-}
-
-void diag_chat::save()
-{
-	cursors.push_back( diags.size() );
-}
-
-diag_chat::~diag_chat()
-{
-	for( vector<diag_item*>::iterator it = diags.begin(); it != diags.end(); ++it )
-	{
-		(*it)->release();
-	}
-}
-
-void diag_chat::commit( diag_item* diag )
-{
-	diags.push_back( diag );
-	for( vector<report_handler_fn>::iterator it = handlers.begin(); it != handlers.end(); ++it )
-	{
-		(*it)( this, diag );
-	}
-}
-
-vector<diag_item*> const& diag_chat::diag_items() const
-{
-	return diags;
-}
-
-void diag_chat::clear()
-{
-	for( vector<diag_item*>::iterator it = diags.begin(); it != diags.end(); ++it )
-	{
-		(*it)->release();
-	}
-	diags.clear();
-}
-
-
-diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
-	: item(item), chat(chat)
-{
-}
-
-diag_item_committer* diag_item_committer::file(string_view f)
-{
-	item->file(f);
-	return this;
-}
-
-diag_item_committer* diag_item_committer::span( code_span const& s )
-{
-	item->span(s);
-	return this;
-}
-
-diag_item_committer::~diag_item_committer()
-{
-	chat->commit(item);
-}
-
-diag_item_committer* diag_item_committer::eval()
-{
-	item->eval();
-	return this;
-}
-
-diag_item_committer* diag_item_committer::token_range( token_t const& beg, token_t const& end )
-{
-	item->file( beg.file_name );
-	item->span( beg, end );
-	return this;
-}
-
-size_t error_count( diag_chat* chat, bool warning_as_error )
-{
-	size_t count = 0;
-
-	for( size_t i_diag = 0; i_diag < chat->diag_items().size(); ++i_diag )
-	{
-		diag_item* diag = chat->diag_items()[i_diag];
-		if( diag->level() == dl_error || diag->level() == dl_fatal_error )
-		{
-			++count;
-		} 
-		else if( warning_as_error && diag->level() == dl_warning )
-		{
-			++count;
-		}
-	}
-
-	return count;
-}
-
-}
+} // namespace sasl::common

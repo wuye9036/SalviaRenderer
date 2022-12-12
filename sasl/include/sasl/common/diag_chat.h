@@ -1,90 +1,68 @@
 #pragma once
 
-#include <sasl/common/common_fwd.h>
+#include <sasl/common/token.h>
+#include <sasl/common/diag_item.h>
 
-#include <memory>
+#include <fmt/format.h>
+
 #include <functional>
-#include <vector>
+#include <memory>
 #include <string_view>
+#include <vector>
 
 namespace sasl::common {
 
-struct	token_t;
-class	diag_chat;
-class	diag_item;
-class	diag_template;
-struct	code_span;
+struct token_t;
+class diag_chat;
+class diag_item;
+struct code_span;
 
-typedef std::function<bool (diag_chat*, diag_item*)> report_handler_fn;
+using report_handler_fn = std::function<bool(diag_chat *, diag_item *)>;
 
-class diag_item_committer
-{
-public:
-	friend class diag_chat;
-	~diag_item_committer();
-
-	template <typename T>
-	diag_item_committer* p( T const& v )
-	{
-		(*item) % v;
-		return this;
-	}
-
-	diag_item_committer*	p(char const* v);
-
-	diag_item_committer*	eval();
-	diag_item_committer*	token_range(token_t const& beg, token_t const& end);
-	diag_item_committer*	file(std::string_view f);
-	diag_item_committer*	span(code_span const& s);
-
-private:
-	diag_item_committer( diag_item* item, diag_chat* chat );
-
-	diag_item_committer( diag_item_committer const& );
-	diag_item_committer& operator = ( diag_item_committer const& );
-
-	diag_item*	item;
-	diag_chat*	chat;
+struct diag_context {
+  std::string_view file_name;
+  code_span span;
 };
 
-class diag_chat
-{
+class diag_chat {
 public:
-	typedef std::unique_ptr<diag_item_committer> committer_pointer;
+  static std::shared_ptr<diag_chat> create();
+  static diag_chat *merge(diag_chat *dest, diag_chat *src,
+                          bool trigger_callback);
 
-	friend class diag_item_committer;
-	static std::shared_ptr<diag_chat> create();
-	static diag_chat* merge( diag_chat* dest, diag_chat* src, bool trigger_callback );
+  void add_report_raised_handler(report_handler_fn const &handler);
+  void report(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args);
 
-	void add_report_raised_handler( report_handler_fn const& handler );
-	committer_pointer report( diag_template const& tmpl );
-	
-	std::vector<diag_item*> const& diag_items() const;
-	void clear();
+  decltype(auto) items() const noexcept {
+    return (diags_);
+  }
+  void clear();
 
-	void save();
-	void restore();
+  void save();
+  void restore();
 
-	~diag_chat();
+  ~diag_chat();
+
 private:
-	void commit(diag_item* diag);
-	std::vector<report_handler_fn>	handlers;
-	std::vector<diag_item*>			diags;
-	std::vector<size_t>				cursors;
+  std::vector<report_handler_fn> handlers_;
+  std::vector<diag_item> diags_;
+  std::vector<size_t> cursors_;
 };
 
-class chat_scope
-{
+class chat_scope {
 public:
-	chat_scope(diag_chat* chat): chat(chat), need_save(false) { chat->save(); }
-	~chat_scope() { if(!need_save) chat->restore(); }
-	void save_new_diags(){ need_save = true; }
+  chat_scope(diag_chat *chat) : chat(chat), need_save(false) { chat->save(); }
+  ~chat_scope() {
+    if (!need_save)
+      chat->restore();
+  }
+  void save_new_diags() { need_save = true; }
+
 private:
-	bool		need_save;
-	diag_chat*	chat;
+  bool need_save;
+  diag_chat *chat;
 };
-// Functions
 
-size_t error_count( diag_chat* chat, bool warning_as_error );
+size_t error_count(diag_chat const* chat, bool warning_as_error);
 
-}
+} // namespace sasl::common
