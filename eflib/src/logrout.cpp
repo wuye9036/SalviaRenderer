@@ -1,4 +1,4 @@
-#include <eflib/include/diagnostics/logrout.h>
+#include <eflib/diagnostics/logrout.h>
 
 #include <stdio.h>
 

@@ -2,12 +2,12 @@
 #include <sasl/include/drivers/compiler_lib.h>
 #include <sasl/include/shims/ia_shim.h>
 #include <sasl/include/shims/interp_shim.h>
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/ManagedStatic.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
-#include <eflib/include/memory/atomic.h>
+#include <eflib/memory/atomic.h>
 
 class llvm_initializer
 {

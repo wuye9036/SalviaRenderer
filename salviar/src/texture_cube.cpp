@@ -5,7 +5,7 @@
 
 using std::make_shared;
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 using namespace eflib;
 

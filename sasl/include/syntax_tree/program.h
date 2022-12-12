@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
-#include <eflib/include/utility/enable_if.h>
+#include <eflib/utility/enable_if.h>
 
 #include <vector>
 #include <memory>

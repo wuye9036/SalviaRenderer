@@ -7,11 +7,11 @@
 
 #include <salviar/include/renderer.h>
 #include <salviar/include/index_fetcher.h>
-#include <eflib/include/memory/atomic.h>
+#include <eflib/memory/atomic.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <vector>
 #include <utility>

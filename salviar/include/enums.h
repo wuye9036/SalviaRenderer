@@ -2,8 +2,8 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/string/string.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/string/string.h>
 
 #include <string>
 

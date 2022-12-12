@@ -5,9 +5,9 @@
 #include <salviar/include/renderer.h>
 #include <salviar/include/mapped_resource.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/utility/addressof.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 #include <vector>

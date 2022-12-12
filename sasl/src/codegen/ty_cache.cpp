@@ -2,7 +2,7 @@
 
 #include <sasl/enums/enums_utility.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 constexpr int PACKAGE_SIZE = 16;
 constexpr int SIMD_WIDTH_IN_BYTES(){

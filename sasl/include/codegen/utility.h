@@ -3,9 +3,9 @@
 
 #include <sasl/include/codegen/forward.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/ADT/APInt.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #include <type_traits>
 

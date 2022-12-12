@@ -7,16 +7,16 @@
 #include <sasl/include/common/diag_item.h>
 #include <sasl/include/common/diag_formatter.h>
 
-#include <eflib/include/math/vector.h>
-#include <eflib/include/math/matrix.h>
-#include <eflib/include/utility/operator_bool.h>
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/platform/dl_loader.h>
+#include <eflib/math/vector.h>
+#include <eflib/math/matrix.h>
+#include <eflib/utility/operator_bool.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/platform/dl_loader.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/test/test_tools.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <vector>
 #include <memory>

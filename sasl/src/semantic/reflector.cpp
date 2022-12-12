@@ -10,7 +10,7 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <algorithm>
 

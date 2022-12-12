@@ -1,12 +1,12 @@
 #include <sasl/include/codegen/cg_extension.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/unref_declarator.h>
 #include <sasl/enums/enums_utility.h>
 #include <sasl/include/codegen/ty_cache.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Intrinsics.h>

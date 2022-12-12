@@ -7,8 +7,8 @@
 #include <sasl/enums/node_ids.h>
 #include <sasl/enums/type_qualifiers.h>
 
-#include <eflib/include/utility/enable_if.h>
-//#include <eflib/include/utility/util.h>
+#include <eflib/utility/enable_if.h>
+//#include <eflib/utility/util.h>
 
 #include <memory>
 #include <vector>

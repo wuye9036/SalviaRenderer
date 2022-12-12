@@ -9,11 +9,11 @@
 
 #include <salviar/include/shader_reflection.h>
 
-#include <eflib/include/math/math.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/math/math.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/CFG.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
@@ -21,11 +21,11 @@
 #include <llvm/IR/Module.h>
 
 #include <boost/lexical_cast.hpp>
-#include <eflib/include/platform/boost_begin.h>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_begin.h>
+#include <eflib/platform/boost_end.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/platform/cpuinfo.h>
 
 #include <unordered_map>
 

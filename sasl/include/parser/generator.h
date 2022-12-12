@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>
 
 #include <sasl/include/parser/parser_forward.h>
 

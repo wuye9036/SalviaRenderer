@@ -6,11 +6,11 @@
 #include <salviar/include/host.h>
 #include <salviar/include/shader_object.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/tuple/tuple.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 BEGIN_NS_SASL_HOST();
 

@@ -4,7 +4,7 @@
 
 #include <memory>
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 class compiler;
 std::shared_ptr<compiler> create_compiler();
-END_NS_SASL_DRIVERS();
+}

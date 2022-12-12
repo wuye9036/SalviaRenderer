@@ -22,8 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
 
-#include <eflib/include/math/quaternion.h>
-#include <eflib/include/math/math.h>
+#include <eflib/math/quaternion.h>
+#include <eflib/math/math.h>
 
 using namespace std;
 using namespace eflib;

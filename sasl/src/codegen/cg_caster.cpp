@@ -1,6 +1,6 @@
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/IR/IRBuilder.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 #include <sasl/include/codegen/cg_caster.h>
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/semantic/caster.h>
@@ -9,8 +9,8 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/unref_declarator.h>
 
 #include <vector>
 

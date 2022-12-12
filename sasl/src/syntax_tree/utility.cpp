@@ -7,12 +7,12 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/enable_if.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/enable_if.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/preprocessor.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <any>
 #include <vector>

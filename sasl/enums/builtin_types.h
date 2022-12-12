@@ -1,7 +1,7 @@
 #pragma once
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/utility/enum.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/enum.h>
 #include <functional>
 
 enum class builtin_types: uint32_t

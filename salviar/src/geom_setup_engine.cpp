@@ -6,8 +6,8 @@
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/shader_regs.h>
 
-#include <eflib/include/math/math.h>
-#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/math/math.h>
+#include <eflib/platform/cpuinfo.h>
 
 using std::atomic;
 using eflib::clampss;
@@ -15,7 +15,7 @@ using eflib::clampss;
 int const GEOMETRY_SETUP_PACKAGE_SIZE = 8;
 int const COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 geom_setup_engine::geom_setup_engine():
 	ctxt_(nullptr),

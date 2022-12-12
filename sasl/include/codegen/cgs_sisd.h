@@ -7,14 +7,14 @@
 #include <sasl/include/codegen/cgs.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/preprocessor/seq.hpp>
 #include <boost/preprocessor/for.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
-//#include <eflib/include/utility/util.h>
-#include <eflib/include/utility/enable_if.h>
-#include <eflib/include/diagnostics/assert.h>
+//#include <eflib/utility/util.h>
+#include <eflib/utility/enable_if.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <any>
 #include <memory>

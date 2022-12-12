@@ -5,11 +5,11 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/async_object.h>
 
-#include <eflib/include/memory/pool.h>
+#include <eflib/memory/pool.h>
 
 #include <memory>
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 struct vs_output_op;
 class  vs_output;

@@ -6,18 +6,18 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/include/codegen/cgs.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/DerivedTypes.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
 #include <boost/lexical_cast.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <vector>

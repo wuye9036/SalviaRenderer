@@ -1,6 +1,6 @@
 #include <salviar/include/binary_modules.h>
 
-#include <eflib/include/platform/dl_loader.h>
+#include <eflib/platform/dl_loader.h>
 
 #include <cassert>
 

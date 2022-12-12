@@ -8,8 +8,8 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/viewport.h>
 
-#include <eflib/include/math/collision_detection.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/math/collision_detection.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <vector>
 #include <memory>

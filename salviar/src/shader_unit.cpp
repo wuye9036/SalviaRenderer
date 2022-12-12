@@ -6,8 +6,8 @@
 #include <salviar/include/buffer.h>
 #include <salviar/include/stream_assembler.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/math/math.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/math/math.h>
 
 #include <memory>
 

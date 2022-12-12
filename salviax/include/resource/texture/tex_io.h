@@ -3,8 +3,8 @@
 #include <salviax/include/resource/resource_forward.h>
 #include <salviar/include/colors.h>
 #include <salviar/include/decl.h>
-#include <eflib/include/string/string.h>
-#include <eflib/include/math/math.h>
+#include <eflib/string/string.h>
+#include <eflib/math/math.h>
 
 #include <vector>
 

@@ -6,7 +6,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/shader_reflection.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 namespace salviar{
 

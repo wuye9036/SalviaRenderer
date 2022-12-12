@@ -1,6 +1,6 @@
 #include <salviax/include/resource/mesh/sa/skin_mesh_impl.h>
 
-#include <eflib/include/math/math.h>
+#include <eflib/math/math.h>
 
 using eflib::mat44;
 using std::vector;

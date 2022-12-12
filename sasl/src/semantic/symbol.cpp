@@ -9,17 +9,17 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/polymorphic_cast.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/polymorphic_cast.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 

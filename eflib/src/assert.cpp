@@ -1,10 +1,10 @@
-#include <eflib/include/platform/config.h>
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/common/initialize.h>
+#include <eflib/platform/config.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/common/initialize.h>
 
 #ifdef EFLIB_WINDOWS
 #	define EFLIB_INCLUDE_WINDOWS_H
-#	include <eflib/include/platform/win32.h>
+#	include <eflib/platform/win32.h>
 #endif
 
 #include <stdio.h>

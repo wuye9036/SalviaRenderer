@@ -11,11 +11,11 @@
 
 #include <salviar/include/shader_reflection.h>
 
-#include <eflib/include/math/math.h>
-#include <eflib/include/utility/polymorphic_cast.h>
+#include <eflib/math/math.h>
+#include <eflib/utility/polymorphic_cast.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/CFG.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>

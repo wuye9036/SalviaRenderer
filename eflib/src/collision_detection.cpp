@@ -1,5 +1,5 @@
-#include <eflib/include/math/collision_detection.h>
-#include <eflib/include/math/math.h>
+#include <eflib/math/collision_detection.h>
+#include <eflib/math/math.h>
 
 namespace eflib{
 	template<class T>

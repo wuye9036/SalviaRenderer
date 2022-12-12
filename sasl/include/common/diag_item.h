@@ -4,11 +4,11 @@
 #include <sasl/include/common/common_fwd.h>
 
 #include <sasl/include/common/token.h>
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <memory>

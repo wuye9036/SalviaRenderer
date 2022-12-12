@@ -1,7 +1,7 @@
 #define BOOST_TEST_MODULE @SASL_TEST_PROJECT_NAME@
 #define BOOST_TEST_NO_MAIN
 
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>
 
 #if defined(EFLIB_LINUX)
 //	We need alternative init API. It is default in Windows because DYN_LINK is enabled.
@@ -9,16 +9,16 @@
 #	define BOOST_TEST_ALTERNATIVE_INIT_API
 #endif
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/chrono.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #if defined(SASL_USE_LLVM)
 #	include <sasl/include/drivers/drivers_api.h>
 #endif
 
-#include <eflib/include/memory/lifetime_manager.h>
+#include <eflib/memory/lifetime_manager.h>
 
 #if defined(EFLIB_WINDOWS)
 #define NOMINMAX

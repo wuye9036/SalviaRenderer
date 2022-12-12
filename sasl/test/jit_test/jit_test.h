@@ -1,18 +1,18 @@
 #pragma once
 
-#include <eflib/include/utility/operator_bool.h>
-#include <eflib/include/math/vector.h>
-#include <eflib/include/math/matrix.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/operator_bool.h>
+#include <eflib/math/vector.h>
+#include <eflib/math/matrix.h>
+#include <eflib/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/sizeof.hpp>
 #include <boost/test/test_tools.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <functional>
 #include <type_traits>

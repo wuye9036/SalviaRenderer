@@ -10,9 +10,9 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
-#include <eflib/include/utility/unref_declarator.h>
-#include <eflib/include/diagnostics/profiler.h>
-#include <eflib/include/platform/main.h>
+#include <eflib/utility/unref_declarator.h>
+#include <eflib/diagnostics/profiler.h>
+#include <eflib/platform/main.h>
 
 #include <iostream>
 #include <fstream>

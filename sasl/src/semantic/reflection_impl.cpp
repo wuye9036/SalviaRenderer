@@ -6,8 +6,8 @@
 #include <sasl/include/host/utility.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/math/math.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/math/math.h>
 
 using namespace sasl::utility;
 

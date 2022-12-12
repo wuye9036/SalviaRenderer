@@ -1,7 +1,7 @@
 #ifndef SOFTART_TYPE_REGISTER_H
 #define SOFTART_TYPE_REGISTER_H
 
-#include <eflib/include/math/math.h>
+#include <eflib/math/math.h>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 
 	#define BEGIN_REGISTER_TYPE() "type_register.h"
@@ -13,7 +13,7 @@
 
 	#ifdef ENUM_AUTOGEN_ENABLE
 		#ifndef ENUM_TYPE_NAME
-			#error Need A Definition of ENUM_NAME_FOR_AUTOGEN£¡
+			#error Need A Definition of ENUM_NAME_FOR_AUTOGENï¿½ï¿½
 		#endif
 		#ifndef ENUM_ITEM_NAME_GEN
 			#error Need generator name of enumulation items via ENUM_ITEM_NAME_GEN
@@ -28,7 +28,7 @@
 		#define END_REGISTER_TYPE() "type_register.h"
 		#undef BEGIN_REGISTER_TYPE
 	#else
-		//ÓÉ#include END_REGISTER_TYPE()½øÀ´µÄ
+		//ï¿½ï¿½#include END_REGISTER_TYPE()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		#ifdef END_REGISTER_TYPE
 			
 			#ifdef BEGIN_REGISTER_TYPE

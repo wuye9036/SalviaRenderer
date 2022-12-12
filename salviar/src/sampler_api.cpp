@@ -2,7 +2,7 @@
 
 #include <salviar/include/sampler.h>
 
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/utility/unref_declarator.h>
 
 using salviar::sampler;
 using eflib::vec2;

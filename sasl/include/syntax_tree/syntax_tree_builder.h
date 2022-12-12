@@ -8,7 +8,7 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <memory>
 #include <unordered_map>

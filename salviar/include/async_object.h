@@ -3,8 +3,8 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/enums.h>
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <atomic>
 #include <mutex>

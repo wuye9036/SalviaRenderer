@@ -8,9 +8,9 @@
 
 #include <salviar/include/decl.h>
 
-#include <eflib/include/memory/allocator.h>
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/memory/allocator.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <string>
 #include <unordered_map>

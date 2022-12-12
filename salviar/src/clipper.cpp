@@ -4,7 +4,7 @@
 #include <salviar/include/shader_regs_op.h>
 #include <salviar/include/shader.h>
 
-#include <eflib/include/memory/pool.h>
+#include <eflib/memory/pool.h>
 
 #include <algorithm>
 

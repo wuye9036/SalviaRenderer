@@ -20,7 +20,7 @@
 #include <salviar/include/render_stages.h>
 #include <salviar/include/shader_cbuffer.h>
 
-#include <eflib/include/memory/atomic.h>
+#include <eflib/memory/atomic.h>
 
 #include <fstream>
 

@@ -7,10 +7,10 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 using sasl::syntax_tree::tynode;
 using sasl::syntax_tree::parameter;

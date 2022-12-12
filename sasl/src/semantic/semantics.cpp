@@ -9,11 +9,11 @@
 #include <sasl/enums/builtin_types.h>
 #include <salviar/include/shader.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/utility/string_ref.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <map>
 #include <unordered_map>

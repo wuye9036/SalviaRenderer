@@ -5,7 +5,7 @@
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 namespace salviar{
 

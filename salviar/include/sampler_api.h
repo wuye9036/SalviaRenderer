@@ -3,7 +3,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <eflib/include/math/vector.h>
+#include <eflib/math/vector.h>
 
 namespace salviar{
 

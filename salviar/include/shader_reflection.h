@@ -5,13 +5,13 @@
 
 #include <salviar/include/shader.h>
 
-#include <eflib/include/platform/cpuinfo.h>
-#include <eflib/include/string/ustring.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/platform/cpuinfo.h>
+#include <eflib/string/ustring.h>
+#include <eflib/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/enable_shared_from_this.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 #include <vector>
 
 namespace salviar{

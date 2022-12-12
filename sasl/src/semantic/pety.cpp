@@ -10,14 +10,14 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/polymorphic_cast.h>
-#include <eflib/include/utility/hash.h>
-#include <eflib/include/memory/atomic.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/polymorphic_cast.h>
+#include <eflib/utility/hash.h>
+#include <eflib/memory/atomic.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <unordered_map>

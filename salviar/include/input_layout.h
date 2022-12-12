@@ -6,7 +6,7 @@
 #include <salviar/include/format.h>
 #include <salviar/include/shader.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <vector>
 

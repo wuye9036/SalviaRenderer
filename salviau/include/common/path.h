@@ -1,7 +1,7 @@
 #pragma once
 
 #include <salviau/include/salviau_forward.h>
-#include <eflib/include/string/string.h>
+#include <eflib/string/string.h>
 #include <vector>
 
 BEGIN_NS_SALVIAU();

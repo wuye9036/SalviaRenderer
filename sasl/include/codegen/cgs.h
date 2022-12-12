@@ -10,8 +10,8 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/enable_if.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/enable_if.h>
 
 #include <functional>
 #include <type_traits>

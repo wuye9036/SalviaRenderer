@@ -5,7 +5,7 @@
 
 #include <sasl/include/shims/shims_forward.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <vector>
 #include <memory>

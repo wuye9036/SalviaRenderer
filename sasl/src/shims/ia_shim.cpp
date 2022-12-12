@@ -5,8 +5,8 @@
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/stream_assembler.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/hash.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/hash.h>
 
 #include <vector>
 #include <utility>

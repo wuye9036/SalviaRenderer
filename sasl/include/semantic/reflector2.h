@@ -4,8 +4,8 @@
 
 #include <salviar/include/shader.h>
 
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/string/ustring.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/string/ustring.h>
 
 #include <memory>
 

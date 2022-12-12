@@ -11,7 +11,7 @@
 #include <salviar/include/shader_impl.h>
 #include <salviar/include/shader_unit.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 namespace eflib
 {

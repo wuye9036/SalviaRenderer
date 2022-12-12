@@ -3,8 +3,8 @@
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/parser/diags.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/string/ustring.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/string/ustring.h>
 
 using sasl::common::diag_chat;
 using sasl::common::code_span;
@@ -19,7 +19,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 
 std::unordered_map<void*, compiler_code_source*> compiler_code_source::ctxt_to_source;
 
@@ -433,4 +433,4 @@ void fixes_file_end_with_newline( std::string& content )
 #endif
 }
 
-END_NS_SASL_DRIVERS();
+}

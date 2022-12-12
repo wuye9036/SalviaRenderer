@@ -3,9 +3,9 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/preprocessor/cat.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <any>
 

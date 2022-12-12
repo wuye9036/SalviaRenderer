@@ -3,8 +3,8 @@
 
 #include <salviax/include/resource/resource_forward.h>
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <memory>
 #include <string>

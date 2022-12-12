@@ -9,8 +9,8 @@
 #include <salviar/include/stream_state.h>
 #include <salviar/include/shader_cbuffer.h>
 
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/math/vector.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/math/vector.h>
 
 namespace salviar{
 

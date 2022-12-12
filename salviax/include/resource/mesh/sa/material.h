@@ -3,7 +3,7 @@
 
 #include <salviax/include/resource/resource_forward.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 #include <salviax/include/resource/mesh/sa/mesh.h>
 #include <string>
 

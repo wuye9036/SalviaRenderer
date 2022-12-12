@@ -6,9 +6,9 @@
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <fstream>
 

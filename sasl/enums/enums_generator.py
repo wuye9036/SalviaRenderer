@@ -33,8 +33,8 @@ void register_enum_name( std::function<void (char const*, %(typename)s)> const& 
 header_file_tmpl = \
 """#pragma once
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/utility/enum.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/enum.h>
 #include <functional>
 
 %(enum_type_declare)s

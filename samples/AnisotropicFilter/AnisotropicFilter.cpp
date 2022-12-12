@@ -17,7 +17,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/tex_io.h>
 
-#include <eflib/include/platform/main.h>
+#include <eflib/platform/main.h>
 
 #include <vector>
 #include <cmath>

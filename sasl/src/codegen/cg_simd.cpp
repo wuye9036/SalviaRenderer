@@ -12,17 +12,17 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
-#include <eflib/include/utility/unref_declarator.h>
-#include <eflib/include/utility/scoped_value.h>
+#include <eflib/utility/unref_declarator.h>
+#include <eflib/utility/scoped_value.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 using sasl::utility::to_builtin_types;
 using namespace sasl::syntax_tree;

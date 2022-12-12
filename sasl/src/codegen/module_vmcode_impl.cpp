@@ -2,9 +2,9 @@
 
 #include <sasl/include/semantic/reflector.h>
 
-#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/platform/cpuinfo.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/ADT/Triple.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -16,7 +16,7 @@
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #include <string>
 #include <vector>

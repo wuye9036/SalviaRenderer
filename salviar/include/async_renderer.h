@@ -5,7 +5,7 @@
 
 #include <salviar/include/renderer.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <any>
 #include <vector>

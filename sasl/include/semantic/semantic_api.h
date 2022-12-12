@@ -3,9 +3,9 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 namespace sasl{
 	namespace syntax_tree{

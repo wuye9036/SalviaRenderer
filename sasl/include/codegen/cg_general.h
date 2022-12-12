@@ -7,11 +7,11 @@
 #include <sasl/include/syntax_tree/visitor.h>
 #include <sasl/include/semantic/reflector.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #include <memory>
 #include <functional>

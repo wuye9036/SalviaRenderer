@@ -4,7 +4,7 @@
 
 #include <salviar/include/enums.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <memory>
 #include <functional>

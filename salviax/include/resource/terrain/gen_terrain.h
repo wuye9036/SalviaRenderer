@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <vector>
 #include <memory>

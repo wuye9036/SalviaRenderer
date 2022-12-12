@@ -28,7 +28,7 @@ Modify Log:
 #define SALVIAX_MESH_IO_H
 
 #include <salviax/include/resource/mesh/sa/mesh.h>
-#include <eflib/include/math/vector.h>
+#include <eflib/math/vector.h>
 #include <vector>
 
 namespace salviax::resource{

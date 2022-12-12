@@ -12,7 +12,7 @@
 #include <salviax/include/resource/terrain/gen_terrain.h>
 
 #include <salviau/include/common/sample_app.h>
-#include <eflib/include/platform/main.h>
+#include <eflib/platform/main.h>
 
 #include <vector>
 

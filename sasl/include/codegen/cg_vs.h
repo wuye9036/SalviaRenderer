@@ -5,9 +5,9 @@
 
 #include <sasl/include/semantic/reflection_impl.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/utility/value_init.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <memory>
 

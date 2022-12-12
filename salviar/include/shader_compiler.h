@@ -3,10 +3,10 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <map>
 

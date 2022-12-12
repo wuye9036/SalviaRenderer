@@ -4,7 +4,7 @@
 #include <sasl/include/drivers/drivers_forward.h>
 
 #include <salviar/include/shader_impl.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <functional>
 #include <tuple>
@@ -39,7 +39,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 
 typedef std::function<
 	bool/*succeed*/ (
@@ -75,6 +75,6 @@ public:
 	virtual ~compiler(){}
 };
 
-END_NS_SASL_DRIVERS();
+}
 
 #endif

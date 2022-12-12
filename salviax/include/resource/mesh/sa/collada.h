@@ -4,13 +4,13 @@
 #include <salviax/include/resource/resource_forward.h>
 
 #include <salviar/include/shader_reflection.h>
-#include <eflib/include/math/matrix.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/math/matrix.h>
+#include <eflib/utility/shared_declaration.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/optional.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <vector>

@@ -15,7 +15,7 @@
 #include <salviau/include/common/sample_app.h>
 #include <salviau/include/common/path.h>
 
-#include <eflib/include/platform/main.h>
+#include <eflib/platform/main.h>
 
 #include <vector>
 

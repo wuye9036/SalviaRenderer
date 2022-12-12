@@ -1,8 +1,8 @@
 #include <salviax/include/resource/font/font.h>
 
 #include <salviar/include/surface.h>
-#include <eflib/include/string/string.h>
-#include <eflib/include/math/collision_detection.h>
+#include <eflib/string/string.h>
+#include <eflib/math/collision_detection.h>
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftglyph.h>

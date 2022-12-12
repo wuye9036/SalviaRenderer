@@ -4,7 +4,7 @@
 #include <salviar/include/shader_regs.h>
 #include <salviar/include/shader.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 using namespace salviar;
 using namespace sasl::shims;

@@ -6,7 +6,7 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/format.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 namespace salviar{
 

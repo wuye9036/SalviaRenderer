@@ -1,5 +1,5 @@
-#include <eflib/include/math/quaternion.h>
-#include <eflib/include/math/math.h>
+#include <eflib/math/quaternion.h>
+#include <eflib/math/math.h>
 namespace eflib{
 
 	quaternion::quaternion(){

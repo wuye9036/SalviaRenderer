@@ -2,8 +2,8 @@
 
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/render_core.h>
-#include <eflib/include/memory/bounded_buffer.h>
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/memory/bounded_buffer.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <memory>
 #include <mutex>
@@ -11,7 +11,7 @@
 
 using std::vector;
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 

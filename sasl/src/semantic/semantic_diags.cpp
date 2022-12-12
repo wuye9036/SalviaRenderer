@@ -3,7 +3,7 @@
 #include <sasl/include/syntax_tree/declaration.h>
 
 #include <sasl/enums/enums_utility.h>
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <sstream>
 

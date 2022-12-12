@@ -2,7 +2,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 #include <algorithm>
 #include <cassert>

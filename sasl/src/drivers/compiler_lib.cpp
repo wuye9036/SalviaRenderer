@@ -3,9 +3,9 @@
 
 using std::shared_ptr;
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 shared_ptr<compiler> create_compiler()
 {
 	return shared_ptr<compiler>( new compiler_impl() );
 }
-END_NS_SASL_DRIVERS();
+}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/include/platform/dl_sym_vis.h>
+#include <eflib/platform/dl_sym_vis.h>
 
 #define BEGIN_NS_SALVIAU()	namespace salviau{
 #define END_NS_SALVIAU()	}

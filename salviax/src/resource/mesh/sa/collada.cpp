@@ -1,8 +1,8 @@
 #include <salviax/include/resource/mesh/sa/collada.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/algorithm/string.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <sstream>
 #include <memory>

@@ -1,28 +1,28 @@
 #define ALL_TESTS_ENABLED 1
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/test/unit_test.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <gtest/gtest.h>
 
 #include <sasl/test/jit_test/jit_test.h>
 #include <salviar/include/shader_reflection.h>
-#include <eflib/include/platform/cpuinfo.h>
-#include <eflib/include/diagnostics/profiler.h>
-#include <eflib/include/memory/allocator.h>
-#include <eflib/include/platform/intrin.h>
+#include <eflib/platform/cpuinfo.h>
+#include <eflib/diagnostics/profiler.h>
+#include <eflib/memory/allocator.h>
+#include <eflib/platform/intrin.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <iostream>
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
-using namespace eflib;
+
 using std::cout;
 using std::endl;
 using std::numeric_limits;
+
+using namespace eflib;
 
 constexpr int SIMD_ALIGNMENT{ 32 };
 constexpr float RELATIVE_TORLERANCE_NORMAL{ 0.0001f };

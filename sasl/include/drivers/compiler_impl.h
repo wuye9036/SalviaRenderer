@@ -4,9 +4,9 @@
 
 #include <sasl/include/drivers/compiler.h>
 #include <sasl/include/drivers/options.h>
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 
 class null_compiler: public compiler
 {
@@ -160,4 +160,4 @@ private:
 	virtual_file_dict			virtual_files;
 };
 
-END_NS_SASL_DRIVERS();
+}

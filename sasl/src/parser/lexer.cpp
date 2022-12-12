@@ -2,13 +2,13 @@
 
 #include <sasl/include/common/token.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/spirit/include/lex.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
-#include <eflib/include/utility/hash.h>
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/utility/hash.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <unordered_set>
 

@@ -10,13 +10,13 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
-#include <eflib/include/utility/unref_declarator.h>
-#include <eflib/include/diagnostics/profiler.h>
-#include <eflib/include/platform/main.h>
+#include <eflib/utility/unref_declarator.h>
+#include <eflib/diagnostics/profiler.h>
+#include <eflib/platform/main.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/assign.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <iostream>
 #include <fstream>

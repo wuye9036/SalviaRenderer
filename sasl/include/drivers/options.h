@@ -6,9 +6,9 @@
 
 #include <salviar/include/shader.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/program_options.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <vector>
@@ -25,7 +25,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 
 namespace po = boost::program_options;
 
@@ -150,6 +150,6 @@ private:
 	static char const* sysincl_desc;
 };
 
-END_NS_SASL_DRIVERS();
+}
 
 #endif

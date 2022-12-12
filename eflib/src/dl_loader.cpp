@@ -1,4 +1,4 @@
-#include <eflib/include/platform/dl_loader.h>
+#include <eflib/platform/dl_loader.h>
 
 #ifdef EFLIB_WINDOWS
 #	if !defined NOMINMAX

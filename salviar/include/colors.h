@@ -1,14 +1,14 @@
 #ifndef SALVIAR_COLOR_H
 #define SALVIAR_COLOR_H
 
-#include <eflib/include/math/math.h>
-#include <eflib/include/math/vector.h>
+#include <eflib/math/math.h>
+#include <eflib/math/vector.h>
 
 #include <salviar/include/salviar_forward.h>
 
 #include <type_traits>
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 using eflib::round;
 

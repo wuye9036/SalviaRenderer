@@ -1,0 +1,32 @@
+{
+    "version": 4,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "msvc_x64_rel",
+            "displayName": "msvc_x64_rel",
+            "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "../salvia.${presetName}.build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_TOOLCHAIN_FILE":  "E:/Code/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_INSTALL_PREFIX": "../salvia.${presetName}.install",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
+                "Boost_NO_WARN_NEW_VERSIONS": "1"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "msvc_x64_rel",
+            "configuration": "RelWithDebInfo"
+        }
+    ]
+}

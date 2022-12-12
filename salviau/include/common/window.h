@@ -3,9 +3,9 @@
 
 #include <salviau/include/salviau_forward.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/signals2.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <any>
 #include <functional>

@@ -3,7 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
 #include <type_traits>
 #include <unordered_map>

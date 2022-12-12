@@ -4,12 +4,12 @@
 
 #include <salviar/include/enums.h>
 
-#include <eflib/include/memory/atomic.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/memory/atomic.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <boost/shared_array.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #include <vector>
 

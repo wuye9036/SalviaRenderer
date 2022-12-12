@@ -7,7 +7,7 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/surface.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <vector>
 #include <algorithm>

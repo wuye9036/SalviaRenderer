@@ -1,9 +1,9 @@
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>
 #include <sasl/include/drivers/compiler.h>
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_formatter.h>
-#include <eflib/include/platform/dl_loader.h>
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/platform/dl_loader.h>
+#include <eflib/diagnostics/assert.h>
 
 using sasl::drivers::compiler;
 using sasl::common::diag_chat;

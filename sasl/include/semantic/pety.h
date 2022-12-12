@@ -6,9 +6,9 @@
 #include <sasl/enums/operators.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/string/ustring.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/string/ustring.h>
 
 #include <vector>
 #include <memory>

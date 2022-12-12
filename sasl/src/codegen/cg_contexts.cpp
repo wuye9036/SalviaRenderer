@@ -1,13 +1,13 @@
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/codegen/cgs.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
 #include <boost/unordered_map.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 using sasl::syntax_tree::node;
 using std::unordered_map;

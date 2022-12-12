@@ -7,16 +7,16 @@
 #include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/common/diag_chat.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <fstream>
 
 using sasl::codegen::module_vmcode;
 using std::fstream;
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 {
 	reinterpret_cast<void (*)(void*, void*, void*, void*)>(callee)( psi, pbi, pso, pbo );
@@ -33,7 +33,7 @@ bool print_diagnostic( diag_chat*, diag_item* item )
 	return true;
 }
 
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 void jit_fixture::init_g( string const& file_name )
 {

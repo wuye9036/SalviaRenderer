@@ -7,7 +7,7 @@
 
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <memory>
 #include <unordered_map>

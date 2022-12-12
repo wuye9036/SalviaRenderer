@@ -1,13 +1,13 @@
-#include <eflib/include/platform/config.h>
-#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/platform/config.h>
+#include <eflib/platform/cpuinfo.h>
 
-#include <eflib/include/thread_pool/threadpool.h>
+#include <eflib/thread_pool/threadpool.h>
 
 #include <salviar/include/salviar_forward.h>
 
 using eflib::num_available_threads;
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 eflib::thread_pool& global_thread_pool()
 {

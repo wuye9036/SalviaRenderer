@@ -3,7 +3,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/renderer.h>
 
-#include <eflib/include/platform/intrin.h>
+#include <eflib/platform/intrin.h>
 
 namespace salviar{
 

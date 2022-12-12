@@ -8,9 +8,9 @@
 #include <salviar/include/render_state.h>
 #include <salviar/include/stream_state.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/range/iterator_range.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 using namespace eflib;
 

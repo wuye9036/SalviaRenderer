@@ -10,12 +10,12 @@
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/texture.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/predef.h>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #if defined(EFLIB_WINDOWS)
 #	include <Windows.h>

@@ -7,11 +7,11 @@
 #include <salviar/include/buffer.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/renderer.h>
-#include <eflib/include/math/math.h>
+#include <eflib/math/math.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/algorithm/string/replace.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <fstream>
 #include <cstring>

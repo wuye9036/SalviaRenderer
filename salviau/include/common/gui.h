@@ -1,7 +1,7 @@
 #pragma once
 
 #include <salviau/include/salviau_forward.h>
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 BEGIN_NS_SALVIAU();
 

@@ -1,3 +1,3 @@
 #pragma once
 
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>

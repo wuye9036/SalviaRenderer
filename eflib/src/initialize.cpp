@@ -1,4 +1,4 @@
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 namespace eflib{
 	namespace detail{

@@ -2,12 +2,12 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/math/math.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/math/math.h>
 
 #include <array>
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 namespace shader_constant
 {

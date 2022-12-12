@@ -1,7 +1,7 @@
 #pragma once
 
 #include <salviar/include/salviar_forward.h>
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 namespace salviar{
 

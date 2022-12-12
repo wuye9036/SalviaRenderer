@@ -9,12 +9,12 @@
 
 #include <salviar/include/shader_reflection.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/utility/addressof.hpp>
 #include <boost/icl/interval_map.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 

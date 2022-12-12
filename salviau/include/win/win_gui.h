@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>
 
 #include <salviau/include/salviau_forward.h>
 #include <salviau/include/common/gui.h>

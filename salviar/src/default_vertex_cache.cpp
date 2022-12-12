@@ -1,4 +1,4 @@
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>
 
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/stream_assembler.h>
@@ -13,9 +13,9 @@
 #include <salviar/include/async_object.h>
 #include <salviar/include/shader_unit.h>
 
-#include <eflib/include/platform/cpuinfo.h>
-#include <eflib/include/memory/pool.h>
-#include <eflib/include/memory/allocator.h>
+#include <eflib/platform/cpuinfo.h>
+#include <eflib/memory/pool.h>
+#include <eflib/memory/allocator.h>
 
 #include <atomic>
 #include <memory>
@@ -33,7 +33,7 @@ using std::shared_ptr;
 
 using std::vector;
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;

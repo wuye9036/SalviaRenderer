@@ -3,13 +3,13 @@
 
 #include <sasl/include/codegen/forward.h>
 
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #include <vector>
 

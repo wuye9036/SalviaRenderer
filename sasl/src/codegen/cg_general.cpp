@@ -17,12 +17,12 @@
 
 #include <salviar/include/enums.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 

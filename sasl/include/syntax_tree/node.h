@@ -5,7 +5,7 @@
 #include <sasl/include/common/token.h>
 #include <sasl/enums/node_ids.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <any>
 #include <vector>

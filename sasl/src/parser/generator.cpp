@@ -7,14 +7,14 @@
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_item.h>
 
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/preprocessor.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 #include <iostream>
 #include <fstream>

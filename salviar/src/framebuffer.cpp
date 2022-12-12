@@ -6,7 +6,7 @@
 #include <salviar/include/render_state.h>
 #include <salviar/include/renderer.h>
 
-#include <eflib/include/math/collision_detection.h>
+#include <eflib/math/collision_detection.h>
 
 #include <algorithm>
 

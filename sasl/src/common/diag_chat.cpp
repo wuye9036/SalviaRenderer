@@ -1,7 +1,7 @@
 #include <sasl/include/common/diag_chat.h>
 
 #include <sasl/include/common/diag_item.h>
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 using eflib::fixed_string;
 using std::unique_ptr;

@@ -6,7 +6,7 @@
 #include <salviar/include/async_object.h>
 #include <salviar/include/surface.h>
 #include <salviar/include/renderer.h>
-#include <eflib/include/diagnostics/profiler.h>
+#include <eflib/diagnostics/profiler.h>
 
 #include <string>
 #include <vector>

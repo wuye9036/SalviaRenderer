@@ -4,7 +4,7 @@
 #include <salviar/include/sampler.h>
 #include <salviar/include/internal_mapped_resource.h>
 
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/utility/unref_declarator.h>
 
 #include <vector>
 #include <memory>

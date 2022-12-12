@@ -1,8 +1,8 @@
 #include <sasl/include/drivers/options.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 using boost::to_lower;
 
@@ -11,7 +11,7 @@ using std::pair;
 using std::string;
 using std::vector;
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 
 // options filter
 void options_filter::reg_extra_parser( po::basic_command_line_parser<char>& ){
@@ -195,5 +195,5 @@ void options_includes::filterate( po::variables_map const & /*vm*/ )
 	return;
 }
 
-END_NS_SASL_DRIVERS();
+}
 

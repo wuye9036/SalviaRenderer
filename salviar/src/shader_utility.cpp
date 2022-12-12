@@ -1,6 +1,6 @@
 #include <salviar/include/shader_utility.h>
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 namespace shader_constant
 {

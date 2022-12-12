@@ -5,8 +5,8 @@
 #include <salviar/include/decl.h>
 #include <salviar/include/enums.h>
 
-#include <eflib/include/memory/pool.h>
-#include <eflib/include/math/math.h>
+#include <eflib/memory/pool.h>
+#include <eflib/math/math.h>
 
 #include <array>
 #include <vector>

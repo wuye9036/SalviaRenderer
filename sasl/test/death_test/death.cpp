@@ -1,8 +1,8 @@
 #define ALL_TESTS_ENABLED 1
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <sasl/include/drivers/drivers_api.h>
 #include <sasl/include/codegen/cg_api.h>
@@ -12,14 +12,14 @@
 #include <sasl/include/common/diag_chat.h>
 #include <salviar/include/shader_reflection.h>
 
-#include <eflib/include/math/vector.h>
-#include <eflib/include/math/matrix.h>
+#include <eflib/math/vector.h>
+#include <eflib/math/matrix.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
-#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/platform/cpuinfo.h>
 
 #include <fstream>
 #include <iostream>

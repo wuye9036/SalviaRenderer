@@ -2,7 +2,7 @@
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
 
-#include <eflib/include/diagnostics/assert.h>
+#include <eflib/diagnostics/assert.h>
 
 using namespace std;
 using namespace eflib;

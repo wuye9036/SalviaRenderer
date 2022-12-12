@@ -2,8 +2,8 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/include/math/math.h>
-#include <eflib/include/utility/enum.h>
+#include <eflib/math/math.h>
+#include <eflib/utility/enum.h>
 
 #include <mutex>
 

@@ -1,5 +1,5 @@
-#include <eflib/include/diagnostics/profiler.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/profiler.h>
+#include <eflib/utility/unref_declarator.h>
 
 #include <cassert>
 #include <iostream>

@@ -3,7 +3,7 @@
 
 #include <sasl/include/common/common_fwd.h>
 
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
 BEGIN_NS_SASL_COMMON();
 

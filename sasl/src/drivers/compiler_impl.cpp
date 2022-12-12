@@ -17,14 +17,14 @@
 
 #include <salviar/include/shader_impl.h>
 
-#include <eflib/include/diagnostics/profiler.h>
-#include <eflib/include/string/ustring.h>
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/platform/intrin.h>
+#include <eflib/diagnostics/profiler.h>
+#include <eflib/string/ustring.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/platform/intrin.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/program_options.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <memory>
 #include <fstream>
@@ -59,7 +59,7 @@ using std::endl;
 using std::ostream;
 using std::ofstream;
 
-BEGIN_NS_SASL_DRIVERS();
+namespace sasl::drivers {
 
 template <typename ParserT>
 bool compiler_impl::parse( ParserT& parser )
@@ -548,4 +548,4 @@ null_compiler::null_compiler()
 
 }
 
-END_NS_SASL_DRIVERS();
+}

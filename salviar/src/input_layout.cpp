@@ -1,15 +1,15 @@
 #include <salviar/include/input_layout.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/range/iterator_range.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 #include <memory>
 
 using std::make_shared;
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 void input_layout::slot_range( size_t& min_slot, size_t& max_slot ) const{
 	min_slot = std::numeric_limits<size_t>::max();

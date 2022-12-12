@@ -1,4 +1,4 @@
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 #include <salviau/include/common/timer.h>
 
 BEGIN_NS_SALVIAU();

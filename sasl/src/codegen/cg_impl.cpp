@@ -14,23 +14,23 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/scoped_value.h>
-#include <eflib/include/utility/polymorphic_cast.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/scoped_value.h>
+#include <eflib/utility/polymorphic_cast.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Host.h>
 #include <llvm/MC/TargetRegistry.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <memory>
 #include <vector>

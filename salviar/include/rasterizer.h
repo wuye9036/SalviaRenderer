@@ -10,9 +10,9 @@
 #include <salviar/include/geom_setup_engine.h>
 #include <salviar/include/async_object.h>
 
-#include <eflib/include/memory/atomic.h>
-#include <eflib/include/memory/pool.h>
-#include <eflib/include/memory/allocator.h>
+#include <eflib/memory/atomic.h>
+#include <eflib/memory/pool.h>
+#include <eflib/memory/allocator.h>
 
 #include <array>
 #include <functional>

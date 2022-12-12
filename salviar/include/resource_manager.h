@@ -6,7 +6,7 @@
 #include <salviar/include/texture.h>
 #include <salviar/include/internal_mapped_resource.h>
 
-#include <eflib/include/memory/allocator.h>
+#include <eflib/memory/allocator.h>
 
 #include <vector>
 

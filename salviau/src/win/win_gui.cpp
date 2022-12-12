@@ -3,12 +3,12 @@
 #include <salviau/src/win/resource.h>
 #include <salviau/include/common/window.h>
 
-#include <eflib/include/platform/constant.h>
-#include <eflib/include/string/string.h>
+#include <eflib/platform/constant.h>
+#include <eflib/string/string.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/signals2.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <sstream>

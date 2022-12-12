@@ -7,7 +7,7 @@
 #include <salviar/include/shader_object.h>
 #include <salviar/include/async_renderer.h>
 
-#include <eflib/include/platform/dl_loader.h>
+#include <eflib/platform/dl_loader.h>
 
 #include <vector>
 #include <string>

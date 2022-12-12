@@ -6,10 +6,10 @@
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/string/ustring.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/string/ustring.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 #include <any>
 #include <vector>

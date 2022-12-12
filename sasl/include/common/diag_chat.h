@@ -3,7 +3,7 @@
 
 #include <sasl/include/common/common_fwd.h>
 
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
 #include <memory>
 #include <functional>

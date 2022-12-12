@@ -7,7 +7,7 @@
 #include <salviar/include/colors.h>
 #include <salviar/include/renderer_capacity.h>
 
-#include <eflib/include/math/collision_detection.h>
+#include <eflib/math/collision_detection.h>
 
 #include <vector>
 

@@ -6,7 +6,7 @@
 #include <sasl/include/codegen/cgs.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 #include <memory>
 #include <any>

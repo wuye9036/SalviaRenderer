@@ -6,12 +6,12 @@
 #include <sasl/include/codegen/cg_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/utility/enable_if.h>
+#include <eflib/utility/enable_if.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/ADT/APInt.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #include <functional>
 #include <type_traits>

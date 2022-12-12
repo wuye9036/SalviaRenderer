@@ -1,6 +1,6 @@
 #include <salviau/include/common/path.h>
 
-#include <eflib/include/string/string.h>
+#include <eflib/string/string.h>
 
 #include <filesystem>
 

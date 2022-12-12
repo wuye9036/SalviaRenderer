@@ -24,6 +24,7 @@
       "boost-wave",
       "freeimage",
       "freetype",
+      "gtest",
       {
         "name": "llvm",
         "default-features": false,

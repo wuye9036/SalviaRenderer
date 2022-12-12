@@ -4,7 +4,7 @@
 #include <salviar/include/colors.h>
 #include <salviar/include/colors_convertors.h>
 #include <salviar/include/enums.h>
-#include <eflib/include/math/collision_detection.h>
+#include <eflib/math/collision_detection.h>
 
 #include <memory>
 #include <functional>

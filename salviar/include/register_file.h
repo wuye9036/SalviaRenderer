@@ -2,8 +2,8 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <eflib/include/memory/vls.h>
-#include <eflib/include/math/vector.h>
+#include <eflib/memory/vls.h>
+#include <eflib/math/vector.h>
 
 #include <utility>
 #include <type_traits>

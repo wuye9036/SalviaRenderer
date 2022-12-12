@@ -4,7 +4,7 @@
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/semantic/reflection_impl.h>
 
-#include <eflib/include/string/ustring.h>
+#include <eflib/string/ustring.h>
 
 namespace llvm
 {

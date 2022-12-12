@@ -1,7 +1,7 @@
 #pragma once
 
 #include <salviax/include/salviax_forward.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 namespace salviar
 {

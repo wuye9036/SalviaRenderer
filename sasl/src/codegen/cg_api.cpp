@@ -11,8 +11,8 @@
 
 #include <salviar/include/enums.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/shared_declaration.h>
 
 namespace sasl::codegen {
 

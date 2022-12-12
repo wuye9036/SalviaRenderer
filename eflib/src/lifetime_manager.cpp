@@ -1,4 +1,4 @@
-#include <eflib/include/memory/lifetime_manager.h>
+#include <eflib/memory/lifetime_manager.h>
 
 #include <cassert>
 

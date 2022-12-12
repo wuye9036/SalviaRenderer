@@ -6,7 +6,7 @@
 #include <sasl/include/semantic/elem_indexes.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/utility/operator_bool.h>
+#include <eflib/utility/operator_bool.h>
 
 #include <memory>
 #include <functional>
@@ -236,14 +236,16 @@ private:
 
 struct insert_point_t{
 	insert_point_t();
-	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != nullptr; }
+	explicit operator bool() const noexcept { return block != nullptr; }
 	llvm::BasicBlock* block;
 };
 
 struct cg_function{
 	cg_function();
 
-	EFLIB_OPERATOR_BOOL( cg_function ){ return nullptr != fn; }
+	explicit operator bool()( cg_function ) const noexcept {
+		return nullptr != fn; 
+	}
 
 	/// Get argument's value by index.
 	multi_value arg(size_t logical_index) const;

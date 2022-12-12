@@ -5,8 +5,8 @@
 
 #include <sasl/include/drivers/compiler.h>
 
-#include <eflib/include/utility/shared_declaration.h>
-#include <eflib/include/platform/dl_sym_vis.h>
+#include <eflib/utility/shared_declaration.h>
+#include <eflib/platform/dl_sym_vis.h>
 
 #include <string>
 #include <memory>

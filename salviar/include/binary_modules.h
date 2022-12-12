@@ -5,7 +5,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <vector>
 #include <string>

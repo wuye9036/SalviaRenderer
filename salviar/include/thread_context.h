@@ -3,12 +3,12 @@
 #include <salviar/include/salviar_forward.h>
 #include <salviar/include/thread_pool.h>
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/platform/cpuinfo.h>
 
 #include <atomic>
 
-BEGIN_NS_SALVIAR()
+namespace salviar {
 
 struct thread_context
 {

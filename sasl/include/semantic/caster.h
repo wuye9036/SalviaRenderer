@@ -5,12 +5,12 @@
 
 #include <sasl/include/semantic/pety.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/bimap.hpp>
 #include <boost/multi_index_container.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
-#include <eflib/include/utility/hash.h>
+#include <eflib/utility/hash.h>
 
 #include <tuple>
 #include <unordered_map>

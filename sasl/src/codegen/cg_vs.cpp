@@ -14,15 +14,15 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/host/utility.h>
 #include <sasl/enums/enums_utility.h>
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/platform/disable_warnings.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/DataLayout.h>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/platform/enable_warnings.h>
 
 #define SASL_VISITOR_TYPE_NAME cg_vs
 

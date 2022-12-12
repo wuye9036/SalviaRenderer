@@ -18,16 +18,16 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/shader_reflection.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/utility/scoped_value.h>
-#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/scoped_value.h>
+#include <eflib/utility/unref_declarator.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <memory>
 

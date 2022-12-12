@@ -4,8 +4,8 @@
 #include <salviax/include/utility/utility_forward.h>
 
 #include <salviar/include/colors.h>
-#include <eflib/include/string/string.h>
-#include <eflib/include/math/collision_detection.h>
+#include <eflib/string/string.h>
+#include <eflib/math/collision_detection.h>
 
 #include <FreeImage.h>
 

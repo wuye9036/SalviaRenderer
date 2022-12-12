@@ -4,9 +4,9 @@
 
 #include <salviar/include/enums.h>
 
-#include <eflib/include/platform/typedefs.h>
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/memory/allocator.h>
+#include <eflib/platform/typedefs.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/memory/allocator.h>
 
 
 #include <vector>

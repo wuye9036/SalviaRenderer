@@ -1,6 +1,6 @@
 #include <salviar/include/resource_data.h>
 
-#include <eflib/include/math/math.h>
+#include <eflib/math/math.h>
 
 namespace salviar{
 
