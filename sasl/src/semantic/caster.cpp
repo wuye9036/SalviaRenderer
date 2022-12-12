@@ -1,11 +1,11 @@
-#include <sasl/include/semantic/caster.h>
+#include <sasl/semantic/caster.h>
 
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/node.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/type_checker.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/node.h>
 
-BEGIN_NS_SASL_SEMANTIC()
+namespace sasl::semantic {
 
 using namespace ::sasl::syntax_tree;
 using namespace ::std;
@@ -244,4 +244,4 @@ void caster_t::set_function_get_semantic( get_semantic_fn fn )
 	get_semantic_ = fn;
 }
 
-END_NS_SASL_SEMANTIC()
+}

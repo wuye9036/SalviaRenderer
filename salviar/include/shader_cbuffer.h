@@ -44,8 +44,8 @@ public:
 		eflib::fixed_string, sampler_ptr
 	> sampler_table;
 
-	virtual void set_sampler(eflib::fixed_string const& name, sampler_ptr const& samp);
-	virtual void set_variable(eflib::fixed_string const& name, void const* data, size_t data_length);
+	virtual void set_sampler(std::string_view name, sampler_ptr const& samp);
+	virtual void set_variable(std::string_view name, void const* data, size_t data_length);
 	
 	variable_table const&	variables() const
 	{

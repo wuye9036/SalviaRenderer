@@ -1,7 +1,7 @@
 #include <eflib/platform/config.h>
-#include <sasl/include/drivers/compiler.h>
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/common/diag_formatter.h>
+#include <sasl/drivers/compiler.h>
+#include <sasl/common/diag_chat.h>
+#include <sasl/common/diag_formatter.h>
 #include <eflib/platform/dl_loader.h>
 #include <eflib/diagnostics/assert.h>
 

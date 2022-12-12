@@ -1,9 +1,9 @@
-#include <sasl/include/codegen/cg_simd.h>
+#include <sasl/codegen/cg_simd.h>
 
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/utility.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/codegen/utility.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/syntax_tree/declaration.h>
 
 #include <sasl/enums/enums_utility.h>
 

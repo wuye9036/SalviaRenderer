@@ -42,11 +42,12 @@ SET_SOURCE_FILES_PROPERTIES(
 	PROPERTIES GENERATED 1
 )
 
-ADD_LIBRARY( sasl_enums STATIC 
+add_library( sasl_enums STATIC 
 	enums_utility.h enums_utility.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/enums.cmake
 	${code_fullpath}
 	enums_generator.py
 )
+target_link_libraries(sasl_enums eflib fmt::fmt)
 
 SET_TARGET_PROPERTIES( sasl_enums PROPERTIES FOLDER "Shader Libs")

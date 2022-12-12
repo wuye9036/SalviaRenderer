@@ -1,7 +1,7 @@
-#include <sasl/include/drivers/code_sources.h>
+#include <sasl/drivers/code_sources.h>
 
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/parser/diags.h>
+#include <sasl/common/diag_chat.h>
+#include <sasl/parser/diags.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/string/ustring.h>
@@ -136,7 +136,7 @@ void compiler_code_source::report_wave_pp_exception(
 	}
 }
 
-fixed_string const& compiler_code_source::file_name() const
+string_view compiler_code_source::file_name() const
 {
 	assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end() );
 

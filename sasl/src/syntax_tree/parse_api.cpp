@@ -1,9 +1,9 @@
-#include <sasl/include/syntax_tree/parse_api.h>
+#include <sasl/syntax_tree/parse_api.h>
 
-#include <sasl/include/parser/parse_api.h>
-#include <sasl/include/parser/lexer.h>
-#include <sasl/include/parser/grammars.h>
-#include <sasl/include/syntax_tree/syntax_tree_builder.h>
+#include <sasl/parser/parse_api.h>
+#include <sasl/parser/lexer.h>
+#include <sasl/parser/grammars.h>
+#include <sasl/syntax_tree/syntax_tree_builder.h>
 
 using sasl::common::code_source;
 using sasl::common::lex_context;
@@ -14,7 +14,7 @@ using sasl::parser::grammars;
 
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 void init_lex( lexer& l ){
 	l.add_pattern
@@ -202,5 +202,5 @@ shared_ptr<program> parse( code_source* src, shared_ptr<lex_context> ctxt, diag_
 	return shared_ptr<program>();
 }
 
-END_NS_SASL_SYNTAX_TREE();
+}
 

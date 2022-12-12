@@ -1,14 +1,14 @@
-#include <sasl/include/common/diag_chat.h>
+#include <sasl/common/diag_chat.h>
 
-#include <sasl/include/common/diag_item.h>
+#include <sasl/common/diag_item.h>
 #include <eflib/diagnostics/assert.h>
 
-using eflib::fixed_string;
 using std::unique_ptr;
 using std::shared_ptr;
+using std::string_view;
 using std::vector;
 
-BEGIN_NS_SASL_COMMON();
+namespace sasl::common {
 
 diag_item_committer* diag_item_committer::p(char const* v)
 {
@@ -104,7 +104,7 @@ diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
 {
 }
 
-diag_item_committer* diag_item_committer::file(fixed_string const& f)
+diag_item_committer* diag_item_committer::file(string_view f)
 {
 	item->file(f);
 	return this;
@@ -154,4 +154,4 @@ size_t error_count( diag_chat* chat, bool warning_as_error )
 	return count;
 }
 
-END_NS_SASL_COMMON();
+}

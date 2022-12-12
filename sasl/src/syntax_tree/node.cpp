@@ -1,8 +1,8 @@
-#include <sasl/include/syntax_tree/node.h>
+#include <sasl/syntax_tree/node.h>
 
 using namespace boost;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 EFLIB_USING_SHARED_PTR(sasl::semantic, node_semantic);
 EFLIB_USING_SHARED_PTR(sasl::semantic, symbol);
@@ -39,4 +39,4 @@ void node::token_range(token_t_ptr const& beg, token_t_ptr const& end)
 	this->tok_end = end;
 }
 
-END_NS_SASL_SYNTAX_TREE();
+}

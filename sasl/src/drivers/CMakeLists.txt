@@ -15,7 +15,7 @@ LINK_DIRECTORIES(
 # Configure Dynamic Link Driver.
 add_library( sasl_drivers
 	SHARED
-	${SASL_HOME_DIR}/sasl/include/drivers/drivers_api.h
+	${SASL_HOME_DIR}/sasl/drivers/drivers_api.h
 	drivers_api.cpp
 	)
 	
@@ -55,14 +55,14 @@ install(
 )
 # Configure Static Link Driver.
 set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/drivers/drivers_forward.h
+	${SASL_HOME_DIR}/sasl/drivers/drivers_forward.h
 	
-	${SASL_HOME_DIR}/sasl/include/drivers/options.h
-	${SASL_HOME_DIR}/sasl/include/drivers/compiler_lib.h
-	${SASL_HOME_DIR}/sasl/include/drivers/compiler.h
-	${SASL_HOME_DIR}/sasl/include/drivers/compiler_diags.h
-	${SASL_HOME_DIR}/sasl/include/drivers/compiler_impl.h
-	${SASL_HOME_DIR}/sasl/include/drivers/code_sources.h
+	${SASL_HOME_DIR}/sasl/drivers/options.h
+	${SASL_HOME_DIR}/sasl/drivers/compiler_lib.h
+	${SASL_HOME_DIR}/sasl/drivers/compiler.h
+	${SASL_HOME_DIR}/sasl/drivers/compiler_diags.h
+	${SASL_HOME_DIR}/sasl/drivers/compiler_impl.h
+	${SASL_HOME_DIR}/sasl/drivers/code_sources.h
 )
 
 set( SOURCE_FILES

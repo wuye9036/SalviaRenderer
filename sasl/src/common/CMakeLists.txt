@@ -1,17 +1,18 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
-
-set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/common/common_fwd.h
-	${SASL_HOME_DIR}/sasl/include/common/diag_chat.h
-	${SASL_HOME_DIR}/sasl/include/common/diag_item.h
-	${SASL_HOME_DIR}/sasl/include/common/diag_formatter.h
-	${SASL_HOME_DIR}/sasl/include/common/lex_context.h
-	${SASL_HOME_DIR}/sasl/include/common/token.h
+set( HEADER_LIST
+	../../include/sasl/common/common_fwd.h
+	../../include/sasl/common/diag_chat.h
+	../../include/sasl/common/diag_item.h
+	../../include/sasl/common/diag_formatter.h
+	../../include/sasl/common/lex_context.h
+	../../include/sasl/common/token.h
 )
 
-set( SOURCE_FILES diag_chat.cpp diag_item.cpp token.cpp diag_formatter.cpp)
+set( SOURCE_LIST diag_chat.cpp diag_item.cpp token.cpp diag_formatter.cpp)
 
-SASL_CONFIG_LIBRARY( sasl_common )
+add_library(sasl_common ${HEADER_LIST} ${SOURCE_LIST})
+target_include_directories(sasl_common PUBLIC ../../include)
+target_link_libraries(sasl_common eflib fmt::fmt)
+target_compile_features(sasl_common PUBLIC cxx_std_20)
 
-target_link_libraries(sasl_common EFLIB)
+set_target_properties(sasl_common PROPERTIES FOLDER "Shader Libs")
 

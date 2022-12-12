@@ -1,19 +1,19 @@
-#include <sasl/include/drivers/compiler_impl.h>
+#include <sasl/drivers/compiler_impl.h>
 
-#include <sasl/include/drivers/compiler_diags.h>
-#include <sasl/include/drivers/code_sources.h>
-#include <sasl/include/drivers/options.h>
+#include <sasl/drivers/compiler_diags.h>
+#include <sasl/drivers/code_sources.h>
+#include <sasl/drivers/options.h>
 
-#include <sasl/include/codegen/cg_api.h>
-#include <sasl/include/semantic/semantic_api.h>
-#include <sasl/include/semantic/reflector.h>
-#include <sasl/include/semantic/reflector2.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/parser/parse_api.h>
-#include <sasl/include/parser/diags.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/common/diag_chat.h>
+#include <sasl/codegen/cg_api.h>
+#include <sasl/semantic/semantic_api.h>
+#include <sasl/semantic/reflector.h>
+#include <sasl/semantic/reflector2.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/parser/parse_api.h>
+#include <sasl/parser/diags.h>
+#include <sasl/syntax_tree/program.h>
+#include <sasl/common/diag_chat.h>
 
 #include <salviar/include/shader_impl.h>
 
@@ -492,7 +492,7 @@ salviar::shader_reflection2_ptr compiler_impl::get_reflection2() const
 	return mreflection2;
 }
 
-void compiler_impl::inject_function(void* pfn, fixed_string const& fn_name, bool is_raw_name )
+void compiler_impl::inject_function(void* pfn, string_view fn_name, bool is_raw_name )
 {
 	eflib::fixed_string raw_name;
 	if( is_raw_name )

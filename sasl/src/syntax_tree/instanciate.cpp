@@ -1,10 +1,10 @@
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/node_creation.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/program.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/node_creation.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/program.h>
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 using sasl::common::token_t;
 
@@ -18,4 +18,4 @@ void instantiate(){
 	create_node<parameter>( token_t::null(), token_t::null() );
 }
 
-END_NS_SASL_SYNTAX_TREE();
+}

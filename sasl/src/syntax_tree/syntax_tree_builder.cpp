@@ -1,11 +1,11 @@
-#include <sasl/include/syntax_tree/syntax_tree_builder.h>
+#include <sasl/syntax_tree/syntax_tree_builder.h>
 
-#include <sasl/include/syntax_tree/utility.h>
-#include <sasl/include/syntax_tree/node_creation.h>
+#include <sasl/syntax_tree/utility.h>
+#include <sasl/syntax_tree/node_creation.h>
 
-#include <sasl/include/parser/lexer.h>
-#include <sasl/include/parser/generator.h>
-#include <sasl/include/parser/grammars.h>
+#include <sasl/parser/lexer.h>
+#include <sasl/parser/generator.h>
+#include <sasl/parser/grammars.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/diagnostics/assert.h>
@@ -34,7 +34,7 @@ using std::make_pair;
 using std::string;
 using std::vector;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 #define SASL_DYNCAST_ATTRIBUTE( type, dest, src ) \
 	shared_ptr< type > dest = dynamic_pointer_cast<type>(src);
@@ -1260,4 +1260,4 @@ shared_ptr<builtin_type> syntax_tree_builder::get_builtin( std::shared_ptr<sasl:
 	return ret;
 }
 
-END_NS_SASL_SYNTAX_TREE()
+}

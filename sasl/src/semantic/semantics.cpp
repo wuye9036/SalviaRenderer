@@ -1,11 +1,11 @@
-#include <sasl/include/semantic/semantics.h>
+#include <sasl/semantic/semantics.h>
 
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/pety.h>
-#include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/common/diag_chat.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/pety.h>
+#include <sasl/syntax_tree/node.h>
+#include <sasl/syntax_tree/program.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/common/diag_chat.h>
 #include <sasl/enums/builtin_types.h>
 #include <salviar/include/shader.h>
 
@@ -83,7 +83,7 @@ string_ref split_real_literal_suffix(string_ref str, bool& is_single)
 	return is_single ? str.substr(0, str.length()-1) : str;
 }
 
-BEGIN_NS_SASL_SEMANTIC()
+namespace sasl::semantic {
 
 class module_semantic_impl: public module_semantic
 {
@@ -522,4 +522,4 @@ module_semantic_ptr module_semantic::create()
 	return make_shared<module_semantic_impl>();
 }
 
-END_NS_SASL_SEMANTIC();
+}

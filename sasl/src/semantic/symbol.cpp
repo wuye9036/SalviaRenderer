@@ -1,12 +1,12 @@
-#include <sasl/include/semantic/symbol.h>
+#include <sasl/semantic/symbol.h>
 
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/caster.h>
-#include <sasl/include/semantic/semantic_diags.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/node.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/type_checker.h>
+#include <sasl/semantic/caster.h>
+#include <sasl/semantic/semantic_diags.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/node.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/diagnostics/assert.h>
@@ -28,7 +28,7 @@ using eflib::fixed_string;
 using namespace std;
 
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 
 using sasl::common::diag_chat;
 using sasl::syntax_tree::expression;
@@ -51,7 +51,7 @@ symbol* symbol::create_root(module_semantic* owner, node* root_node){
 	return create(owner, nullptr, root_node);
 }
 
-symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node, fixed_string const& mangled)
+symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node, string_view mangled)
 {
 	assert( owner->get_symbol(assoc_node) == nullptr );
 	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, nullptr, &mangled);
@@ -73,13 +73,13 @@ symbol::symbol(module_semantic* owner, symbol* parent, node* assoc_node, fixed_s
 {
 }
 
-symbol* symbol::find_this( fixed_string const& mangled ) const
+symbol* symbol::find_this( string_view mangled ) const
 {
 	named_children_dict::const_iterator iter = named_children_.find(mangled);
 	return iter == named_children_.end() ? nullptr : iter->second;
 }
 
-symbol* symbol::find( fixed_string const& mangled ) const
+symbol* symbol::find( string_view mangled ) const
 {
 	symbol* ret = find_this(mangled);
 	if (ret) {	return ret; }
@@ -87,7 +87,7 @@ symbol* symbol::find( fixed_string const& mangled ) const
 	return parent_->find(mangled);
 }
 
-symbol::symbol_array symbol::find_overloads(fixed_string const& unmangled) const
+symbol::symbol_array symbol::find_overloads(string_view unmangled) const
 {
 	overload_dict::const_iterator it = overloads_.find(unmangled);
 	if( it != overloads_.end() )
@@ -221,7 +221,7 @@ void symbol::associated_node( node* v )
 	associated_node_ = v;
 }
 
-fixed_string const& symbol::mangled_name() const{
+string_view symbol::mangled_name() const{
 	if( mangled_name_.empty() )
 	{
 		// TODO Unavailable until function type is finished.
@@ -238,7 +238,7 @@ fixed_string const& symbol::mangled_name() const{
 	return mangled_name_;
 }
 
-fixed_string const& symbol::unmangled_name() const
+string_view symbol::unmangled_name() const
 {
 	return unmangled_name_;
 }
@@ -358,7 +358,7 @@ bool get_deprecated_and_next( symbol* const& sym, symbol* const* begin_addr, vec
 }
 
 symbol::symbol_array symbol::find_overloads_impl(
-	fixed_string const& unmangled, caster_t* conv, expression_array const& args) const
+	string_view unmangled, caster_t* conv, expression_array const& args) const
 {
 	// find all overloads_
 	symbol_array overloads_ = find_overloads(unmangled);
@@ -471,7 +471,7 @@ symbol::symbol_array symbol::find_overloads_impl(
 	return candidates;
 }
 
-symbol::overload_position symbol::get_overload_position(eflib::fixed_string const& name)
+symbol::overload_position symbol::get_overload_position(std::string_view name)
 {
 	overload_dict::iterator iter = overloads_.find(name);
 	if( iter != overloads_.end() )
@@ -507,4 +507,4 @@ module_semantic* symbol::owner() const
 	return owner_;
 }
 
-END_NS_SASL_SEMANTIC();
+}

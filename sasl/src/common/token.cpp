@@ -1,36 +1,35 @@
-#include <sasl/include/common/token.h>
+#include <sasl/common/token.h>
 
-using eflib::fixed_string;
 using std::shared_ptr;
 using std::make_shared;
+using std::string_view;
 
-BEGIN_NS_SASL_COMMON();
+namespace sasl::common {
 
-token_t::token_t(): str("UNINITIALIZED_VALUE"), end_of_file(false)
+token_t::token_t(): s("UNINITIALIZED_VALUE"), end_of_file(false)
 {
 }
 
-token_t::token_t(const token_t& rhs) : file_name(rhs.file_name), span(rhs.span), str(rhs.str), id(rhs.id), end_of_file(rhs.end_of_file)
+token_t::token_t(const token_t& rhs) : file_name(rhs.file_name), span(rhs.span), s(rhs.s), id(rhs.id), end_of_file(rhs.end_of_file)
 {
 }
 
 std::shared_ptr<token_t> token_t::make(
-	size_t id, eflib::fixed_string const& str,
-	size_t line, size_t col, eflib::fixed_string const& fname
+	size_t id, std::string_view s,
+	size_t line, size_t col, std::string_view fname
 	)
 {
 	std::shared_ptr<token_t> ret = std::make_shared<token_t>();
 	ret->id = id;
-	ret->str = str;
+	ret->s = s;
 	ret->file_name = fname;
 	ret->span.set( line, col, 0 );
 	ret->end_of_file = false;
 
 	size_t cur_line = line;
 	size_t cur_col = col;
-	for(fixed_string::const_iterator it = str.begin(); it != str.end(); ++it)
+	for(auto ch: s)
 	{
-		char ch = *it;
 		if( ch == '\n' ){
 			++cur_line;
 			cur_col = 1;
@@ -54,7 +53,7 @@ token_t& token_t::operator=( const token_t& rhs )
 {
 	file_name = rhs.file_name;
 	span = rhs.span;
-	str = rhs.str;
+	s = rhs.s;
 	end_of_file = rhs.end_of_file;
 	id = rhs.id;
 	return *this;
@@ -65,7 +64,7 @@ shared_ptr<token_t> token_t::null()
 	return shared_ptr<token_t>();
 }
 
-shared_ptr<token_t> token_t::from_string(fixed_string const& str)
+shared_ptr<token_t> token_t::from_string(string_view str)
 {
 	return shared_ptr<token_t>( new token_t(str.begin(), str.end()) );
 }
@@ -124,4 +123,4 @@ void code_span::set( size_t line_beg, size_t col_beg, size_t length )
 	this->col_end  = col_beg + length;
 }
 
-END_NS_SASL_COMMON();
+}

@@ -1,4 +1,4 @@
-#include <sasl/include/codegen/cg_intrins.h>
+#include <sasl/codegen/cg_intrins.h>
 
 #include <eflib/platform/disable_warnings.h>
 #include <llvm/IR/Intrinsics.h>

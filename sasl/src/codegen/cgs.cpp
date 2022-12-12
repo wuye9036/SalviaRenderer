@@ -1,13 +1,13 @@
-#include <sasl/include/codegen/cgs.h>
+#include <sasl/codegen/cgs.h>
 
 #include <sasl/enums/enums_utility.h>
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/module_vmcode_impl.h>
-#include <sasl/include/codegen/ty_cache.h>
-#include <sasl/include/codegen/utility.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/codegen/module_vmcode_impl.h>
+#include <sasl/codegen/ty_cache.h>
+#include <sasl/codegen/utility.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/syntax_tree/declaration.h>
 
 #include <salviar/include/shader_reflection.h>
 

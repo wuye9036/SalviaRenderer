@@ -5,31 +5,31 @@ set( ADDITIONAL_INCLUDE_DIRECTORIES
 	)
 	
 set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/codegen/utility.h
-	${SASL_HOME_DIR}/sasl/include/codegen/ty_cache.h
-	${SASL_HOME_DIR}/sasl/include/codegen/generate_entry.h
+	${SASL_HOME_DIR}/sasl/codegen/utility.h
+	${SASL_HOME_DIR}/sasl/codegen/ty_cache.h
+	${SASL_HOME_DIR}/sasl/codegen/generate_entry.h
 	
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_extension.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cgs.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cgs_objects.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cgs_sisd.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cgs_simd.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_extension.h
+	${SASL_HOME_DIR}/sasl/codegen/cgs.h
+	${SASL_HOME_DIR}/sasl/codegen/cgs_objects.h
+	${SASL_HOME_DIR}/sasl/codegen/cgs_sisd.h
+	${SASL_HOME_DIR}/sasl/codegen/cgs_simd.h
 	
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_api.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_api.h
 	
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_impl.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_impl.imp.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_sisd.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_general.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_vs.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_simd.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_ps.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_impl.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_impl.imp.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_sisd.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_general.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_vs.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_simd.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_ps.h
 	
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_contexts.h
-	${SASL_HOME_DIR}/sasl/include/codegen/module_vmcode_impl.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_caster.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_intrins.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_type_builder.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_contexts.h
+	${SASL_HOME_DIR}/sasl/codegen/module_vmcode_impl.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_caster.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_intrins.h
+	${SASL_HOME_DIR}/sasl/codegen/cg_type_builder.h
 )
 
 set( SOURCE_FILES

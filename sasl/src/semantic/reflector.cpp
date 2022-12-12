@@ -1,11 +1,11 @@
-#include <sasl/include/semantic/reflector.h>
+#include <sasl/semantic/reflector.h>
 
-#include <sasl/include/semantic/reflection_impl.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_diags.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/common/diag_chat.h>
+#include <sasl/semantic/reflection_impl.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/semantic_diags.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/common/diag_chat.h>
 
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
@@ -37,7 +37,7 @@ using std::lower_bound;
 using std::string;
 using std::vector;
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 
 bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem )
 {
@@ -130,7 +130,7 @@ sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::seman
 class reflector
 {
 public:
-	reflector(module_semantic* sem, eflib::fixed_string const& entry_name, diag_chat* diags)
+	reflector(module_semantic* sem, std::string_view entry_name, diag_chat* diags)
 		: sem_(sem), current_entry_(nullptr), reflection_(nullptr), entry_name_(entry_name), diags_(diags)
 	{
 	}
@@ -331,11 +331,11 @@ reflection_impl_ptr reflect(module_semantic_ptr const& sem, diag_chat* diags)
 
 reflection_impl_ptr reflect(
 	module_semantic_ptr const& sem,
-	eflib::fixed_string const& entry_name,
+	std::string_view entry_name,
 	diag_chat* diags )
 {
 	reflector rfl(sem.get(), entry_name, diags);
 	return rfl.reflect();
 }
 
-END_NS_SASL_SEMANTIC();
+}

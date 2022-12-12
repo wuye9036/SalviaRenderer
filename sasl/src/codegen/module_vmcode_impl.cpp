@@ -1,6 +1,6 @@
-#include <sasl/include/codegen/module_vmcode_impl.h>
+#include <sasl/codegen/module_vmcode_impl.h>
 
-#include <sasl/include/semantic/reflector.h>
+#include <sasl/semantic/reflector.h>
 
 #include <eflib/platform/cpuinfo.h>
 
@@ -44,7 +44,7 @@ struct llvm_options
 
 namespace sasl::codegen {
 
-module_vmcode_impl::module_vmcode_impl(fixed_string const& name)
+module_vmcode_impl::module_vmcode_impl(string_view name)
 {
 	vm_ctx_		= std::make_unique<llvm::LLVMContext>();
 	ir_builder_ = std::make_unique<llvm::DefaultIRBuilder>(*vm_ctx_);
@@ -126,7 +126,7 @@ void module_vmcode_impl::set_context( shared_ptr<module_context> const& v )
 	ctxt_ = v;
 }
 
-void* module_vmcode_impl::get_function(fixed_string const& func_name)
+void* module_vmcode_impl::get_function(string_view func_name)
 {
 	if (!finalized_)
 	{
@@ -144,7 +144,7 @@ void* module_vmcode_impl::get_function(fixed_string const& func_name)
 	return native_func;
 }
 
-void module_vmcode_impl::inject_function(void* pfn, fixed_string const& name)
+void module_vmcode_impl::inject_function(void* pfn, string_view name)
 {
 	llvm::sys::DynamicLibrary::AddSymbol(name.raw_string(), pfn);
 	return;

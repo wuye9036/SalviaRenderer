@@ -1,13 +1,13 @@
-#include <sasl/include/host/shader_object_impl.h>
+#include <sasl/host/shader_object_impl.h>
 
-#include <sasl/include/semantic/reflection_impl.h>
-#include <sasl/include/codegen/cg_api.h>
+#include <sasl/semantic/reflection_impl.h>
+#include <sasl/codegen/cg_api.h>
 
 using namespace salviar;
 using namespace sasl::semantic;
 using namespace sasl::codegen;
 
-BEGIN_NS_SASL_HOST();
+namespace sasl::host() {
 
 shader_object_impl::shader_object_impl()
 	:entry_(nullptr)
@@ -49,4 +49,4 @@ void shader_object_impl::set_vm_code(module_vmcode_ptr const& vmcode)
 	module_vmc_ = vmcode;
 }
 
-END_NS_SASL_HOST();
+}

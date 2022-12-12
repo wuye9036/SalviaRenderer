@@ -1,18 +1,18 @@
-#include <sasl/include/host/host_impl.h>
+#include <sasl/host/host_impl.h>
 
-#include <sasl/include/shims/ia_shim.h>
-#include <sasl/include/shims/interp_shim.h>
+#include <sasl/shims/ia_shim.h>
+#include <sasl/shims/interp_shim.h>
 
-#include <sasl/include/host/shader_object_impl.h>
-#include <sasl/include/host/shader_log_impl.h>
-#include <sasl/include/host/shader_unit_impl.h>
+#include <sasl/host/shader_object_impl.h>
+#include <sasl/host/shader_log_impl.h>
+#include <sasl/host/shader_unit_impl.h>
 
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/common/diag_item.h>
-#include <sasl/include/common/diag_formatter.h>
-#include <sasl/include/drivers/drivers_api.h>
-#include <sasl/include/codegen/cg_api.h>
-#include <sasl/include/semantic/reflection_impl.h>
+#include <sasl/common/diag_chat.h>
+#include <sasl/common/diag_item.h>
+#include <sasl/common/diag_formatter.h>
+#include <sasl/drivers/drivers_api.h>
+#include <sasl/codegen/cg_api.h>
+#include <sasl/semantic/reflection_impl.h>
 
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/stream_assembler.h>
@@ -46,7 +46,7 @@ using namespace sasl::host;
 using namespace sasl::semantic;
 using namespace sasl::shims;
 
-BEGIN_NS_SASL_HOST();
+namespace sasl::host() {
 
 host_impl::host_impl()
 {
@@ -196,7 +196,7 @@ size_t host_impl::vs_output_attr_count() const
 	return vx_shader_ ? vx_shader_->get_reflection()->layouts_count(su_buffer_out) - 1 : 0;
 }
 
-bool host_impl::vx_update_constant(fixed_string const& name, void const* value, size_t sz)
+bool host_impl::vx_update_constant(string_view name, void const* value, size_t sz)
 {
 	if(!vx_shader_) return false;
 	sv_layout* layout = vx_shader_->get_reflection()->input_sv_layout(name);
@@ -205,19 +205,19 @@ bool host_impl::vx_update_constant(fixed_string const& name, void const* value, 
 	return true;
 }
 
-bool host_impl::vx_update_constant_pointer(fixed_string const& name, void const* pvalue)
+bool host_impl::vx_update_constant_pointer(string_view name, void const* pvalue)
 {
 	void const* array_ptr[2] = {pvalue, pvalue};
 	return vx_update_constant(name, &(array_ptr[0]), sizeof(void const*));
 }
 
-bool host_impl::vx_update_sampler(fixed_string const& name, sampler_ptr const& samp)
+bool host_impl::vx_update_sampler(string_view name, sampler_ptr const& samp)
 {
 	sampler* psamp = samp.get();
 	return vx_update_constant(name, &psamp, sizeof(void*));
 }
 
-END_NS_SASL_HOST();
+}
 
 using namespace sasl::host;
 using namespace salviar;

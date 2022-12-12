@@ -1,4 +1,4 @@
-#include <sasl/include/host/shader_unit_impl.h>
+#include <sasl/host/shader_unit_impl.h>
 
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/shader_regs.h>
@@ -9,7 +9,7 @@
 using namespace salviar;
 using namespace sasl::shims;
 
-BEGIN_NS_SASL_HOST();
+namespace sasl::host() {
 
 vx_shader_unit_impl::vx_shader_unit_impl(
 	ia_shim_func_ptr	shim_func,
@@ -83,4 +83,4 @@ void vx_shader_unit_impl::execute(size_t ivert, vs_output& out)
 		);
 }
 
-END_NS_SASL_HOST();
+}

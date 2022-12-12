@@ -1,19 +1,19 @@
-#include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/semantic/semantic_analyser.h>
 
 #include <sasl/enums/operators.h>
 
-#include <sasl/include/semantic/semantic_diags.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/caster.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/utility.h>
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/syntax_tree/node_creation.h>
+#include <sasl/semantic/semantic_diags.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/type_checker.h>
+#include <sasl/semantic/caster.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/program.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/utility.h>
+#include <sasl/common/diag_chat.h>
+#include <sasl/syntax_tree/node_creation.h>
 
 #include <salviar/include/enums.h>
 #include <salviar/include/shader_reflection.h>
@@ -31,7 +31,7 @@
 
 #include <memory>
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 
 using salviar::semantic_value;
 
@@ -2181,7 +2181,7 @@ void semantic_analyser::register_builtin_functions2()
 }
 
 void semantic_analyser::register_function2(
-	fixed_string const& name,
+	string_view name,
 	vector<size_t> const& proto_indexes,
 	vector<proto_info> const& protos,
 	bool is_intrinsic,
@@ -2389,4 +2389,4 @@ semantic_analyser::parameter_lrvs::parameter_lrvs(
 	param_lrvs[2] = lrv_p2;
 }
 
-END_NS_SASL_SEMANTIC();
+}

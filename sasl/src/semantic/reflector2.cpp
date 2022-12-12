@@ -1,8 +1,8 @@
-#include <sasl/include/semantic/reflector2.h>
+#include <sasl/semantic/reflector2.h>
 
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/syntax_tree/declaration.h>
 
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
@@ -38,7 +38,7 @@ using std::pair;
 using std::make_pair;
 using std::deque;
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(reflector2);
 EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl2);
@@ -428,7 +428,7 @@ private:
 class reflector2
 {
 public:
-	reflector2(module_semantic* sem, eflib::fixed_string const& entry_name)
+	reflector2(module_semantic* sem, std::string_view entry_name)
 		: sem_(sem), current_entry_(nullptr), reflection_(nullptr), entry_name_(entry_name)
 	{
 	}
@@ -769,10 +769,10 @@ salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem)
 	return rfl.reflect();
 }
 
-salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
+salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, std::string_view entry_name)
 {
 	reflector2 rfl( sem.get(), entry_name );
 	return rfl.reflect();
 }
 
-END_NS_SASL_SEMANTIC();
+}

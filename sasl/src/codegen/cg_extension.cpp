@@ -1,9 +1,9 @@
-#include <sasl/include/codegen/cg_extension.h>
+#include <sasl/codegen/cg_extension.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/unref_declarator.h>
 #include <sasl/enums/enums_utility.h>
-#include <sasl/include/codegen/ty_cache.h>
+#include <sasl/codegen/ty_cache.h>
 
 #include <eflib/platform/disable_warnings.h>
 #include <eflib/platform/enable_warnings.h>

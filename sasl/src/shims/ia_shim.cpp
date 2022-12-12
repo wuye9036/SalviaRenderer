@@ -1,4 +1,4 @@
-#include <sasl/include/shims/ia_shim.h>
+#include <sasl/shims/ia_shim.h>
 
 #include <salviar/include/input_layout.h>
 #include <salviar/include/shader.h>
@@ -15,7 +15,7 @@ using namespace salviar;
 using std::vector;
 using std::make_pair;
 
-BEGIN_NS_SASL_SHIMS();
+namespace sasl::shims() {
 
 size_t hash_value(ia_shim_key const& key)
 {
@@ -74,4 +74,4 @@ void common_ia_shim(void* output_buffer, ia_shim_data const* mapping, size_t ive
 	}
 }
 
-END_NS_SASL_SHIMS();
+}

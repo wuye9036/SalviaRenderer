@@ -6,6 +6,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(SALVIA_HOME_DIR ${CMAKE_HOME_DIRECTORY})
 
 # Configure dependencies
+find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(freeimage CONFIG REQUIRED)
 include (cmake/IncludeBoost.cmake)
@@ -16,7 +17,7 @@ add_subdirectory( cmake )
 
 # Add projects
 add_subdirectory(eflib)
-# add_subdirectory(sasl)
+add_subdirectory(sasl)
 # add_subdirectory(salviar)
 # add_subdirectory(salviax)
 # add_subdirectory(salviau)

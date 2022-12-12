@@ -1,7 +1,7 @@
-#include <sasl/include/parser/grammars.h>
+#include <sasl/parser/grammars.h>
 
-#include <sasl/include/parser/error_handlers.h>
-#include <sasl/include/parser/lexer.h>
+#include <sasl/parser/error_handlers.h>
+#include <sasl/parser/lexer.h>
 
 #define STERM( name ) terminal( lxr.get_id( #name ), #name )
 #define STERM2( name, desc ) terminal( lxr.get_id( #name ), desc )

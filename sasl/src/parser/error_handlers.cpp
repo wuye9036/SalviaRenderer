@@ -1,7 +1,7 @@
-#include <sasl/include/parser/error_handlers.h>
-#include <sasl/include/parser/diags.h>
-#include <sasl/include/parser/generator.h>
-#include <sasl/include/common/diag_chat.h>
+#include <sasl/parser/error_handlers.h>
+#include <sasl/parser/diags.h>
+#include <sasl/parser/generator.h>
+#include <sasl/common/diag_chat.h>
 
 using sasl::common::diag_chat;
 
@@ -30,7 +30,7 @@ parse_results expected_failed_handler( diag_chat* diags, token_iterator const& o
 	{
 		diags->report( unmatched_expected_token )
 			->span(tok->span)->file(tok->file_name)
-			->p(expected_str)->p(tok->str);
+			->p(expected_str)->p(tok->s);
 	}
 	
 

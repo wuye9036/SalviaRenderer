@@ -1,4 +1,4 @@
-#include <sasl/include/shims/interp_shim.h>
+#include <sasl/shims/interp_shim.h>
 
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_impl.h>
@@ -8,7 +8,7 @@ using namespace salviar;
 using eflib::vec4;
 using std::vector;
 
-BEGIN_NS_SASL_SHIMS();
+namespace sasl::shims() {
 
 void default_vso2reg(
 	vec4*			out_registers,
@@ -118,4 +118,4 @@ void interp_shim::get_shim_functions(
 }
 
 
-END_NS_SASL_SHIMS();
+}

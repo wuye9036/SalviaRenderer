@@ -1,11 +1,11 @@
-#include <sasl/include/parser/generator.h>
+#include <sasl/parser/generator.h>
 
-#include <sasl/include/parser/lexer.h>
-#include <sasl/include/parser/diags.h>
-#include <sasl/include/parser/error_handlers.h>
-#include <sasl/include/common/token.h>
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/common/diag_item.h>
+#include <sasl/parser/lexer.h>
+#include <sasl/parser/diags.h>
+#include <sasl/parser/error_handlers.h>
+#include <sasl/common/token.h>
+#include <sasl/common/diag_chat.h>
+#include <sasl/common/diag_item.h>
 
 #include <eflib/utility/unref_declarator.h>
 
@@ -243,7 +243,7 @@ parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_
 		return parse_results::succeed;
 	}
 
-	diags->report( unmatched_token )->token_range(**iter, **iter)->p( (*iter)->str );
+	diags->report( unmatched_token )->token_range(**iter, **iter)->p( (*iter)->s );
 	return parse_results::failed;
 }
 

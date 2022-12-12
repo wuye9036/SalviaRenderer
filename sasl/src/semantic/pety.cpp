@@ -1,12 +1,12 @@
-#include <sasl/include/semantic/pety.h>
+#include <sasl/semantic/pety.h>
 
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/node_creation.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/node.h>
+#include <sasl/syntax_tree/node_creation.h>
 
-#include <sasl/include/syntax_tree/utility.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
+#include <sasl/syntax_tree/utility.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
 
@@ -36,7 +36,7 @@ using std::make_pair;
 using std::vector;
 using std::string;
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 
 // --------------------- Data Types -------------------------
 
@@ -168,7 +168,7 @@ public:
 		get2(btc_tid, out_tyn, out_sem);
 	}
 
-	fixed_string mangle(fixed_string const& name, tid_t tid)
+	fixed_string mangle(string_view name, tid_t tid)
 	{
 		init_builtin_short_name();
 
@@ -615,4 +615,4 @@ void append_mangling(std::string& str, tynode* typespec)
 	}
 }
 
-END_NS_SASL_SEMANTIC();
+}

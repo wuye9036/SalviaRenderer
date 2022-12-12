@@ -1,6 +1,6 @@
-#include <sasl/include/host/shader_log_impl.h>
+#include <sasl/host/shader_log_impl.h>
 
-BEGIN_NS_SASL_HOST();
+namespace sasl::host() {
 
 size_t shader_log_impl::count() const
 {
@@ -17,4 +17,4 @@ void shader_log_impl::append(std::string const& str)
 	logs_.push_back(str);
 }
 
-END_NS_SASL_HOST();
+}

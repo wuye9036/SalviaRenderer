@@ -1,18 +1,18 @@
-#include <sasl/include/codegen/cg_vs.h>
+#include <sasl/codegen/cg_vs.h>
 
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/module_vmcode_impl.h>
-#include <sasl/include/codegen/cg_impl.imp.h>
-#include <sasl/include/codegen/generate_entry.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/codegen/module_vmcode_impl.h>
+#include <sasl/codegen/cg_impl.imp.h>
+#include <sasl/codegen/generate_entry.h>
 
-#include <sasl/include/semantic/pety.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/host/utility.h>
+#include <sasl/semantic/pety.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/program.h>
+#include <sasl/host/utility.h>
 #include <sasl/enums/enums_utility.h>
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/unref_declarator.h>

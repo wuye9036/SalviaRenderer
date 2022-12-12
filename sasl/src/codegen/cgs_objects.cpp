@@ -1,10 +1,10 @@
-#include <sasl/include/codegen/cgs_objects.h>
+#include <sasl/codegen/cgs_objects.h>
 
-#include <sasl/include/codegen/cgs.h>
-#include <sasl/include/codegen/utility.h>
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/codegen/cgs.h>
+#include <sasl/codegen/utility.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/syntax_tree/declaration.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/platform/disable_warnings.h>

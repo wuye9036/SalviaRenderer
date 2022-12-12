@@ -3,7 +3,7 @@ using eflib::fixed_string;
 
 namespace salviar{
 
-void shader_cbuffer::set_sampler(eflib::fixed_string const& name, sampler_ptr const& samp)
+void shader_cbuffer::set_sampler(std::string_view name, sampler_ptr const& samp)
 {
 	auto iter = samplers_.find(name);
 	if (iter != samplers_.end() )
@@ -16,7 +16,7 @@ void shader_cbuffer::set_sampler(eflib::fixed_string const& name, sampler_ptr co
 	}
 }
 
-void shader_cbuffer::set_variable(eflib::fixed_string const& name, void const* data, size_t data_length)
+void shader_cbuffer::set_variable(std::string_view name, void const* data, size_t data_length)
 {
 	shader_cdata* existed_cdata = nullptr;
 

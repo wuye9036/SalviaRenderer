@@ -1,17 +1,17 @@
-#include <sasl/include/codegen/cg_simd.h>
+#include <sasl/codegen/cg_simd.h>
 
-#include <sasl/include/host/utility.h>
-#include <sasl/include/codegen/cg_impl.imp.h>
-#include <sasl/include/codegen/utility.h>
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/generate_entry.h>
-#include <sasl/include/semantic/reflection_impl.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/caster.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/expression.h>
+#include <sasl/host/utility.h>
+#include <sasl/codegen/cg_impl.imp.h>
+#include <sasl/codegen/utility.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/codegen/generate_entry.h>
+#include <sasl/semantic/reflection_impl.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/caster.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/expression.h>
 #include <eflib/utility/unref_declarator.h>
 #include <eflib/utility/scoped_value.h>
 

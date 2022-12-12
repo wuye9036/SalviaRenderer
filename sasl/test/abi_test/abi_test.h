@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sasl/include/drivers/compiler.h>
-#include <sasl/include/drivers/drivers_api.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/common/diag_item.h>
-#include <sasl/include/common/diag_formatter.h>
+#include <sasl/drivers/compiler.h>
+#include <sasl/drivers/drivers_api.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/common/diag_chat.h>
+#include <sasl/common/diag_item.h>
+#include <sasl/common/diag_formatter.h>
 
 #include <eflib/math/vector.h>
 #include <eflib/math/matrix.h>

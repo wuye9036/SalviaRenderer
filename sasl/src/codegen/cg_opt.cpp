@@ -4,7 +4,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/platform/enable_warnings.h>
 
-#include <sasl/include/codegen/cg_api.h>
+#include <sasl/codegen/cg_api.h>
 
 #include <vector>
 #include <memory>

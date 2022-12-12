@@ -1,16 +1,14 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
-
-set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/parser/diags.h
-	${SASL_HOME_DIR}/sasl/include/parser/error_handlers.h
-	${SASL_HOME_DIR}/sasl/include/parser/lexer.h
-	${SASL_HOME_DIR}/sasl/include/parser/generator.h
-	${SASL_HOME_DIR}/sasl/include/parser/grammars.h
-	${SASL_HOME_DIR}/sasl/include/parser/parse_api.h
-	${SASL_HOME_DIR}/sasl/include/parser/parser_forward.h
+set( HEADER_LIST
+	../../include/sasl/parser/diags.h
+	../../include/sasl/parser/error_handlers.h
+	../../include/sasl/parser/lexer.h
+	../../include/sasl/parser/generator.h
+	../../include/sasl/parser/grammars.h
+	../../include/sasl/parser/parse_api.h
+	../../include/sasl/parser/parser_forward.h
 )
 
-set( SOURCE_FILES
+set( SOURCE_LIST
 	diags.cpp
 	error_handlers.cpp
 	generator.cpp
@@ -19,5 +17,10 @@ set( SOURCE_FILES
 	parse_api.cpp
 )
 
-SASL_CONFIG_LIBRARY( sasl_parser )
+add_library(sasl_parser ${HEADER_LIST} ${SOURCE_LIST})
+target_include_directories(sasl_parser PUBLIC ../../include)
+target_link_libraries(sasl_parser eflib)
+target_compile_features(sasl_parser PUBLIC cxx_std_20)
+
+set_target_properties(sasl_parser PROPERTIES FOLDER "Shader Libs")
 

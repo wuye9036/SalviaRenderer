@@ -1,10 +1,10 @@
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/visitor.h>
-#include <sasl/include/common/token.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/visitor.h>
+#include <sasl/common/token.h>
 
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 statement::statement( node_ids nodetype, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 : node( nodetype, tok_beg, tok_end ){}
@@ -96,4 +96,4 @@ for_statement::for_statement( shared_ptr<token_t> const& tok_beg, shared_ptr<tok
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( for_statement );
 
-END_NS_SASL_SYNTAX_TREE();
+}

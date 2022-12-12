@@ -1,13 +1,13 @@
-#include <sasl/include/codegen/cg_api.h>
+#include <sasl/codegen/cg_api.h>
 
-#include <sasl/include/codegen/cg_general.h>
-#include <sasl/include/codegen/cg_vs.h>
-#include <sasl/include/codegen/cg_ps.h>
+#include <sasl/codegen/cg_general.h>
+#include <sasl/codegen/cg_vs.h>
+#include <sasl/codegen/cg_ps.h>
 
-#include <sasl/include/semantic/reflection_impl.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/node.h>
+#include <sasl/semantic/reflection_impl.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/syntax_tree/node.h>
 
 #include <salviar/include/enums.h>
 

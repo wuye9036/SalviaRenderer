@@ -1,9 +1,9 @@
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/visitor.h>
 
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 expression::expression( node_ids ntype, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 	: node( ntype, tok_beg, tok_end )
@@ -129,4 +129,4 @@ bool operator_traits::include( const std::vector<operators>& c, operators op)
 	return std::find( c.begin(), c.end(), op) != c.end();
 }
 
-END_NS_SASL_SYNTAX_TREE()
+}

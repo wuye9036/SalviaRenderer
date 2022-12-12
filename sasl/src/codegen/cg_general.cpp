@@ -1,19 +1,19 @@
-#include <sasl/include/codegen/cg_general.h>
+#include <sasl/codegen/cg_general.h>
 
 #include <sasl/enums/enums_utility.h>
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/cg_impl.imp.h>
-#include <sasl/include/codegen/module_vmcode_impl.h>
-#include <sasl/include/codegen/cg_caster.h>
-#include <sasl/include/semantic/reflector.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/caster.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/program.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/codegen/cg_impl.imp.h>
+#include <sasl/codegen/module_vmcode_impl.h>
+#include <sasl/codegen/cg_caster.h>
+#include <sasl/semantic/reflector.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/type_checker.h>
+#include <sasl/semantic/caster.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/program.h>
 
 #include <salviar/include/enums.h>
 

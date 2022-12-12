@@ -1,11 +1,11 @@
-#include <sasl/include/syntax_tree/utility.h>
+#include <sasl/syntax_tree/utility.h>
 
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/node_creation.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/expression.h>
+#include <sasl/syntax_tree/node_creation.h>
+#include <sasl/syntax_tree/program.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/visitor.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/enable_if.h>
@@ -27,7 +27,7 @@ using std::is_base_of;
 using std::dynamic_pointer_cast;
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+namespace sasl::syntax_tree {
 
 #define SAFE_ACCEPT( node_handle ) if( node_handle ) { (node_handle)->accept(this, data); }
 class follow_up_visitor : public syntax_tree_visitor{
@@ -425,4 +425,4 @@ std::shared_ptr<node> deep_duplicate( std::shared_ptr<node> src ){
 	return process_node<std::shared_ptr<node>>( src, &dup );
 }
 
-END_NS_SASL_SYNTAX_TREE()
+}

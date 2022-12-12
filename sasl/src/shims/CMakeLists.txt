@@ -5,9 +5,9 @@ set( ADDITIONAL_INCLUDE_DIRECTORIES
 	)
 	
 set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/shims/ia_shim.h
-	${SASL_HOME_DIR}/sasl/include/shims/interp_shim.h
-	${SASL_HOME_DIR}/sasl/include/shims/om_shim.h
+	${SASL_HOME_DIR}/sasl/shims/ia_shim.h
+	${SASL_HOME_DIR}/sasl/shims/interp_shim.h
+	${SASL_HOME_DIR}/sasl/shims/om_shim.h
 )
 
 set( SOURCE_FILES

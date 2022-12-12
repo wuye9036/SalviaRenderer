@@ -4,12 +4,12 @@
 #include <boost/test/unit_test.hpp>
 #include <eflib/platform/boost_end.h>
 
-#include <sasl/include/drivers/drivers_api.h>
-#include <sasl/include/codegen/cg_api.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/common/diag_formatter.h>
-#include <sasl/include/common/diag_chat.h>
+#include <sasl/drivers/drivers_api.h>
+#include <sasl/codegen/cg_api.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/common/diag_formatter.h>
+#include <sasl/common/diag_chat.h>
 #include <salviar/include/shader_reflection.h>
 
 #include <eflib/math/vector.h>

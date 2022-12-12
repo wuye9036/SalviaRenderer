@@ -1,5 +1,5 @@
-#include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/cgs.h>
+#include <sasl/codegen/cg_contexts.h>
+#include <sasl/codegen/cgs.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/unref_declarator.h>

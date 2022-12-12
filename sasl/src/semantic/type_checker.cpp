@@ -1,9 +1,9 @@
-#include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/semantic/type_checker.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/syntax_tree/declaration.h>
 #include <cassert>
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::function_full_def;
@@ -41,4 +41,4 @@ bool type_equal( shared_ptr<tynode> lhs, shared_ptr<tynode> rhs ){
 	return false;
 }
 
-END_NS_SASL_SEMANTIC();
+}

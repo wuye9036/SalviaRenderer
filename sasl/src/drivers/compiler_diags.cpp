@@ -1,4 +1,4 @@
-#include <sasl/include/drivers/compiler_diags.h>
+#include <sasl/drivers/compiler_diags.h>
 
 using namespace sasl::common;
 

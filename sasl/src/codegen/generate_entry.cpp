@@ -1,8 +1,8 @@
-#include <sasl/include/codegen/generate_entry.h>
+#include <sasl/codegen/generate_entry.h>
 
-#include <sasl/include/codegen/cgs.h>
-#include <sasl/include/semantic/reflection_impl.h>
-#include <sasl/include/host/utility.h>
+#include <sasl/codegen/cgs.h>
+#include <sasl/semantic/reflection_impl.h>
+#include <sasl/host/utility.h>
 #include <salviar/include/shader_reflection.h>
 
 

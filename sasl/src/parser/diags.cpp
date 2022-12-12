@@ -1,4 +1,4 @@
-#include <sasl/include/parser/diags.h>
+#include <sasl/parser/diags.h>
 
 using namespace sasl::common;
 

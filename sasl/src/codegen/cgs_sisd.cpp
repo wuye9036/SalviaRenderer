@@ -1,9 +1,9 @@
-#include <sasl/include/codegen/cgs_sisd.h>
+#include <sasl/codegen/cgs_sisd.h>
 
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/codegen/cg_contexts.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/codegen/cg_contexts.h>
 #include <sasl/enums/enums_utility.h>
 #include <eflib/diagnostics/assert.h>
 #include <eflib/platform/cpuinfo.h>

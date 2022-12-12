@@ -15,7 +15,7 @@
 #include <eflib/platform/boost_end.h>
 
 #if defined(SASL_USE_LLVM)
-#	include <sasl/include/drivers/drivers_api.h>
+#	include <sasl/drivers/drivers_api.h>
 #endif
 
 #include <eflib/memory/lifetime_manager.h>

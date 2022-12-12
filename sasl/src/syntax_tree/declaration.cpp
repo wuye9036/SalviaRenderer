@@ -1,11 +1,11 @@
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/node.h>
+#include <sasl/syntax_tree/visitor.h>
 
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 initializer::initializer( node_ids type_id, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 	: node( type_id, tok_beg, tok_end ){
@@ -139,4 +139,4 @@ SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( alias_type );
 alias_type::alias_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 : tynode( node_ids::alias_type, tok_beg, tok_end ){
 }
-END_NS_SASL_SYNTAX_TREE();
+}

@@ -167,7 +167,7 @@ public:
 	virtual size_t		layouts_count	(sv_usage usage) const = 0;
 	virtual size_t 		total_size		(sv_usage usage) const = 0;
 	virtual sv_layout*	input_sv_layout	(salviar::semantic_value const&) const = 0;
-	virtual sv_layout*	input_sv_layout	(eflib::fixed_string const&) const = 0;
+	virtual sv_layout*	input_sv_layout	(std::string_view) const = 0;
 	virtual sv_layout*	output_sv_layout(salviar::semantic_value const&) const = 0;
 	virtual bool		has_position_output() const = 0;
 

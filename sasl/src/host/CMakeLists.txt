@@ -13,10 +13,10 @@ LINK_DIRECTORIES(
 )
 
 set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/host/host_impl.h
-	${SASL_HOME_DIR}/sasl/include/host/shader_log_impl.h
-	${SASL_HOME_DIR}/sasl/include/host/shader_object_impl.h
-	${SASL_HOME_DIR}/sasl/include/host/shader_unit_impl.h
+	${SASL_HOME_DIR}/sasl/host/host_impl.h
+	${SASL_HOME_DIR}/sasl/host/shader_log_impl.h
+	${SASL_HOME_DIR}/sasl/host/shader_object_impl.h
+	${SASL_HOME_DIR}/sasl/host/shader_unit_impl.h
 )
 
 set( SOURCE_FILES

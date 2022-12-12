@@ -1,6 +1,6 @@
-#include <sasl/include/semantic/semantic_diags.h>
+#include <sasl/semantic/semantic_diags.h>
 
-#include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/declaration.h>
 
 #include <sasl/enums/enums_utility.h>
 #include <eflib/diagnostics/assert.h>
@@ -27,7 +27,7 @@ using std::shared_ptr;
 using std::string;
 using std::stringstream;
 
-BEGIN_NS_SASL_SEMANTIC();
+namespace sasl::semantic() {
 
 diag_template unknown_semantic_error(dl_fatal_error, "unknown semantic error occurred on '%s':%d");
 diag_template function_arg_count_error( dl_error, "'%s': no overloaded function takes %d arguments" );
@@ -210,4 +210,4 @@ std::string source_position_repr::str()
 	return std::string();
 }
 
-END_NS_SASL_SEMANTIC();
+}

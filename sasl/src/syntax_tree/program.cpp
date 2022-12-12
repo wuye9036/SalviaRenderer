@@ -1,9 +1,9 @@
-#include <sasl/include/syntax_tree/program.h>
+#include <sasl/syntax_tree/program.h>
 
 #include <sasl/enums/node_ids.h>
-#include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/syntax_tree/visitor.h>
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree() {
 
 program::program( const std::string& name)
 	: node( node_ids::program, std::shared_ptr<token_t>(), std::shared_ptr<token_t>() ), name(name)
@@ -17,4 +17,4 @@ program::program( std::shared_ptr<token_t> const& tok_beg, std::shared_ptr<token
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( program );
 
-END_NS_SASL_SYNTAX_TREE();
+}

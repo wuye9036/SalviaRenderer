@@ -1,7 +1,7 @@
-#include <sasl/include/drivers/drivers_api.h>
-#include <sasl/include/drivers/compiler_lib.h>
-#include <sasl/include/shims/ia_shim.h>
-#include <sasl/include/shims/interp_shim.h>
+#include <sasl/drivers/drivers_api.h>
+#include <sasl/drivers/compiler_lib.h>
+#include <sasl/shims/ia_shim.h>
+#include <sasl/shims/interp_shim.h>
 #include <eflib/platform/disable_warnings.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/ManagedStatic.h>

@@ -1,9 +1,9 @@
-#include <sasl/include/semantic/reflection_impl.h>
+#include <sasl/semantic/reflection_impl.h>
 
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/semantic/semantics.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/host/utility.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/semantic/semantics.h>
+#include <sasl/semantic/symbol.h>
+#include <sasl/host/utility.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/diagnostics/assert.h>
@@ -38,7 +38,7 @@ using std::shared_ptr;
 using std::vector;
 using std::make_pair;
 
-BEGIN_NS_SASL_SEMANTIC()
+namespace sasl::semantic {
 
 using namespace sasl::utility::ops;
 
@@ -179,7 +179,7 @@ sv_layout* reflection_impl::input_sv_layout( symbol* v ) const
 	return const_cast<sv_layout*>( addressof( it->second ) );
 }
 
-sv_layout* reflection_impl::input_sv_layout(fixed_string const& name) const
+sv_layout* reflection_impl::input_sv_layout(string_view name) const
 {
 	auto it = name_layouts_.find(name);
 	if( it == name_layouts_.end() )
@@ -269,4 +269,4 @@ salviar::languages reflection_impl::get_language() const
 	return module_sem_->get_language();
 }
 
-END_NS_SASL_SEMANTIC()
+}

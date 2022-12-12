@@ -25,6 +25,7 @@
       "freeimage",
       "freetype",
       "gtest",
+      "fmt",
       {
         "name": "llvm",
         "default-features": false,

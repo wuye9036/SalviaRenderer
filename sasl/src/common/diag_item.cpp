@@ -1,8 +1,8 @@
-#include <sasl/include/common/diag_item.h>
+#include <sasl/common/diag_item.h>
 
-using eflib::fixed_string;
+using std::string_view;
 
-BEGIN_NS_SASL_COMMON();
+namespace sasl::common {
 
 diag_item::diag_item( diag_template const* tmpl )
 	: tmpl(tmpl)
@@ -31,15 +31,15 @@ code_span diag_item::span() const
 	return item_span;
 }
 
-diag_item& diag_item::file( fixed_string const& f )
+diag_item& diag_item::file(string_view f)
 {
 	item_file = f;
 	return *this;
 }
 
-fixed_string diag_item::file() const
+string_view diag_item::file() const
 {
-	return item_file.empty() ? fixed_string("<unknown>") : item_file;
+	return item_file.empty() ? string_view("<unknown>") : item_file;
 }
 
 void diag_item::release()
@@ -49,7 +49,7 @@ void diag_item::release()
 
 diag_item& diag_item::eval()
 {
-	fmt.reset( new boost::format( this->str().raw_string() ) );
+	fmt.reset( new boost::format(std::string{this->str()}) );
 	return *this;
 }
 
@@ -58,7 +58,7 @@ diag_levels diag_item::level() const
 	return tmpl->level();
 }
 
-fixed_string diag_item::str() const
+string_view diag_item::str() const
 {
 	for(size_t i = 0; i < fmt_params.size(); ++i)
 	{
@@ -66,7 +66,7 @@ fixed_string diag_item::str() const
 		fmt_params[i]->release();
 	}
 	fmt_params.clear();
-	return fixed_string( formatter().str() );
+	return string_view( formatter().str() );
 }
 
 size_t diag_item::id() const
@@ -132,5 +132,5 @@ size_t diag_template::id() const
 	return uid;
 }
 
-END_NS_SASL_COMMON();
+}
 
