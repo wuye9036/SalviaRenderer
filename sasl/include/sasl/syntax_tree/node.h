@@ -30,7 +30,7 @@ namespace sasl{
 {	\
 	v->visit( *this, data );\
 }
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 class syntax_tree_visitor;
 

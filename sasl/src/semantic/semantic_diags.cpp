@@ -14,8 +14,7 @@ using sasl::utility::vector_count;
 using sasl::utility::vector_size;
 
 using sasl::common::diag_template;
-using sasl::common::dl_error;
-using sasl::common::dl_fatal_error;
+using sasl::common::diag_levels;
 using sasl::common::token_t;
 using sasl::common::compiler_compatibility;
 using sasl::syntax_tree::tynode;
@@ -27,29 +26,9 @@ using std::shared_ptr;
 using std::string;
 using std::stringstream;
 
-namespace sasl::semantic() {
+namespace sasl::semantic {
 
-diag_template unknown_semantic_error(dl_fatal_error, "unknown semantic error occurred on '%s':%d");
-diag_template function_arg_count_error( dl_error, "'%s': no overloaded function takes %d arguments" );
-diag_template function_param_unmatched( dl_error, "'%s': no overloaded function could convert all argument types\n\twhile trying to match '%s'" );
-diag_template function_multi_overloads( dl_error, "'%s': %d overloads have similar conversations." );
-diag_template not_a_member_of( dl_error, "'%s': not a member of '%s'" );
-diag_template invalid_swizzle( dl_error, "'%s': invalid swizzle of '%s'." );
-diag_template operator_param_unmatched( dl_error, "no overloaded operator could convert all argument types\n\twhile trying to match '%s'" );
-diag_template operator_multi_overloads( dl_error, "%d overloads have similar conversations." );
-diag_template member_left_must_have_struct( dl_error, "left of '.%s' must have struct\n\ttype is '%s'");
-diag_template cannot_convert_type_from( dl_error, "'%s': cannot convert from '%s' to '%s'");
-diag_template illegal_use_type_as_expr( dl_error, "'%s': illegal use of this type as an expression" );
-diag_template undeclared_identifier(dl_error, "'%s': undeclared identifier");
-diag_template type_redefinition(dl_error, "'%s': '%s' type redefinition");
-diag_template case_expr_not_constant(dl_error, "case expression not constant");
-diag_template illegal_type_for_case_expr(dl_error, "'%s': illegal type for case expression");
-diag_template identifier_not_found(dl_error, "'%s': identifier not found");
-diag_template not_an_acceptable_operator(dl_error, "binary '%s': '%s' is not acceptable to the predefined operator");
-diag_template subscript_not_integral(dl_error, "subscript is not of integral type");
-diag_template left_operand_must_be_lvalue(dl_error, "'%s': left operand must be l-value");
-diag_template operator_needs_lvalue(dl_error, "'%s' needs l-value");
-diag_template not_support_auto_semantic(dl_error, "Semantic verified failed. Note: Current version didn't support semantics propagates from parent to members");
+
 
 char const* scalar_nick_name( builtin_types btcode )
 {
@@ -127,14 +106,14 @@ string type_repr::str()
 		else if ( ty->is_struct() )
 		{
 			str_cache = "struct ";
-			str_cache += ty->as_handle<struct_type>()->name->str;
+			str_cache += ty->as_handle<struct_type>()->name->s;
 		}
 		else if ( ty->is_function() )
 		{
 			shared_ptr<function_full_def> fn = ty->as_handle<function_full_def>();
 			str_cache = type_repr(fn->retval_type).str();
 			str_cache += " ";
-			str_cache += fn->name->str;
+			str_cache += fn->name->s;
 			str_cache += "(";
 			if( !fn->params.empty() )
 			{

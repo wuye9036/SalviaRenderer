@@ -4,7 +4,7 @@
 #include <sasl/syntax_tree/statement.h>
 #include <sasl/syntax_tree/program.h>
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 using sasl::common::token_t;
 

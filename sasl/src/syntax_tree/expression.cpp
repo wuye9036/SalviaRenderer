@@ -3,7 +3,7 @@
 
 using std::shared_ptr;
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 expression::expression( node_ids ntype, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 	: node( ntype, tok_beg, tok_end )

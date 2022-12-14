@@ -31,7 +31,15 @@ public:
                           bool trigger_callback);
 
   void add_report_raised_handler(report_handler_fn const &handler);
-  void report(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args);
+  void report_args(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args);
+  void report_args(diag_template tmpl, token_t token_beg, token_t token_end, fmt::format_args args);
+  void report(diag_template tmpl, token_t token_beg, token_t token_end);
+  void report(diag_template tmpl, std::string_view file_name, code_span span);
+
+  template <typename... Args>
+  void report(diag_template tmpl, token_t token_beg, token_t token_end, Args&&... args) {
+    report_args(tmpl, token_beg, token_end, fmt::make_format_args(std::forward<Args>(args)...));
+  }
 
   decltype(auto) items() const noexcept {
     return (diags_);

@@ -7,7 +7,7 @@ using sasl::common::diag_chat;
 using sasl::syntax_tree::node;
 using std::shared_ptr;
 
-namespace sasl::semantic() {
+namespace sasl::semantic {
 
 shared_ptr<module_semantic> analysis_semantic( shared_ptr<node> const& root, diag_chat* diags, uint32_t lang ){
 	semantic_analyser saimpl;

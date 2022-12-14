@@ -16,7 +16,7 @@ namespace sasl{
 	}
 }
 
-namespace sasl::semantic() {
+namespace sasl::semantic {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 

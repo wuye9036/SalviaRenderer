@@ -21,7 +21,7 @@ namespace sasl
 	}
 }
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 class syntax_tree_visitor;
 

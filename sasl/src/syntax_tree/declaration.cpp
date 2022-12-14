@@ -5,7 +5,7 @@
 
 using std::shared_ptr;
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 initializer::initializer( node_ids type_id, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 	: node( type_id, tok_beg, tok_end ){

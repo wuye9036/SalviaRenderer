@@ -6,7 +6,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 struct node;
 

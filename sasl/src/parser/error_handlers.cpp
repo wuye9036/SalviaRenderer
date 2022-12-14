@@ -19,9 +19,9 @@ parse_results expected_failed_handler(diag_chat *diags, token_iterator const &or
 
   diags->clear();
   if (tok->end_of_file) {
-    diags->report(end_of_file, tok->file_name, tok->span, fmt::make_format_args(fmt::arg("expected", expected_str)));
+    diags->report_args(end_of_file, tok->file_name, tok->span, fmt::make_format_args(fmt::arg("expected", expected_str)));
   } else {
-    diags->report(unmatched_expected_token, tok->file_name, tok->span,
+    diags->report_args(unmatched_expected_token, tok->file_name, tok->span,
                   fmt::make_format_args(fmt::arg("expected", expected_str), fmt::arg("actual", tok->s)));
   }
 

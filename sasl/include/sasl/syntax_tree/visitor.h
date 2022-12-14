@@ -9,7 +9,7 @@
 
 #include <any>
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 struct unary_expression;
 struct cast_expression;

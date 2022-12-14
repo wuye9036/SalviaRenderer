@@ -1,21 +1,19 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
-
-set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/syntax_tree/declaration.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/expression.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/identifier.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/node.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/node_creation.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/parse_api.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/program.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/statement.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/syntax_tree_builder.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/syntax_tree_fwd.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/visitor.h
-	${SASL_HOME_DIR}/sasl/syntax_tree/utility.h
+set( HEADER_LIST
+	../../include/sasl/syntax_tree/declaration.h
+	../../include/sasl/syntax_tree/expression.h
+	../../include/sasl/syntax_tree/identifier.h
+	../../include/sasl/syntax_tree/node.h
+	../../include/sasl/syntax_tree/node_creation.h
+	../../include/sasl/syntax_tree/parse_api.h
+	../../include/sasl/syntax_tree/program.h
+	../../include/sasl/syntax_tree/statement.h
+	../../include/sasl/syntax_tree/syntax_tree_builder.h
+	../../include/sasl/syntax_tree/syntax_tree_fwd.h
+	../../include/sasl/syntax_tree/visitor.h
+	../../include/sasl/syntax_tree/utility.h
 )
 
-set( SOURCE_FILES
+set( SOURCE_LIST
 	declaration.cpp
 	expression.cpp
 	identifier.cpp
@@ -28,5 +26,10 @@ set( SOURCE_FILES
 	utility.cpp
 )
 
-SASL_CONFIG_LIBRARY( sasl_syntaxtree )
+add_library(sasl_syntax_tree ${HEADER_LIST} ${SOURCE_LIST})
+target_include_directories(sasl_syntax_tree PUBLIC ../../include)
+target_link_libraries(sasl_syntax_tree eflib sasl_enums Boost::boost)
+target_compile_features(sasl_syntax_tree PUBLIC cxx_std_20)
+
+set_target_properties(sasl_syntax_tree PROPERTIES FOLDER "Shader Libs")
 

@@ -1,5 +1,4 @@
-#ifndef SASL_SYNTAX_TREE_PARSE_API_H
-#define SASL_SYNTAX_TREE_PARSE_API_H
+#pragma once
 
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
 
@@ -14,7 +13,7 @@ namespace sasl{
 	}
 }
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 struct program;
 
@@ -31,5 +30,3 @@ std::shared_ptr<program> parse(
 	);
 
 }
-
-#endif

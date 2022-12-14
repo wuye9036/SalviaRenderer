@@ -16,9 +16,21 @@ shared_ptr<diag_chat> diag_chat::create() { return std::make_shared<diag_chat>()
 
 void diag_chat::add_report_raised_handler(report_handler_fn const &handler) { handlers_.push_back(handler); }
 
-void diag_chat::report(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args) {
-  std::string resolved_diag_message = fmt::vformat(tmpl.content, std::move(args));
+void diag_chat::report_args(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args) {
+  std::string resolved_diag_message = fmt::vformat(tmpl.content, args);
   diags_.emplace_back(tmpl, file_name, span, std::move(resolved_diag_message));
+}
+
+void diag_chat::report(diag_template tmpl, std::string_view file_name, code_span span) {
+  diags_.emplace_back(tmpl, file_name, span, std::string{tmpl.content});
+}
+
+void diag_chat::report_args(diag_template tmpl, token_t token_beg, token_t token_end, fmt::format_args args) {
+  report_args(tmpl, token_beg.file_name, sasl::common::merge(token_beg.span, token_end.span), args);
+}
+
+void diag_chat::report(diag_template tmpl, token_t token_beg, token_t token_end) {
+  report(tmpl, token_beg.file_name, sasl::common::merge(token_beg.span, token_end.span));
 }
 
 diag_chat *diag_chat::merge(diag_chat *dest, diag_chat *src, bool trigger_callback) {

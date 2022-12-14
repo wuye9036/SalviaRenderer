@@ -243,7 +243,7 @@ parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_
 		return parse_results::succeed;
 	}
 
-	diags->report(unmatched_token, iter->get()->file_name, iter->get()->span, fmt::make_format_args(fmt::arg("syntax_error", (*iter)->s)));
+	diags->report_args(unmatched_token, iter->get()->file_name, iter->get()->span, fmt::make_format_args(fmt::arg("syntax_error", (*iter)->s)));
 	return parse_results::failed;
 }
 

@@ -8,9 +8,9 @@
 
 #include <eflib/platform/typedefs.h>
 #include <eflib/utility/shared_declaration.h>
-#include <eflib/string/ustring.h>
 
 #include <vector>
+#include <string>
 #include <memory>
 #include <unordered_map>
 
@@ -22,7 +22,7 @@ namespace sasl
 	}
 }
 
-namespace sasl::semantic() {
+namespace sasl::semantic {
 
 class	module_semantic;
 class	node_semantic;
@@ -58,9 +58,8 @@ public:
 		) = 0;
 
 	// Name mangling
-	virtual eflib::fixed_string mangle(
-		std::string_view, tid_t tid) = 0;
-	virtual eflib::fixed_string operator_name(operators const& op) = 0;
+	virtual std::string mangle(std::string_view, tid_t tid) = 0;
+	virtual std::string_view operator_name(operators const& op) = 0;
 
 	virtual ~pety_t() {}
 };

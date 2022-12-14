@@ -7,13 +7,14 @@
 #include <sasl/syntax_tree/declaration.h>
 #include <sasl/common/diag_chat.h>
 #include <sasl/enums/builtin_types.h>
-#include <salviar/include/shader.h>
 
 #include <eflib/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <eflib/platform/boost_end.h>
+
+#include <eflib/diagnostics/assert.h>
 
 #include <map>
 #include <unordered_map>
@@ -251,12 +252,12 @@ public:
 		extra_nodes_.push_back(v);
 	}
 
-	salviar::languages get_language() const
+	salvia::shader::languages get_language() const
 	{
 		return lang_;
 	}
 
-	void set_language(salviar::languages v)
+	void set_language(salvia::shader::languages v)
 	{
 		lang_ = v;
 	}
@@ -287,7 +288,7 @@ private:
 		}
 	}
 
-	salviar::languages	lang_;
+	salvia::shader::languages	lang_;
 	pety_t_ptr			pety_;
 	program_ptr			root_node_;
 	symbol*				root_symbol_;
@@ -349,11 +350,11 @@ node_semantic::labeled_statement_array& node_semantic::labeled_statements()
 	return *labeled_statements_;
 }
 
-void node_semantic::semantic_value( salviar::semantic_value const& v )
+void node_semantic::semantic_value( salvia::shader::semantic_value const& v )
 {
 	if( !semantic_value_ )
 	{
-		semantic_value_ = new salviar::semantic_value(v);
+		semantic_value_ = new salvia::shader::semantic_value(v);
 	}
 	else
 	{
@@ -451,12 +452,12 @@ void node_semantic::const_value( std::string const& v )
 	tid(-1);
 }
 
-salviar::semantic_value const& node_semantic::semantic_value_ref() const
+salvia::shader::semantic_value const& node_semantic::semantic_value_ref() const
 {
 	if( !semantic_value_ )
 	{
 		const_cast<node_semantic*>(this)->semantic_value_
-			= new salviar::semantic_value();
+			= new salvia::shader::semantic_value();
 	}
 	return *semantic_value_;
 }

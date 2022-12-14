@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<xs:element name="enums">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" name="enum">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:choice maxOccurs="unbounded">
+								<xs:element name="AutoGen" maxOccurs="1">
+									<xs:complexType>
+										<xs:attribute name="expression" type="xs:string"/>
+									</xs:complexType>
+								</xs:element>
+								<xs:element name="Ortho" maxOccurs="1"/>
+								<xs:element name="HasName" maxOccurs="1" />
+								<xs:element name="Convertible" maxOccurs="1"/>
+								<xs:element minOccurs="1" maxOccurs="unbounded" name="item">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:minLength value="1"></xs:minLength>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="Order" maxOccurs="1" />
+							</xs:choice>
+						</xs:sequence>
+						<xs:attribute name="name" type="xs:string" use="required"></xs:attribute>
+						<xs:attribute name="storage_type" type="xs:string" use="optional" />
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+		
+		<xs:key name="key_of_enums">
+			<xs:selector xpath="enum" />
+			<xs:field xpath="@name" />
+		</xs:key>
+		
+	</xs:element>
+</xs:schema>

@@ -14,7 +14,7 @@ using sasl::parser::grammars;
 
 using std::shared_ptr;
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 void init_lex( lexer& l ){
 	l.add_pattern

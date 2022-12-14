@@ -1,52 +1,38 @@
-#ifndef EFLIB_MEMORY_ATOMIC_H
-#define EFLIB_MEMORY_ATOMIC_H
+#pragma once
 
-#include <eflib/platform/config.h>
 #include <atomic>
+#include <eflib/platform/config.h>
 
-namespace eflib{
-	class spinlock {
-	private:
-		enum class LockState: intptr_t
-        {
-            Locked,
-            Unlocked
-        };
-		std::atomic<LockState> state_;
+namespace eflib {
+class spinlock {
+private:
+  enum class LockState : intptr_t { Locked, Unlocked };
+  std::atomic<LockState> state_;
 
-	public:
-		spinlock() : state_(LockState::Unlocked) {}
-		
-		bool try_lock()
-		{
-			return state_.exchange(LockState::Locked, std::memory_order_acquire) == LockState::Unlocked;
-		}
+public:
+  spinlock() : state_(LockState::Unlocked) {}
 
-		void lock()
-		{
-			while ( !try_lock() )
-			{
-				/* busy-wait */
-			}
-		}
+  bool try_lock() {
+    return state_.exchange(LockState::Locked, std::memory_order_acquire) == LockState::Unlocked;
+  }
 
-		void unlock()
-		{
-			state_.store(LockState::Unlocked, std::memory_order_release);
-		}
-	};
+  void lock() {
+    while (!try_lock()) {
+      /* busy-wait */
+    }
+  }
 
-	class scoped_spin_locker
-	{
-	public:
-		scoped_spin_locker(spinlock& lock): lock_(lock) { lock_.lock(); }
-		~scoped_spin_locker() { lock_.unlock(); }
-	private:
-		scoped_spin_locker(scoped_spin_locker const&) = delete;
-		scoped_spin_locker& operator = (scoped_spin_locker const&) = delete;
-		spinlock& lock_;
-	};
-}
+  void unlock() { state_.store(LockState::Unlocked, std::memory_order_release); }
+};
 
+class scoped_spin_locker {
+public:
+  scoped_spin_locker(spinlock &lock) : lock_(lock) { lock_.lock(); }
+  ~scoped_spin_locker() { lock_.unlock(); }
 
-#endif		// SALVIAR_ATOMIC_H
+private:
+  scoped_spin_locker(scoped_spin_locker const &) = delete;
+  scoped_spin_locker &operator=(scoped_spin_locker const &) = delete;
+  spinlock &lock_;
+};
+} // namespace eflib

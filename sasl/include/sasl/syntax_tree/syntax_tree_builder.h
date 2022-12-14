@@ -22,7 +22,7 @@ namespace sasl{
 	}
 }
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 class builder_context{
 	builder_context( const builder_context& rhs, bool reset_gen_node = true )

@@ -1,5 +1,4 @@
-#ifndef EFLIB_WRITE_MASK_H
-#define EFLIB_WRITE_MASK_H
+#pragma once
 
 
 #define WRITE_MASK_FOR_VEC2() \
@@ -784,5 +783,3 @@ void wzyx(vector_<ScalarT,4> const& v){\
 	((ScalarT*)this)[1] = v[2];\
 	((ScalarT*)this)[0] = v[3];\
 }\
-
-#endif

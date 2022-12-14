@@ -2,9 +2,11 @@
 #include <sasl/syntax_tree/visitor.h>
 #include <sasl/common/token.h>
 
+#include <cassert>
+
 using std::shared_ptr;
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 statement::statement( node_ids nodetype, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 : node( nodetype, tok_beg, tok_end ){}

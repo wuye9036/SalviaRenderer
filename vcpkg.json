@@ -26,6 +26,7 @@
       "freetype",
       "gtest",
       "fmt",
+      "magic-enum",
       {
         "name": "llvm",
         "default-features": false,

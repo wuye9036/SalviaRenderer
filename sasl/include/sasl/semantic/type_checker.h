@@ -12,7 +12,7 @@ namespace sasl{
 	}
 }
 
-namespace sasl::semantic() {
+namespace sasl::semantic {
 
 bool type_equal(
 	std::shared_ptr< ::sasl::syntax_tree::tynode > lhs,

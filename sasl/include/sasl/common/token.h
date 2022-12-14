@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iterator>
 #include <memory>
 #include <string_view>
 
@@ -30,8 +31,8 @@ struct token_t {
 
   token_t(const token_t &rhs);
 
-  template <typename IteratorT>
-  token_t(IteratorT const &first, IteratorT const &last) : s(first, last), id(0), end_of_file(false) {}
+  template <std::forward_iterator IteratorT>
+  token_t(IteratorT first, IteratorT last) : s(first, last), id(0), end_of_file(false) {}
 
   token_t &operator=(const token_t &rhs);
 

@@ -11,23 +11,21 @@
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/diagnostics/assert.h>
-
+#include <salvia/shader/constants.h>
 #include <algorithm>
 
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
 using namespace sasl::common;
 
-using salviar::languages;
-using salviar::sv_usage;
-using salviar::su_none;
-using salviar::su_stream_in;
-using salviar::su_stream_out;
-using salviar::su_buffer_in;
-using salviar::su_buffer_out;
-using salviar::sv_usage_count;
-
-using eflib::fixed_string;
+using salvia::shader::languages;
+using salvia::shader::sv_usage;
+using salvia::shader::su_none;
+using salvia::shader::su_stream_in;
+using salvia::shader::su_stream_out;
+using salvia::shader::su_buffer_in;
+using salvia::shader::su_buffer_out;
+using salvia::shader::sv_usage_count;
 
 using std::addressof;
 using std::make_shared;
@@ -37,27 +35,27 @@ using std::lower_bound;
 using std::string;
 using std::vector;
 
-namespace sasl::semantic() {
+namespace sasl::semantic {
 
-bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem )
+bool verify_semantic_type( builtin_types btc, salvia::shader::semantic_value const& sem )
 {
 	switch( sem.get_system_value() ){
 
-	case salviar::sv_none:
+	case salvia::shader::sv_none:
 		return false;
 
-	case salviar::sv_position:
-	case salviar::sv_texcoord:
-	case salviar::sv_normal:
-	case salviar::sv_target:
+	case salvia::shader::sv_position:
+	case salvia::shader::sv_texcoord:
+	case salvia::shader::sv_normal:
+	case salvia::shader::sv_target:
 		return 
 			( is_scalar(btc) || is_vector(btc) || is_matrix(btc) )
 			&& ( scalar_of(btc) == builtin_types::_float || scalar_of(btc) == builtin_types::_sint32 );
-	case salviar::sv_blend_indices:
+	case salvia::shader::sv_blend_indices:
 		return ( is_scalar(btc) || is_vector(btc) ) && is_integer( scalar_of(btc) );
-	case salviar::sv_blend_weights:
+	case salvia::shader::sv_blend_weights:
 		return ( is_scalar(btc) || is_vector(btc) ) && ( scalar_of(btc) == builtin_types::_float );
-	case salviar::sv_depth:
+	case salvia::shader::sv_depth:
 		return ( btc == builtin_types::_float );
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -66,57 +64,57 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 	return false;
 }
 
-sv_usage vsinput_semantic_usage( salviar::semantic_value const& sem ){
+sv_usage vsinput_semantic_usage( salvia::shader::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
-	case salviar::sv_position:
-	case salviar::sv_texcoord:
-	case salviar::sv_normal:
-	case salviar::sv_blend_indices:
-	case salviar::sv_blend_weights:
+	case salvia::shader::sv_position:
+	case salvia::shader::sv_texcoord:
+	case salvia::shader::sv_normal:
+	case salvia::shader::sv_blend_indices:
+	case salvia::shader::sv_blend_weights:
 		return su_stream_in;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;
 }
 
-sv_usage vsoutput_semantic_usage( salviar::semantic_value const& sem ){
+sv_usage vsoutput_semantic_usage( salvia::shader::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
-	case salviar::sv_position:
+	case salvia::shader::sv_position:
 		return su_buffer_out;
-	case salviar::sv_texcoord:
+	case salvia::shader::sv_texcoord:
 		return su_buffer_out;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;
 }
 
-sv_usage psinput_semantic_usage( salviar::semantic_value const& sem ){
+sv_usage psinput_semantic_usage( salvia::shader::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
-	case salviar::sv_texcoord:
+	case salvia::shader::sv_texcoord:
 		return su_stream_in;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;
 }
 
-sv_usage psoutput_semantic_usage( salviar::semantic_value const& sem ){
+sv_usage psoutput_semantic_usage( salvia::shader::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
-	case salviar::sv_target:
+	case salvia::shader::sv_target:
 		return su_stream_out;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;
 }
 
-sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::semantic_value const& sem ){
+sv_usage semantic_usage( salvia::shader::languages lang, bool is_output, salvia::shader::semantic_value const& sem ){
 	switch ( lang ){
-	case salviar::lang_vertex_shader:
+	case salvia::shader::lang_vertex_shader:
 		if( is_output ){
 			return vsoutput_semantic_usage(sem);
 		} else {
 			return vsinput_semantic_usage(sem);
 		}
-	case salviar::lang_pixel_shader:
+	case salvia::shader::lang_pixel_shader:
 		if( is_output ){
 			return psoutput_semantic_usage(sem);
 		} else {
@@ -184,7 +182,7 @@ private:
 			return reflection_impl_ptr();
 		}
 
-		salviar::languages lang = sem_->get_language();
+		salvia::shader::languages lang = sem_->get_language();
 
 		// Initialize language ABI information.
 		reflection_impl_ptr ret = make_shared<reflection_impl>();
@@ -193,9 +191,9 @@ private:
 		ret->entry_point_name_	= current_entry_->mangled_name();
 		reflection_ = ret.get();
 
-		if( lang == salviar::lang_vertex_shader
-			|| lang == salviar::lang_pixel_shader
-			|| lang == salviar::lang_blending_shader
+		if( lang == salvia::shader::lang_vertex_shader
+			|| lang == salvia::shader::lang_pixel_shader
+			|| lang == salvia::shader::lang_blending_shader
 			)
 		{
 			// Process entry function.
@@ -255,7 +253,7 @@ private:
 		tynode* ptspec = pssi->ty_proto();
 		assert(ptspec); // TODO: Here are semantic analysis error.
 
-		salviar::semantic_value const& node_sem = pssi->semantic_value_ref();
+		salvia::shader::semantic_value const& node_sem = pssi->semantic_value_ref();
 
 		if( ptspec->is_builtin() )
 		{
@@ -280,8 +278,7 @@ private:
 			}
 			else if (is_member)
 			{
-				diags_->report(not_support_auto_semantic)
-					->token_range(*v->token_begin(), *v->token_end());
+				diags_->report(not_support_auto_semantic, "", code_span{});
 				return false;
 			}
 		}
@@ -318,7 +315,7 @@ private:
 
 	diag_chat*			diags_;
 	module_semantic*	sem_;
-	fixed_string		entry_name_;
+	std::string_view	entry_name_;
 	symbol*				current_entry_;
 	reflection_impl*	reflection_;
 };

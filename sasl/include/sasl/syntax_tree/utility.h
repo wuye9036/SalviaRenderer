@@ -10,7 +10,7 @@
 #include <vector>
 #include <functional>
 
-namespace sasl::syntax_tree() {
+namespace sasl::syntax_tree {
 
 //////////////////////////////////////////////////////////////////////////
 // Concept:
