@@ -1,5 +1,3 @@
----
-BasedOnStyle: LLVM
----
+BasedOnStyle : LLVM
 Language: Cpp
-ColumnLimit: 120
+ColumnLimit: 100
