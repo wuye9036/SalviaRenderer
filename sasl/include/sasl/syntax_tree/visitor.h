@@ -1,10 +1,10 @@
-#ifndef SASL_SYNTAX_TREE_VISITOR
-#define SASL_SYNTAX_TREE_VISITOR
+#pragma once
 
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
 
 #include <eflib/platform/boost_begin.h>
 #include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <eflib/platform/boost_end.h>
 
 #include <any>
@@ -150,5 +150,3 @@ public:
 };
 
 }
-
-#endif

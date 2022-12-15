@@ -6,7 +6,7 @@
 
 #include <salviar/include/buffer.h>
 #include <salviar/include/renderer.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/input_layout.h>
 
 #include <eflib/platform/boost_begin.h>

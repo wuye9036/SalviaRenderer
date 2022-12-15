@@ -1,6 +1,6 @@
 #include <sasl/codegen/cg_general.h>
 
-#include <sasl/enums/enums_utility.h>
+#include <sasl/enums/traits.h>
 #include <sasl/codegen/cg_contexts.h>
 #include <sasl/codegen/cg_impl.imp.h>
 #include <sasl/codegen/module_vmcode_impl.h>
@@ -15,14 +15,8 @@
 #include <sasl/syntax_tree/statement.h>
 #include <sasl/syntax_tree/program.h>
 
-#include <salviar/include/enums.h>
-
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/unref_declarator.h>
-
-#include <eflib/platform/boost_begin.h>
-#include <boost/format.hpp>
-#include <eflib/platform/boost_end.h>
 
 #include <string>
 
@@ -31,7 +25,7 @@ namespace sasl::codegen{
 using namespace syntax_tree;
 using namespace semantic;
 using namespace llvm;
-using namespace sasl::utility;
+using namespace sasl::enums;
 
 using semantic::reflection_impl;
 using semantic::node_semantic;

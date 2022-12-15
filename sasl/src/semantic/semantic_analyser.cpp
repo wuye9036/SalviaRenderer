@@ -73,13 +73,13 @@ using sasl::syntax_tree::statement;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::switch_statement;
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, tynode);
-using sasl::syntax_tree::list_of_builtin_type;
+using sasl::syntax_tree::fill_builtin_types;
 using sasl::syntax_tree::unary_expression;
 using sasl::syntax_tree::variable_declaration;
 using sasl::syntax_tree::variable_expression;
 using sasl::syntax_tree::while_statement;
 
-using namespace sasl::utility;
+using namespace sasl::enums;
 using namespace std::string_view_literals;
 
 using eflib::scoped_value;
@@ -172,7 +172,7 @@ void semantic_analyser::parse_semantic(token_t_ptr const &sem_tok, token_t_ptr c
       string::const_reverse_iterator it = semstr.rbegin();
 
       size_t num_tail_length = 0;
-      char ch = '\0';
+
       while (std::isdigit(*it)) {
         ++it;
         ++num_tail_length;
@@ -1663,7 +1663,7 @@ void semantic_analyser::register_builtin_functions2() {
   vector<string_view> vb_vf_intrin_names{"isinf"sv, "isfinite"sv, "isnan"sv};
 
   // Initialize builtins and tids.
-  list_of_builtin_type(builtins, &is_storagable);
+  fill_builtin_types(builtins, &is_storagable);
   for (size_t i_builtin = 0; i_builtin < builtins.size(); ++i_builtin) {
     tids.push_back(pety->get(builtins[i_builtin]));
   }

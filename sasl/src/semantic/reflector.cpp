@@ -8,14 +8,14 @@
 #include <sasl/common/diag_chat.h>
 
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/enums_utility.h>
+#include <sasl/enums/traits.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <salvia/shader/constants.h>
 #include <algorithm>
 
 using namespace sasl::syntax_tree;
-using namespace sasl::utility;
+using namespace sasl::enums;
 using namespace sasl::common;
 
 using salvia::shader::languages;

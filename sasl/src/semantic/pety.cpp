@@ -12,18 +12,18 @@
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/memory/atomic.h>
+#include <eflib/utility/enum.h>
 #include <eflib/utility/hash.h>
 #include <eflib/utility/polymorphic_cast.h>
 
-#include <boost/format.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
-
+#include <fmt/format.h>
 #include <string>
 #include <unordered_map>
 
 using namespace sasl::syntax_tree;
-using namespace sasl::utility;
+using namespace sasl::enums;
+using namespace eflib::enum_operators;
+
 using eflib::polymorphic_cast;
 using eflib::scoped_spin_locker;
 using eflib::spinlock;
@@ -165,11 +165,10 @@ public:
     if (it != opname_cache_.end()) {
       return it->second;
     }
-    string opname("0");
-    opname.append(op_names_[op]);
-    string_view fs_opname(std::move(opname));
-    opname_cache_.insert(make_pair(op, fs_opname));
-    return fs_opname;
+    auto op_name = op_names_[op];
+    auto mangled_op_name = fmt::format("0{}", op_name);
+    auto inserted = opname_cache_.insert(make_pair(op, mangled_op_name));
+    return inserted.first->second;
   }
 
   ~pety_impl() {}
@@ -258,7 +257,7 @@ private:
   vector<type_item> type_items_;
   unordered_map<vector<tid_t>, std::string, eflib::hash_range> mangling_cache_;
   unordered_map<tid_t, vector<tid_t>> param_tids_cache_;
-  unordered_map<operators, string_view> opname_cache_;
+  unordered_map<operators, std::string> opname_cache_;
 
   symbol *root_symbol_;
   module_semantic *owner_;
@@ -309,21 +308,19 @@ string_view builtin_type_name(builtin_types btc,
 
   std::string ret;
   if (is_vector(btc)) {
-    ret = (boost::format("%1%_%2%") % builtin_type_name(scalar_of(btc), scalar_type_names) %
-           vector_size(btc))
-              .str();
+    ret = fmt::format("{}_{}", builtin_type_name(scalar_of(btc), scalar_type_names),
+                      vector_size(btc));
 
   } else if (is_matrix(btc)) {
-    ret = (boost::format("%1%_%2%x%3%") % builtin_type_name(scalar_of(btc), scalar_type_names) %
-           vector_size(btc) % vector_count(btc))
-              .str();
+    ret = fmt::format("{}_{}x{}", builtin_type_name(scalar_of(btc), scalar_type_names),
+                      vector_size(btc), vector_count(btc));
 
   } else {
-    ret = (boost::format("0%1%") % scalar_type_names.at(btc)).str();
+    ret = fmt::format("0{}", scalar_type_names.at(btc));
   }
 
-  builtins_name.insert(make_pair(btc, ret));
-  return ret;
+  auto inserted = builtins_name.insert(make_pair(btc, ret));
+  return inserted.first->second;
 }
 
 //	description:
@@ -510,7 +507,7 @@ void append_mangling(string &str, builtin_types btc, bool as_comp) {
 }
 
 void append_mangling(std::string &str, type_qualifiers qual) {
-  if (to_underlying(qual & type_qualifiers::_uniform) != 0) {
+  if (eflib::e2i(qual & type_qualifiers::_uniform) != 0) {
     str.append("U");
   }
   str.append("Q");

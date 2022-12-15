@@ -3,7 +3,7 @@
 
 #include <salviax/include/resource/resource_forward.h>
 
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <eflib/math/matrix.h>
 #include <eflib/utility/shared_declaration.h>
 

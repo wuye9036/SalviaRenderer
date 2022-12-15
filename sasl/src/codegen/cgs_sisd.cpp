@@ -4,7 +4,7 @@
 #include <sasl/semantic/symbol.h>
 #include <sasl/semantic/semantics.h>
 #include <sasl/codegen/cg_contexts.h>
-#include <sasl/enums/enums_utility.h>
+#include <sasl/enums/traits.h>
 #include <eflib/diagnostics/assert.h>
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/utility/unref_declarator.h>
@@ -36,7 +36,7 @@ using sasl::semantic::node_semantic;
 using eflib::support_feature;
 using eflib::cpu_sse2;
 
-using namespace sasl::utility;
+using namespace sasl::enums;
 
 using llvm::APInt;
 using llvm::Argument;

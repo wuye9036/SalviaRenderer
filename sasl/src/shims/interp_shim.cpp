@@ -1,6 +1,6 @@
 #include <sasl/shims/interp_shim.h>
 
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/shader_impl.h>
 
 using namespace salviar;

@@ -6,7 +6,7 @@
 // #include <sasl/syntax_tree/declaration.h>
 
 // #include <sasl/enums/builtin_types.h>
-// #include <sasl/enums/enums_utility.h>
+// #include <sasl/enums/traits.h>
 
 // #include <salvia/shader/reflection.h>
 
@@ -21,7 +21,7 @@
 // #include <deque>
 
 // using namespace sasl::syntax_tree;
-// using namespace sasl::utility;
+// using namespace sasl::enums;
 
 // using namespace salvia::shader;
 

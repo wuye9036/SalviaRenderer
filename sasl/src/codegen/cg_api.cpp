@@ -9,8 +9,6 @@
 #include <sasl/semantic/symbol.h>
 #include <sasl/syntax_tree/node.h>
 
-#include <salviar/include/enums.h>
-
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/shared_declaration.h>
 
@@ -37,7 +35,7 @@ module_vmcode_ptr generate_vmcode(
 	if(!assoc_node) { return ret; }
 	if(assoc_node->node_class() != node_ids::program) { return ret; }
 	
-	if(!reflection || reflection->get_language() == salviar::lang_general)
+	if(!reflection || reflection->get_language() == salvia::shader::lang_general)
 	{
 		cg_general cg;
 		if( cg.generate(sem, reflection) )
@@ -46,7 +44,7 @@ module_vmcode_ptr generate_vmcode(
 		}
 	}
 		
-	if ( reflection->get_language() == salviar::lang_vertex_shader )
+	if ( reflection->get_language() == salvia::shader::lang_vertex_shader )
 	{
 		cg_vs cg;
 		if( cg.generate(sem, reflection) )
@@ -55,7 +53,7 @@ module_vmcode_ptr generate_vmcode(
 		}
 	}
 
-	if( reflection->get_language() == salviar::lang_pixel_shader )
+	if( reflection->get_language() == salvia::shader::lang_pixel_shader )
 	{
 		cg_ps cg;
 		if( cg.generate(sem, reflection) )

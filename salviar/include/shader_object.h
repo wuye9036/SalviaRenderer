@@ -4,7 +4,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 
 #include <eflib/utility/shared_declaration.h>
 

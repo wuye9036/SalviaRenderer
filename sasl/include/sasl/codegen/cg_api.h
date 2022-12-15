@@ -4,7 +4,6 @@
 #include <sasl/codegen/forward.h>
 
 #include <eflib/utility/shared_declaration.h>
-#include <eflib/string/ustring.h>
 
 #include <ostream>
 #include <string>

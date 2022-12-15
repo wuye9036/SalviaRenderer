@@ -299,9 +299,9 @@ public:
                            value_array const &v, value_kinds k, abis abi);
 
   multi_value create_variable(cg_type const *, abis abi,
-                              std::string const &name);
+                              std::string_view name);
   multi_value create_variable(builtin_types bt, abis abi,
-                              std::string const &name);
+                              std::string_view name);
 
   virtual multi_value create_vector(std::vector<multi_value> const &scalars,
                                     abis abi) = 0;

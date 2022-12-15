@@ -2,8 +2,8 @@
 
 #include <sasl/codegen/cgs.h>
 #include <sasl/semantic/reflection_impl.h>
-#include <sasl/host/utility.h>
-#include <salviar/include/shader_reflection.h>
+#include <sasl/enums/traits.h>
+#include <salvia/shader/reflection.h>
 
 
 #include <eflib/platform/disable_warnings.h>
@@ -16,14 +16,13 @@
 #include <vector>
 
 using sasl::semantic::reflection_impl;
-using sasl::utility::to_builtin_types;
-using salviar::sv_usage;
-using salviar::su_buffer_in;
-using salviar::su_buffer_out;
-using salviar::su_stream_in;
-using salviar::su_stream_out;
-using salviar::sv_layout;
-using salviar::sv_usage_count;
+using salvia::shader::sv_usage;
+using salvia::shader::su_buffer_in;
+using salvia::shader::su_buffer_out;
+using salvia::shader::su_stream_in;
+using salvia::shader::su_stream_out;
+using salvia::shader::sv_layout;
+using salvia::shader::sv_usage_count;
 using llvm::PointerType;
 using llvm::Type;
 using llvm::DataLayout;
@@ -33,6 +32,8 @@ using llvm::ArrayType;
 using std::pair;
 using std::vector;
 using std::make_pair;
+
+using namespace sasl::enums;
 
 namespace sasl::codegen {
 
@@ -94,7 +95,7 @@ Type* generate_parameter_type(
 
 	for(sv_layout* svl: svls)
 	{
-		builtin_types value_bt = to_builtin_types(svl->value_type);
+		builtin_types value_bt = sasl::enums::to_builtin_types(svl->value_type);
 		tycodes.push_back(value_bt);
 		Type* value_vm_ty = cg->type_(value_bt, abis::c);
 
@@ -103,7 +104,7 @@ Type* generate_parameter_type(
 		// Otherwise the members of stream are values at all.
 		if(	(  su_stream_in == su
 			|| su_stream_out == su
-			|| svl->agg_type == salviar::aggt_array )
+			|| svl->agg_type == salvia::shader::aggt_array )
 			&& cg->parallel_factor() == 1
 			)
 		{

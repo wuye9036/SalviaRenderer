@@ -14,7 +14,7 @@
 #include <sasl/codegen/cg_api.h>
 #include <sasl/semantic/reflection_impl.h>
 
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>

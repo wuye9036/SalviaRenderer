@@ -1,7 +1,7 @@
 #pragma once
 
-#include <salvia/shader/constants.h>
 #include <eflib/platform/cpuinfo.h>
+#include <salvia/shader/constants.h>
 
 #include <vector>
 
@@ -229,5 +229,4 @@ public:
   virtual reg_name find_reg(reg_categories cat, semantic_value const &sv) const = 0;
   virtual size_t reg_addr(reg_name const &rname) const = 0;
 };
-} // namespace salviar
-
+} // namespace salvia::shader

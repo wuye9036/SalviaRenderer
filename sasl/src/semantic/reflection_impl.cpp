@@ -1,6 +1,6 @@
 #include <sasl/semantic/reflection_impl.h>
 
-// #include <sasl/enums/enums_utility.h>
+// #include <sasl/enums/traits.h>
 // #include <sasl/host/utility.h>
 // #include <sasl/semantic/semantics.h>
 // #include <sasl/semantic/symbol.h>
@@ -9,7 +9,7 @@
 // #include <eflib/diagnostics/assert.h>
 // #include <eflib/math/math.h>
 
-// using namespace sasl::utility;
+// using namespace sasl::enums;
 
 // EFLIB_USING_SHARED_PTR(sasl::syntax_tree, array_type);
 // EFLIB_USING_SHARED_PTR(sasl::syntax_tree, tynode);
@@ -40,7 +40,7 @@
 
 // namespace sasl::semantic {
 
-// using namespace sasl::utility::ops;
+// using namespace sasl::enums::ops;
 
 // reflection_impl::reflection_impl()
 //     : module_sem_(nullptr), entry_point_(nullptr), position_output_(nullptr) {

@@ -5,7 +5,7 @@
 #include <salviar/include/host.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/shader_regs.h>

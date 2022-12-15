@@ -1,20 +1,14 @@
 #include <sasl/codegen/ty_cache.h>
 
-#include <sasl/enums/enums_utility.h>
-
+#include <sasl/enums/traits.h>
 #include <eflib/diagnostics/assert.h>
 
-constexpr int PACKAGE_SIZE = 16;
-constexpr int SIMD_WIDTH_IN_BYTES(){
-	return 16;
-}
-constexpr int SIMD_FLOAT_SIZE(){
-	return SIMD_WIDTH_IN_BYTES() / sizeof(float);
-}
+using namespace sasl::enums;
 
-using namespace sasl::utility;
+constexpr int PACKAGE_SIZE = 16;
 
 namespace sasl::codegen {
+	using eflib::e2i;
 
 class ty_cache_t{
 public:
@@ -25,8 +19,8 @@ private:
 	Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
 	Type* create_abi_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
 
-	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> >	cache[abis::count];
-	unordered_map<builtin_types, std::string>							ty_name[abis::count];
+	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> >	cache[e2i(abis::count)];
+	unordered_map<builtin_types, std::string>							ty_name[e2i(abis::count)];
 };
 
 Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis abi )

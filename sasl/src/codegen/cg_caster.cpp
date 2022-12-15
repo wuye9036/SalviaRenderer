@@ -10,6 +10,7 @@
 #include <sasl/syntax_tree/utility.h>
 
 #include <eflib/diagnostics/assert.h>
+#include <eflib/utility/enum.h>
 #include <eflib/utility/unref_declarator.h>
 
 #include <vector>
@@ -32,6 +33,8 @@ using sasl::syntax_tree::create_builtin_type;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
 
+using eflib::e2i;
+
 using std::make_shared;
 using std::shared_ptr;
 using std::dynamic_pointer_cast;
@@ -39,7 +42,8 @@ using std::static_pointer_cast;
 
 using std::vector;
 
-using namespace sasl::utility;
+using namespace sasl::enums;
+using namespace eflib::enum_operators;
 
 namespace sasl::codegen {
 
@@ -57,7 +61,7 @@ public:
 		node_context* src_ctxt = get_context(src);
 		node_context* dest_ctxt = get_context(dest);
 
-		if(to_underlying(dest->node_class() & node_ids::tynode) != 0)
+		if(e2i(dest->node_class() & node_ids::tynode) != 0)
 		{
 			// Overwrite source.
 			src_ctxt->node_value = v;

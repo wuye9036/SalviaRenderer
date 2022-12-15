@@ -16,7 +16,7 @@
 #include <salviar/include/render_stages.h>
 #include <salviar/include/renderer.h>
 #include <salviar/include/shader_cbuffer.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/async_object.h>
 

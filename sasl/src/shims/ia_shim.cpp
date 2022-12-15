@@ -2,7 +2,7 @@
 
 #include <salviar/include/input_layout.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/stream_assembler.h>
 
 #include <eflib/diagnostics/assert.h>

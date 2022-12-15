@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <sasl/test/jit_test/jit_test.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/diagnostics/profiler.h>
 #include <eflib/memory/allocator.h>

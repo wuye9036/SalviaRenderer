@@ -3,6 +3,10 @@
 #include <sasl/syntax_tree/node.h>
 #include <sasl/syntax_tree/visitor.h>
 
+#include <eflib/utility/enum.h>
+
+using namespace eflib::enum_operators;
+
 using std::shared_ptr;
 
 namespace sasl::syntax_tree {
@@ -71,7 +75,7 @@ bool tynode::is_alias() const{
 
 bool tynode::is_uniform() const
 {
-	return to_underlying(qual & type_qualifiers::_uniform) != 0;
+	return eflib::e2i(qual & type_qualifiers::_uniform) != 0;
 }
 
 builtin_type::builtin_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )

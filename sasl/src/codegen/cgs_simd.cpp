@@ -5,9 +5,9 @@
 #include <sasl/semantic/symbol.h>
 #include <sasl/syntax_tree/declaration.h>
 
-#include <sasl/enums/enums_utility.h>
+#include <sasl/enums/traits.h>
 
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 
 #include <eflib/math/math.h>
 #include <eflib/utility/unref_declarator.h>
@@ -39,14 +39,14 @@ using sasl::syntax_tree::variable_declaration;
 
 using sasl::semantic::node_semantic;
 
-using salviar::PACKAGE_ELEMENT_COUNT;
-using salviar::PACKAGE_LINE_ELEMENT_COUNT;
+using salvia::shader::PACKAGE_ELEMENT_COUNT;
+using salvia::shader::PACKAGE_LINE_ELEMENT_COUNT;
 
 using eflib::ceil_to_pow2;
 using eflib::cpu_sse2;
 using eflib::support_feature;
 
-using namespace sasl::utility;
+using namespace sasl::enums;
 
 using llvm::APInt;
 using llvm::Argument;

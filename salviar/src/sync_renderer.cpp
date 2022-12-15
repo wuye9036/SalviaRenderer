@@ -15,7 +15,7 @@
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/host.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 #include <salviar/include/shader_object.h>
 
 namespace salviar{

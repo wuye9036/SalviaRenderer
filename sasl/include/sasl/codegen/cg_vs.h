@@ -1,14 +1,7 @@
-#ifndef SASL_CODEGEN_CG_VS_H
-#define SASL_CODEGEN_CG_VS_H
+#pragma once
 
 #include <sasl/codegen/cg_sisd.h>
-
 #include <sasl/semantic/reflection_impl.h>
-
-#include <eflib/platform/boost_begin.h>
-#include <boost/utility/value_init.hpp>
-#include <eflib/platform/boost_end.h>
-
 #include <memory>
 
 namespace sasl{
@@ -73,12 +66,12 @@ private:
 
 	module_vmcode_impl* mod_ptr();
 
-	multi_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
+	multi_value layout_to_value(salvia::shader::sv_layout* si, bool copy_from_input);
 
 	// If ctxt is nullptr, the generated value and type will be cached.
 	// Return true if context is fetched from cache.
 	bool layout_to_node_context(
-		node_context* ctxt, salviar::sv_layout* si,
+		node_context* ctxt, salvia::shader::sv_layout* si,
 		bool store_to_existed_value, bool copy_from_input);
 
 	void copy_to_result( std::shared_ptr<sasl::syntax_tree::expression> const& );
@@ -87,12 +80,10 @@ private:
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	multi_value param_values[salviar::sv_usage_count];
+	multi_value param_values[salvia::shader::sv_usage_count];
 
-	typedef std::unordered_map<salviar::semantic_value, node_context*> input_copies_dict;
+	typedef std::unordered_map<salvia::shader::semantic_value, node_context*> input_copies_dict;
 	input_copies_dict input_copies_;
 };
 
 }
-
-#endif

@@ -10,7 +10,7 @@
 #include <sasl/semantic/semantics.h>
 #include <sasl/common/diag_formatter.h>
 #include <sasl/common/diag_chat.h>
-#include <salviar/include/shader_reflection.h>
+#include <salvia/shader/reflection.h>
 
 #include <eflib/math/vector.h>
 #include <eflib/math/matrix.h>

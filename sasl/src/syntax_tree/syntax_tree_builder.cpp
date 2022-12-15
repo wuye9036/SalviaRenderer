@@ -3,7 +3,7 @@
 #include <sasl/syntax_tree/node_creation.h>
 #include <sasl/syntax_tree/utility.h>
 
-#include <sasl/enums/enums_utility.h>
+#include <sasl/enums/traits.h>
 #include <sasl/parser/generator.h>
 #include <sasl/parser/grammars.h>
 #include <sasl/parser/lexer.h>
@@ -11,10 +11,8 @@
 #include <eflib/diagnostics/assert.h>
 
 #include <boost/range/adaptor/reversed.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
-using namespace sasl::utility;
+using namespace sasl::enums;
 
 using sasl::common::token_t;
 
