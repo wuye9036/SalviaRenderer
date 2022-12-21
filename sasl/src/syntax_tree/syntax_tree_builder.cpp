@@ -14,7 +14,7 @@
 
 using namespace sasl::enums;
 
-using sasl::common::token_t;
+using sasl::common::token;
 
 using sasl::parser::attribute;
 using sasl::parser::grammars;
@@ -50,21 +50,21 @@ namespace sasl::syntax_tree {
 
 #define INSERT_INTO_BTCACHE(litname, enum_code)                                                    \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token_t::null(), token_t::null());     \
+    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::null(), token::null());     \
     bt->tycode = builtin_types::enum_code;                                                         \
     bt_cache.insert(make_pair(std::string(#litname), bt));                                         \
   }
 
 #define INSERT_VECTOR_INTO_BTCACHE(component_type, dim, enum_code)                                 \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token_t::null(), token_t::null());     \
+    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::null(), token::null());     \
     bt->tycode = vector_of(builtin_types::enum_code, dim);                                         \
     bt_cache.insert(make_pair(string(#component_type) + char_tbl[dim], bt));                       \
   }
 
 #define INSERT_MATRIX_INTO_BTCACHE(component_type, vsize, vcnt, enum_code)                         \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token_t::null(), token_t::null());     \
+    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::null(), token::null());     \
     bt->tycode = matrix_of(builtin_types::enum_code, vsize, vcnt);                                 \
     bt_cache.insert(                                                                               \
         make_pair(string(#component_type) + char_tbl[vcnt] + "x" + char_tbl[vsize], bt));          \
@@ -352,13 +352,13 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst(shared_ptr<attrib
 }
 
 operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr,
-                                               shared_ptr<token_t> &op_tok) {
+                                               token &op_tok) {
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
 
   assert(tok_attr);
 
   op_tok = tok_attr->tok;
-  auto op_str = op_tok->s;
+  auto op_str = op_tok.lit();
   char op_chars[4] = {'\0', '\0', '\0', '\0'};
   for (size_t i = 0; i < op_str.length(); ++i) {
     op_chars[i] = op_str[i];
@@ -383,10 +383,10 @@ operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr,
 }
 
 operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr,
-                                                shared_ptr<token_t> &op_tok) {
+                                                token &op_tok) {
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
   op_tok = tok_attr->tok;
-  switch (op_tok->s[0]) {
+  switch (op_tok.lit()[0]) {
   case '+': // ++
     return operators::postfix_incr;
   case '-': // --
@@ -394,7 +394,7 @@ operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr,
   }
 
   string assertion("Unsupported operator: ");
-  assertion += op_tok->s;
+  assertion += op_tok.lit();
   EFLIB_ASSERT_UNIMPLEMENTED0(assertion.c_str());
 
   return operators::none;
@@ -415,14 +415,14 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr(shared_ptr<attribut
   // Make expression list and operators list.
   vector<shared_ptr<expression>> exprs;
   vector<operators> ops;
-  vector<shared_ptr<token_t>> op_tokens;
+  vector<token> op_tokens;
 
   exprs.push_back(build_rhsexpr(attr->child(0)));
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, follows, attr->child(1));
   for (shared_ptr<attribute> follow_pair : follows->attrs) {
     exprs.push_back(build_rhsexpr(follow_pair->child(1)));
     shared_ptr<attribute> op_attr = follow_pair->child(0);
-    shared_ptr<token_t> op_token;
+    token op_token{token::uninitialized()};
     ops.push_back(build_binop(op_attr, op_token));
     op_tokens.push_back(op_token);
   }
@@ -461,7 +461,7 @@ shared_ptr<expression> syntax_tree_builder::build_lcomb_expr(shared_ptr<attribut
     binexpr =
         create_node<binary_expression>(lexpr->token_begin(), follow_pair->child(1)->token_end());
     binexpr->left_expr = lexpr;
-    shared_ptr<token_t> op_token;
+    token op_token{token::uninitialized()};
     binexpr->op = build_binop(follow_pair->child(0), op_token);
     binexpr->op_token = op_token;
     binexpr->right_expr = dispatch_lcomb_expr(follow_pair->child(1));
@@ -560,7 +560,7 @@ shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr(shared_ptr<a
   shared_ptr<unary_expression> ret =
       create_node<unary_expression>(attr->token_beg(), attr->token_end());
   ret->expr = expr;
-  shared_ptr<token_t> op_token;
+  token op_token{token::uninitialized()};
   ret->op = build_prefix_op(op_attr, op_token);
   ret->op_token = op_token;
 
@@ -580,7 +580,7 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr(shared_ptr<attribute>
     SASL_CASE_RULE(opinc) {
       shared_ptr<unary_expression> ret_unary =
           create_node<unary_expression>(ret->token_begin(), expr_attr->token_end());
-      shared_ptr<token_t> op_token;
+      token op_token{token::uninitialized()};
       ret_unary->op = build_postfix_op(expr_attr, op_token);
       ret_unary->op_token = op_token;
       ret_unary->expr = ret;
@@ -1053,7 +1053,7 @@ void syntax_tree_builder::build_initdecl(shared_ptr<attribute> attr, shared_ptr<
 }
 
 operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr,
-                                           shared_ptr<token_t> &op_tok) {
+                                           token &op_tok) {
   // Get terminal attribute of operator from attr or direct child of attr.
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
   if (!tok_attr) {
@@ -1062,7 +1062,7 @@ operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr,
 
   assert(tok_attr);
   op_tok = tok_attr->tok;
-  auto op_str = op_tok->s;
+  auto op_str = op_tok.lit();
   char op_chars[4] = {'\0', '\0', '\0', '\0'};
   for (size_t i = 0; i < op_str.length(); ++i) {
     op_chars[i] = op_str[i];
@@ -1135,8 +1135,8 @@ operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr,
 }
 
 void syntax_tree_builder::build_semantic(shared_ptr<attribute> const &attr,
-                                         shared_ptr<token_t> &out_semantic,
-                                         shared_ptr<token_t> &out_semantic_index) {
+                                         token &out_semantic,
+                                         token &out_semantic_index) {
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, typed_attr, attr);
   if (!typed_attr->attrs.empty()) {
     SASL_DYNCAST_ATTRIBUTE(queuer_attribute, sem_attr, typed_attr->attrs[0]);
@@ -1156,7 +1156,7 @@ shared_ptr<builtin_type>
 syntax_tree_builder::get_builtin(std::shared_ptr<sasl::parser::attribute> const &attr) {
   initialize_bt_cache();
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, term_attr, attr);
-  std::string name{term_attr->tok->s};
+  std::string name{term_attr->tok.lit()};
   shared_ptr<builtin_type> ret;
   if (bt_cache.count(name) > 0) {
     ret = duplicate(bt_cache[name])->as_handle<builtin_type>();

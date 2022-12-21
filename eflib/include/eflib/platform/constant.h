@@ -1,5 +1,4 @@
-#ifndef EFLIB_PLATFORM_CONSTANT_H
-#define EFLIB_PLATFORM_CONSTANT_H
+#pragma
 
 #include <limits>
 
@@ -17,4 +16,3 @@ namespace eflib{
 	static const float 	epsilon				=	std::numeric_limits< float >::epsilon();
 }
 
-#endif

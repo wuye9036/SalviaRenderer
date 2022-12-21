@@ -1,11 +1,6 @@
-set( HEADER_LIST
-	../../include/sasl/parser/diags.h
-	../../include/sasl/parser/error_handlers.h
-	../../include/sasl/parser/lexer.h
-	../../include/sasl/parser/generator.h
-	../../include/sasl/parser/grammars.h
-	../../include/sasl/parser/parse_api.h
-)
+
+file(GLOB HEADER_LIST CONFIGURE_DEPENDS "../../include/sasl/parser/*.h")
+file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "*.cpp")
 
 set( SOURCE_LIST
 	error_handlers.cpp
@@ -21,4 +16,3 @@ target_link_libraries(sasl_parser eflib)
 target_compile_features(sasl_parser PUBLIC cxx_std_20)
 
 set_target_properties(sasl_parser PROPERTIES FOLDER "Shader Libs")
-

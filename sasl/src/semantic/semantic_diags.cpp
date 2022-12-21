@@ -17,7 +17,7 @@ using sasl::enums::vector_size;
 using sasl::common::compiler_compatibility;
 using sasl::common::diag_levels;
 using sasl::common::diag_template;
-using sasl::common::token_t;
+using sasl::common::token;
 using sasl::syntax_tree::function_full_def;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::tynode;
@@ -87,12 +87,12 @@ string type_repr::str() {
       str_cache.assign(name.begin(), name.end());
     } else if (ty->is_struct()) {
       str_cache = "struct ";
-      str_cache += ty->as_handle<struct_type>()->name->s;
+      str_cache += ty->as_handle<struct_type>()->name.lit();
     } else if (ty->is_function()) {
       shared_ptr<function_full_def> fn = ty->as_handle<function_full_def>();
       str_cache = type_repr(fn->retval_type).str();
       str_cache += " ";
-      str_cache += fn->name->s;
+      str_cache += fn->name.lit();
       str_cache += "(";
       if (!fn->params.empty()) {
         for (size_t i = 1; i < fn->params.size(); ++i) {
@@ -140,8 +140,8 @@ string args_type_repr::str() {
 
 args_type_repr::args_type_repr() {}
 
-source_position_repr::source_position_repr(shared_ptr<token_t> const &beg,
-                                           shared_ptr<token_t> const &end,
+source_position_repr::source_position_repr(shared_ptr<token> const &beg,
+                                           shared_ptr<token> const &end,
                                            compiler_compatibility cc)
     : beg(beg), end(end), cc(cc) {}
 

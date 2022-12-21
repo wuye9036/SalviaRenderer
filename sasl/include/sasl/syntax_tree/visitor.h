@@ -2,9 +2,9 @@
 
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
 
-#include <eflib/platform/boost_begin.h>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
+#include <eflib/platform/boost_begin.h>
 #include <eflib/platform/boost_end.h>
 
 #include <any>
@@ -67,86 +67,137 @@ struct program;
 //	void visit ( ... ){
 //		EFLIB_ASSERT_UNIMPLEMENTED0( "XXX::visit was not implemented yet." );
 //	}
-#define SASL_VISIT_DEF_UNIMPL( node_type_name )	\
-	SASL_SPECIFIC_VISIT_DEF_UNIMPL( visit, node_type_name )
-#define SASL_SPECIFIC_VISIT_DEF_UNIMPL( fn, node_type_name ) \
-	void SASL_VISITOR_TYPE_NAME::fn( ::sasl::syntax_tree::node_type_name &, ::std::any* ){ \
-		EFLIB_ASSERT_UNIMPLEMENTED0( \
-			( ::std::string( BOOST_PP_STRINGIZE( SASL_VISITOR_TYPE_NAME::node_type_name ) ) \
-			+ ::std::string( " was not implemented yet." ) ).c_str()	\
-		); \
-	}
+#define SASL_VISIT_DEF_UNIMPL(node_type_name) SASL_SPECIFIC_VISIT_DEF_UNIMPL(visit, node_type_name)
+#define SASL_SPECIFIC_VISIT_DEF_UNIMPL(fn, node_type_name)                                         \
+  void SASL_VISITOR_TYPE_NAME::fn(::sasl::syntax_tree::node_type_name &, ::std::any *) {           \
+    EFLIB_ASSERT_UNIMPLEMENTED0(                                                                   \
+        (::std::string(BOOST_PP_STRINGIZE( SASL_VISITOR_TYPE_NAME::node_type_name ) ) +            \
+                       ::std::string(" was not implemented yet."))                                 \
+             .c_str());                                                                            \
+  }
 
-#define SASL_VISIT_DEF( node_type_name )	\
-	SASL_SPECIFIC_VISIT_DEF( visit, node_type_name )
-#define SASL_SPECIFIC_VISIT_DEF( fn, node_type_name ) \
-	void SASL_VISITOR_TYPE_NAME::fn ( ::sasl::syntax_tree::node_type_name& v, ::std::any* data )
+#define SASL_VISIT_DEF(node_type_name) SASL_SPECIFIC_VISIT_DEF(visit, node_type_name)
+#define SASL_SPECIFIC_VISIT_DEF(fn, node_type_name)                                                \
+  void SASL_VISITOR_TYPE_NAME::fn(::sasl::syntax_tree::node_type_name &v, ::std::any *data)
 
-#define SASL_VISIT_DCL( node_type_name )	\
-	SASL_SPECIFIC_VISIT_DCL( visit, node_type_name )
-#define SASL_SPECIFIC_VISIT_DCL( fn, node_type_name ) \
-	virtual void fn ( ::sasl::syntax_tree::node_type_name& v, ::std::any* data = nullptr )
+#define SASL_VISIT_DCL(node_type_name) SASL_SPECIFIC_VISIT_DCL(visit, node_type_name)
+#define SASL_SPECIFIC_VISIT_DCL(fn, node_type_name)                                                \
+  virtual void fn(::sasl::syntax_tree::node_type_name &v, ::std::any *data = nullptr)
 
-#define SASL_VISIT_INLINE_DEF_UNIMPL( node_type_name )	\
-	SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL( visit, node_type_name )
-#define SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL( fn, node_type_name )	\
-	virtual void fn ( ::sasl::syntax_tree::node_type_name &, ::std::any* = nullptr ){	\
-		EFLIB_ASSERT_UNIMPLEMENTED0( \
-			( ::std::string( BOOST_PP_STRINGIZE( node_type_name ) ) \
-			+ ::std::string( " was not implemented yet." ) ).c_str()	\
-		); \
-	}
+#define SASL_VISIT_INLINE_DEF_UNIMPL(node_type_name)                                               \
+  SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL(visit, node_type_name)
+#define SASL_SPECIFIC_VISIT_INLINE_DEF_UNIMPL(fn, node_type_name)                                  \
+  virtual void fn(::sasl::syntax_tree::node_type_name &, ::std::any * = nullptr) {                 \
+    EFLIB_ASSERT_UNIMPLEMENTED0((::std::string(BOOST_PP_STRINGIZE( node_type_name ) ) +            \
+                                               ::std::string(" was not implemented yet."))         \
+                                     .c_str());                                                    \
+  }
 
-class syntax_tree_visitor{
+class syntax_tree_visitor {
 public:
-	// expression
-	SASL_VISIT_DCL( unary_expression ) = 0;
-	SASL_VISIT_DCL( cast_expression ) = 0;
-	SASL_VISIT_DCL( binary_expression ) = 0;
-	SASL_VISIT_DCL( expression_list ) = 0;
-	SASL_VISIT_DCL( cond_expression ) = 0;
-	SASL_VISIT_DCL( index_expression ) = 0;
-	SASL_VISIT_DCL( call_expression ) = 0;
-	SASL_VISIT_DCL( member_expression ) = 0;
-	SASL_VISIT_DCL( constant_expression ) = 0;
-	SASL_VISIT_DCL( variable_expression ) = 0;
+  // expression
+  SASL_VISIT_DCL(unary_expression) = 0;
+  SASL_VISIT_DCL(cast_expression) = 0;
+  SASL_VISIT_DCL(binary_expression) = 0;
+  SASL_VISIT_DCL(expression_list) = 0;
+  SASL_VISIT_DCL(cond_expression) = 0;
+  SASL_VISIT_DCL(index_expression) = 0;
+  SASL_VISIT_DCL(call_expression) = 0;
+  SASL_VISIT_DCL(member_expression) = 0;
+  SASL_VISIT_DCL(constant_expression) = 0;
+  SASL_VISIT_DCL(variable_expression) = 0;
 
-	// declaration & type specifier
-	SASL_VISIT_DCL( initializer ) = 0;
-	SASL_VISIT_DCL( expression_initializer ) = 0;
-	SASL_VISIT_DCL( member_initializer ) = 0;
-	SASL_VISIT_DCL( declaration ) = 0;
-	SASL_VISIT_DCL( declarator ) = 0;
-	SASL_VISIT_DCL( variable_declaration ) = 0;
-	SASL_VISIT_DCL( type_definition ) = 0;
-	SASL_VISIT_DCL( function_def ) = 0;
-	SASL_VISIT_DCL( parameter ) = 0;
-	SASL_VISIT_DCL( function_full_def ) = 0;
-	SASL_VISIT_DCL( parameter_full ) = 0;
-	SASL_VISIT_DCL( tynode ) = 0;
-	SASL_VISIT_DCL( builtin_type ) = 0;
-	SASL_VISIT_DCL( array_type ) = 0;
-	SASL_VISIT_DCL( struct_type ) = 0;
-	SASL_VISIT_DCL( alias_type ) = 0;
-	SASL_VISIT_DCL( function_type ) = 0;
+  // declaration & type specifier
+  SASL_VISIT_DCL(initializer) = 0;
+  SASL_VISIT_DCL(expression_initializer) = 0;
+  SASL_VISIT_DCL(member_initializer) = 0;
+  SASL_VISIT_DCL(declaration) = 0;
+  SASL_VISIT_DCL(declarator) = 0;
+  SASL_VISIT_DCL(variable_declaration) = 0;
+  SASL_VISIT_DCL(type_definition) = 0;
+  SASL_VISIT_DCL(function_def) = 0;
+  SASL_VISIT_DCL(parameter) = 0;
+  SASL_VISIT_DCL(function_full_def) = 0;
+  SASL_VISIT_DCL(parameter_full) = 0;
+  SASL_VISIT_DCL(tynode) = 0;
+  SASL_VISIT_DCL(builtin_type) = 0;
+  SASL_VISIT_DCL(array_type) = 0;
+  SASL_VISIT_DCL(struct_type) = 0;
+  SASL_VISIT_DCL(alias_type) = 0;
+  SASL_VISIT_DCL(function_type) = 0;
 
-	// statement
-	SASL_VISIT_DCL( statement ) = 0;
-	SASL_VISIT_DCL( declaration_statement ) = 0;
-	SASL_VISIT_DCL( if_statement ) = 0;
-	SASL_VISIT_DCL( while_statement ) = 0;
-	SASL_VISIT_DCL( dowhile_statement ) = 0;
-	SASL_VISIT_DCL( for_statement ) = 0;
-	SASL_VISIT_DCL( case_label ) = 0;
-	SASL_VISIT_DCL( ident_label ) = 0;
-	SASL_VISIT_DCL( switch_statement ) = 0;
-	SASL_VISIT_DCL( compound_statement ) = 0;
-	SASL_VISIT_DCL( expression_statement ) = 0;
-	SASL_VISIT_DCL( jump_statement ) = 0;
-	SASL_VISIT_DCL( labeled_statement ) = 0;
+  // statement
+  SASL_VISIT_DCL(statement) = 0;
+  SASL_VISIT_DCL(declaration_statement) = 0;
+  SASL_VISIT_DCL(if_statement) = 0;
+  SASL_VISIT_DCL(while_statement) = 0;
+  SASL_VISIT_DCL(dowhile_statement) = 0;
+  SASL_VISIT_DCL(for_statement) = 0;
+  SASL_VISIT_DCL(case_label) = 0;
+  SASL_VISIT_DCL(ident_label) = 0;
+  SASL_VISIT_DCL(switch_statement) = 0;
+  SASL_VISIT_DCL(compound_statement) = 0;
+  SASL_VISIT_DCL(expression_statement) = 0;
+  SASL_VISIT_DCL(jump_statement) = 0;
+  SASL_VISIT_DCL(labeled_statement) = 0;
 
-	// program
-	SASL_VISIT_DCL( program ) = 0;
+  // program
+  SASL_VISIT_DCL(program) = 0;
 };
 
-}
+template <typename Visitor> class syntax_tree_static_visitor: public syntax_tree_visitor {
+public:
+  syntax_tree_static_visitor(Visitor &v) : vis_{v} {}
+  // expression
+  SASL_VISIT_DCL(unary_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(cast_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(binary_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(expression_list) { vis_(v, data); }
+  SASL_VISIT_DCL(cond_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(index_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(call_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(member_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(constant_expression) { vis_(v, data); }
+  SASL_VISIT_DCL(variable_expression) { vis_(v, data); }
+
+  // declaration & type specifier
+  SASL_VISIT_DCL(initializer) { vis_(v, data); }
+  SASL_VISIT_DCL(expression_initializer) { vis_(v, data); }
+  SASL_VISIT_DCL(member_initializer) { vis_(v, data); }
+  SASL_VISIT_DCL(declaration) { vis_(v, data); }
+  SASL_VISIT_DCL(declarator) { vis_(v, data); }
+  SASL_VISIT_DCL(variable_declaration) { vis_(v, data); }
+  SASL_VISIT_DCL(type_definition) { vis_(v, data); }
+  SASL_VISIT_DCL(function_def) { vis_(v, data); }
+  SASL_VISIT_DCL(parameter) { vis_(v, data); }
+  SASL_VISIT_DCL(function_full_def) { vis_(v, data); }
+  SASL_VISIT_DCL(parameter_full) { vis_(v, data); }
+  SASL_VISIT_DCL(tynode) { vis_(v, data); }
+  SASL_VISIT_DCL(builtin_type) { vis_(v, data); }
+  SASL_VISIT_DCL(array_type) { vis_(v, data); }
+  SASL_VISIT_DCL(struct_type) { vis_(v, data); }
+  SASL_VISIT_DCL(alias_type) { vis_(v, data); }
+  SASL_VISIT_DCL(function_type) { vis_(v, data); }
+
+  // statement
+  SASL_VISIT_DCL(statement) { vis_(v, data); }
+  SASL_VISIT_DCL(declaration_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(if_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(while_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(dowhile_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(for_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(case_label) { vis_(v, data); }
+  SASL_VISIT_DCL(ident_label) { vis_(v, data); }
+  SASL_VISIT_DCL(switch_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(compound_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(expression_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(jump_statement) { vis_(v, data); }
+  SASL_VISIT_DCL(labeled_statement) { vis_(v, data); }
+
+  // program
+  SASL_VISIT_DCL(program) { vis_(v, data); }
+
+  Visitor vis_;
+};
+
+} // namespace sasl::syntax_tree

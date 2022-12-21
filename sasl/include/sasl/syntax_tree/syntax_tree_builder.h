@@ -131,26 +131,26 @@ public:
 
 	operators build_binop(
 		std::shared_ptr<sasl::parser::attribute> attr,
-		std::shared_ptr<token_t>& op_tok );
+		token & op_tok );
 
 	operators build_prefix_op(
 		std::shared_ptr<sasl::parser::attribute> attr,
-		std::shared_ptr<token_t>& op_tok );
+		token & op_tok );
 	
 	operators build_postfix_op(
 		std::shared_ptr<sasl::parser::attribute> attr,
-		std::shared_ptr<token_t>& op_tok );
+		token & op_tok );
 
 	void build_semantic(
 		std::shared_ptr<sasl::parser::attribute> const& attr,
-		std::shared_ptr<sasl::common::token_t>& out_semantic,
-		std::shared_ptr<sasl::common::token_t>& out_semantic_index
+		token& out_semantic,
+		token& out_semantic_index
 		);
 private:
 	void initialize_bt_cache();
 	std::shared_ptr<builtin_type> get_builtin( std::shared_ptr<sasl::parser::attribute> const& attr );
 
-	syntax_tree_builder& operator = ( syntax_tree_builder const& );
+	syntax_tree_builder &operator=(syntax_tree_builder const &) = delete;
 
 	sasl::parser::lexer& l;
 	sasl::parser::grammars& g;

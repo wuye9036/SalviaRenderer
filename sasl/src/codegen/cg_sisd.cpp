@@ -143,7 +143,7 @@ SASL_VISIT_DEF(member_expression) {
   } else {
     // Member
     symbol *struct_sym = sem_->get_symbol(tisi->ty_proto());
-    symbol *mem_sym = struct_sym->find_this(v.member->s);
+    symbol *mem_sym = struct_sym->find_this(v.member.lit());
 
     assert(mem_sym);
     node_context *mem_ctxt = node_ctxt(mem_sym->associated_node(), true);

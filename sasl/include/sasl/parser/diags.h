@@ -19,9 +19,9 @@ constexpr sasl::common::diag_template cannot_open_include_file            {1100,
 constexpr sasl::common::diag_template cannot_open_input_file              {1101, diag_levels::error,          "cannot open input file: '{file_name:s}'."};
 constexpr sasl::common::diag_template unrecognized_token                  {1102, diag_levels::error,          "unrecognized token: '{token:s}'."};
 constexpr sasl::common::diag_template unknown_tokenize_error              {1103, diag_levels::error,          "unknown exception in tokenize stage was raised. exception info: '{info:s}'."};
-constexpr sasl::common::diag_template end_of_file                         {1104, diag_levels::error,          "end of file found but '{token:s}' needed."};
+constexpr sasl::common::diag_template end_of_file                         {1104, diag_levels::error,          "end of file found but '{:s}' needed."};
 constexpr sasl::common::diag_template unmatched_token                     {1105, diag_levels::error,          "syntax error: '{syntax_error:s}'"};
-constexpr sasl::common::diag_template unmatched_expected_token            {1106, diag_levels::error,          "syntax error: missing '{expected:s}' before '{actual:s}'."}; 
+constexpr sasl::common::diag_template unmatched_expected_token            {1106, diag_levels::error,          "syntax error: missing '{:s}' before '{:s}'."}; 
 
 // clang-format on
 }

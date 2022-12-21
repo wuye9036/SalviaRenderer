@@ -15,7 +15,7 @@
 namespace splex = boost::spirit::lex;
 
 using sasl::common::lex_context;
-using sasl::common::token_t;
+using sasl::common::token;
 
 using std::make_shared;
 using std::shared_ptr;
@@ -44,7 +44,7 @@ public:
       state_translations;
   unordered_set<std::string> skippers;
   unordered_set<std::string> init_states;
-  token_seq *attrs;
+  std::vector<token> *attrs;
   shared_ptr<lex_context> ctxt;
 };
 
@@ -54,7 +54,7 @@ public:
 
   attr_processor(attr_processor const &rhs) : data(rhs.data) {}
 
-  void output(token_seq &seq) { data->attrs = &seq; }
+  void output(std::vector<token> &seq) { data->attrs = &seq; }
 
   void context(shared_ptr<lex_context> ctxt) { data->ctxt = ctxt; }
 
@@ -89,8 +89,8 @@ public:
     // do skip
     std::string splexer_state(splexer_ctxt.get_state_name());
     if (data->skippers.count(splexer_state) == 0) {
-      shared_ptr<token_t> tok =
-          token_t::make(id, str, data->ctxt->line(), data->ctxt->column(),
+      token tok =
+          token::make(id, str, data->ctxt->line(), data->ctxt->column(),
                         data->ctxt->file_name());
       data->attrs->push_back(tok);
       data->ctxt->update_position(str);
@@ -228,7 +228,7 @@ std::string const &lexer::get_name(size_t id) { return impl->ids[id]; }
 size_t lexer::get_id(std::string const &name) { return impl->defs[name].id(); }
 
 bool lexer::tokenize(/*INPUTS*/ std::string const &code,
-                     shared_ptr<lex_context> ctxt, /*OUTPUT*/ token_seq &seq) {
+                     shared_ptr<lex_context> ctxt, /*OUTPUT*/ std::vector<token> &seq) {
   impl->proc->output(seq);
   impl->proc->context(ctxt);
 
@@ -287,14 +287,13 @@ shared_ptr<lexer_impl> lexer::get_impl() const { return impl; }
 bool lexer::begin_incremental() { return true; }
 
 bool lexer::incremental_tokenize(string const &word,
-                                 shared_ptr<lex_context> ctxt, token_seq &seq) {
+                                 shared_ptr<lex_context> ctxt, std::vector<token> &seq) {
   return tokenize(word, ctxt, seq);
 }
 
-bool lexer::end_incremental(shared_ptr<lex_context> ctxt, token_seq &seq) {
-  token_ptr tok = token_t::make(size_t(-1), "", ctxt->line(), ctxt->column(),
-                                ctxt->file_name());
-  tok->end_of_file = true;
+bool lexer::end_incremental(shared_ptr<lex_context> ctxt, std::vector<token> &seq) {
+  token tok = token::make(size_t(-1), "", ctxt->line(), ctxt->column(),
+                                ctxt->file_name(), true);
   seq.push_back(tok);
 
   return true;
@@ -302,12 +301,11 @@ bool lexer::end_incremental(shared_ptr<lex_context> ctxt, token_seq &seq) {
 
 bool lexer::tokenize_with_end(std::string const &code,
                               shared_ptr<lex_context> ctxt,
-                              /*OUTPUT*/ token_seq &seq) {
+                              /*OUTPUT*/ std::vector<token> &seq) {
   bool ret = tokenize(code, ctxt, seq);
   if (ret) {
-    token_ptr tok = token_t::make(size_t(-1), "", ctxt->line(), ctxt->column(),
-                                  ctxt->file_name());
-    tok->end_of_file = true;
+    token tok = token::make(size_t(-1), "", ctxt->line(), ctxt->column(),
+                                  ctxt->file_name(), true);
     seq.push_back(tok);
   }
   return ret;

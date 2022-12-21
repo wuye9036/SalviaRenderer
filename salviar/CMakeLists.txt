@@ -165,4 +165,4 @@ if(UNIX)
 	# On linux, it will depend on pthread.
 	TARGET_LINK_LIBRARIES(salviar pthread)
 endif()
-SET_TARGET_PROPERTIES( salviar PROPERTIES FOLDER "SALVIA Renderer" )
+set_target_properties( salviar PROPERTIES FOLDER "SALVIA Renderer" )

@@ -136,7 +136,7 @@ symbol *symbol::add_function_begin(function_def *child_fn) {
     return nullptr;
   }
   symbol *ret = new (owner_->alloc_symbol()) symbol(owner_, this, child_fn, nullptr);
-  ret->unmangled_name_ = child_fn->name->s;
+  ret->unmangled_name_ = child_fn->name.lit();
   return ret;
 }
 
@@ -464,7 +464,7 @@ symbol::overload_position symbol::get_overload_position(std::string_view name) {
 symbol *symbol::unchecked_insert_overload(symbol::overload_position pos, function_def *def,
                                           tid_t tid) {
   symbol *sym = symbol::create(owner_, this, def);
-  sym->unmangled_name_ = def->name->s;
+  sym->unmangled_name_ = def->name.lit();
   children_.insert(make_pair(static_cast<node *>(def), sym));
 
   pos.pos->first.push_back(sym);

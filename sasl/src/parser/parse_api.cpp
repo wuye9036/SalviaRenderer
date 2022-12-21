@@ -17,8 +17,8 @@ class diag_chat;
 } // namespace sasl
 using sasl::common::code_source;
 using sasl::common::diag_chat;
-using sasl::common::lex_context;
 using sasl::common::inline_code_span;
+using sasl::common::lex_context;
 
 using std::cout;
 using std::endl;
@@ -30,9 +30,9 @@ bool sasl::parser::parse(shared_ptr<attribute> &pt_root, const std::string &code
 
   bool tok_result = l.tokenize_with_end(code, ctxt, toks);
   if (!tok_result) {
-    diags->report_args(sasl::parser::unrecognized_token, ctxt->file_name(),
+    diags->report(sasl::parser::unrecognized_token, ctxt->file_name(),
                   inline_code_span(ctxt->line(), ctxt->column(), 1),
-                  fmt::make_format_args(fmt::arg("token", "<unknown>")));
+                  fmt::arg("token", "<unknown>"));
     return false;
   }
 
@@ -50,9 +50,9 @@ bool sasl::parser::parse(shared_ptr<attribute> &pt_root, code_source *src,
       std::string next_token{src->next()};
       bool tok_result = l.incremental_tokenize(next_token, ctxt, toks);
       if (!tok_result) {
-        diags->report_args(sasl::parser::unrecognized_token, ctxt->file_name(),
-              inline_code_span(ctxt->line(), ctxt->column(), 1),
-              fmt::make_format_args(fmt::arg("token", next_token)));
+        diags->report(sasl::parser::unrecognized_token, ctxt->file_name(),
+                      inline_code_span(ctxt->line(), ctxt->column(), 1),
+                      fmt::arg("token", next_token));
         return false;
       }
     }

@@ -111,7 +111,7 @@ public:
     }
 
     // Construct function type prototype.
-    shared_ptr<function_type> fn_proto = create_node<function_type>(token_t_ptr(), token_t_ptr());
+    shared_ptr<function_type> fn_proto = create_node<function_type>();
     fn_proto->result_type = get_proto(fn_tids[0])->as_handle<tynode>();
     fn_proto->param_types.reserve(4);
     for (size_t i_param = 1; i_param < fn_tids.size(); ++i_param) {
@@ -372,7 +372,7 @@ name_of_unqualified_type(module_semantic * /*sem*/, tynode *typespec,
   node_ids node_cls = typespec->node_class();
 
   if (node_cls == node_ids::alias_type) {
-    return polymorphic_cast<alias_type *>(typespec)->alias->s;
+    return polymorphic_cast<alias_type *>(typespec)->alias.lit();
   } else if (node_cls == node_ids::builtin_type) {
     return builtin_type_name(typespec->tycode, scalar_type_names);
   } else if (node_cls == node_ids::function_full_def) {
@@ -380,7 +380,7 @@ name_of_unqualified_type(module_semantic * /*sem*/, tynode *typespec,
     return string_view();
     // return mangle( sem, polymorphic_cast<function_full_def*>(typespec) );
   } else if (node_cls == node_ids::struct_type) {
-    return polymorphic_cast<struct_type *>(typespec)->name->s;
+    return polymorphic_cast<struct_type *>(typespec)->name.lit();
   } else if (node_cls == node_ids::function_type) {
     return string_view();
   }
@@ -515,7 +515,7 @@ void append_mangling(std::string &str, type_qualifiers qual) {
 
 void append_mangling(std::string &str, struct_type *stype) {
   str.append("S");
-  str.append(stype->name->s);
+  str.append(stype->name.lit());
 }
 
 // Mangling array. Cannot distinguish between int[] & int[][].

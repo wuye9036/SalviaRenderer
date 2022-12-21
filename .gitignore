@@ -3,3 +3,5 @@ test_main.cpp
 .vscode/
 *.suo
 *.pyc
+build/
+.vs/

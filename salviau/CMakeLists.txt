@@ -65,7 +65,7 @@ ADD_LIBRARY( salviau SHARED
 endif(MSVC)
 
 TARGET_LINK_LIBRARIES( salviau salviax EFLIB ${Boost_LIBRARIES}) 
-SET_TARGET_PROPERTIES( salviau PROPERTIES FOLDER "Samples" )
+set_target_properties( salviau PROPERTIES FOLDER "Samples" )
 install(TARGETS salviau)
 install(
     CODE [[

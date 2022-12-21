@@ -1,7 +1,8 @@
-#ifndef SASL_SYNTAX_TREE_NODE_CREATION_H
-#define SASL_SYNTAX_TREE_NODE_CREATION_H
+#pragma once
 
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
+
+#include <sasl/common/token.h>
 
 #include <memory>
 #include <type_traits>
@@ -9,34 +10,26 @@
 namespace sasl::syntax_tree {
 
 struct node;
+using token = sasl::common::token;
 
 template <typename NodeT>
-std::shared_ptr<NodeT> create_node()
-{
-	static_assert(std::is_base_of<node, NodeT>::value);
-    auto ret = std::shared_ptr<NodeT>{ new NodeT{} };
-	return ret;
+  requires std::is_base_of_v<node, NodeT>
+std::shared_ptr<NodeT> create_node() {
+  return std::make_shared<NodeT>();
 }
 
 template <typename NodeT, typename ParamT>
-std::shared_ptr<NodeT> create_node(ParamT&& par)
-{
-	static_assert(std::is_base_of<node, NodeT>::value);
-    auto ret = std::shared_ptr<NodeT>{ new NodeT(std::forward<ParamT>(par)) };
-	return ret;
+  requires std::is_base_of_v<node, NodeT>
+std::shared_ptr<NodeT> create_node(ParamT &&par){
+  return std::make_shared<NodeT>(std::forward<ParamT>(par));
 }
 
 template <typename NodeT>
-std::shared_ptr<NodeT> create_node(
-	std::shared_ptr<token_t> const& token_beg,
-	std::shared_ptr<token_t> const& token_end
-	)
-{
-	static_assert(std::is_base_of<node, NodeT>::value);
-    auto ret = std::shared_ptr<NodeT>{ new NodeT(token_beg, token_end) };
-	return ret;
+  requires std::is_base_of_v<node, NodeT>
+std::shared_ptr<NodeT> create_node(token tok_beg, token tok_end) {
+  auto ret = std::make_shared<NodeT>();
+  ret->tok_beg = std::move(tok_beg);
+  ret->tok_end = std::move(tok_end);
 }
 
-}
-
-#endif
+} // namespace sasl::syntax_tree

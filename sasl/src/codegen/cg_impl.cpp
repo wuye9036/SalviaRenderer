@@ -128,7 +128,7 @@ void cg_impl::visit_child(sasl::syntax_tree::node *child) { child->accept(this, 
 SASL_VISIT_DEF(variable_expression) {
   EFLIB_UNREF_DECLARATOR(data);
 
-  symbol *var_sym = current_symbol_->find(v.var_name->s);
+  symbol *var_sym = current_symbol_->find(v.var_name.lit());
   assert(var_sym);
 
   node *var_node = var_sym->associated_node();
@@ -625,7 +625,7 @@ SASL_SPECIFIC_VISIT_DEF(visit_local_declarator, declarator) {
 
   ctxt->ty = current_cg_type_;
   ctxt->node_value = service()->create_variable(
-      ctxt->ty, local_abi(sem_->get_semantic(&v)->msc_compatible()), v.name->s);
+      ctxt->ty, local_abi(sem_->get_semantic(&v)->msc_compatible()), v.name.lit());
 
   if (v.init) {
     VARIABLE_TO_INIT_SCOPE(&v);

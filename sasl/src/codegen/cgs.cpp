@@ -250,9 +250,9 @@ cg_type *cg_service::create_ty(tynode *tyn) {
       }
 
       StructType *ty_c =
-          StructType::create(c_member_types, fmt::format("{}.abi.c", struct_tyn->name->s));
+          StructType::create(c_member_types, fmt::format("{}.abi.c", struct_tyn->name.lit()));
       StructType *ty_llvm =
-          StructType::create(llvm_member_types, fmt::format("{}.abi.llvm", struct_tyn->name->s));
+          StructType::create(llvm_member_types, fmt::format("{}.abi.llvm", struct_tyn->name.lit()));
 
       ret->vm_type(abis::c, ty_c);
       ret->vm_type(abis::llvm, ty_llvm);

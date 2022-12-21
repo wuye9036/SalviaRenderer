@@ -18,6 +18,7 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <variant>
 
 using std::vector;
 
@@ -29,27 +30,36 @@ using std::shared_ptr;
 
 namespace sasl::syntax_tree {
 
-#define SAFE_ACCEPT(node_handle)                                                                   \
-  if (node_handle) {                                                                               \
-    (node_handle)->accept(this, data);                                                             \
-  }
 class follow_up_visitor : public syntax_tree_visitor {
 public:
   follow_up_visitor(std::function<void(node &, ::std::any *)> applied) : applied(applied) {}
 
+  template <typename NodePtr, typename = decltype(std::declval<NodePtr>().get())>
+    void invoke_accept(NodePtr &&pnode, std::any *data) {
+    if (std::forward<NodePtr>(pnode)) {
+      pnode->accept(this, data);
+    }
+  }
+
+  template <typename ContainerT> void visit(ContainerT &cont, ::std::any *data) {
+    for (auto &e : cont) {
+      visit(e, data);
+    }
+  }
+
   // expression
   SASL_VISIT_DCL(unary_expression) {
-    SAFE_ACCEPT(v.expr);
+    invoke_accept(v.expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(cast_expression) {
-    SAFE_ACCEPT(v.casted_type);
-    SAFE_ACCEPT(v.expr);
+    invoke_accept(v.casted_type, data);
+    invoke_accept(v.expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(binary_expression) {
-    SAFE_ACCEPT(v.left_expr);
-    SAFE_ACCEPT(v.right_expr);
+    invoke_accept(v.left_expr, data);
+    invoke_accept(v.right_expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(expression_list) {
@@ -57,23 +67,23 @@ public:
     applied(v, data);
   }
   SASL_VISIT_DCL(cond_expression) {
-    SAFE_ACCEPT(v.cond_expr);
-    SAFE_ACCEPT(v.yes_expr);
-    SAFE_ACCEPT(v.no_expr);
+    invoke_accept(v.cond_expr, data);
+    invoke_accept(v.yes_expr, data);
+    invoke_accept(v.no_expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(index_expression) {
-    SAFE_ACCEPT(v.expr);
-    SAFE_ACCEPT(v.index_expr);
+    invoke_accept(v.expr, data);
+    invoke_accept(v.index_expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(call_expression) {
-    SAFE_ACCEPT(v.expr);
+    invoke_accept(v.expr, data);
     visit(v.args, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(member_expression) {
-    SAFE_ACCEPT(v.expr);
+    invoke_accept(v.expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(constant_expression) { applied(v, data); }
@@ -83,7 +93,7 @@ public:
   SASL_VISIT_INLINE_DEF_UNIMPL(initializer);
 
   SASL_VISIT_DCL(expression_initializer) {
-    SAFE_ACCEPT(v.init_expr);
+    invoke_accept(v.init_expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(member_initializer) {
@@ -92,22 +102,22 @@ public:
   }
   SASL_VISIT_INLINE_DEF_UNIMPL(declaration);
   SASL_VISIT_DCL(variable_declaration) {
-    SAFE_ACCEPT(v.type_info);
+    invoke_accept(v.type_info, data);
     visit(v.declarators, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(declarator) {
-    SAFE_ACCEPT(v.init);
+    invoke_accept(v.init, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(type_definition) {
-    SAFE_ACCEPT(v.type_info);
+    invoke_accept(v.type_info, data);
     applied(v, data);
   }
   SASL_VISIT_INLINE_DEF_UNIMPL(tynode);
   SASL_VISIT_DCL(builtin_type) { applied(v, data); }
   SASL_VISIT_DCL(array_type) {
-    SAFE_ACCEPT(v.elem_type);
+    invoke_accept(v.elem_type, data);
     visit(v.array_lens, data);
     applied(v, data);
   }
@@ -117,29 +127,29 @@ public:
   }
   SASL_VISIT_DCL(alias_type) { visit(v, data); }
   SASL_VISIT_DCL(function_type) {
-    SAFE_ACCEPT(v.result_type);
+    invoke_accept(v.result_type, data);
     visit(v.param_types, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(parameter) {
-    SAFE_ACCEPT(v.init);
+    invoke_accept(v.init, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(function_def) {
-    SAFE_ACCEPT(v.type);
+    invoke_accept(v.type, data);
     visit(v.params, data);
-    SAFE_ACCEPT(v.body);
+    invoke_accept(v.body, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(parameter_full) {
-    SAFE_ACCEPT(v.init);
-    SAFE_ACCEPT(v.param_type);
+    invoke_accept(v.init, data);
+    invoke_accept(v.param_type, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(function_full_def) {
-    SAFE_ACCEPT(v.retval_type);
+    invoke_accept(v.retval_type, data);
     visit(v.params, data);
-    SAFE_ACCEPT(v.body);
+    invoke_accept(v.body, data);
     applied(v, data);
   }
 
@@ -151,36 +161,36 @@ public:
     applied(v, data);
   }
   SASL_VISIT_DCL(if_statement) {
-    SAFE_ACCEPT(v.cond);
-    SAFE_ACCEPT(v.yes_stmt);
-    SAFE_ACCEPT(v.no_stmt);
+    invoke_accept(v.cond, data);
+    invoke_accept(v.yes_stmt, data);
+    invoke_accept(v.no_stmt, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(while_statement) {
-    SAFE_ACCEPT(v.cond);
-    SAFE_ACCEPT(v.body);
+    invoke_accept(v.cond, data);
+    invoke_accept(v.body, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(dowhile_statement) {
-    SAFE_ACCEPT(v.body);
-    SAFE_ACCEPT(v.cond);
+    invoke_accept(v.body, data);
+    invoke_accept(v.cond, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(for_statement) {
-    SAFE_ACCEPT(v.init);
-    SAFE_ACCEPT(v.cond);
-    SAFE_ACCEPT(v.iter);
-    SAFE_ACCEPT(v.body);
+    invoke_accept(v.init, data);
+    invoke_accept(v.cond, data);
+    invoke_accept(v.iter, data);
+    invoke_accept(v.body, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(case_label) {
-    SAFE_ACCEPT(v.expr);
+    invoke_accept(v.expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(ident_label) { applied(v, data); }
   SASL_VISIT_DCL(switch_statement) {
-    SAFE_ACCEPT(v.cond);
-    SAFE_ACCEPT(v.stmts);
+    invoke_accept(v.cond, data);
+    invoke_accept(v.stmts, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(compound_statement) {
@@ -188,15 +198,15 @@ public:
     applied(v, data);
   }
   SASL_VISIT_DCL(expression_statement) {
-    SAFE_ACCEPT(v.expr);
+    invoke_accept(v.expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(jump_statement) {
-    SAFE_ACCEPT(v.jump_expr);
+    invoke_accept(v.jump_expr, data);
     applied(v, data);
   }
   SASL_VISIT_DCL(labeled_statement) {
-    SAFE_ACCEPT(v.stmt);
+    invoke_accept(v.stmt, data);
     visit(v.labels, data);
   }
   // program
@@ -206,11 +216,7 @@ public:
   }
 
 private:
-  template <typename ContainerT> void visit(ContainerT &v, ::std::any *data) {
-    for (typename ContainerT::iterator it = v.begin(); it != v.end(); ++it) {
-      SAFE_ACCEPT(*it);
-    }
-  }
+
   std::function<void(node &, ::std::any *)> applied;
 };
 
@@ -223,7 +229,7 @@ void follow_up_traversal(std::shared_ptr<node> root,
 }
 
 std::shared_ptr<builtin_type> create_builtin_type(const builtin_types &btc) {
-  auto ret = create_node<builtin_type>(token_t::null(), token_t::null());
+  auto ret = create_node<builtin_type>(token::null(), token::null());
   ret->tycode = btc;
   return ret;
 }
@@ -236,8 +242,21 @@ template <typename NodeT> void store_node_to_data(any *lhs, shared_ptr<NodeT> rh
   }
 }
 
+template <typename T>
+  requires std::is_copy_assignable_v<T>
+void copy_member(T &lhs, T const &rhs) {
+  lhs = rhs;
+}
+template <typename T>
+  requires(!std::is_copy_assignable_v<T> /* &&
+           std::is_same_v<std::remove_cvref_t<decltype(declval<T>().clone())>, T>*/)
+void copy_member(T &lhs, T const &rhs) {
+  lhs = rhs.clone();
+}
+
 #define COPY_VALUE_ITEM(r, dest_src, member)                                                       \
-  BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member = BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member;
+  copy_member(BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member,                                         \
+              BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member);
 
 #define SASL_SWALLOW_CLONE_NODE(output, v, node_type, member_seq)                                  \
   std::shared_ptr<node_type> cloned = create_node<node_type>(v.token_begin(), v.token_end());      \
@@ -258,7 +277,7 @@ void copy_from_any(shared_ptr<NodeT> &lhs, const any &rhs,
 }
 
 #define DEEPCOPY_VALUE_ITEM(r, dest_src, member)                                                   \
-  visit(BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member, &member_dup);                                  \
+  invoke_accept(BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member, &member_dup);                                  \
   copy_from_any(BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member, member_dup);
 
 #define SASL_DEEP_CLONE_NODE(dest_any_ptr, src_v_ref, node_type, member_seq)                       \

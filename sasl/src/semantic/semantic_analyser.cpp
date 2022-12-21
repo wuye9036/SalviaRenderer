@@ -26,15 +26,14 @@
 
 #include <cctype>
 #include <memory>
-#include <string_view>
 #include <random>
+#include <string_view>
 
 namespace sasl::semantic {
 
 using salvia::shader::semantic_value;
 
 using sasl::common::diag_chat;
-EFLIB_USING_SHARED_PTR(sasl::common, token_t);
 
 using sasl::syntax_tree::alias_type;
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, array_type);
@@ -159,34 +158,35 @@ shared_ptr<NodeT> semantic_analyser::visit_child(shared_ptr<NodeT> const &child,
   return visit_child<NodeT, NodeT>(child, return_sem);
 }
 
-void semantic_analyser::parse_semantic(token_t_ptr const &sem_tok, token_t_ptr const &sem_idx_tok,
-                                       node_semantic *ssi) {
-  if (sem_tok) {
-    salvia::shader::semantic_value sem(salvia::shader::sv_none);
-    string semstr{sem_tok->s};
-    size_t index = 0;
-    if (sem_idx_tok) {
-      index = boost::lexical_cast<size_t>(sem_idx_tok->s);
-    } else {
-      // Try to get last digitals for generate index.
-      string::const_reverse_iterator it = semstr.rbegin();
-
-      size_t num_tail_length = 0;
-
-      while (std::isdigit(*it)) {
-        ++it;
-        ++num_tail_length;
-      }
-
-      if (num_tail_length > 0) {
-        size_t split_pos = semstr.size() - num_tail_length;
-
-        index = boost::lexical_cast<size_t>(semstr.substr(split_pos));
-        semstr = semstr.substr(0, split_pos);
-      }
-    }
-    ssi->semantic_value(semantic_value(semstr, static_cast<uint32_t>(index)));
+void semantic_analyser::parse_semantic(token sem_tok, token sem_idx_tok, node_semantic *ssi) {
+  if (!sem_tok.is_valid()) {
+    return;
   }
+
+  salvia::shader::semantic_value sem(salvia::shader::sv_none);
+  string semstr{sem_tok.lit()};
+  size_t index = 0;
+  if (sem_idx_tok.is_valid()) {
+    index = boost::lexical_cast<size_t>(sem_idx_tok.lit());
+  } else {
+    // Try to get last digitals for generate index.
+    string::const_reverse_iterator it = semstr.rbegin();
+
+    size_t num_tail_length = 0;
+
+    while (std::isdigit(*it)) {
+      ++it;
+      ++num_tail_length;
+    }
+
+    if (num_tail_length > 0) {
+      size_t split_pos = semstr.size() - num_tail_length;
+
+      index = boost::lexical_cast<size_t>(semstr.substr(split_pos));
+      semstr = semstr.substr(0, split_pos);
+    }
+  }
+  ssi->semantic_value(semantic_value(semstr, static_cast<uint32_t>(index)));
 }
 
 SASL_VISIT_DEF(unary_expression) {
@@ -212,7 +212,8 @@ SASL_VISIT_DEF(unary_expression) {
   parameter_lrvs &operator_lrvs = operator_parameter_lrvs_[v.op];
   if ((operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) == 0) {
     if ((inner_sem->lr_value() & lvalue_or_rvalue::lvalue) == 0) {
-      diags->report(operator_needs_lvalue, *v.token_begin(), *v.token_end(), std::string{v.op_token->s});
+      diags->report(operator_needs_lvalue, v.token_begin(), v.token_end(),
+                    std::string{v.op_token.lit()});
       return;
     }
   }
@@ -288,12 +289,12 @@ SASL_VISIT_DEF(binary_expression) {
     for (size_t i = 0; i < 2 /*binary operator*/; ++i) {
       atr.arg(get_node_semantic(exprs[i])->ty_proto());
     }
-    diags->report(operator_param_unmatched, *v.token_begin(), *v.token_end(), atr.str());
+    diags->report(operator_param_unmatched, v.token_begin(), v.token_end(), atr.str());
     return;
   }
 
   if (overloads.size() > 1) {
-    diags->report(operator_multi_overloads, *v.token_begin(), *v.token_end(), overloads.size());
+    diags->report(operator_multi_overloads, v.token_begin(), v.token_end(), overloads.size());
     return;
   }
 
@@ -314,7 +315,8 @@ SASL_VISIT_DEF(binary_expression) {
   if ((operator_lrvs.param_lrvs[1] & lvalue_or_rvalue::rvalue) == 0) {
     if (is_assign_operation) {
       if ((right_expr_sem->lr_value() & lvalue_or_rvalue::lvalue) == 0) {
-        diags->report(left_operand_must_be_lvalue, *v.token_begin(), *v.token_end(), v.op_token->s);
+        diags->report(left_operand_must_be_lvalue, v.token_begin(), v.token_end(),
+                      v.op_token.lit());
         return;
       }
     } else {
@@ -358,8 +360,8 @@ SASL_VISIT_DEF(cond_expression) {
   tid_t cond_tid = cond_sem->tid();
 
   if (cond_tid != bool_tid && !caster->try_implicit(cond_sem->tid(), bool_tid)) {
-    diags->report(cannot_convert_type_from, *dup_expr->cond_expr->token_begin(),
-                  *dup_expr->cond_expr->token_end(), "?", type_repr(cond_sem->ty_proto()).str(),
+    diags->report(cannot_convert_type_from, dup_expr->cond_expr->token_begin(),
+                  dup_expr->cond_expr->token_end(), "?", type_repr(cond_sem->ty_proto()).str(),
                   "bool");
     return;
   }
@@ -375,8 +377,8 @@ SASL_VISIT_DEF(cond_expression) {
   } else if (caster->try_implicit(no_tid, yes_tid)) {
     expr_tid = no_tid;
   } else {
-    diags->report(cannot_convert_type_from, *dup_expr->yes_expr->token_begin(),
-                  *dup_expr->no_expr->token_end(), ":", type_repr(no_sem->ty_proto()).str(),
+    diags->report(cannot_convert_type_from, dup_expr->yes_expr->token_begin(),
+                  dup_expr->no_expr->token_end(), ":", type_repr(no_sem->ty_proto()).str(),
                   type_repr(yes_sem->ty_proto()).str());
     return;
   }
@@ -414,7 +416,7 @@ SASL_VISIT_DEF(index_expression) {
   tynode *agg_tyn = agg_sem->ty_proto();
   builtin_types agg_tycode = agg_tyn->tycode;
   if (!(agg_tyn->is_array() || is_vector(agg_tycode) || is_matrix(agg_tycode))) {
-    diags->report(not_an_acceptable_operator, *v.token_begin(), *v.token_end(), "[",
+    diags->report(not_an_acceptable_operator, v.token_begin(), v.token_end(), "[",
                   type_repr(agg_tyn).str());
     agg_sem = nullptr;
   }
@@ -429,7 +431,7 @@ SASL_VISIT_DEF(index_expression) {
   builtin_types idx_tycode = idx_tyn->tycode;
 
   if (!is_integer(idx_tycode)) {
-    diags->report(subscript_not_integral, *v.token_begin(), *v.token_end());
+    diags->report(subscript_not_integral, v.token_begin(), v.token_end());
     index_sem = nullptr;
   }
 
@@ -495,10 +497,10 @@ SASL_VISIT_DEF(call_expression) {
           atr.arg(shared_ptr<tynode>());
         }
       }
-      diags->report(function_param_unmatched, *v.token_begin(), *v.token_end(),
+      diags->report(function_param_unmatched, v.token_begin(), v.token_end(),
                     fnsi->function_name(), atr.str());
     } else if (syms.size() > 1) {
-      diags->report(function_multi_overloads, *v.token_begin(), *v.token_end(),
+      diags->report(function_multi_overloads, v.token_begin(), v.token_end(),
                     fnsi->function_name(), syms.size());
     } else {
       symbol *func_sym = syms[0];
@@ -552,7 +554,7 @@ SASL_VISIT_DEF(member_expression) {
 
   node_semantic *agg_sem = get_node_semantic(dup_expr->expr);
   if (!agg_sem) {
-    diags->report(member_left_must_have_struct, *v.member, *v.member, v.member->s, "<unknown>");
+    diags->report(member_left_must_have_struct, v.member, v.member, v.member.lit(), "<unknown>");
     return;
   }
 
@@ -565,10 +567,10 @@ SASL_VISIT_DEF(member_expression) {
   if (agg_type->is_struct()) {
     // Aggregated is struct
     symbol *struct_sym = get_symbol(agg_type);
-    symbol *mem_sym = struct_sym->find_this(v.member->s);
+    symbol *mem_sym = struct_sym->find_this(v.member.lit());
 
     if (!mem_sym) {
-      diags->report(not_a_member_of, *v.member, *v.member, v.member->s,
+      diags->report(not_a_member_of, v.member, v.member, v.member.lit(),
                     struct_sym->unmangled_name());
     } else {
       shared_ptr<declarator> mem_declr = mem_sym->associated_node()->as_handle<declarator>();
@@ -582,17 +584,18 @@ SASL_VISIT_DEF(member_expression) {
              (is_scalar(agg_type->tycode) || is_vector(agg_type->tycode))) {
     // Aggregated class is scalar or vector: Member expression is 'SWIZZLE'
     builtin_types agg_btc = agg_type->tycode;
-    size_t field_count = check_swizzle(agg_btc, v.member->s, swizzle_code);
+    size_t field_count = check_swizzle(agg_btc, v.member.lit(), swizzle_code);
     if (field_count > 0) {
       builtin_types elem_btc = scalar_of(agg_btc);
       builtin_types swizzled_btc = vector_of(elem_btc, field_count);
       mem_typeid = module_semantic_->pety()->get(swizzled_btc);
     } else {
-      diags->report(invalid_swizzle, *v.member, *v.member, v.member->s, type_repr(agg_type).str());
+      diags->report(invalid_swizzle, v.member, v.member, v.member.lit(),
+                    type_repr(agg_type).str());
       return;
     }
   } else {
-    diags->report(member_left_must_have_struct, *v.member, *v.member, v.member->s,
+    diags->report(member_left_must_have_struct, v.member, v.member, v.member.lit(),
                   type_repr(agg_type).str());
     return;
   }
@@ -610,7 +613,7 @@ SASL_VISIT_DEF(constant_expression) {
   shared_ptr<constant_expression> dup_cexpr =
       duplicate(v.as_handle())->as_handle<constant_expression>();
   generated_sem = create_node_semantic(dup_cexpr);
-  generated_sem->const_value(std::string{v.value_tok->s}, v.ctype);
+  generated_sem->const_value(std::string{v.value_tok.lit()}, v.ctype);
   generated_sem->lr_value(lvalue_or_rvalue::rvalue);
   generated_node = dup_cexpr;
 }
@@ -618,7 +621,7 @@ SASL_VISIT_DEF(constant_expression) {
 SASL_VISIT_DEF(variable_expression) {
   EFLIB_UNREF_DECLARATOR(data);
 
-  std::string name{v.var_name->s};
+  std::string name{v.var_name.lit()};
 
   symbol *vdecl = current_symbol->find(name);
   shared_ptr<variable_expression> dup_vexpr =
@@ -631,7 +634,7 @@ SASL_VISIT_DEF(variable_expression) {
     shared_ptr<parameter> param_node = node->as_handle<parameter>();
 
     if (ty_node) {
-      diags->report(illegal_use_type_as_expr, *v.token_begin(), *v.token_end(), name);
+      diags->report(illegal_use_type_as_expr, v.token_begin(), v.token_end(), name);
     } else if (decl_node || param_node) {
       generated_sem = create_node_semantic(dup_vexpr);
       *generated_sem = *get_node_semantic(node);
@@ -639,7 +642,7 @@ SASL_VISIT_DEF(variable_expression) {
       generated_sem->lr_value(lvalue_or_rvalue::lvalue);
       generated_sem->referenced_declarator(node);
     } else {
-      diags->report(unknown_semantic_error, *v.token_begin(), *v.token_end(), __FILE__, __LINE__);
+      diags->report(unknown_semantic_error, v.token_begin(), v.token_end(), __FILE__, __LINE__);
     }
   } else {
     // Function
@@ -649,7 +652,7 @@ SASL_VISIT_DEF(variable_expression) {
       generated_sem->associated_symbol(current_symbol);
       generated_sem->function_name(name);
     } else {
-      diags->report(undeclared_identifier, *v.token_begin(), *v.token_end(), name);
+      diags->report(undeclared_identifier, v.token_begin(), v.token_end(), name);
     }
   }
 
@@ -679,8 +682,8 @@ SASL_VISIT_DEF(expression_initializer) {
 
   if (var_tsi->tid() != init_expr_sem->tid()) {
     if (!caster->try_implicit(var_tsi->tid(), init_expr_sem->tid())) {
-      diags->report(cannot_convert_type_from, *dup_exprinit->init_expr->token_begin(),
-                    *dup_exprinit->init_expr->token_end(),
+      diags->report(cannot_convert_type_from, dup_exprinit->init_expr->token_begin(),
+                    dup_exprinit->init_expr->token_end(),
                     type_repr(init_expr_sem->ty_proto()).str(),
                     type_repr(var_tsi->ty_proto()).str());
     }
@@ -710,7 +713,7 @@ SASL_VISIT_DEF(declarator) {
   }
 
   if (declaration_tid != -1) {
-    symbol *nodesym = current_symbol->add_named_child(v.name->s, dup_decl.get());
+    symbol *nodesym = current_symbol->add_named_child(v.name.lit(), dup_decl.get());
     parse_semantic(v.semantic, v.semantic_index, generated_sem);
     if (is_global_scope) {
       module_semantic_->global_vars().push_back(nodesym);
@@ -787,9 +790,9 @@ SASL_VISIT_DEF(struct_type) {
   //	* struct definition.
 
   std::string name;
-  if (!v.name) {
+  if (!v.name.is_valid()) {
     name = unique_structure_name();
-    v.name = token_t::from_string(name);
+    v.name = token::make(name);
   }
 
   // Get from type pool or insert a new one.
@@ -810,7 +813,7 @@ SASL_VISIT_DEF(struct_type) {
 
   // If v has body, try to update body, or redefinition.
   if (dup_struct->has_body) {
-    diags->report(type_redefinition, *v.token_begin(), *v.token_end(), v.name->s, "struct");
+    diags->report(type_redefinition, v.token_begin(), v.token_end(), v.name.lit(), "struct");
     return;
   }
 
@@ -833,7 +836,7 @@ SASL_VISIT_DEF(alias_type) {
   EFLIB_UNREF_DECLARATOR(data);
 
   tid_t dup_struct_id = -1;
-  if (v.alias->s == "sampler") {
+  if (v.alias.lit() == "sampler") {
     dup_struct_id = module_semantic_->pety()->get(builtin_types::_sampler);
   } else {
     dup_struct_id = module_semantic_->pety()->get(&v, current_symbol);
@@ -841,7 +844,7 @@ SASL_VISIT_DEF(alias_type) {
 
   if (dup_struct_id == -1) {
     generated_node = duplicate(v.as_handle());
-    diags->report(undeclared_identifier, *v.alias, *v.alias, v.alias->s);
+    diags->report(undeclared_identifier, v.alias, v.alias, v.alias.lit());
     return;
   }
 
@@ -879,8 +882,8 @@ SASL_VISIT_DEF(parameter_full) {
   generated_node = dup_par;
 
   symbol *sym = nullptr;
-  if (v.name) {
-    sym = current_symbol->add_named_child(v.name->s, dup_par.get());
+  if (!v.name.is_valid()) {
+    sym = current_symbol->add_named_child(v.name.lit(), dup_par.get());
   }
 
   node_semantic *par_sem = nullptr;
@@ -1099,7 +1102,7 @@ SASL_VISIT_DEF(case_label) {
     dup_case->expr = visit_child(v.expr);
 
     if (v.expr->node_class() != node_ids::constant_expression) {
-      diags->report(case_expr_not_constant, *v.expr->token_begin(), *v.expr->token_end());
+      diags->report(case_expr_not_constant, v.expr->token_begin(), v.expr->token_end());
     } else {
       node_semantic *expr_sem = get_node_semantic(dup_case->expr);
       if (!expr_sem) {
@@ -1108,7 +1111,8 @@ SASL_VISIT_DEF(case_label) {
 
       builtin_types expr_bt = expr_sem->ty_proto()->tycode;
       if (!is_integer(expr_bt) && expr_bt != builtin_types::_boolean) {
-        diags->report(illegal_type_for_case_expr, *v.expr->token_begin(), *v.expr->token_end(), type_repr(expr_sem->ty_proto()).str());
+        diags->report(illegal_type_for_case_expr, v.expr->token_begin(), v.expr->token_end(),
+                      type_repr(expr_sem->ty_proto()).str());
       }
     }
   }
@@ -1201,7 +1205,9 @@ SASL_VISIT_DEF(jump_statement) {
     }
 
     if (expr_tid != fret_tid && !caster->try_implicit(fret_tid, expr_tid)) {
-      diags->report(cannot_convert_type_from, *dup_jump->jump_expr->token_begin(), *dup_jump->jump_expr->token_end(), "return", type_repr(expr_sem->ty_proto()).str(), type_repr(func_sem->ty_proto()).str());
+      diags->report(cannot_convert_type_from, dup_jump->jump_expr->token_begin(),
+                    dup_jump->jump_expr->token_end(), "return",
+                    type_repr(expr_sem->ty_proto()).str(), type_repr(func_sem->ty_proto()).str());
     }
   }
 }
@@ -2014,15 +2020,15 @@ void semantic_analyser::register_function2(string_view name, vector<size_t> cons
     proto_info const &proto = protos[proto_indexes[i_proto]];
 
     shared_ptr<function_def> fn_def =
-        create_node<function_def>(shared_ptr<token_t>(), shared_ptr<token_t>());
+        create_node<function_def>(token::uninitialized(), token::uninitialized());
     hold_generated_node(fn_def);
 
-    fn_def->name = token_t::from_string(name);
+    fn_def->name = token::make(name);
     fn_def->type = pety->get_proto(proto.fn_tid)->as_handle<function_type>();
     assert(fn_def->type);
 
     for (size_t i_param = 0; i_param < proto.params_count; ++i_param) {
-      shared_ptr<parameter> param = create_node<parameter>(token_t_ptr(), token_t_ptr());
+      shared_ptr<parameter> param = create_node<parameter>(token::uninitialized(), token::uninitialized());
       fn_def->params.push_back(param);
       node_semantic *param_sem = create_node_semantic(param);
       param_sem->tid(proto.params_tid[i_param]);

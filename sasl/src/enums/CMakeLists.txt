@@ -6,4 +6,4 @@ add_library( sasl_enums STATIC ${HEADER_LIST} ${SOURCE_LIST})
 target_include_directories(sasl_enums PUBLIC ../../include)
 target_link_libraries(sasl_enums eflib shader)
 
-SET_TARGET_PROPERTIES( sasl_enums PROPERTIES FOLDER "Shader Libs")
+set_target_properties( sasl_enums PROPERTIES FOLDER "Shader Libs")

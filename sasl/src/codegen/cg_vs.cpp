@@ -84,7 +84,7 @@ SASL_VISIT_DEF(member_expression) {
   } else {
     // Member
     symbol *struct_sym = sem_->get_symbol(tisi->ty_proto());
-    symbol *mem_sym = struct_sym->find_this(v.member->s);
+    symbol *mem_sym = struct_sym->find_this(v.member.lit());
     assert(mem_sym);
 
     if (agg_ctxt->is_semantic_mode) {
@@ -109,7 +109,7 @@ SASL_VISIT_DEF(member_expression) {
 
 SASL_VISIT_DEF(variable_expression) {
   // T ODO Referenced symbol must be evaluated in semantic analysis stages.
-  symbol *sym = find_symbol(v.var_name->s);
+  symbol *sym = find_symbol(v.var_name.lit());
   assert(sym);
 
   // var_si is not null if sym is global value( sv_none is available )
@@ -239,7 +239,7 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
       sv_layout *psi = abii->input_sv_layout(par_sem);
 
       builtin_types hint = par_ssi->ty_proto()->tycode;
-      pctxt->node_value = service()->create_variable(hint, abis::c, param->name->s);
+      pctxt->node_value = service()->create_variable(hint, abis::c, param->name.lit());
       layout_to_node_context(pctxt, psi, true,          /*store if value existed*/
                              sem_->is_modified(par_sym) /*copy from input*/
       );

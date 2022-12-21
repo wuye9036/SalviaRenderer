@@ -15,14 +15,13 @@ error_handler get_expected_failed_handler(std::string const &expected_str) {
 
 parse_results expected_failed_handler(diag_chat *diags, token_iterator const &org_iter, token_iterator &iter,
                                       std::string const &expected_str) {
-  token_ptr tok = *iter;
+  token const& tok = *iter;
 
   diags->clear();
-  if (tok->end_of_file) {
-    diags->report_args(end_of_file, tok->file_name, tok->span, fmt::make_format_args(fmt::arg("expected", expected_str)));
+  if (tok.end_of_file()) {
+    diags->report(end_of_file, tok.file_name(), tok.span(), expected_str);
   } else {
-    diags->report_args(unmatched_expected_token, tok->file_name, tok->span,
-                  fmt::make_format_args(fmt::arg("expected", expected_str), fmt::arg("actual", tok->s)));
+    diags->report(unmatched_expected_token, tok.file_name(), tok.span(), expected_str, tok.lit());
   }
 
   iter = org_iter;

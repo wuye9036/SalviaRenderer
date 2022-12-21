@@ -1,11 +1,13 @@
 #pragma once
 
-#include <eflib/platform/typedefs.h>
-#include <eflib/utility/shared_declaration.h>
+#include <sasl/common/token.h>
 #include <sasl/enums/operators.h>
 #include <sasl/semantic/semantic_forward.h>
 #include <sasl/semantic/semantics.h>
 #include <sasl/syntax_tree/visitor.h>
+
+#include <eflib/platform/typedefs.h>
+#include <eflib/utility/shared_declaration.h>
 
 #include <any>
 #include <memory>
@@ -15,7 +17,6 @@
 namespace sasl {
 namespace common {
 EFLIB_DECLARE_CLASS_SHARED_PTR(diag_chat);
-EFLIB_DECLARE_STRUCT_SHARED_PTR(token_t);
 } // namespace common
 namespace syntax_tree {
 EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
@@ -38,6 +39,9 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(sacontext);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(proto_info);
 
 class semantic_analyser : public sasl::syntax_tree::syntax_tree_visitor {
+private:
+  using token = sasl::common::token;
+  
 public:
   semantic_analyser();
 
@@ -103,8 +107,7 @@ private:
   std::shared_ptr<ReturnNodeT> visit_child(std::shared_ptr<NodeT> const &child,
                                            node_semantic **return_sem = nullptr);
 
-  void parse_semantic(sasl::common::token_t_ptr const &sem_tok,
-                      sasl::common::token_t_ptr const &sem_idx_tok, node_semantic *ssi);
+  void parse_semantic(token sem_tok, token sem_idx_tok, node_semantic *ssi);
 
   node_semantic *get_node_semantic(sasl::syntax_tree::node *);
   node_semantic *get_node_semantic(sasl::syntax_tree::node_ptr const &);
@@ -128,7 +131,6 @@ private:
   void register_builtin_types();
   void register_builtin_functions2();
   void hold_generated_node(sasl::syntax_tree::node_ptr const &);
-  void initialize_operator_parameter_to_lrv_lookup_table();
 
   void register_function2(std::string_view name, std::vector<size_t> const &proto_indexes,
                           std::vector<proto_info> const &protos, bool is_intrinsic = false,

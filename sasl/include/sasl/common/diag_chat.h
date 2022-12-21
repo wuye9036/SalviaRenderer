@@ -12,7 +12,6 @@
 
 namespace sasl::common {
 
-struct token_t;
 class diag_chat;
 class diag_item;
 struct code_span;
@@ -25,20 +24,27 @@ struct diag_context {
 };
 
 class diag_chat {
+private:
+  void report_impl(diag_template tmpl, std::string_view file_name, code_span span,
+                   fmt::format_args args);
+
 public:
   static std::shared_ptr<diag_chat> create();
   static diag_chat *merge(diag_chat *dest, diag_chat *src,
                           bool trigger_callback);
 
   void add_report_raised_handler(report_handler_fn const &handler);
-  void report_args(diag_template tmpl, std::string_view file_name, code_span span, fmt::format_args args);
-  void report_args(diag_template tmpl, token_t token_beg, token_t token_end, fmt::format_args args);
-  void report(diag_template tmpl, token_t token_beg, token_t token_end);
+  void report(diag_template tmpl, token token_beg, token token_end);
   void report(diag_template tmpl, std::string_view file_name, code_span span);
 
   template <typename... Args>
-  void report(diag_template tmpl, token_t token_beg, token_t token_end, Args&&... args) {
-    report_args(tmpl, token_beg, token_end, fmt::make_format_args(std::forward<Args>(args)...));
+  void report(diag_template tmpl, token token_beg, token token_end, Args&&... args) {
+    report_impl(tmpl, token_beg, token_end, fmt::make_format_args(std::forward<Args>(args)...));
+  }
+
+  template <typename... Args>
+  void report(diag_template tmpl, std::string_view file_name, code_span span, Args &&...args) {
+    report_impl(tmpl, file_name, span, fmt::make_format_args(std::forward<Args>(args)...));
   }
 
   decltype(auto) items() const noexcept {

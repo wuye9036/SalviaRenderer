@@ -11,9 +11,7 @@ namespace sasl
 }
 
 namespace sasl::parser{
-
-typedef std::shared_ptr< sasl::common::token_t > token_ptr;
-typedef std::vector< token_ptr > token_seq;
+typedef std::vector<token> token_seq;
 typedef token_seq::iterator token_iterator;
 
 error_handler get_expected_failed_handler( std::string const& expected_str );

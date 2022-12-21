@@ -62,13 +62,13 @@ private:
 
 class source_position_repr {
 public:
-  source_position_repr(std::shared_ptr<sasl::common::token_t> const &beg,
-                       std::shared_ptr<sasl::common::token_t> const &end,
+  source_position_repr(std::shared_ptr<sasl::common::token> const &beg,
+                       std::shared_ptr<sasl::common::token> const &end,
                        sasl::common::compiler_compatibility cc);
   std::string str();
 
 private:
-  std::shared_ptr<sasl::common::token_t> beg, end;
+  std::shared_ptr<sasl::common::token> beg, end;
   sasl::common::compiler_compatibility cc;
   std::string str_cache;
 };

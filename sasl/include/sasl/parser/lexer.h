@@ -2,27 +2,21 @@
 
 #include <sasl/common/lex_context.h>
 
+#include <sasl/common/token.h>
+
 #include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-namespace sasl {
-namespace common {
-struct token_t;
-}
-} // namespace sasl
-
 namespace sasl::parser {
-
-typedef std::shared_ptr<sasl::common::token_t> token_ptr;
-typedef std::vector<token_ptr> token_seq;
-typedef token_seq::iterator token_iterator;
 
 struct lexer_impl;
 
 class lexer {
+private:
+  using token = sasl::common::token;
 public:
   lexer();
 
@@ -103,20 +97,20 @@ public:
   bool tokenize_with_end(
       /*INPUTS*/ std::string const &code,
       std::shared_ptr<sasl::common::lex_context> ctxt,
-      /*OUTPUT*/ token_seq &seq);
+      /*OUTPUT*/ std::vector<token> &seq);
 
   bool begin_incremental();
   bool incremental_tokenize(std::string const &word,
                             std::shared_ptr<sasl::common::lex_context> ctxt,
-                            token_seq &seq);
+                            std::vector<token> &seq);
   bool end_incremental(std::shared_ptr<sasl::common::lex_context> ctxt,
-                       token_seq &seq);
+                       std::vector<token> &seq);
 
 private:
   bool tokenize(
       /*INPUTS*/ std::string const &code,
       std::shared_ptr<sasl::common::lex_context> ctxt,
-      /*OUTPUT*/ token_seq &seq);
+      /*OUTPUT*/ std::vector<token> &seq);
   std::shared_ptr<lexer_impl> impl;
 };
 
