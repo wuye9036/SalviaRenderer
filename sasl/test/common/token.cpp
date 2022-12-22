@@ -34,10 +34,14 @@ TEST(sasl_common, token_construct_move_copy) {
 }
 
 TEST(sasl_common, token_ref_counting) {
-  std::string const s{"test_string"};
+  std::string const s0{"test_string0"};
+  std::string const s1{"test_string1"};
 
-  token t0 = token::make(s);
-  token t1 = token::make(s);
+  token t0 = token::make(s0);
+  token t1 = token::make(s1);
+  EXPECT_NE(t0.lit(), t1.lit());
+  t0 = t1;
+  EXPECT_EQ(t0.lit(), t1.lit());
 }
 
 } // namespace test_common

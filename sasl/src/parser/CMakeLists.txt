@@ -2,14 +2,6 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "../../include/sasl/parser/*.h")
 file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "*.cpp")
 
-set( SOURCE_LIST
-	error_handlers.cpp
-	generator.cpp
-	grammars.cpp
-	lexer.cpp
-	parse_api.cpp
-)
-
 add_library(sasl_parser ${HEADER_LIST} ${SOURCE_LIST})
 target_include_directories(sasl_parser PUBLIC ../../include)
 target_link_libraries(sasl_parser eflib)

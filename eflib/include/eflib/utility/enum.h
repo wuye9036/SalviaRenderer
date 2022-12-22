@@ -8,7 +8,7 @@
 namespace eflib {
 
 namespace detail {
-namespace { // avoid ODR-violation
+namespace {
 template <class T> auto test_sizable(int) -> decltype(sizeof(T), std::true_type{});
 template <class> auto test_sizable(...) -> std::false_type;
 
@@ -34,29 +34,40 @@ template <class E> inline constexpr bool is_scoped_enum_v = is_scoped_enum<E>::v
 template <typename E>
 concept EnumType = is_scoped_enum_v<E>;
 
+template <typename EorI>
+concept EnumOrIntType = is_scoped_enum_v<EorI> || std::is_integral_v<EorI>;
+
 template <EnumType E> constexpr auto to_underlying(E e) noexcept {
   return static_cast<std::underlying_type_t<E>>(e);
+}
+
+template <EnumOrIntType EorI> constexpr auto to_underlying_or_fwd(EorI v) noexcept {
+  if constexpr (is_scoped_enum_v<EorI>) {
+    return static_cast<std::underlying_type_t<EorI>>(v);
+  } else {
+    return v;
+  }
 }
 
 template <EnumType E> constexpr auto e2i(E e) noexcept { return to_underlying(e); }
 
 namespace enum_operators {
 
-template <EnumType E> constexpr E operator|(E lhs, E rhs) noexcept {
+template <EnumType E, EnumOrIntType EorI> constexpr E operator|(E lhs, EorI rhs) noexcept {
   auto lhs_v = to_underlying(lhs);
-  auto rhs_v = to_underlying(rhs);
+  auto rhs_v = to_underlying_or_fwd(rhs);
   return static_cast<E>(lhs_v | rhs_v);
 }
 
-template <EnumType E> constexpr E operator&(E lhs, E rhs) noexcept {
+template <EnumType E, EnumOrIntType EorI> constexpr E operator&(E lhs, EorI rhs) noexcept {
   auto lhs_v = to_underlying(lhs);
-  auto rhs_v = to_underlying(rhs);
+  auto rhs_v = to_underlying_or_fwd(rhs);
   return static_cast<E>(lhs_v & rhs_v);
 }
 
-template <EnumType E> constexpr E operator^(E lhs, E rhs) noexcept {
+template <EnumType E, EnumOrIntType EorI> constexpr E operator^(E lhs, EorI rhs) noexcept {
   auto lhs_v = to_underlying(lhs);
-  auto rhs_v = to_underlying(rhs);
+  auto rhs_v = to_underlying_or_fwd(rhs);
   return static_cast<E>(lhs_v ^ rhs_v);
 }
 

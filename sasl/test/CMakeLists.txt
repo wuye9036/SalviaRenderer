@@ -36,10 +36,11 @@
 
 set(SOURCE_LIST "")
 
-file(GLOB_RECURSE TMP_SOURCE_LIST CONFIGURE_DEPENDS "./common/*.cpp")
-list(APPEND SOURCE_LIST ${TMP_SOURCE_LIST})
-file(GLOB_RECURSE TMP_SOURCE_LIST CONFIGURE_DEPENDS "./_main/*.cpp")
-list(APPEND SOURCE_LIST ${TMP_SOURCE_LIST})
+foreach(comp_name "main" "common" "parser")
+  file(GLOB_RECURSE TMP_SOURCE_LIST CONFIGURE_DEPENDS "./${comp_name}/*.cpp")
+  list(APPEND SOURCE_LIST ${TMP_SOURCE_LIST})
+endforeach()
+
 
 source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" PREFIX "Source Files" FILES ${SOURCE_LIST})
 
