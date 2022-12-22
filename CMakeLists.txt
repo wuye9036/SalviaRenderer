@@ -29,3 +29,5 @@ add_subdirectory(sasl)
 # 	add_subdirectory( salvia_d3d_sw_driver )
 # endif()
 
+enable_testing()
+add_test(NAME ShaderTests COMMAND $<TARGET_FILE:sasl_test>)

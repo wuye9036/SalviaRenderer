@@ -41,9 +41,9 @@ public:
     }
   }
 
-  template <typename ContainerT> void visit(ContainerT &cont, ::std::any *data) {
+  template <typename T> void visit(vector<T> &cont, ::std::any *data) {
     for (auto &e : cont) {
-      visit(e, data);
+      invoke_accept(e, data);
     }
   }
 
@@ -229,7 +229,7 @@ void follow_up_traversal(std::shared_ptr<node> root,
 }
 
 std::shared_ptr<builtin_type> create_builtin_type(const builtin_types &btc) {
-  auto ret = create_node<builtin_type>(token::null(), token::null());
+  auto ret = create_node<builtin_type>(token::make_empty(), token::make_empty());
   ret->tycode = btc;
   return ret;
 }
@@ -277,7 +277,7 @@ void copy_from_any(shared_ptr<NodeT> &lhs, const any &rhs,
 }
 
 #define DEEPCOPY_VALUE_ITEM(r, dest_src, member)                                                   \
-  invoke_accept(BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member, &member_dup);                                  \
+  visit(BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member, &member_dup);                                  \
   copy_from_any(BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member, member_dup);
 
 #define SASL_DEEP_CLONE_NODE(dest_any_ptr, src_v_ref, node_type, member_seq)                       \

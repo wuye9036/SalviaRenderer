@@ -15,7 +15,7 @@
             "binaryDir": "build/salvia.${presetName}.build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_TOOLCHAIN_FILE":  "E:/Code/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "E:/Code/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_INSTALL_PREFIX": "../salvia.${presetName}.install",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
                 "Boost_NO_WARN_NEW_VERSIONS": "1"
@@ -23,10 +23,19 @@
         }
     ],
     "buildPresets": [
-      {
-        "name": "default",
-        "configurePreset": "msvc_x64_dev",
-        "configuration": "RelWithDebInfo"
-      }
+        {
+            "name": "msvc_x64_dev_build",
+            "configurePreset": "msvc_x64_dev",
+            "configuration": "RelWithDebInfo"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "msvc_x64_dev_test",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "msvc_x64_dev",
+            "configuration": "RelWithDebInfo"
+        }
     ]
 }

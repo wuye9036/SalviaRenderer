@@ -414,7 +414,7 @@ parse_results queuer::parse(token_iterator &iter, token_iterator end, shared_ptr
     parse_results result = p->parse(iter, end, out, diags);
 
     ret->attrs.push_back(out);
-    ret->token_range(iter_beg, out->token_end());
+    ret->token_range(*iter_beg, out->token_end());
     if (!result.is_continuable()) {
       attr = ret;
       if (p->is_expected()) {

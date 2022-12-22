@@ -2,6 +2,9 @@
 
 #include <eflib/platform/config.h>
 
+#include <boost/smart_ptr/local_shared_ptr.hpp>
+#include <boost/smart_ptr/make_local_shared.hpp>
+
 #include <iterator>
 #include <memory>
 #include <string_view>
@@ -35,26 +38,10 @@ struct unique {};
 
 template <typename StoragePolicy> class token_base {
 private:
-  template <typename T> struct delete_shared {
-    constexpr delete_shared() noexcept = default;
-    void operator()(T *ptr) const {
-      --(ptr->ref_count);
-      if (ptr->ref_count == 0) {
-        delete ptr;
-      }
-    }
-  };
-
   static constexpr bool is_shared_storage =
       std::is_same_v<StoragePolicy, token_storage_policy::shared>;
 
-  template <bool Shared> struct ref_counter {};
-
-  template <> struct ref_counter<true> {
-    size_t ref_count = 1;
-  };
-
-  struct token_data : public ref_counter<is_shared_storage> {
+  struct token_data {
     size_t id = 0;
     std::string_view lit;
     code_span span;
@@ -62,16 +49,13 @@ private:
     bool end_of_file = false;
   };
 
-  using deleter = std::conditional_t<is_shared_storage, delete_shared<token_data>,
-                                     std::default_delete<token_data>>;
-
-  using data_ptr = std::unique_ptr<token_data, deleter>;
+  using data_ptr = std::conditional_t<is_shared_storage, boost::local_shared_ptr<token_data>, std::unique_ptr<token_data>>;
 
   data_ptr data_;
 
   template <typename... Args> static data_ptr make_data(Args &&...args) {
     if constexpr (is_shared_storage) {
-      return data_ptr(new token_data(std::forward<Args>(args)...));
+      return boost::make_local_shared<token_data>(std::forward<Args>(args)...);
     } else {
       return std::make_unique<token_data>(std::forward<Args>(args)...);
     }
@@ -79,12 +63,13 @@ private:
 
   template <typename SP, typename = std::enable_if_t<is_shared_storage>>
   token_base &assign(token_base<SP> const &rhs) noexcept {
-    data_.reset(rhs.data_.get());
-    ++(data_->ref_count);
+    data_ = rhs.data_;
     return *this;
   }
 
 public:
+  EF_CONSTEXPR23 token_base() {}
+
   // Move constructs applied on shared and unique
   EF_CONSTEXPR23 token_base(token_base &&rhs) noexcept = default;
   EF_CONSTEXPR23 token_base &operator=(token_base &&rhs) noexcept = default;
@@ -94,14 +79,11 @@ public:
 
   EF_CONSTEXPR23 token_base clone() const {
     auto ret = token_base(make_data(*data_));
-    if constexpr (is_shared_storage) {
-      ret.data_->ref_count = 1;
-    }
     return ret;
   }
 
   EF_CONSTEXPR23 static [[nodiscard]] token_base uninitialized() noexcept { return token_base{}; }
-  EF_CONSTEXPR23 static [[nodiscard]] token_base null() { return token_base(make_data()); }
+  EF_CONSTEXPR23 static [[nodiscard]] token_base make_empty() { return token_base(make_data()); }
 
   EF_CONSTEXPR23 static [[nodiscard]] token_base make(std::string_view lit) {
     return make(0, lit, 0, 0, std::string_view{});
@@ -128,7 +110,7 @@ public:
   }
 
   EF_CONSTEXPR23 [[nodiscard]] bool is_uninitialized() const noexcept {
-    return static_cast<bool>(data_);
+    return !data_;
   }
 
   EF_CONSTEXPR23 [[nodiscard]] bool is_valid() const noexcept {
@@ -144,7 +126,6 @@ public:
   EF_CONSTEXPR23 [[nodiscard]] bool end_of_file() const { return data_->end_of_file; }
 
 private:
-  EF_CONSTEXPR23 token_base() = default;
   EF_CONSTEXPR23 explicit token_base(data_ptr data) noexcept : data_{std::move(data)} {}
 };
 

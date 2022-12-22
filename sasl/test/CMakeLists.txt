@@ -33,12 +33,19 @@
 # ADD_SUBDIRECTORY( abi_test )
 # ADD_SUBDIRECTORY( death_test )
 # ADD_SUBDIRECTORY( jit_test )
-file(GLOB_RECURSE SOURCE_LIST CONFIGURE_DEPENDS "./common/*.cpp")
+
+set(SOURCE_LIST "")
+
+file(GLOB_RECURSE TMP_SOURCE_LIST CONFIGURE_DEPENDS "./common/*.cpp")
+list(APPEND SOURCE_LIST ${TMP_SOURCE_LIST})
+file(GLOB_RECURSE TMP_SOURCE_LIST CONFIGURE_DEPENDS "./_main/*.cpp")
+list(APPEND SOURCE_LIST ${TMP_SOURCE_LIST})
 
 source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" PREFIX "Source Files" FILES ${SOURCE_LIST})
 
 add_executable(sasl_test ${SOURCE_LIST})
-target_link_libraries(sasl_test PRIVATE sasl_common eflib Boost::boost $<$<PLATFORM_ID:UNIX>:dl>)
+target_link_libraries(sasl_test PRIVATE sasl_common eflib GTest::gtest GTest::gtest_main Boost::boost $<$<PLATFORM_ID:UNIX>:dl>)
 target_compile_features(sasl_test PUBLIC cxx_std_20)
 
-set_target_properties(sasl_syntax_tree PROPERTIES FOLDER "Shader Libs")
+set_target_properties(sasl_test PROPERTIES FOLDER "Shader Libs")
+

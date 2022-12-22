@@ -30,6 +30,7 @@ std::shared_ptr<NodeT> create_node(token tok_beg, token tok_end) {
   auto ret = std::make_shared<NodeT>();
   ret->tok_beg = std::move(tok_beg);
   ret->tok_end = std::move(tok_end);
+  return ret;
 }
 
 } // namespace sasl::syntax_tree

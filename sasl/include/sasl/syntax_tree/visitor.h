@@ -147,7 +147,9 @@ public:
 
 template <typename Visitor> class syntax_tree_static_visitor: public syntax_tree_visitor {
 public:
-  syntax_tree_static_visitor(Visitor &v) : vis_{v} {}
+  syntax_tree_static_visitor(Visitor const &v) : vis_{v} {}
+  syntax_tree_static_visitor(Visitor &&v) : vis_{std::move(v)} {}
+
   // expression
   SASL_VISIT_DCL(unary_expression) { vis_(v, data); }
   SASL_VISIT_DCL(cast_expression) { vis_(v, data); }

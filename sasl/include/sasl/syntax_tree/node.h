@@ -29,13 +29,12 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 struct node : public std::enable_shared_from_this<node> {
 protected:
   using token = sasl::common::token;
-
-  node_ids type_id;
   token tok_beg, tok_end;
-
   virtual ~node();
 
 public:
+  node();
+
   template <typename R> friend std::shared_ptr<R> create_node();
   template <typename R, typename P0> friend std::shared_ptr<R> create_node(P0 &&);
   template <typename R>
@@ -64,7 +63,7 @@ public:
     this->tok_end = std::move(tok_end);
   }
 
-  node_ids node_class() const noexcept { return type_id; }
+  virtual node_ids node_class() const noexcept = 0;
 
   virtual void accept(syntax_tree_visitor *vis, std::any *data) = 0;
 
@@ -73,10 +72,9 @@ protected:
   node(const node &) = delete;
 };
 
-template <typename DerivedT, node_ids TypeId> class node_impl;
-
-template <typename DerivedT, node_ids TypeId>
-class node_impl: node {
+template <typename DerivedT, typename BaseT, node_ids TypeId>
+class node_impl: public BaseT {
+public:
   constexpr node_ids node_class() const noexcept{ return TypeId; }
   virtual void accept(syntax_tree_visitor *vis, std::any *data) override;
 };

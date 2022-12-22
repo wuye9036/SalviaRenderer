@@ -50,21 +50,21 @@ namespace sasl::syntax_tree {
 
 #define INSERT_INTO_BTCACHE(litname, enum_code)                                                    \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::null(), token::null());     \
+    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::make_empty(), token::make_empty());     \
     bt->tycode = builtin_types::enum_code;                                                         \
     bt_cache.insert(make_pair(std::string(#litname), bt));                                         \
   }
 
 #define INSERT_VECTOR_INTO_BTCACHE(component_type, dim, enum_code)                                 \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::null(), token::null());     \
+    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::make_empty(), token::make_empty());     \
     bt->tycode = vector_of(builtin_types::enum_code, dim);                                         \
     bt_cache.insert(make_pair(string(#component_type) + char_tbl[dim], bt));                       \
   }
 
 #define INSERT_MATRIX_INTO_BTCACHE(component_type, vsize, vcnt, enum_code)                         \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::null(), token::null());     \
+    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::make_empty(), token::make_empty());     \
     bt->tycode = matrix_of(builtin_types::enum_code, vsize, vcnt);                                 \
     bt_cache.insert(                                                                               \
         make_pair(string(#component_type) + char_tbl[vcnt] + "x" + char_tbl[vsize], bt));          \
@@ -137,7 +137,8 @@ shared_ptr<program> syntax_tree_builder::build_prog(shared_ptr<attribute> attr) 
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, typed_attr, attr->child(0));
 
   if (typed_attr) {
-    ret = create_node<program>("prog");
+    ret = create_node<program>();
+    ret->name = "prog";
 
     for (shared_ptr<attribute> decl_attr : typed_attr->attrs) {
       vector<shared_ptr<declaration>> decls = build_decl(decl_attr);

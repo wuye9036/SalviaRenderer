@@ -7,8 +7,8 @@
 
 #include <eflib/utility/enable_if.h>
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace sasl::syntax_tree {
 
@@ -17,9 +17,9 @@ struct declaration;
 
 using token = sasl::common::token;
 
-struct program: public node{
-	std::string name;
-	std::vector< std::shared_ptr<declaration> > decls;
+struct program: public node_impl<program, node, node_ids::program> {
+  std::string name;
+  std::vector<std::shared_ptr<declaration>> decls;
 };
 
-}
+} // namespace sasl::syntax_tree

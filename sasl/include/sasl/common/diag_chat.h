@@ -1,7 +1,7 @@
 #pragma once
 
-#include <sasl/common/token.h>
 #include <sasl/common/diag_item.h>
+#include <sasl/common/token.h>
 
 #include <fmt/format.h>
 
@@ -30,16 +30,16 @@ private:
 
 public:
   static std::shared_ptr<diag_chat> create();
-  static diag_chat *merge(diag_chat *dest, diag_chat *src,
-                          bool trigger_callback);
+  static diag_chat *merge(diag_chat *dest, diag_chat *src, bool trigger_callback);
 
   void add_report_raised_handler(report_handler_fn const &handler);
   void report(diag_template tmpl, token token_beg, token token_end);
   void report(diag_template tmpl, std::string_view file_name, code_span span);
 
   template <typename... Args>
-  void report(diag_template tmpl, token token_beg, token token_end, Args&&... args) {
-    report_impl(tmpl, token_beg, token_end, fmt::make_format_args(std::forward<Args>(args)...));
+  void report(diag_template tmpl, token token_beg, token token_end, Args &&...args) {
+    report_impl(tmpl, token_beg.file_name(), sasl::common::merge(token_beg.span(), token_end.span()),
+                fmt::make_format_args(std::forward<Args>(args)...));
   }
 
   template <typename... Args>
@@ -47,9 +47,7 @@ public:
     report_impl(tmpl, file_name, span, fmt::make_format_args(std::forward<Args>(args)...));
   }
 
-  decltype(auto) items() const noexcept {
-    return (diags_);
-  }
+  decltype(auto) items() const noexcept { return (diags_); }
   void clear();
 
   void save();
@@ -77,6 +75,6 @@ private:
   diag_chat *chat;
 };
 
-size_t error_count(diag_chat const* chat, bool warning_as_error);
+size_t error_count(diag_chat const *chat, bool warning_as_error);
 
 } // namespace sasl::common
