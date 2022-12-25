@@ -4,8 +4,6 @@
 
 #include <eflib/platform/cpuinfo.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/ADT/Triple.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>

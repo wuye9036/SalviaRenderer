@@ -1,5 +1,4 @@
-#ifndef SASL_CODEGEN_CGS_SISD_H
-#define SASL_CODEGEN_CGS_SISD_H
+#pragma once
 
 #include <sasl/codegen/forward.h>
 
@@ -9,8 +8,6 @@
 
 #include <boost/preprocessor/for.hpp>
 #include <boost/preprocessor/seq.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 // #include <eflib/utility/util.h>
 #include <eflib/diagnostics/assert.h>
@@ -147,5 +144,3 @@ public:
 };
 
 } // namespace sasl::codegen
-
-#endif

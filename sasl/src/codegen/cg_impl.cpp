@@ -20,8 +20,6 @@
 #include <eflib/utility/scoped_value.h>
 #include <eflib/utility/unref_declarator.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>

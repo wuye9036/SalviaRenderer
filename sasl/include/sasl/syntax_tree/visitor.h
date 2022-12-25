@@ -4,8 +4,6 @@
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <any>
 

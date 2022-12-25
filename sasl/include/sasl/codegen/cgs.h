@@ -1,5 +1,4 @@
-#ifndef SASL_CODEGEN_CGS_H
-#define SASL_CODEGEN_CGS_H
+#pragma once
 
 #include <sasl/codegen/forward.h>
 
@@ -21,7 +20,7 @@
 namespace sasl::semantic {
 class module_semantic;
 class node_semantic;
-}
+} // namespace sasl::semantic
 
 namespace sasl::codegen {
 
@@ -34,7 +33,7 @@ class cg_service {
 
 public:
   cg_service(size_t parallel_factor);
-  virtual ~cg_service(){}
+  virtual ~cg_service() {}
 
   virtual bool initialize(module_vmcode_impl *mod, module_context *ctxt,
                           sasl::semantic::module_semantic *sem);
@@ -61,51 +60,37 @@ public:
   virtual multi_value emit_div(multi_value const &lhs, multi_value const &rhs);
   virtual multi_value emit_mod(multi_value const &lhs, multi_value const &rhs);
 
-  virtual multi_value emit_mul_comp(multi_value const &lhs,
-                                    multi_value const &rhs);
-  virtual multi_value emit_mul_intrin(multi_value const &lhs,
-                                      multi_value const &rhs);
+  virtual multi_value emit_mul_comp(multi_value const &lhs, multi_value const &rhs);
+  virtual multi_value emit_mul_intrin(multi_value const &lhs, multi_value const &rhs);
 
-  virtual multi_value emit_cmp_lt(multi_value const &lhs,
-                                  multi_value const &rhs);
-  virtual multi_value emit_cmp_le(multi_value const &lhs,
-                                  multi_value const &rhs);
-  virtual multi_value emit_cmp_eq(multi_value const &lhs,
-                                  multi_value const &rhs);
-  virtual multi_value emit_cmp_ne(multi_value const &lhs,
-                                  multi_value const &rhs);
-  virtual multi_value emit_cmp_ge(multi_value const &lhs,
-                                  multi_value const &rhs);
-  virtual multi_value emit_cmp_gt(multi_value const &lhs,
-                                  multi_value const &rhs);
+  virtual multi_value emit_cmp_lt(multi_value const &lhs, multi_value const &rhs);
+  virtual multi_value emit_cmp_le(multi_value const &lhs, multi_value const &rhs);
+  virtual multi_value emit_cmp_eq(multi_value const &lhs, multi_value const &rhs);
+  virtual multi_value emit_cmp_ne(multi_value const &lhs, multi_value const &rhs);
+  virtual multi_value emit_cmp_ge(multi_value const &lhs, multi_value const &rhs);
+  virtual multi_value emit_cmp_gt(multi_value const &lhs, multi_value const &rhs);
 
   virtual multi_value emit_not(multi_value const &v);
   virtual multi_value emit_and(multi_value const &lhs, multi_value const &rhs);
   virtual multi_value emit_or(multi_value const &lhs, multi_value const &rhs);
 
-  virtual multi_value emit_call(cg_function const &fn,
-                                std::vector<multi_value> const &args);
-  virtual multi_value emit_call(cg_function const &fn,
-                                std::vector<multi_value> const &args,
+  virtual multi_value emit_call(cg_function const &fn, std::vector<multi_value> const &args);
+  virtual multi_value emit_call(cg_function const &fn, std::vector<multi_value> const &args,
                                 llvm::Value *exec_mask);
   /// @}
 
   /// @name Emit element extraction
   /// @{
-  virtual multi_value emit_insert_val(multi_value const &lhs,
-                                      multi_value const &idx,
+  virtual multi_value emit_insert_val(multi_value const &lhs, multi_value const &idx,
                                       multi_value const &elem_value);
   virtual multi_value emit_insert_val(multi_value const &lhs, size_t index,
                                       multi_value const &elem_value);
 
   virtual multi_value emit_extract_val(multi_value const &lhs, size_t idx);
-  virtual multi_value emit_extract_val(multi_value const &lhs,
-                                       multi_value const &idx);
+  virtual multi_value emit_extract_val(multi_value const &lhs, multi_value const &idx);
   virtual multi_value emit_extract_ref(multi_value const &lhs, size_t idx);
-  virtual multi_value emit_extract_ref(multi_value const &lhs,
-                                       multi_value const &idx);
-  virtual multi_value emit_extract_elem_mask(multi_value const &vec,
-                                             elem_indexes const &indexes);
+  virtual multi_value emit_extract_ref(multi_value const &lhs, multi_value const &idx);
+  virtual multi_value emit_extract_elem_mask(multi_value const &vec, elem_indexes const &indexes);
   multi_value emit_extract_col(multi_value const &lhs, size_t index);
 
   template <typename IndexT>
@@ -123,14 +108,13 @@ public:
   virtual multi_value emit_dot(multi_value const &lhs, multi_value const &rhs);
   virtual multi_value emit_abs(multi_value const &lhs);
   virtual multi_value emit_sqrt(multi_value const &lhs);
-  virtual multi_value emit_cross(multi_value const &lhs,
-                                 multi_value const &rhs);
+  virtual multi_value emit_cross(multi_value const &lhs, multi_value const &rhs);
   virtual multi_value emit_ddx(multi_value const &v) = 0;
   virtual multi_value emit_ddy(multi_value const &v) = 0;
   virtual multi_value emit_any(multi_value const &v);
   virtual multi_value emit_all(multi_value const &v);
-  virtual multi_value emit_select(multi_value const &flag,
-                                  multi_value const &v0, multi_value const &v1);
+  virtual multi_value emit_select(multi_value const &flag, multi_value const &v0,
+                                  multi_value const &v1);
   virtual multi_value emit_isinf(multi_value const &v);
   virtual multi_value emit_isfinite(multi_value const &v);
   virtual multi_value emit_isnan(multi_value const &v);
@@ -139,27 +123,17 @@ public:
                                  multi_value const &max_v);
   virtual multi_value emit_saturate(multi_value const &v);
 
-  virtual multi_value emit_tex2Dlod(multi_value const &samp,
-                                    multi_value const &coord);
-  virtual multi_value emit_tex2Dgrad(multi_value const &samp,
-                                     multi_value const &coord,
-                                     multi_value const &ddx,
-                                     multi_value const &ddy);
-  virtual multi_value emit_tex2Dbias(multi_value const &samp,
-                                     multi_value const &coord);
-  virtual multi_value emit_tex2Dproj(multi_value const &samp,
-                                     multi_value const &coord);
+  virtual multi_value emit_tex2Dlod(multi_value const &samp, multi_value const &coord);
+  virtual multi_value emit_tex2Dgrad(multi_value const &samp, multi_value const &coord,
+                                     multi_value const &ddx, multi_value const &ddy);
+  virtual multi_value emit_tex2Dbias(multi_value const &samp, multi_value const &coord);
+  virtual multi_value emit_tex2Dproj(multi_value const &samp, multi_value const &coord);
 
-  virtual multi_value emit_texCUBElod(multi_value const &samp,
-                                      multi_value const &coord);
-  virtual multi_value emit_texCUBEgrad(multi_value const &samp,
-                                       multi_value const &coord,
-                                       multi_value const &ddx,
-                                       multi_value const &ddy);
-  virtual multi_value emit_texCUBEbias(multi_value const &samp,
-                                       multi_value const &coord);
-  virtual multi_value emit_texCUBEproj(multi_value const &samp,
-                                       multi_value const &coord);
+  virtual multi_value emit_texCUBElod(multi_value const &samp, multi_value const &coord);
+  virtual multi_value emit_texCUBEgrad(multi_value const &samp, multi_value const &coord,
+                                       multi_value const &ddx, multi_value const &ddy);
+  virtual multi_value emit_texCUBEbias(multi_value const &samp, multi_value const &coord);
+  virtual multi_value emit_texCUBEproj(multi_value const &samp, multi_value const &coord);
 
   /// @}
 
@@ -257,25 +231,20 @@ public:
   cg_function *fetch_function(sasl::syntax_tree::function_def *fn_node);
 
   template <typename T>
-  multi_value
-  create_constant_scalar(T const &v, cg_type *tyinfo, builtin_types hint,
-                         EFLIB_ENABLE_IF_COND(std::is_integral<T>)) {
-    llvm::Value *ll_val =
-        llvm::ConstantInt::get(llvm::IntegerType::get(context(), sizeof(T) * 8),
-                               uint64_t(v), std::is_signed<T>::value);
+  multi_value create_constant_scalar(T const &v, cg_type *tyinfo, builtin_types hint,
+                                     EFLIB_ENABLE_IF_COND(std::is_integral<T>)) {
+    llvm::Value *ll_val = llvm::ConstantInt::get(llvm::IntegerType::get(context(), sizeof(T) * 8),
+                                                 uint64_t(v), std::is_signed<T>::value);
     return create_scalar(ll_val, tyinfo, hint);
   }
 
   template <typename T>
-  multi_value
-  create_constant_scalar(T const &v, cg_type *tyinfo, builtin_types hint,
-                         EFLIB_ENABLE_IF_COND(std::is_floating_point<T>)) {
-    llvm::Value *ll_val =
-        llvm::ConstantFP::get(llvm::Type::getFloatTy(context()), v);
+  multi_value create_constant_scalar(T const &v, cg_type *tyinfo, builtin_types hint,
+                                     EFLIB_ENABLE_IF_COND(std::is_floating_point<T>)) {
+    llvm::Value *ll_val = llvm::ConstantFP::get(llvm::Type::getFloatTy(context()), v);
     return create_scalar(ll_val, tyinfo, hint);
   }
-  virtual multi_value create_scalar(llvm::Value *val, cg_type *tyinfo,
-                                    builtin_types hint);
+  virtual multi_value create_scalar(llvm::Value *val, cg_type *tyinfo, builtin_types hint);
 
   multi_value null_value(cg_type *tyinfo, abis abi);
   multi_value null_value(builtin_types bt, abis abi);
@@ -287,27 +256,20 @@ public:
   llvm::Value *combine_flags(value_array const &flags);
   value_array split_mask(llvm::Value *mask);
 
-  multi_value create_constant_int(cg_type *tyinfo, builtin_types bt, abis abi,
-                                  uint64_t v);
+  multi_value create_constant_int(cg_type *tyinfo, builtin_types bt, abis abi, uint64_t v);
 
   value_array invalid_value_array();
 
-  multi_value create_value(cg_type *tyinfo, value_array const &v, value_kinds k,
+  multi_value create_value(cg_type *tyinfo, value_array const &v, value_kinds k, abis abi);
+  multi_value create_value(builtin_types hint, value_array const &v, value_kinds k, abis abi);
+  multi_value create_value(cg_type *tyinfo, builtin_types hint, value_array const &v, value_kinds k,
                            abis abi);
-  multi_value create_value(builtin_types hint, value_array const &v,
-                           value_kinds k, abis abi);
-  multi_value create_value(cg_type *tyinfo, builtin_types hint,
-                           value_array const &v, value_kinds k, abis abi);
 
-  multi_value create_variable(cg_type const *, abis abi,
-                              std::string_view name);
-  multi_value create_variable(builtin_types bt, abis abi,
-                              std::string_view name);
+  multi_value create_variable(cg_type const *, abis abi, std::string_view name);
+  multi_value create_variable(builtin_types bt, abis abi, std::string_view name);
 
-  virtual multi_value create_vector(std::vector<multi_value> const &scalars,
-                                    abis abi) = 0;
-  virtual multi_value create_value_by_scalar(multi_value const &scalar,
-                                             cg_type *tyinfo,
+  virtual multi_value create_vector(std::vector<multi_value> const &scalars, abis abi) = 0;
+  virtual multi_value create_value_by_scalar(multi_value const &scalar, cg_type *tyinfo,
                                              builtin_types hint);
   /// @}
 
@@ -369,9 +331,8 @@ protected:
 
   std::unordered_map<operators, uint32_t> conv_bin_op_to_vm_;
 
-  multi_value emit_cmp(multi_value const &lhs, multi_value const &rhs,
-                       uint32_t pred_signed, uint32_t pred_unsigned,
-                       uint32_t pred_float);
+  multi_value emit_cmp(multi_value const &lhs, multi_value const &rhs, uint32_t pred_signed,
+                       uint32_t pred_unsigned, uint32_t pred_float);
 
   // LLVM have some instructions/intrinsics to support unary and binary
   // operations. But even simple instruction 'add', there are two overloads to
@@ -403,7 +364,7 @@ protected:
   //     supported type.
   //       e.g. signed_sv_fn and float_sv_fn are functors to forward,
   //	          lhs and rhs could be value of signed int or <singed int x n>
-  //or float or <float x n>
+  // or float or <float x n>
   //   Aggregation Compatibility:
   //     S: Scalar
   //     V: Vector
@@ -418,21 +379,18 @@ public:
   multi_value emit_bin_ps_ta_sva(std::string const &scalar_external_intrin_name,
                                  multi_value const &v0, multi_value const &v1);
   multi_value emit_bin_es_ta_sva(std::string const &scalar_external_intrin_name,
-                                 multi_value const &lhs,
-                                 multi_value const &rhs);
+                                 multi_value const &lhs, multi_value const &rhs);
   multi_value emit_bin_es_ta_sva(multi_value const &lhs, multi_value const &rhs,
                                  binary_intrin_functor signed_sv_fn,
                                  binary_intrin_functor unsigned_sv_fn,
                                  binary_intrin_functor float_sv_fn);
-  multi_value emit_unary_ps(std::string const &scalar_external_intrin_name,
-                            multi_value const &v);
+  multi_value emit_unary_ps(std::string const &scalar_external_intrin_name, multi_value const &v);
 
   cg_extension *extension();
 
 protected:
   multi_value emit_bin_mm(multi_value const &lhs, multi_value const &rhs,
-                          binary_intrin_functor signed_fn,
-                          binary_intrin_functor unsigned_fn,
+                          binary_intrin_functor signed_fn, binary_intrin_functor unsigned_fn,
                           binary_intrin_functor float_fn);
   multi_value emit_dot_vv(multi_value const &lhs, multi_value const &rhs);
 
@@ -442,24 +400,17 @@ protected:
   multi_value emit_mul_mv(multi_value const &lhs, multi_value const &rhs);
   multi_value emit_mul_mm(multi_value const &lhs, multi_value const &rhs);
 
-  virtual multi_value emit_tex_lod_impl(multi_value const &samp,
-                                        multi_value const &coord,
-                                        externals::id vs_intrin,
-                                        externals::id ps_intrin);
-  virtual multi_value emit_tex_grad_impl(multi_value const &samp,
-                                         multi_value const &coord,
-                                         multi_value const &ddx,
-                                         multi_value const &ddy,
+  virtual multi_value emit_tex_lod_impl(multi_value const &samp, multi_value const &coord,
+                                        externals::id vs_intrin, externals::id ps_intrin);
+  virtual multi_value emit_tex_grad_impl(multi_value const &samp, multi_value const &coord,
+                                         multi_value const &ddx, multi_value const &ddy,
                                          externals::id ps_intrin);
-  virtual multi_value emit_tex_bias_impl(multi_value const &samp,
-                                         multi_value const &coord,
+  virtual multi_value emit_tex_bias_impl(multi_value const &samp, multi_value const &coord,
                                          externals::id ps_intrin);
-  virtual multi_value emit_tex_proj_impl(multi_value const &samp,
-                                         multi_value const &coord,
+  virtual multi_value emit_tex_proj_impl(multi_value const &samp, multi_value const &coord,
                                          externals::id ps_intrin);
 
-  bool merge_swizzle(multi_value const *&root, elem_indexes &indexes,
-                     multi_value const &v);
+  bool merge_swizzle(multi_value const *&root, elem_indexes &indexes, multi_value const &v);
 
   multi_value inf_from_value(multi_value const &v, bool negative);
 
@@ -468,6 +419,4 @@ protected:
   value_array load_as_llvm_c(multi_value const &v, abis abi);
 };
 
-}
-
-#endif
+} // namespace sasl::codegen

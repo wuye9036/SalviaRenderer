@@ -5,8 +5,6 @@
 #include <sasl/codegen/ty_cache.h>
 #include <sasl/enums/traits.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Intrinsics.h>

@@ -27,8 +27,6 @@
 #include <llvm/IR/Module.h>
 
 #include <boost/format.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <functional>
 

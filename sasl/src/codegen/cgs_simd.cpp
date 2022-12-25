@@ -21,8 +21,6 @@
 #include <llvm/IR/Module.h>
 
 #include <boost/lexical_cast.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/platform/cpuinfo.h>

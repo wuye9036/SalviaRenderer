@@ -1,5 +1,4 @@
-#ifndef SASL_CODEGEN_CG_GENERAL_H
-#define SASL_CODEGEN_CG_GENERAL_H
+#pragma once
 
 #include <sasl/codegen/forward.h>
 
@@ -72,5 +71,3 @@ private:
 };
 
 } // namespace sasl::codegen
-
-#endif

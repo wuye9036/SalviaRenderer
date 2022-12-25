@@ -11,8 +11,6 @@
 
 #include <boost/format.hpp>
 #include <boost/preprocessor.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <eflib/diagnostics/assert.h>
 

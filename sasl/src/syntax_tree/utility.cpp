@@ -11,8 +11,6 @@
 #include <eflib/utility/enable_if.h>
 
 #include <boost/preprocessor.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <any>
 #include <memory>

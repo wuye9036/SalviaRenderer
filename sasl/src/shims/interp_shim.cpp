@@ -8,7 +8,7 @@ using namespace salviar;
 using eflib::vec4;
 using std::vector;
 
-namespace sasl::shims() {
+namespace sasl::shims {
 
 void default_vso2reg(
 	vec4*			out_registers,

@@ -22,7 +22,9 @@
 #include <llvm/IR/Module.h>
 
 #include <fmt/format.h>
+
 #include <functional>
+#include <vector>
 
 using llvm::BasicBlock;
 using llvm::DefaultIRBuilder;
@@ -35,6 +37,7 @@ using llvm::Value;
 using namespace std::placeholders;
 
 using std::shared_ptr;
+using std::vector;
 
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;

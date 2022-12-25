@@ -1,13 +1,9 @@
-#ifndef SASL_CODEGEN_CG_PS_H
-#define SASL_CODEGEN_CG_PS_H
+#pragma once
 
 #include <sasl/codegen/cg_simd.h>
 
 namespace sasl::codegen {
 
-class cg_ps: public cg_simd{
-};
+class cg_ps : public cg_simd {};
 
-}
-
-#endif
+} // namespace sasl::codegen

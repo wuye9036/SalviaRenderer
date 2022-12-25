@@ -1,23 +1,15 @@
-#ifndef SASL_CODEGEN_TY_CACHE_H
-#define SASL_CODEGEN_TY_CACHE_H
+#pragma once
 
 #include <sasl/codegen/forward.h>
 
-#include <sasl/enums/builtin_types.h>
 #include <sasl/codegen/cgs.h>
+#include <sasl/enums/builtin_types.h>
 
-#include <eflib/platform/disable_warnings.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
-#include <llvm/IR/DerivedTypes.h>
-#include <eflib/platform/enable_warnings.h>
-
-#include <eflib/platform/boost_begin.h>
-#include <boost/unordered_map.hpp>
-#include <boost/lexical_cast.hpp>
-#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <vector>
@@ -25,14 +17,9 @@
 namespace sasl::codegen {
 
 using namespace llvm;
-using std::unordered_map;
-using boost::lexical_cast;
 using std::string;
-using std::vector;
 
-void initialize_cache( LLVMContext& ctxt );
-Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi );
+void initialize_cache(LLVMContext &ctxt);
+Type *get_llvm_type(LLVMContext &ctxt, builtin_types bt, abis abi);
 
-}
-
-#endif
+} // namespace sasl::codegen

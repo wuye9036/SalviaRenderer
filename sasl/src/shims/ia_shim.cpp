@@ -15,7 +15,7 @@ using namespace salviar;
 using std::vector;
 using std::make_pair;
 
-namespace sasl::shims() {
+namespace sasl::shims {
 
 size_t hash_value(ia_shim_key const& key)
 {

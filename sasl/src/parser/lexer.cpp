@@ -4,8 +4,6 @@
 
 #include <boost/spirit/include/lex.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/hash.h>

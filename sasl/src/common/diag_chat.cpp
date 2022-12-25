@@ -60,7 +60,7 @@ void diag_chat::clear() { diags_.clear(); }
 
 size_t error_count(diag_chat const *chat, bool warning_as_error) {
   size_t count = 0;
-
+  
   for (auto const &diag : chat->items()) {
     if (diag.level() == diag_levels::error || diag.level() == diag_levels::fatal_error) {
       ++count;

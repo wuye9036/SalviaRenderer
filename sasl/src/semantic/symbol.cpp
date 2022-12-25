@@ -13,14 +13,7 @@
 #include <eflib/utility/polymorphic_cast.h>
 #include <eflib/utility/unref_declarator.h>
 
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 #include <string_view>
@@ -31,16 +24,16 @@ using namespace std;
 namespace sasl::semantic {
 
 using sasl::common::diag_chat;
-using sasl::syntax_tree::expression;
-using sasl::syntax_tree::function_def;
-using sasl::syntax_tree::function_type;
-using sasl::syntax_tree::tynode;
 using sasl::enums::is_matrix;
 using sasl::enums::is_scalar;
 using sasl::enums::is_vector;
 using sasl::enums::scalar_of;
 using sasl::enums::vector_count;
 using sasl::enums::vector_size;
+using sasl::syntax_tree::expression;
+using sasl::syntax_tree::function_def;
+using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::tynode;
 
 using std::shared_ptr;
 
