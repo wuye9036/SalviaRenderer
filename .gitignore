@@ -4,4 +4,5 @@ test_main.cpp
 *.suo
 *.pyc
 build/
+.build/
 .vs/

@@ -782,4 +782,4 @@ void wzyx(vector_<ScalarT,4> const& v){\
 	((ScalarT*)this)[2] = v[1];\
 	((ScalarT*)this)[1] = v[2];\
 	((ScalarT*)this)[0] = v[3];\
-}\
+}

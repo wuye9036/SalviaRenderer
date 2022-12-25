@@ -4,6 +4,7 @@
 #include <sasl/parser/generator.h>
 
 using sasl::common::diag_chat;
+using namespace sasl::parser::diags;
 
 namespace sasl::parser {
 

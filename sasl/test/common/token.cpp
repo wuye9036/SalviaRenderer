@@ -33,7 +33,7 @@ TEST(sasl_common, token_construct_move_copy) {
   EXPECT_EQ(t4.lit().data(), t3.lit().data());
 }
 
-TEST(sasl_common, token_ref_counting) {
+TEST(sasl_common, token_sharing) {
   std::string const s0{"test_string0"};
   std::string const s1{"test_string1"};
 

@@ -1,22 +1,28 @@
 #pragma once
 
+#include <sasl/parser/diags.h>
+
+#include <sasl/common/diag_chat.h>
 #include <sasl/common/token.h>
 
 #include <eflib/utility/composition.h>
 #include <eflib/utility/enum.h>
 
 #include <optional>
+#include <ranges>
 #include <variant>
 
 namespace sasl::parser_next {
 
 using token = sasl::common::token;
 using namespace eflib::composition;
+using namespace sasl::parser::diags;
+
 } // namespace sasl::parser_next
 
 namespace sasl::parser_next::attributes {
 
-struct attribute;
+struct any_attribute;
 
 struct attribute_base {
   intptr_t rule_id;
@@ -25,33 +31,42 @@ struct attribute_base {
 
 struct nil_attribute : std::monostate {};
 
-struct terminal_attribute : attribute_base {};
+struct terminal_attribute {
+  attribute_base base;
+};
 
 // *|+|- rule
-struct select_attribute : attribute_base {
-  std::optional<indirect_<attribute>> attr;
+struct select_attribute {
+  attribute_base base;
+  std::optional<indirect_<any_attribute>> attr;
   size_t selected_index;
 };
 
 // rule0 | rule1
-struct sequence_attribute : attribute_base {
-  std::vector<attribute> children;
+struct sequence_attribute {
+  attribute_base base;
+  std::vector<any_attribute> children;
 };
 
 // rule0 >> rule1
 // rule0 > rule1
-struct queue_attribute : attribute_base {
-  std::vector<attribute> children;
+struct queue_attribute {
+  attribute_base base;
+  std::vector<any_attribute> children;
 };
 
-struct attribute : std::variant<nil_attribute, terminal_attribute, select_attribute,
-                                sequence_attribute, queue_attribute> {};
+struct any_attribute : std::variant<nil_attribute, terminal_attribute, select_attribute,
+                                    sequence_attribute, queue_attribute> {};
+
+template <typename T>
+concept attribute = std::same_as<decltype(std::declval<T>().base), attribute_base> ||
+                    std::same_as<T, any_attribute>;
 
 template <typename AttrT>
-concept aggregated_attr =
+concept aggregated_attribute =
     std::same_as<AttrT, sequence_attribute> || std::same_as<AttrT, queue_attribute>;
 
-decltype(auto) get_child(aggregated_attr auto &&attr, size_t i) {
+decltype(auto) get_child(aggregated_attribute auto &&attr, size_t i) {
   return std::forward<decltype(attr)>(attr).children[i];
 }
 
@@ -61,10 +76,11 @@ decltype(auto) get_child(aggregated_attr auto &&attr, size_t i) {
 namespace sasl::parser_next::combinators {
 
 using namespace eflib::enum_operators;
+using namespace sasl::parser_next::attributes;
 
 namespace {
 constexpr uint32_t _recover_failed_offset = 4, _recover_failed_mask = 0xF0, _expected_offset = 0,
-                 _expected_mask = 0x0F;
+                   _expected_mask = 0x0F;
 }
 
 enum class result_state : uint32_t {
@@ -103,6 +119,59 @@ constexpr bool is_expected_failed_or_recovered(result_state rs) noexcept {
 constexpr bool is_continuable(result_state rs) noexcept {
   return (rs & _recover_failed_mask) != result_state::failed;
 }
+
+using token_range = std::ranges::subrange<std::vector<token>::iterator>;
+
+template <attribute Attr> struct parsing_result {
+  result_state state;
+  token_range rng;
+  Attr attr;
+};
+
+struct paser_base {
+  bool is_expected = false;
+};
+
+struct terminal_p {
+  parsing_result<attributes::any_attribute> parse(token_range rng, sasl::common::diag_chat &diags) {
+    if (rng.empty()) {
+      return {result_state::failed, rng, nil_attribute{}};
+    }
+
+    if (rng.front().id() == token_id) {
+      return {result_state::succeed, rng.next(), terminal_attribute{{0, rng.front(), rng.front()}}};
+    }
+
+    diags.report(unmatched_token, rng.front().file_name(), rng.front().span(),
+                 fmt::arg("syntax_error", rng.front().lit()));
+    return {result_state::failed, rng, nil_attribute{}};
+  }
+
+  size_t token_id;
+};
+
+struct repeat_p {};
+struct select_p {};
+struct sequential_p {};
+struct negative_p {};
+
+struct end_p {};
+struct error_catch_p {};
+
+struct parser {};
+
+struct named_p {
+  std::string name;
+};
+
+template <typename T> struct is_parsing_result : std::false_type {};
+template <attribute Attr>
+struct is_parsing_result<parsing_result<Attr>> : std::true_type {};
+
+template <typename T> using is_parsing_result_v = is_parsing_result<T>::value;
+
+template <typename T>
+concept range_p = is_parsing_result_v<T>;
 
 #if 0
 typedef std::function<parse_results(sasl::common::diag_chat * /*diags*/,
@@ -249,7 +318,7 @@ public:
   endholder();
   endholder(endholder const &);
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
+                      sasl:: ::diag_chat *diags) const;
   std::shared_ptr<parser> clone() const;
 };
 

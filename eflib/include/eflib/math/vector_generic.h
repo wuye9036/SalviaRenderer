@@ -38,7 +38,7 @@ template <typename ScalarT, int Size> struct vector_data {
   //
   vector_<ScalarT, Size> &set(vector_<ScalarT, Size> const &v) {
     if (&v == this)
-      return;
+      return *this;
     for (int index = 0; index < Size; ++index) {
       data_[index] = v.data_[index];
     }
@@ -155,13 +155,13 @@ template <typename ScalarT, int Size> struct vector_ {};
 
 template <typename ScalarT>
 struct vector_<ScalarT, 1> : public vector_swizzle<ScalarT, 1>, public vector_data<ScalarT, 1> {
-  vector_<ScalarT, 1>() {}
+  vector_() {}
   explicit vector_<ScalarT, 1>(ScalarT v) { this->data_[0] = v; }
 };
 
 template <typename ScalarT>
 struct vector_<ScalarT, 2> : public vector_swizzle<ScalarT, 2>, public vector_data<ScalarT, 2> {
-  vector_<ScalarT, 2>() {}
+  vector_() {}
   explicit vector_<ScalarT, 2>(ScalarT v0, ScalarT v1) {
     this->data_[0] = v0;
     this->data_[1] = v1;
@@ -170,7 +170,7 @@ struct vector_<ScalarT, 2> : public vector_swizzle<ScalarT, 2>, public vector_da
 
 template <typename ScalarT>
 struct vector_<ScalarT, 3> : public vector_swizzle<ScalarT, 3>, public vector_data<ScalarT, 3> {
-  vector_<ScalarT, 3>() {}
+  vector_() {}
   explicit vector_<ScalarT, 3>(ScalarT v0, ScalarT v1, ScalarT v2) {
     this->data_[0] = v0;
     this->data_[1] = v1;
@@ -180,7 +180,7 @@ struct vector_<ScalarT, 3> : public vector_swizzle<ScalarT, 3>, public vector_da
 
 template <typename ScalarT>
 struct vector_<ScalarT, 4> : public vector_swizzle<ScalarT, 4>, public vector_data<ScalarT, 4> {
-  vector_<ScalarT, 4>() {}
+  vector_() {}
   explicit vector_<ScalarT, 4>(ScalarT v0, ScalarT v1 = ScalarT(0), ScalarT v2 = ScalarT(0),
                                ScalarT v3 = ScalarT(0)) {
     this->data_[0] = v0;

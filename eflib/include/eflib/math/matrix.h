@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #include <eflib/platform/config.h>
 #include <eflib/math/vector.h>
 #include <eflib/math/matrix_generic.h>

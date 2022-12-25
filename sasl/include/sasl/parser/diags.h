@@ -3,7 +3,7 @@
 #include <sasl/common/diag_item.h>
 #include <string_view>
 
-namespace sasl::parser{
+namespace sasl::parser::diags{
 
 using sasl::common::diag_levels;
 using sasl::common::diag_template;

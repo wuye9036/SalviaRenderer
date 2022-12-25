@@ -17,7 +17,7 @@ namespace sasl::syntax_tree_next {
 using token = sasl::common::token;
 using namespace eflib::composition;
 
-struct node {
+struct node_base {
   token token_beg, token_end;
 };
 
@@ -34,55 +34,64 @@ struct declaration;
 
 // ... expressions ...
 
-
-struct constant_expression: node {
+struct constant_expression {
+  node_base base;
   token value_tok;
   literal_classifications ctype;
 };
 
-struct variable_expression : node {
+struct variable_expression {
+  node_base base;
   token var_name;
 };
 
-struct unary_expression : node {
+struct unary_expression {
+  node_base base;
   indirect_<expression> primary_expr;
   token op_token;
   operators op;
 };
 
-struct binary_expression : node {
+struct binary_expression {
+  node_base base;
   indirect_<expression> left_oprand;
   indirect_<expression> right_operand;
   token op_token;
   operators op;
 };
 
-struct cast_expression : node {
+struct cast_expression {
+  node_base base;
   indirect_<qualified_type> dest_type;
   indirect_<expression> expr;
 };
 
-struct expression_list : node {
+struct expression_list {
+  node_base base;
   std::vector<expression> exprs;
 };
 
-struct cond_expression : node {
+struct cond_expression {
+  node_base base;
   indirect_<expression> cond;
   indirect_<expression> pos;
   indirect_<expression> neg;
 };
 
-struct subscript_expression : node {
+struct subscript_expression {
+  node_base base;
   indirect_<expression> expr;
   indirect_<expression> sub;
 };
 
-struct call_expression : node {
+struct call_expression {
+  node_base base;
   indirect_<expression> expr;
   std::vector<expression> args;
 };
 
-struct member_expression : node {
+struct member_expression {
+  node_base base;
   indirect_<expression> expr;
   token member;
 };
@@ -94,51 +103,66 @@ struct expression
 
 // ... statements ...
 
-struct empty_statement : node {};
+struct empty_statement {
+  node_base base;
+};
 
-struct declaration_statement : node {
+struct declaration_statement {
+  node_base base;
   indirect_<declaration> decl;
 };
 
-struct expression_statement : node {
+struct expression_statement {
+  node_base base;
   expression expr;
 };
 
-struct continue_statement : node {};
+struct continue_statement {
+  node_base base;
+};
 
-struct break_statement : node {};
+struct break_statement {
+  node_base base;
+};
 
-struct return_statement : node {
+struct return_statement {
+  node_base base;
   std::optional<expression> expr;
 };
 
-struct if_statement : node {
+struct if_statement {
+  node_base base;
   expression cond;
   indirect_<statement> pos_stmt, neg_stmt;
 };
 
-struct while_statement : node {
+struct while_statement {
+  node_base base;
   expression cond;
   indirect_<statement> body;
 };
 
-struct dowhile_statement : node {
+struct dowhile_statement {
+  node_base base;
   indirect_<statement> body;
   expression cond;
 };
 
-struct for_statement : node {
+struct for_statement {
+  node_base base;
   declaration_statement init;
   expression cond, iter;
   indirect_<statement> body;
 };
 
-struct switch_statement : node {
+struct switch_statement {
+  node_base base;
   expression expr;
   indirect_<statement> body;
 };
 
-struct compound_statement : node {
+struct compound_statement {
+  node_base base;
   std::vector<statement> stmts;
 };
 
@@ -151,44 +175,52 @@ struct statement
 
 struct initializer;
 
-struct expression_initializer : node {
+struct expression_initializer {
+  node_base base;
   expression init_expr;
 };
 
-struct aggregate_initializer : node {
+struct aggregate_initializer {
+  node_base base;
   std::vector<initializer> sub_inits;
 };
 
 struct initializer : std::variant<expression_initializer, aggregate_initializer> {};
 
-struct declarator : node {
+struct declarator {
+  node_base base;
   token name;
   initializer init;
   std::optional<indexed_semantic> semantic;
 };
 
-struct array_type : node {
+struct array_type {
+  node_base base;
   std::vector<expression> dims;
   indirect_<qualified_type> element_type;
 };
 
-struct alias_type : node {
+struct alias_type {
+  node_base base;
   indirect_<qualified_type> type;
   token alias;
 };
 
-struct builtin_type : node {
+struct builtin_type {
+  node_base base;
   builtin_types code;
 };
 
-struct parameter : node {
+struct parameter {
+  node_base base;
   indirect_<qualified_type> type;
   token name;
   std::optional<initializer> init;
   std::optional<indexed_semantic> semantic;
 };
 
-struct function_signature : node {
+struct function_signature {
+  node_base base;
   token name;
   std::vector<parameter> params;
 
@@ -199,7 +231,8 @@ struct function_signature : node {
   } result;
 };
 
-struct struct_definition : node {
+struct struct_definition {
+  node_base base;
   token name;
   std::vector<declaration> decls;
 };
@@ -207,22 +240,26 @@ struct struct_definition : node {
 struct unqualified_type
     : std::variant<builtin_type, array_type, alias_type, function_signature, struct_definition> {};
 
-struct qualified_type : node {
+struct qualified_type {
+  node_base base;
   type_qualifiers quals;
   unqualified_type prim;
 };
 
-struct variable_declaration : node {
+struct variable_declaration {
+  node_base base;
   qualified_type type;
   std::vector<declarator> declarators;
 };
 
-struct function_definition : node {
+struct function_definition {
+  node_base base;
   function_signature signature;
   compound_statement body;
 };
 
-struct elaborated_type : node {
+struct elaborated_type {
+  node_base base;
   token name;
 };
 

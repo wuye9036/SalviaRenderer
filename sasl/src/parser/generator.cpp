@@ -39,6 +39,8 @@ using std::string;
 
 namespace sasl::parser {
 
+using namespace diags;
+
 parse_results::parse_results() : tag(-1) {}
 
 parse_results::parse_results(int t) : tag(t) {}
@@ -182,7 +184,7 @@ parser::parser() : expected(false) {}
 bool parser::is_expected() const { return expected; }
 void parser::is_expected(bool v) { expected = v; }
 
-error_catcher parser::operator[](error_handler on_err) { return error_catcher(clone(), on_err); }
+// error_catcher parser::operator[](error_handler on_err) { return error_catcher(clone(), on_err); }
 
 terminal::terminal(size_t tok_id, std::string const &desc) : tok_id(tok_id), desc(desc) {}
 

@@ -156,7 +156,7 @@ public:
                               sasl::common::diag_chat *diags) const = 0;
   bool is_expected() const;
   void is_expected(bool v);
-  error_catcher operator[](error_handler on_err);
+  // error_catcher operator[](error_handler on_err);
   virtual std::shared_ptr<parser> clone() const = 0;
   virtual ~parser() {}
 
