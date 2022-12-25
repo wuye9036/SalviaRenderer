@@ -45,7 +45,6 @@ using namespace sasl::common;
 using eflib::polymorphic_cast;
 using eflib::scoped_value;
 
-using std::addressof;
 using std::make_pair;
 using std::string_view;
 using std::vector;
@@ -596,7 +595,7 @@ SASL_SPECIFIC_VISIT_DEF(before_decls_visit, program) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
 
-  TargetMachine *tm = create_local_target_machine();
+  [[maybe_unused]] TargetMachine *tm = create_local_target_machine();
 }
 
 SASL_SPECIFIC_VISIT_DEF(visit_member_declarator, declarator) {
@@ -794,7 +793,7 @@ SASL_SPECIFIC_VISIT_DEF(process_intrinsics, program) {
     service()->fn().allocation_block(service()->new_block(".alloc", true));
 
     service()->function_body_beg();
-    insert_point_t ip_body = service()->new_block(".body", true);
+    [[maybe_unused]] insert_point_t ip_body = service()->new_block(".body", true);
 
     // Parse Parameter Informations
     vector<tynode *> par_tys;

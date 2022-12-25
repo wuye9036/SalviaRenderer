@@ -43,14 +43,11 @@ using sasl::semantic::tid_t;
 
 using eflib::scoped_value;
 
-using std::addressof;
-using std::any_cast;
-using std::weak_ptr;
-
 using std::make_pair;
 using std::pair;
 using std::string;
 using std::vector;
+using std::weak_ptr;
 
 #define SASL_VISITOR_TYPE_NAME cg_sisd
 
@@ -311,10 +308,10 @@ SASL_VISIT_DEF(while_statement) {
 SASL_VISIT_DEF(dowhile_statement) {
   EFLIB_UNREF_DECLARATOR(data);
 
-  insert_point_t do_beg = service()->new_block("do.to_body", true);
+  [[maybe_unused]] insert_point_t do_beg = service()->new_block("do.to_body", true);
   insert_point_t do_end = service()->insert_point();
 
-  insert_point_t cond_beg = service()->new_block("while.cond", true);
+  [[maybe_unused]] insert_point_t cond_beg = service()->new_block("while.cond", true);
   visit_child(v.cond);
   tid_t cond_tid = sem_->get_semantic(v.cond)->tid();
   tid_t bool_tid = sem_->pety()->get(builtin_types::_boolean);
@@ -374,7 +371,7 @@ SASL_VISIT_DEF(switch_statement) {
 
   insert_point_t break_end = service()->new_block("switch.break", true);
 
-  insert_point_t body_beg = service()->new_block("switch.body", true);
+  [[maybe_unused]] insert_point_t body_beg = service()->new_block("switch.body", true);
 
   {
     BREAK_TO_SCOPE(break_end);

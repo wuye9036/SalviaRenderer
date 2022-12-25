@@ -67,10 +67,10 @@ struct node_context
 	node_context(module_context* owner)
 		: owner(owner)
 		, function_scope(nullptr)
+		, node_value(0)
 		, is_semantic_mode(false)
 		, ty(nullptr)
 		, declarator_count(0)
-		, node_value(0)
 	{
 	}
 

@@ -498,10 +498,7 @@ void append_mangling(string &str, builtin_types btc, bool as_comp) {
     str.append(1, vector_len_ch);
     append_mangling(str, scalar_of(btc), true);
   } else if (is_matrix(btc)) {
-    str.append("M");
-    char matrix_len_buf[3] = {'0' + static_cast<char>(vector_size(btc)),
-                              '0' + static_cast<char>(vector_count(btc)), 0};
-    str.append(matrix_len_buf);
+    fmt::format_to(std::back_inserter(str), "M{}{}", vector_size(btc), vector_count(btc));
     append_mangling(str, scalar_of(btc), true);
   }
 }

@@ -31,11 +31,8 @@ using llvm::LLVMContext;
 using llvm::Module;
 using llvm::Type;
 using llvm::Value;
-using llvm::VectorType;
 
 using namespace std::placeholders;
-
-namespace VMIntrin = llvm::Intrinsic;
 
 using std::shared_ptr;
 
@@ -58,16 +55,13 @@ using sasl::enums::vector_count;
 using sasl::enums::vector_of;
 using sasl::enums::vector_size;
 
-using salvia::shader::PACKAGE_ELEMENT_COUNT;
-using salvia::shader::SIMD_ELEMENT_COUNT;
-
 using namespace eflib;
 using namespace eflib::enum_operators;
 
 namespace sasl::codegen {
 
 cg_service::cg_service(size_t parallel_factor)
-    : vmcode_(nullptr), ctxt_(nullptr), sem_(nullptr), parallel_factor_(parallel_factor) {}
+    : sem_(nullptr), vmcode_(nullptr), ctxt_(nullptr), parallel_factor_(parallel_factor) {}
 
 bool cg_service::initialize(module_vmcode_impl *mod, module_context *ctxt, module_semantic *sem) {
   assert(mod);

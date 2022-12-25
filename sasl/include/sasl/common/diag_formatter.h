@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include <sasl/common/common_fwd.h>
 #include <string>

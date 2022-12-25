@@ -33,15 +33,15 @@ namespace eflib{
 
 		void set_min(eflib::vec4& min)
 		{
-			x = (T)(min.x);
-			y = (T)(min.y);
+			x = (T)(min.x());
+			y = (T)(min.y());
 		}
 
 		void set_max(eflib::vec4& max)
 		{
 			EFLIB_ASSERT(max.x > x && max.y > y, "");
-			w = (T)(max.x) - x;
-			h = (T)(max.y) - y;
+			w = (T)(max.x()) - x;
+			h = (T)(max.y()) - y;
 		}
 
 		eflib::vec4 get_min()

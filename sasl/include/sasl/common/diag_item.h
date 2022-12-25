@@ -1,7 +1,5 @@
 #pragma once
 
-#include <sasl/common/common_fwd.h>
-
 #include <sasl/common/token.h>
 
 #include <fmt/format.h>
@@ -25,7 +23,7 @@ class diag_item {
 public:
   constexpr diag_item() noexcept = default;
   constexpr diag_item(diag_template t, std::string_view file_name, code_span span, std::string resolved_diag) noexcept
-      : template_{t}, file_name_{file_name}, span_{span}, resolved_diag_(std::move(resolved_diag)) {}
+      : file_name_{file_name}, span_{span}, resolved_diag_(std::move(resolved_diag)), template_{t} {}
   constexpr diag_item(diag_item const&) = default;
   constexpr diag_item(diag_item && rhs) noexcept = default;
   constexpr diag_item& operator = (diag_item && rhs) noexcept = default;

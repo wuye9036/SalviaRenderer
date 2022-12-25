@@ -1,4 +1,4 @@
-find_package(llvm CONFIG REQUIRED)
+find_package(LLVM CONFIG REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 include(HandleLLVMOptions)

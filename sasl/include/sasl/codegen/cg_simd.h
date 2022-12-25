@@ -29,6 +29,8 @@ public:
   cg_simd();
   ~cg_simd();
 
+  using cg_impl::visit;
+
   // expression
   SASL_VISIT_DCL(unary_expression);
   SASL_VISIT_DCL(cast_expression);
@@ -60,22 +62,22 @@ public:
   SASL_VISIT_DCL(labeled_statement);
 
 protected:
-  cgs_simd *service() const;
-  abis local_abi(bool is_c_compatible) const;
+  cgs_simd *service() const override;
+  abis local_abi(bool is_c_compatible) const override;
 
   multi_value layout_to_value(salvia::shader::sv_layout *svl);
 
-  SASL_SPECIFIC_VISIT_DCL(before_decls_visit, program);
+  SASL_SPECIFIC_VISIT_DCL(before_decls_visit, program) override;
 
-  SASL_SPECIFIC_VISIT_DCL(create_fnsig, function_def);
-  SASL_SPECIFIC_VISIT_DCL(create_fnargs, function_def);
+  SASL_SPECIFIC_VISIT_DCL(create_fnsig, function_def) override;
+  SASL_SPECIFIC_VISIT_DCL(create_fnargs, function_def) override;
   SASL_SPECIFIC_VISIT_DCL(create_virtual_args, function_def);
 
-  SASL_SPECIFIC_VISIT_DCL(visit_return, jump_statement);
-  SASL_SPECIFIC_VISIT_DCL(visit_continue, jump_statement);
-  SASL_SPECIFIC_VISIT_DCL(visit_break, jump_statement);
+  SASL_SPECIFIC_VISIT_DCL(visit_return, jump_statement) override;
+  SASL_SPECIFIC_VISIT_DCL(visit_continue, jump_statement) override;
+  SASL_SPECIFIC_VISIT_DCL(visit_break, jump_statement) override;
 
-  SASL_SPECIFIC_VISIT_DCL(bin_logic, binary_expression);
+  SASL_SPECIFIC_VISIT_DCL(bin_logic, binary_expression) override;
 
   llvm::Function *entry_fn;
   multi_value entry_values[salvia::shader::sv_usage_count];

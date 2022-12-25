@@ -6,6 +6,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(SALVIA_HOME_DIR ${CMAKE_HOME_DIRECTORY})
 
 # Configure dependencies
+find_package(range-v3 CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(freeimage CONFIG REQUIRED)
@@ -14,7 +15,7 @@ include (cmake/IncludeBoost.cmake)
 include (cmake/IncludeLLVM.cmake)
 
 include (cmake/ConfigCompiler.cmake)
-add_subdirectory( cmake )
+add_subdirectory(cmake)
 
 # Add projects
 add_subdirectory(eflib)

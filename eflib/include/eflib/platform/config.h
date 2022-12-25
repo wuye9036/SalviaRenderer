@@ -73,18 +73,22 @@
 #define EFLIB_ALIGN(x) __attribute__((aligned(x)))
 #endif
 
-#if defined(EFLIB_MSVC)
-#if _HAS_CXX23
+#if (defined(EFLIB_MSVC) && _HAS_CXX23) || __cplusplus > 202002L
 #define EF_CONSTEXPR23 constexpr
 #else
 #define EF_CONSTEXPR23 inline
 #endif
+
+#if defined(EFLIB_MSVC)
+#define EF_CONSTEXPR_STR constexpr
+#else
+#define EF_CONSTEXPR_STR inline
 #endif
 
 namespace eflib {
 #if defined(EFLIB_DEBUG)
-bool const is_debug_mode = true;
+constexpr bool is_debug_mode = true;
 #else
-bool const is_debug_mode = false;
+constexpr bool is_debug_mode = false;
 #endif
 }; // namespace eflib

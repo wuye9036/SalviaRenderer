@@ -1,14 +1,15 @@
-#pragma
+#pragma once
 
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/traits.h>
 #include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/node_creation.h>
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
 
 #include <any>
 #include <functional>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace sasl::syntax_tree {
 
@@ -32,8 +33,7 @@ void map_of_builtin_type(ContainerT &cont, const PredT &pred) {
   btc_list_t const &btclst(sasl::enums::list_of_builtin_types());
   for (btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it) {
     if (pred(*it)) {
-      std::shared_ptr<builtin_type> bt =
-          create_node<builtin_type>(token::make_empty(), token::make_empty());
+      auto bt = create_node<builtin_type>(token::make_empty(), token::make_empty());
       bt->tycode = *it;
       cont[*it] = bt;
     }
@@ -41,12 +41,12 @@ void map_of_builtin_type(ContainerT &cont, const PredT &pred) {
 }
 
 template <typename ContainerT, typename PredT>
-  requires (requires (ContainerT c, PredT p){
-    c.push_back(std::declval<builtin_types>());
-    c.clear();
-    { p(std::declval<builtin_types>()) } -> std::same_as<bool>;
-  })
-void fill_builtin_types(ContainerT &cont, PredT&& pred) {
+  requires(requires(ContainerT c, PredT p) {
+             c.push_back(std::declval<builtin_types>());
+             c.clear();
+             { p(std::declval<builtin_types>()) } -> std::same_as<bool>;
+           })
+void fill_builtin_types(ContainerT &cont, PredT &&pred) {
   cont.clear();
   auto const &bts = sasl::enums::list_of_builtin_types();
   for (auto bt : bts) {

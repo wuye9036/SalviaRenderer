@@ -34,6 +34,7 @@ class cg_service {
 
 public:
   cg_service(size_t parallel_factor);
+  virtual ~cg_service(){}
 
   virtual bool initialize(module_vmcode_impl *mod, module_context *ctxt,
                           sasl::semantic::module_semantic *sem);

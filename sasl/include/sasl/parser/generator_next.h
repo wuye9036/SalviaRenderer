@@ -8,8 +8,9 @@
 #include <eflib/utility/composition.h>
 #include <eflib/utility/enum.h>
 
+#include <range/v3/view.hpp>
+
 #include <optional>
-#include <ranges>
 #include <variant>
 
 namespace sasl::parser_next {
@@ -79,8 +80,10 @@ using namespace eflib::enum_operators;
 using namespace sasl::parser_next::attributes;
 
 namespace {
-constexpr uint32_t _recover_failed_offset = 4, _recover_failed_mask = 0xF0, _expected_offset = 0,
-                   _expected_mask = 0x0F;
+constexpr uint32_t _recover_failed_offset = 4;
+constexpr uint32_t _recover_failed_mask = 0xF0;
+constexpr uint32_t _expected_offset = 0;
+constexpr uint32_t _expected_mask = 0x0F;
 }
 
 enum class result_state : uint32_t {
@@ -120,7 +123,7 @@ constexpr bool is_continuable(result_state rs) noexcept {
   return (rs & _recover_failed_mask) != result_state::failed;
 }
 
-using token_range = std::ranges::subrange<std::vector<token>::iterator>;
+using token_range = ranges::subrange<std::vector<token>::iterator>;
 
 template <attribute Attr> struct parsing_result {
   result_state state;
@@ -135,7 +138,7 @@ struct paser_base {
 struct terminal_p {
   parsing_result<attributes::any_attribute> parse(token_range rng, sasl::common::diag_chat &diags) {
     if (rng.empty()) {
-      return {result_state::failed, rng, nil_attribute{}};
+      return {result_state::failed, rng, {nil_attribute{}}};
     }
 
     if (rng.front().id() == token_id) {
@@ -168,7 +171,7 @@ template <typename T> struct is_parsing_result : std::false_type {};
 template <attribute Attr>
 struct is_parsing_result<parsing_result<Attr>> : std::true_type {};
 
-template <typename T> using is_parsing_result_v = is_parsing_result<T>::value;
+template <typename T> constexpr auto is_parsing_result_v = is_parsing_result<T>::value;
 
 template <typename T>
 concept range_p = is_parsing_result_v<T>;

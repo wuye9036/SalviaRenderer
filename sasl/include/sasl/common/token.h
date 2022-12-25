@@ -36,7 +36,7 @@ struct shared {};
 struct unique {};
 } // namespace token_storage_policy
 
-template <typename StoragePolicy> class token_base {
+template <typename StoragePolicy> class [[nodiscard]] token_base {
 private:
   static constexpr bool is_shared_storage =
       std::is_same_v<StoragePolicy, token_storage_policy::shared>;
@@ -82,13 +82,13 @@ public:
     return ret;
   }
 
-  EF_CONSTEXPR23 static [[nodiscard]] token_base uninitialized() noexcept { return token_base{}; }
-  EF_CONSTEXPR23 static [[nodiscard]] token_base make_empty() { return token_base(make_data()); }
+  EF_CONSTEXPR23 static token_base uninitialized() noexcept { return token_base{}; }
+  EF_CONSTEXPR23 static token_base make_empty() { return token_base(make_data()); }
 
-  EF_CONSTEXPR23 static [[nodiscard]] token_base make(std::string_view lit) {
+  EF_CONSTEXPR23 static token_base make(std::string_view lit) {
     return make(0, lit, 0, 0, std::string_view{});
   }
-  EF_CONSTEXPR23 static [[nodiscard]] token_base make(size_t id, std::string_view lit, size_t line,
+  EF_CONSTEXPR23 static token_base make(size_t id, std::string_view lit, size_t line,
                                                       size_t col, std::string_view fname,
                                                       bool end_of_file = false) {
     auto span = inline_code_span(line, col, col);
@@ -109,21 +109,21 @@ public:
     return token_base(std::move(data));
   }
 
-  EF_CONSTEXPR23 [[nodiscard]] bool is_uninitialized() const noexcept {
+  [[nodiscard]] EF_CONSTEXPR23 bool is_uninitialized() const noexcept {
     return !data_;
   }
 
-  EF_CONSTEXPR23 [[nodiscard]] bool is_valid() const noexcept {
+  [[nodiscard]] EF_CONSTEXPR23 bool is_valid() const noexcept {
     return !is_uninitialized() && !lit().empty();
   }
 
-  EF_CONSTEXPR23 [[nodiscard]] size_t id() const noexcept { return data_->id; }
-  EF_CONSTEXPR23 [[nodiscard]] std::string_view lit() const noexcept { return data_->lit; }
-  EF_CONSTEXPR23 [[nodiscard]] code_span span() const noexcept { return data_->span; }
-  EF_CONSTEXPR23 [[nodiscard]] std::string_view file_name() const noexcept {
+  [[nodiscard]] EF_CONSTEXPR23 size_t id() const noexcept { return data_->id; }
+  [[nodiscard]] EF_CONSTEXPR23 std::string_view lit() const noexcept { return data_->lit; }
+  [[nodiscard]] EF_CONSTEXPR23 code_span span() const noexcept { return data_->span; }
+  [[nodiscard]] EF_CONSTEXPR23 std::string_view file_name() const noexcept {
     return data_->file_name;
   }
-  EF_CONSTEXPR23 [[nodiscard]] bool end_of_file() const { return data_->end_of_file; }
+  [[nodiscard]] EF_CONSTEXPR23 bool end_of_file() const { return data_->end_of_file; }
 
 private:
   EF_CONSTEXPR23 explicit token_base(data_ptr data) noexcept : data_{std::move(data)} {}

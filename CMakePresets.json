@@ -20,6 +20,21 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
                 "Boost_NO_WARN_NEW_VERSIONS": "1"
             }
+        },
+        {
+            "name": "clang_linux_x64_dev",
+            "displayName": "clang_linux_x64_dev",
+            "description": "Clang-15 on linux, x86-64",
+            "binaryDir": "./.build/salvia.${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_TOOLCHAIN_FILE": "~/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_INSTALL_PREFIX": "./.install/salvia.${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
+                "Boost_NO_WARN_NEW_VERSIONS": "1",
+                "CMAKE_C_COMPILER": "clang-15",
+                "CMAKE_CXX_COMPILER": "clang++-15"
+            }
         }
     ],
     "buildPresets": [

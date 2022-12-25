@@ -19,7 +19,7 @@ namespace chrono = std::chrono;
 namespace eflib
 {
 	profiling_item::profiling_item(profiling_item* parent)
-		: duration_(0.0), tag(0), parent(parent)
+		: tag(0), parent(parent), duration_(0.0)
 	{
 	}
 
@@ -73,8 +73,8 @@ namespace eflib
 	}
 
 	profiler::profiler() 
-		: current_{ nullptr }
-		, root_{ nullptr }
+		: root_{ nullptr }
+		, current_{ nullptr }
 	{
 	}
 

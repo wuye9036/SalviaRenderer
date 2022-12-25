@@ -101,7 +101,7 @@ static uint32_t const REG_CATEGORY_REGFILE_COUNTS[] = {
 struct sv_layout {
   sv_layout()
       : logical_index(0), physical_index(0), offset(0), size(0), padding(0), usage(su_none),
-        value_type(lvt_none), sv(sv_none), agg_type(aggt_none) {}
+        value_type(lvt_none), agg_type(aggt_none), sv(sv_none) {}
 
   size_t total_size() const { return size + padding; }
 
@@ -228,5 +228,6 @@ public:
   virtual size_t available_reg_count(reg_categories cat) const = 0;
   virtual reg_name find_reg(reg_categories cat, semantic_value const &sv) const = 0;
   virtual size_t reg_addr(reg_name const &rname) const = 0;
+  virtual ~shader_reflection2() {}
 };
 } // namespace salvia::shader

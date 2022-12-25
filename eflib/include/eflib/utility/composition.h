@@ -40,7 +40,7 @@ struct make_variant<directs<DirectArgs...>, indirects<IndirectArgs...>> {
 // std::variant<
 //      literal_int, literal_float, literal_string,
 //      indirect_<unary_expression>, indirect_<binary_expression>>;
-template <typename D, typename I> using make_variant_t = make_variant<D, I>::type;
+template <typename D, typename I> using make_variant_t = typename make_variant<D, I>::type;
 
 template <typename... Ts>
 struct overload: Ts... {

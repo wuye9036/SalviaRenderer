@@ -8,6 +8,8 @@
 #		define NOMINMAX
 #	endif
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 #include <algorithm>
@@ -69,7 +71,7 @@ namespace eflib{
 			// Linux doesn't easily allow us to look at the Affinity Bitmask directly,
 			// but it does provide an API to test affinity maskbits of the current process
 			// against each logical processor visible under OS.
-			num = sysconf(_SC_NPROCESSORS_CONF);	// This will tell us how many CPUs are currently enabled.
+			num = sysconf(_SC_NPROCESSORS_ONLN);	// This will tell us how many CPUs are currently enabled.
 		}
 #endif
 

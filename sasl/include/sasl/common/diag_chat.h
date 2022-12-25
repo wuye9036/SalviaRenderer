@@ -63,7 +63,7 @@ private:
 
 class chat_scope {
 public:
-  chat_scope(diag_chat *chat) : chat(chat), need_save(false) { chat->save(); }
+  chat_scope(diag_chat *chat) : need_save(false), chat(chat) { chat->save(); }
   ~chat_scope() {
     if (!need_save)
       chat->restore();

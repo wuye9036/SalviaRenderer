@@ -1,5 +1,22 @@
 # set compile flags for MSVC
 
+include(CheckCXXSourceCompiles)
+
+check_cxx_source_compiles("
+  #include <string>
+  int main() {
+    return 0;
+    // constexpr std::size_t n = std::string(\"hello, world\").size();
+    // return static_cast<int>(n);
+  }
+  "
+  CONSTEXPR_FOR_STR
+)
+
+# append("-fconcepts-ts" CMAKE_CXX_FLAGS)
+
+message(STATUS "Eval: ${CONSTEXPR_FOR_STR}")
+
 #set(CMAKE_C_CXX_COMMON_FLAGS "-fPIC ${SALVIA_GCC_GCOV_PARAM} -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -w -fexceptions -msse2 -mstackrealign")
 #if(MINGW)
 #	set(CMAKE_C_CXX_COMMON_FLAGS "${CMAKE_C_CXX_COMMON_FLAGS} -DWIN32 -DWINDOWS")

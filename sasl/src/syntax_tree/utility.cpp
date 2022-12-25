@@ -125,7 +125,7 @@ public:
     visit(v.decls, data);
     applied(v, data);
   }
-  SASL_VISIT_DCL(alias_type) { visit(v, data); }
+  SASL_VISIT_DCL(alias_type) { v.accept(this, data); }
   SASL_VISIT_DCL(function_type) {
     invoke_accept(v.result_type, data);
     visit(v.param_types, data);

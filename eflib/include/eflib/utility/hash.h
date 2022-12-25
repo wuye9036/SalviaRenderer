@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <iterator>
+#include <type_traits>
 #include <vector>
 #include <ranges>
 
@@ -48,14 +49,13 @@ struct hash_tuple {
 
   template <typename... ArgsT>
   constexpr size_t operator()(std::tuple<ArgsT...> const& t) const noexcept {
-    size_t seed = 0;
-    return operator()(t, std::make_index_sequence<std::tuple_size<decltype(t)>>{});
+    return operator()(t, std::make_index_sequence<std::tuple_size_v<decltype(t)>>{});
   }
 
   template <typename... ArgsT, size_t... ArgInts>
   constexpr size_t operator()(std::tuple<ArgsT...> const& t, std::index_sequence<ArgInts...>) const noexcept {
     size_t seed = 0;
-    (hash_combine(seed, t.get<ArgInts>()), ...);
+    (hash_combine(seed, t.template get<ArgInts>()), ...);
     return seed;
   }
 };
