@@ -11,7 +11,7 @@
 #include <sasl/syntax_tree/utility.h>
 
 #include <eflib/diagnostics/assert.h>
-#include <eflib/memory/atomic.h>
+#include <eflib/concurrency/atomic.h>
 #include <eflib/utility/enum.h>
 #include <eflib/utility/hash.h>
 #include <eflib/utility/polymorphic_cast.h>

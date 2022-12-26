@@ -2,7 +2,6 @@
 
 #include <eflib/platform/config.h>
 #include <eflib/thread_pool/threadpool.h>
-#include <salviar/include/salviar_forward.h>
 
 namespace salviar {
 

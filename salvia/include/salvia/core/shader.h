@@ -1,7 +1,5 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
 #include <salviar/include/enums.h>
 #include <salviar/include/renderer_capacity.h>
 #include <salviar/include/sampler.h>
@@ -23,7 +21,6 @@
 
 namespace salviar {
 
-
 inline size_t hash_value(semantic_value const &v) {
   size_t seed = v.get_index();
   if (v.get_system_value() != sv_customized) {
@@ -34,7 +31,7 @@ inline size_t hash_value(semantic_value const &v) {
   return seed;
 }
 
-END_NS_SALVIAR()
+} // namespace salviar
 
 namespace std {
 template <> struct hash<salviar::semantic_value> {
@@ -48,7 +45,7 @@ template <> struct hash<salviar::semantic_value> {
     return seed;
   }
 };
-}
+} // namespace std
 
 namespace salviar {
 
@@ -69,17 +66,14 @@ struct shader_profile {
 
 class cpp_shader {
 public:
-  virtual result set_sampler(const std::_tstring &varname,
-                             sampler_ptr const &samp) = 0;
+  virtual result set_sampler(const std::_tstring &varname, sampler_ptr const &samp) = 0;
   virtual result set_constant(const std::_tstring &varname,
                               shader_constant::const_voidptr pval) = 0;
-  virtual result set_constant(const std::_tstring &varname,
-                              shader_constant::const_voidptr pval,
+  virtual result set_constant(const std::_tstring &varname, shader_constant::const_voidptr pval,
                               size_t index) = 0;
 
   virtual result find_register(semantic_value const &sv, size_t &index) = 0;
-  virtual std::unordered_map<semantic_value, size_t> const &
-  get_register_map() = 0;
+  virtual std::unordered_map<semantic_value, size_t> const &get_register_map() = 0;
 
   template <typename T> std::shared_ptr<T> clone() {
     auto ret = std::dynamic_pointer_cast<T>(clone());
@@ -102,8 +96,7 @@ public:
     return result::ok;
   }
 
-  result set_constant(const std::_tstring &varname,
-                      shader_constant::const_voidptr pval) {
+  result set_constant(const std::_tstring &varname, shader_constant::const_voidptr pval) {
     variable_map::iterator var_it = varmap_.find(varname);
     if (var_it == varmap_.end()) {
       return result::failed;
@@ -114,8 +107,8 @@ public:
     return result::failed;
   }
 
-  result set_constant(const std::_tstring &varname,
-                      shader_constant::const_voidptr pval, size_t index) {
+  result set_constant(const std::_tstring &varname, shader_constant::const_voidptr pval,
+                      size_t index) {
     container_variable_map::iterator cont_it = contmap_.find(varname);
     if (cont_it == contmap_.end()) {
       return result::failed;
@@ -126,12 +119,10 @@ public:
 
   result find_register(semantic_value const &sv, size_t &index);
   std::unordered_map<semantic_value, size_t> const &get_register_map();
-  void bind_semantic(char const *name, size_t semantic_index,
-                     size_t register_index);
+  void bind_semantic(char const *name, size_t semantic_index, size_t register_index);
   void bind_semantic(semantic_value const &s, size_t register_index);
 
-  template <class T>
-  result declare_constant(const std::_tstring &varname, T &var) {
+  template <class T> result declare_constant(const std::_tstring &varname, T &var) {
     varmap_[varname] = shader_constant::voidptr(&var);
     return result::ok;
   }
@@ -141,16 +132,14 @@ public:
     return result::ok;
   }
 
-  template <class T>
-  result declare_container_constant(const std::_tstring &varname, T &var) {
+  template <class T> result declare_container_constant(const std::_tstring &varname, T &var) {
     return declare_container_constant_impl(varname, var, var[0]);
   }
 
 private:
   typedef std::map<std::_tstring, shader_constant::voidptr> variable_map;
   typedef std::map<std::_tstring, sampler_ptr *> sampler_map;
-  typedef std::map<std::_tstring, std::shared_ptr<detail::container>>
-      container_variable_map;
+  typedef std::map<std::_tstring, std::shared_ptr<detail::container>> container_variable_map;
   typedef std::unordered_map<semantic_value, size_t> register_map;
 
   variable_map varmap_;
@@ -159,11 +148,10 @@ private:
   sampler_map sampmap_;
 
   template <class T, class ElemType>
-  result declare_container_constant_impl(const std::_tstring &varname, T &var,
-                                         const ElemType &) {
+  result declare_container_constant_impl(const std::_tstring &varname, T &var, const ElemType &) {
     varmap_[varname] = shader_constant::voidptr(&var);
-    contmap_[varname] = std::shared_ptr<detail::container>(
-        new detail::container_impl<T, ElemType>(var));
+    contmap_[varname] =
+        std::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));
     return result::ok;
   }
 };
@@ -194,14 +182,13 @@ protected:
   color_rgba32f tex2dlod(sampler const &s, eflib::vec4 const &coord_with_lod);
   color_rgba32f tex2dproj(const sampler &s, size_t iReg);
 
-  color_rgba32f texcube(const sampler &s, const eflib::vec4 &coord,
-                        const eflib::vec4 &ddx, const eflib::vec4 &ddy,
-                        float bias = 0);
+  color_rgba32f texcube(const sampler &s, const eflib::vec4 &coord, const eflib::vec4 &ddx,
+                        const eflib::vec4 &ddy, float bias = 0);
   color_rgba32f texcube(const sampler &s, size_t iReg);
   color_rgba32f texcubelod(const sampler &s, size_t iReg);
   color_rgba32f texcubeproj(const sampler &s, size_t iReg);
-  color_rgba32f texcubeproj(const sampler &s, const eflib::vec4 &v,
-                            const eflib::vec4 &ddx, const eflib::vec4 &ddy);
+  color_rgba32f texcubeproj(const sampler &s, const eflib::vec4 &v, const eflib::vec4 &ddx,
+                            const eflib::vec4 &ddy);
 
 public:
   void update_front_face(bool v) { front_face_ = v; }
@@ -216,8 +203,7 @@ public:
 class cpp_blend_shader : public cpp_shader_impl {
 public:
   void execute(size_t sample, pixel_accessor &inout, const ps_output &in);
-  virtual bool shader_prog(size_t sample, pixel_accessor &inout,
-                           const ps_output &in) = 0;
+  virtual bool shader_prog(size_t sample, pixel_accessor &inout, const ps_output &in) = 0;
 };
 
-}
+} // namespace salviar
