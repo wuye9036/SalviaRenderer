@@ -2,7 +2,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/renderer.h>
+#include <salvia/core/renderer.h>
 #include <salviar/include/render_stages.h>
 #include <salviar/include/render_core.h>
 

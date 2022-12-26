@@ -4,7 +4,7 @@
 #include <sasl/drivers/drivers_forward.h>
 #include <sasl/syntax_tree/parse_api.h>
 
-#include <salviar/include/shader.h>
+#include <salvia/shader/shader.h>
 
 #include <eflib/platform/boost_begin.h>
 #include <boost/program_options.hpp>

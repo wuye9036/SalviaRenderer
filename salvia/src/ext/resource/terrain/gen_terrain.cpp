@@ -1,9 +1,9 @@
 /* All Algorithms Copyright (C) Jason Shankel, 2000. */
 #include <salviax/include/resource/terrain/gen_terrain.h>
 
-#include <salviar/include/texture.h>
-#include <salviar/include/renderer.h>
-#include <salviar/include/mapped_resource.h>
+#include <salvia/resource/texture.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/mapped_resource.h>
 
 #include <eflib/platform/boost_begin.h>
 #include <boost/utility/addressof.hpp>

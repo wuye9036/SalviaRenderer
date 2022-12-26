@@ -4,7 +4,7 @@
 #include <sasl/host/host_forward.h>
 
 #include <salviar/include/host.h>
-#include <salviar/include/shader_object.h>
+#include <salvia/shader/shader_object.h>
 
 #include <eflib/utility/shared_declaration.h>
 

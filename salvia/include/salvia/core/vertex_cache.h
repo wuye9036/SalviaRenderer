@@ -5,7 +5,7 @@
 
 #include <salviar/include/decl.h>
 
-#include <salviar/include/renderer.h>
+#include <salvia/core/renderer.h>
 #include <salviar/include/index_fetcher.h>
 #include <eflib/memory/atomic.h>
 

@@ -3,12 +3,10 @@
 #include <eflib/math/math.h>
 #include <eflib/platform/typedefs.h>
 
-
 #include <array>
+#include <tuple>
 
-namespace salviar {
-
-namespace shader_constant {
+namespace salvia::shader_constant {
 struct empty {};
 
 using shader_constant_types =
@@ -30,7 +28,7 @@ template <typename T> struct type_encode {
   static constexpr size_t id = index_in_tuple<T, shader_constant_types>::value;
 };
 
-#include "voidptr.h"
+#include <eflib/meta/voidptr.inl>
 
 // reg functions
 ////////////////////////////////////////////
@@ -53,13 +51,13 @@ inline bool assign(voidptr lhs, const_voidptr rhs) {
   }
   return false;
 }
-}
 
 namespace detail {
 class container {
 public:
-  virtual void get(shader_constant::voidptr pval, size_t pos) = 0;
-  virtual void set(shader_constant::const_voidptr val, size_t pos) = 0;
+  virtual void get(voidptr pval, size_t pos) = 0;
+  virtual void set(const_voidptr val, size_t pos) = 0;
+  virtual ~container() {}
 };
 
 template <class ContainerImpl, class ElemType> class container_impl : public container {
@@ -71,20 +69,19 @@ template <class ContainerImpl, class ElemType> class container_impl : public con
 public:
   container_impl(container_type &cont) : pcont(&cont) {}
 
-  virtual void get(shader_constant::voidptr pval, size_t pos) {
-    element_type *pelem = shader_constant::voidptr_cast<element_type>(pval);
+  virtual void get(voidptr pval, size_t pos) {
+    element_type *pelem = voidptr_cast<element_type>(pval);
     if (pelem) {
       *pelem = (*pcont)[pos];
     }
   }
 
-  virtual void set(shader_constant::const_voidptr pval, size_t pos) {
-    const element_type *pelem = shader_constant::voidptr_cast<element_type>(pval);
+  virtual void set(const_voidptr pval, size_t pos) {
+    const element_type *pelem = voidptr_cast<element_type>(pval);
     if (pelem) {
       (*pcont)[pos] = *pelem;
     }
   }
 };
-}
-
-END_NS_SALVIAR()
+} // namespace detail
+} // namespace salvia::shader_constant

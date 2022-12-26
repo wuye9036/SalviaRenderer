@@ -15,4 +15,4 @@ eflib::thread_pool& global_thread_pool()
 	return tp;
 }
 
-END_NS_SALVIAR()
+}

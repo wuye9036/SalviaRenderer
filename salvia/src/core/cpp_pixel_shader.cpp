@@ -1,6 +1,6 @@
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_regs_op.h>
-#include <salviar/include/shader.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_regs_op.h>
+#include <salvia/shader/shader.h>
 
 namespace salviar{
 
@@ -83,4 +83,4 @@ bool cpp_pixel_shader::output_depth() const
     return false;
 }
 
-END_NS_SALVIAR()
+}

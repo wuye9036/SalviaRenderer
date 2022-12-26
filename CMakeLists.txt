@@ -19,9 +19,9 @@ add_subdirectory(cmake)
 
 # Add projects
 add_subdirectory(eflib)
-add_subdirectory(shader)
+add_subdirectory(salvia)
 add_subdirectory(sasl)
-# add_subdirectory(salviar)
+
 # add_subdirectory(salviax)
 # add_subdirectory(salviau)
 # add_subdirectory(samples)

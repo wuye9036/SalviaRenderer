@@ -4,7 +4,7 @@
 
 #include <eflib/platform/typedefs.h>
 #include <eflib/utility/shared_declaration.h>
-#include <salviar/include/enums.h>
+#include <salvia/common/constants.h>
 
 #include <array>
 #include <atomic>

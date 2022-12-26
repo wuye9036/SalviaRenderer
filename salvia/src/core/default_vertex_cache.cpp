@@ -3,15 +3,15 @@
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/host.h>
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_regs_op.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_regs_op.h>
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/thread_context.h>
 #include <salviar/include/async_object.h>
-#include <salviar/include/shader_unit.h>
+#include <salvia/shader/shader_unit.h>
 
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/memory/pool.h>
@@ -677,4 +677,4 @@ vertex_cache_ptr create_default_vertex_cache()
 	return vertex_cache_ptr( new tls_vertex_cache() );
 }
 
-END_NS_SALVIAR()
+}

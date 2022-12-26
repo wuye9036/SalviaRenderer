@@ -2,7 +2,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/renderer_capacity.h>
+#include <salvia/core/render_capacity.h>
 
 #include <eflib/utility/shared_declaration.h>
 

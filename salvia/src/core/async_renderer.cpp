@@ -133,4 +133,4 @@ renderer_ptr create_async_renderer()
 	return ret;
 }
 
-END_NS_SALVIAR()
+}

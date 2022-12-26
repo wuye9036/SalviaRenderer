@@ -3,8 +3,8 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/decl.h>
-#include <salviar/include/enums.h>
-#include <salviar/include/shader.h>
+#include <salvia/common/constants.h>
+#include <salvia/shader/shader.h>
 #include <salviar/include/framebuffer.h>
 #include <salviar/include/raster_state.h>
 #include <salviar/include/geom_setup_engine.h>

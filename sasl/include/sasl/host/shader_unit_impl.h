@@ -9,7 +9,7 @@
 
 #include <salviar/include/host.h>
 #include <salviar/include/shader_impl.h>
-#include <salviar/include/shader_unit.h>
+#include <salvia/shader/shader_unit.h>
 
 #include <eflib/utility/shared_declaration.h>
 

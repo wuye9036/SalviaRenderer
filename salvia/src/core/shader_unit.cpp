@@ -1,9 +1,9 @@
-#include <salviar/include/shader_unit.h>
+#include <salvia/shader/shader_unit.h>
 
-#include <salviar/include/shader_object.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/renderer.h>
-#include <salviar/include/buffer.h>
+#include <salvia/shader/shader_object.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/buffer.h>
 #include <salviar/include/stream_assembler.h>
 
 #include <eflib/diagnostics/assert.h>

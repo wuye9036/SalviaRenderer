@@ -7,4 +7,4 @@ namespace salviar {
 
 eflib::thread_pool& global_thread_pool();
 
-END_NS_SALVIAR()
+}

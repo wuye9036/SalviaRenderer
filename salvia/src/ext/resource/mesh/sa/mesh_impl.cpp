@@ -1,6 +1,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 
 #include <eflib/diagnostics/assert.h>
 

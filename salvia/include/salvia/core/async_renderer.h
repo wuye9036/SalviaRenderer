@@ -3,7 +3,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/renderer.h>
+#include <salvia/core/renderer.h>
 
 #include <eflib/utility/shared_declaration.h>
 

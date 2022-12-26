@@ -1,8 +1,8 @@
 #include <sasl/host/shader_unit_impl.h>
 
 #include <salviar/include/stream_assembler.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader.h>
 
 #include <eflib/diagnostics/assert.h>
 

@@ -8,8 +8,8 @@
 #include <salviax/include/swap_chain/swap_chain.h>
 
 #include <salviar/include/async_object.h>
-#include <salviar/include/surface.h>
-#include <salviar/include/renderer.h>
+#include <salvia/resource/surface.h>
+#include <salvia/core/renderer.h>
 #include <eflib/diagnostics/profiler.h>
 
 #include <string>

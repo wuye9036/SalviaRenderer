@@ -1,10 +1,10 @@
 #include <salviar/include/stream_assembler.h>
 
-#include <salviar/include/input_layout.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_regs_op.h>
-#include <salviar/include/buffer.h>
-#include <salviar/include/shader.h>
+#include <salvia/resource/input_layout.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_regs_op.h>
+#include <salvia/resource/buffer.h>
+#include <salvia/shader/shader.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/stream_state.h>
 

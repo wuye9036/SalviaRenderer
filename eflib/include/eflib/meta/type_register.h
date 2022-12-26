@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EFLIB_META_TYPE_REGISTER_H
+#define EFLIB_META_TYPE_REGISTER_H
 
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <eflib/math/math.h>
@@ -89,5 +90,6 @@ const int _registered_types_count = BOOST_PP_SEQ_SIZE(DECL_REGISTERED_TYPES);
 
 #else
 #error check macro!
+#endif
 #endif
 #endif

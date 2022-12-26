@@ -1,8 +1,6 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
-namespace salviar{
+namespace salvia::core{
 
 struct viewport{
 	float x;

@@ -1,7 +1,7 @@
 #include <sasl/shims/ia_shim.h>
 
-#include <salviar/include/input_layout.h>
-#include <salviar/include/shader.h>
+#include <salvia/resource/input_layout.h>
+#include <salvia/shader/shader.h>
 #include <salvia/shader/reflection.h>
 #include <salviar/include/stream_assembler.h>
 

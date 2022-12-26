@@ -1,7 +1,8 @@
-#include <salviar/include/colors.h>
+#include <salvia/resource/colors_convertors.h>
+
 #include <memory.h>
 
-namespace salviar{
+namespace salvia::resource{
 
 static pixel_format_convertor pfc_instance;
 
@@ -117,4 +118,4 @@ pixel_format_convertor::pixel_format_convertor(){
 	color_convertor_initializer<pixel_format_color_max - 1, pixel_format_color_max - 1> init_(&convertors[0][0], &array_convertors[0][0],
 		&lerpers_1d[0], &lerpers_2d[0]);
 }
-END_NS_SALVIAR()
+}

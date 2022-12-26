@@ -1,14 +1,14 @@
 #include <salviau/include/common/sample_app.h>
 #include <salviau/include/common/path.h>
 
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_object.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_object.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
-#include <salviar/include/colors.h>
-#include <salviar/include/texture.h>
+#include <salvia/resource/colors.h>
+#include <salvia/resource/texture.h>
 
 #include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/material.h>

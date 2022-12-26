@@ -6,10 +6,10 @@
 #include <salvia_d3d_sw_driver/include/umd_device.h>
 #include <salvia_d3d_sw_driver/include/umd_resource.h>
 
-#include <salviar/include/renderer.h>
-#include <salviar/include/buffer.h>
-#include <salviar/include/texture.h>
-#include <salviar/include/internal_mapped_resource.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/buffer.h>
+#include <salvia/resource/texture.h>
+#include <salvia/resource/internal_mapped_resource.h>
 
 using namespace salviar;
 

@@ -3,7 +3,7 @@
 
 #include <salviax/include/utility/utility_forward.h>
 
-#include <salviar/include/colors.h>
+#include <salvia/resource/colors.h>
 #include <eflib/string/string.h>
 #include <eflib/math/collision_detection.h>
 

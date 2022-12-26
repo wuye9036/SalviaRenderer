@@ -1,10 +1,10 @@
 #include <salviax/include/resource/texture/tex_io.h>
 
 #include <salviax/include/utility/freeimage_utilities.h>
-#include <salviar/include/renderer.h>
-#include <salviar/include/surface.h>
-#include <salviar/include/texture.h>
-#include <salviar/include/mapped_resource.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/surface.h>
+#include <salvia/resource/texture.h>
+#include <salvia/resource/mapped_resource.h>
 #include <FreeImage.h>
 
 #include <algorithm>

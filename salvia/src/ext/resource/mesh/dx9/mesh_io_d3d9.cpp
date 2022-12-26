@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <salviax/include/resource/mesh/dx9/mesh_io_d3d9.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviar/include/renderer.h>
-#include <salviar/include/buffer.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/buffer.h>
 
 using namespace std;
 using namespace eflib;

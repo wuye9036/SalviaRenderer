@@ -4,10 +4,10 @@
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviax/include/resource/mesh/sa/skin_mesh_impl.h>
 
-#include <salviar/include/buffer.h>
-#include <salviar/include/renderer.h>
+#include <salvia/resource/buffer.h>
+#include <salvia/core/renderer.h>
 #include <salvia/shader/reflection.h>
-#include <salviar/include/input_layout.h>
+#include <salvia/resource/input_layout.h>
 
 #include <eflib/platform/boost_begin.h>
 #include <boost/property_tree/xml_parser.hpp>
@@ -26,7 +26,7 @@ using salviar::buffer_ptr;
 using salviar::language_value_types;
 using salviar::input_element_desc;
 using salviar::input_per_vertex;
-using salviar::semantic_value;
+using salvia::shader::semantic_value;
 
 using eflib::vec4;
 using eflib::int4;

@@ -2,7 +2,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/enums.h>
+#include <salvia/common/constants.h>
 
 #include <eflib/utility/shared_declaration.h>
 

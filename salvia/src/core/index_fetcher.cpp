@@ -1,4 +1,4 @@
-#include <salviar/include/buffer.h>
+#include <salvia/resource/buffer.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/index_fetcher.h>
 

@@ -2,12 +2,12 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/enums.h>
-#include <salviar/include/colors.h>
-#include <salviar/include/format.h>
+#include <salvia/common/constants.h>
+#include <salvia/resource/colors.h>
+#include <salvia/resource/format.h>
 #include <salviar/include/viewport.h>
 #include <salviar/include/stream_state.h>
-#include <salviar/include/shader_cbuffer.h>
+#include <salvia/shader/shader_cbuffer.h>
 
 #include <eflib/utility/shared_declaration.h>
 #include <eflib/math/vector.h>

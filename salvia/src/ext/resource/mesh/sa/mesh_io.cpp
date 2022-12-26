@@ -18,9 +18,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviar/include/input_layout.h>
+#include <salvia/resource/input_layout.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 
 #include <eflib/math/quaternion.h>
 #include <eflib/math/math.h>

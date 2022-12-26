@@ -2,9 +2,9 @@
 
 #include <salviax/include/swap_chain/swap_chain_impl.h>
 
-#include <salviar/include/surface.h>
-#include <salviar/include/renderer.h>
-#include <salviar/include/mapped_resource.h>
+#include <salvia/resource/surface.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/mapped_resource.h>
 
 #include <memory>
 

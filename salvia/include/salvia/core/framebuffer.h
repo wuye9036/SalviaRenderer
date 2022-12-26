@@ -2,10 +2,10 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/enums.h>
+#include <salvia/common/constants.h>
 #include <salviar/include/decl.h>
-#include <salviar/include/colors.h>
-#include <salviar/include/renderer_capacity.h>
+#include <salvia/resource/colors.h>
+#include <salvia/core/render_capacity.h>
 
 #include <eflib/math/collision_detection.h>
 

@@ -8,7 +8,7 @@
 
 #include <salviar/include/async_renderer.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/texture.h>
+#include <salvia/resource/texture.h>
 
 #include <eflib/platform/boost_begin.h>
 #include <boost/program_options.hpp>

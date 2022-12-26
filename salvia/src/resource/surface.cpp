@@ -1,5 +1,5 @@
-#include <salviar/include/surface.h>
-#include <salviar/include/internal_mapped_resource.h>
+#include <salvia/resource/surface.h>
+#include <salvia/resource/internal_mapped_resource.h>
 
 #include <memory>
 
@@ -7,7 +7,7 @@
 
 using eflib::int4;
 
-namespace salviar{
+namespace salvia::resource{
 
 #if SALVIA_TILED_SURFACE
 const size_t TILE_BITS = 5;

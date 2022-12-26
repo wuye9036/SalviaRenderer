@@ -3,10 +3,10 @@
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviax/include/resource/texture/tex_io.h>
-#include <salviar/include/texture.h>
-#include <salviar/include/buffer.h>
-#include <salviar/include/input_layout.h>
-#include <salviar/include/renderer.h>
+#include <salvia/resource/texture.h>
+#include <salvia/resource/buffer.h>
+#include <salvia/resource/input_layout.h>
+#include <salvia/core/renderer.h>
 #include <eflib/math/math.h>
 
 #include <eflib/platform/boost_begin.h>

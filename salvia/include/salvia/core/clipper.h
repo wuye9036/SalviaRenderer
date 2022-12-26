@@ -3,7 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/decl.h>
-#include <salviar/include/enums.h>
+#include <salvia/common/constants.h>
 
 #include <eflib/memory/pool.h>
 #include <eflib/math/math.h>

@@ -1,6 +1,6 @@
 #include <salviar/include/render_state.h>
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_cbuffer.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_cbuffer.h>
 
 namespace salviar{
 

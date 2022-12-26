@@ -4,10 +4,10 @@
 
 #include <salviau/include/common/sample_app.h>
 
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_regs.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_regs.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
 #include <eflib/utility/unref_declarator.h>

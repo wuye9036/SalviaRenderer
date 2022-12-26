@@ -4,7 +4,7 @@
 #include <salviar/include/thread_context.h>
 #include <salviar/include/thread_pool.h>
 #include <salviar/include/vertex_cache.h>
-#include <salviar/include/shader_regs.h>
+#include <salvia/shader/shader_regs.h>
 
 #include <eflib/math/math.h>
 #include <eflib/platform/cpuinfo.h>

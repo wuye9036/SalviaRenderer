@@ -6,10 +6,10 @@
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>
 #include <salvia/shader/reflection.h>
-#include <salviar/include/shader_object.h>
-#include <salviar/include/shader_unit.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_regs_op.h>
+#include <salvia/shader/shader_object.h>
+#include <salvia/shader/shader_unit.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_regs_op.h>
 #include <salviar/include/thread_pool.h>
 #include <salviar/include/thread_context.h>
 #include <salviar/include/vertex_cache.h>

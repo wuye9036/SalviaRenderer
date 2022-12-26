@@ -1,7 +1,7 @@
 #pragma once
 
 #include <salviax/include/resource/resource_forward.h>
-#include <salviar/include/colors.h>
+#include <salvia/resource/colors.h>
 #include <salviar/include/decl.h>
 #include <eflib/string/string.h>
 #include <eflib/math/math.h>

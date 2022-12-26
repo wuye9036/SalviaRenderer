@@ -1,6 +1,6 @@
 #include <salviax/include/resource/font/font.h>
 
-#include <salviar/include/surface.h>
+#include <salvia/resource/surface.h>
 #include <eflib/string/string.h>
 #include <eflib/math/collision_detection.h>
 #include <ft2build.h>

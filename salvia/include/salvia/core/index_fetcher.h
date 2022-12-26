@@ -3,8 +3,8 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/decl.h>
-#include <salviar/include/enums.h>
-#include <salviar/include/format.h>
+#include <salvia/common/constants.h>
+#include <salvia/resource/format.h>
 
 #include <eflib/platform/typedefs.h>
 

@@ -3,7 +3,7 @@
 #include <salviax/include/resource/resource_forward.h>
 #include <salviar/include/decl.h>
 #include <salviar/include/stream_assembler.h>
-#include <salviar/include/input_layout.h>
+#include <salvia/resource/input_layout.h>
 
 #include <vector>
 #include <memory>

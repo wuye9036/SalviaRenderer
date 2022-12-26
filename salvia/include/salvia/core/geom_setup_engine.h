@@ -2,7 +2,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/enums.h>
+#include <salvia/common/constants.h>
 #include <salviar/include/async_object.h>
 
 #include <eflib/memory/pool.h>
@@ -88,4 +88,4 @@ private:
 	geom_setup_context const*			ctxt_;
 };
 
-END_NS_SALVIAR()
+}

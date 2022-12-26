@@ -3,7 +3,7 @@ file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "*.cpp")
 
 add_library(sasl_semantic ${HEADER_LIST} ${SOURCE_LIST})
 target_include_directories(sasl_semantic PUBLIC ../../include)
-target_link_libraries(sasl_semantic eflib shader)
+target_link_libraries(sasl_semantic eflib salvia_shader)
 target_compile_features(sasl_semantic PUBLIC cxx_std_20)
 
 set_target_properties(sasl_semantic PROPERTIES FOLDER "Shader Libs")

@@ -1,10 +1,10 @@
 #include <salviar/include/framebuffer.h>
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_regs_op.h>
-#include <salviar/include/surface.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_regs_op.h>
+#include <salvia/resource/surface.h>
 #include <salviar/include/render_state.h>
-#include <salviar/include/renderer.h>
+#include <salvia/core/renderer.h>
 
 #include <eflib/math/collision_detection.h>
 

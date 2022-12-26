@@ -1,8 +1,10 @@
-#include <salviar/include/buffer.h>
+#include <salvia/resource/buffer.h>
 
-#include <salviar/include/internal_mapped_resource.h>
+#include <salvia/resource/internal_mapped_resource.h>
 
-namespace salviar{
+#include <cstring>
+
+namespace salvia::resource{
 
 result buffer::map(internal_mapped_resource& mapped, map_mode mm)
 {
@@ -10,7 +12,7 @@ result buffer::map(internal_mapped_resource& mapped, map_mode mm)
 	{
 	case map_read:
 		mapped.data = mapped.reallocator(data_.size());
-		memcpy( mapped.data, data_.data(), data_.size() );
+		std::memcpy( mapped.data, data_.data(), data_.size() );
 		break;
 	case map_read_write:
 	case map_write_no_overwrite:

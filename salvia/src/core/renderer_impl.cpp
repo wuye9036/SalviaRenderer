@@ -1,22 +1,22 @@
 #include <salviar/include/renderer_impl.h>
 
 #include <salviar/include/binary_modules.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_regs_op.h>
-#include <salviar/include/shader_cbuffer.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_regs_op.h>
+#include <salvia/shader/shader_cbuffer.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/render_state.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/framebuffer.h>
-#include <salviar/include/surface.h>
+#include <salvia/resource/surface.h>
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/stream_assembler.h>
-#include <salviar/include/shader_unit.h>
-#include <salviar/include/input_layout.h>
+#include <salvia/shader/shader_unit.h>
+#include <salvia/resource/input_layout.h>
 #include <salviar/include/host.h>
 #include <salvia/shader/reflection.h>
-#include <salviar/include/shader_object.h>
+#include <salvia/shader/shader_object.h>
 #include <salviar/include/async_object.h>
 
 namespace salviar{

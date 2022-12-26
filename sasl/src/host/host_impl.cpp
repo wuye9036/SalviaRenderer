@@ -18,7 +18,7 @@
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>
-#include <salviar/include/shader_cbuffer.h>
+#include <salvia/shader/shader_cbuffer.h>
 
 #include <eflib/memory/atomic.h>
 

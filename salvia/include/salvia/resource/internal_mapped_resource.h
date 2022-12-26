@@ -1,25 +1,16 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
+#include <functional>
 
-#include <eflib/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <eflib/platform/boost_end.h>
+namespace salvia::resource {
 
-namespace salviar{
+struct internal_mapped_resource {
+  internal_mapped_resource(std::function<void *(size_t)> realloc) : reallocator(realloc) {}
+  void *data;
+  uint32_t row_pitch;
+  uint32_t depth_pitch;
 
-struct internal_mapped_resource
-{
-	internal_mapped_resource(boost::function<void* (size_t)> realloc)
-		: reallocator(realloc)
-	{
-	}
-	void*		data;
-	uint32_t	row_pitch;
-	uint32_t	depth_pitch;
-
-	boost::function<void* (size_t)>
-			reallocator;
+  std::function<void *(size_t)> reallocator;
 };
 
-}
+} // namespace salviar

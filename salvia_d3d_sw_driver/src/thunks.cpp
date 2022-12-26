@@ -7,7 +7,7 @@
 #include <salvia_d3d_sw_driver/include/kmd_context.h>
 #include <salvia_d3d_sw_driver/include/umd_device.h>
 
-#include <salviar/include/texture.h>
+#include <salvia/resource/texture.h>
 
 using namespace salviar;
 

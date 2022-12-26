@@ -1,8 +1,8 @@
 #include <salviax/include/swap_chain/swap_chain_impl.h>
-#include <salviar/include/renderer.h>
+#include <salvia/core/renderer.h>
 #include <salviar/include/async_renderer.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/texture.h>
+#include <salvia/resource/texture.h>
 #include <eflib/platform/dl_loader.h>
 
 using namespace salviar;

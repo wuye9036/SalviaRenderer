@@ -1,16 +1,16 @@
 #pragma once
 
-#include <salviar/include/enums.h>
-#include <salviar/include/renderer_capacity.h>
-#include <salviar/include/sampler.h>
-#include <salviar/include/shader_utility.h>
+#include <salvia/common/constants.h>
+#include <salvia/common/renderer_capacity.h>
+
+#include <salvia/resource/sampler.h>
+#include <salvia/shader/constants.h>
+#include <salvia/shader/shader_utility.h>
 
 #include <eflib/utility/hash.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <boost/algorithm/string.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <functional>
 #include <map>
@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace salviar {
+namespace salvia::shader {
 
 inline size_t hash_value(semantic_value const &v) {
   size_t seed = v.get_index();
@@ -31,23 +31,9 @@ inline size_t hash_value(semantic_value const &v) {
   return seed;
 }
 
-} // namespace salviar
+} // namespace salvia::shader
 
-namespace std {
-template <> struct hash<salviar::semantic_value> {
-  size_t operator()(salviar::semantic_value const &v) const noexcept {
-    size_t seed = v.get_index();
-    if (v.get_system_value() != salviar::sv_customized) {
-      eflib::hash_combine(seed, static_cast<size_t>(v.get_system_value()));
-    } else {
-      eflib::hash_combine(seed, v.get_name());
-    }
-    return seed;
-  }
-};
-} // namespace std
-
-namespace salviar {
+namespace salvia::core {
 
 struct viewport;
 struct scanline_info;
@@ -60,20 +46,21 @@ struct ps_output;
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 
+namespace detail = salvia::shader_constant::detail;
+
 struct shader_profile {
-  languages language;
+  salvia::shader::languages language;
 };
 
 class cpp_shader {
 public:
-  virtual result set_sampler(const std::_tstring &varname, sampler_ptr const &samp) = 0;
-  virtual result set_constant(const std::_tstring &varname,
-                              shader_constant::const_voidptr pval) = 0;
-  virtual result set_constant(const std::_tstring &varname, shader_constant::const_voidptr pval,
+  virtual result set_sampler(const std::string &varname, sampler_ptr const &samp) = 0;
+  virtual result set_constant(const std::string &varname, shader_constant::const_voidptr pval) = 0;
+  virtual result set_constant(const std::string &varname, shader_constant::const_voidptr pval,
                               size_t index) = 0;
 
-  virtual result find_register(semantic_value const &sv, size_t &index) = 0;
-  virtual std::unordered_map<semantic_value, size_t> const &get_register_map() = 0;
+  virtual result find_register(shader::semantic_value const &sv, size_t &index) = 0;
+  virtual std::unordered_map<shader::semantic_value, size_t> const &get_register_map() = 0;
 
   template <typename T> std::shared_ptr<T> clone() {
     auto ret = std::dynamic_pointer_cast<T>(clone());
@@ -87,7 +74,7 @@ public:
 
 class cpp_shader_impl : public cpp_shader {
 public:
-  result set_sampler(std::_tstring const &samp_name, sampler_ptr const &samp) {
+  result set_sampler(std::string const &samp_name, sampler_ptr const &samp) override {
     auto samp_it = sampmap_.find(samp_name);
     if (samp_it == sampmap_.end()) {
       return result::failed;
@@ -96,7 +83,7 @@ public:
     return result::ok;
   }
 
-  result set_constant(const std::_tstring &varname, shader_constant::const_voidptr pval) {
+  result set_constant(const std::string &varname, shader_constant::const_voidptr pval) override {
     variable_map::iterator var_it = varmap_.find(varname);
     if (var_it == varmap_.end()) {
       return result::failed;
@@ -107,8 +94,8 @@ public:
     return result::failed;
   }
 
-  result set_constant(const std::_tstring &varname, shader_constant::const_voidptr pval,
-                      size_t index) {
+  result set_constant(const std::string &varname, shader_constant::const_voidptr pval,
+                      size_t index) override {
     container_variable_map::iterator cont_it = contmap_.find(varname);
     if (cont_it == contmap_.end()) {
       return result::failed;
@@ -117,30 +104,31 @@ public:
     return result::ok;
   }
 
-  result find_register(semantic_value const &sv, size_t &index);
-  std::unordered_map<semantic_value, size_t> const &get_register_map();
+  result find_register(shader::semantic_value const &sv, size_t &index) override;
+  std::unordered_map<shader::semantic_value, size_t> const &get_register_map() override;
   void bind_semantic(char const *name, size_t semantic_index, size_t register_index);
-  void bind_semantic(semantic_value const &s, size_t register_index);
+  void bind_semantic(shader::semantic_value const &s, size_t register_index);
 
-  template <class T> result declare_constant(const std::_tstring &varname, T &var) {
+  template <class T> result declare_constant(const std::string &varname, T &var) {
     varmap_[varname] = shader_constant::voidptr(&var);
     return result::ok;
   }
 
-  result declare_sampler(const std::_tstring &varname, sampler_ptr &var) {
+  result declare_sampler(const std::string &varname, sampler_ptr &var) {
     sampmap_[varname] = &var;
     return result::ok;
   }
 
-  template <class T> result declare_container_constant(const std::_tstring &varname, T &var) {
+  template <class T> result declare_container_constant(const std::string &varname, T &var) {
     return declare_container_constant_impl(varname, var, var[0]);
   }
 
 private:
-  typedef std::map<std::_tstring, shader_constant::voidptr> variable_map;
-  typedef std::map<std::_tstring, sampler_ptr *> sampler_map;
-  typedef std::map<std::_tstring, std::shared_ptr<detail::container>> container_variable_map;
-  typedef std::unordered_map<semantic_value, size_t> register_map;
+  typedef std::map<std::string, shader_constant::voidptr> variable_map;
+  typedef std::map<std::string, sampler_ptr *> sampler_map;
+  typedef std::map<std::string, std::shared_ptr<detail::container>>
+      container_variable_map;
+  typedef std::unordered_map<shader::semantic_value, size_t> register_map;
 
   variable_map varmap_;
   container_variable_map contmap_;
@@ -148,7 +136,7 @@ private:
   sampler_map sampmap_;
 
   template <class T, class ElemType>
-  result declare_container_constant_impl(const std::_tstring &varname, T &var, const ElemType &) {
+  result declare_container_constant_impl(const std::string &varname, T &var, const ElemType &) {
     varmap_[varname] = shader_constant::voidptr(&var);
     contmap_[varname] =
         std::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));
@@ -163,6 +151,8 @@ public:
   virtual uint32_t num_output_attributes() const = 0;
   virtual uint32_t output_attribute_modifiers(uint32_t index) const = 0;
 };
+
+using namespace salvia::resource;
 
 class cpp_pixel_shader : public cpp_shader_impl {
   bool front_face_;
@@ -206,4 +196,4 @@ public:
   virtual bool shader_prog(size_t sample, pixel_accessor &inout, const ps_output &in) = 0;
 };
 
-} // namespace salviar
+} // namespace salvia::core
