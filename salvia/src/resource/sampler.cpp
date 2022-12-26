@@ -891,4 +891,4 @@ void sampler::calc_anisotropic_info(eflib::uint4 const &size, eflib::vec4 const 
   }
 }
 
-} // namespace salviar
+} // namespace salvia::resource

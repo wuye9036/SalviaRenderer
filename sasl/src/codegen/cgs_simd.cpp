@@ -105,13 +105,10 @@ void cgs_simd::store(multi_value &lhs, multi_value const &rhs) {
 
       if (lhs.abi() == abis::c) {
         value_array parent_address = lhs.parent()->load_ref();
-        for (size_t i_write_idx = 0; i_write_idx < indexes_length;
-             ++i_write_idx) {
-          value_array mem_ptr =
-              ext_->struct_gep(parent_address, indexes[i_write_idx]);
+        for (size_t i_write_idx = 0; i_write_idx < indexes_length; ++i_write_idx) {
+          value_array mem_ptr = ext_->struct_gep(parent_address, indexes[i_write_idx]);
           value_array old_elem = ext_->load(mem_ptr);
-          multi_value new_element_val =
-              emit_extract_val(rhs, static_cast<int>(i_write_idx));
+          multi_value new_element_val = emit_extract_val(rhs, static_cast<int>(i_write_idx));
           value_array masked_new_elem =
               ext_->select(mask, new_element_val.load(lhs.abi()), old_elem);
           ext_->store(masked_new_elem, mem_ptr);
@@ -121,21 +118,18 @@ void cgs_simd::store(multi_value &lhs, multi_value const &rhs) {
         multi_value old_parent = lhs.parent()->to_rvalue();
         multi_value selected_parent = old_parent;
 
-        for (size_t i_write_idx = 0; i_write_idx < indexes_length;
-             ++i_write_idx) {
-          multi_value new_elem_val =
-              emit_extract_val(rhs, static_cast<int>(i_write_idx));
-          multi_value old_elem_val = emit_extract_val(
-              old_parent, static_cast<int>(indexes[i_write_idx]));
+        for (size_t i_write_idx = 0; i_write_idx < indexes_length; ++i_write_idx) {
+          multi_value new_elem_val = emit_extract_val(rhs, static_cast<int>(i_write_idx));
+          multi_value old_elem_val =
+              emit_extract_val(old_parent, static_cast<int>(indexes[i_write_idx]));
 
-          value_array selected_new_elem = ext_->select(
-              mask, new_elem_val.load(lhs.abi()), old_elem_val.load());
-          multi_value selected_new_elem_val =
-              create_value(new_elem_val.hint(), selected_new_elem,
-                           value_kinds::value, new_elem_val.abi());
+          value_array selected_new_elem =
+              ext_->select(mask, new_elem_val.load(lhs.abi()), old_elem_val.load());
+          multi_value selected_new_elem_val = create_value(new_elem_val.hint(), selected_new_elem,
+                                                           value_kinds::value, new_elem_val.abi());
 
-          selected_parent = emit_insert_val(
-              selected_parent, indexes[i_write_idx], selected_new_elem_val);
+          selected_parent =
+              emit_insert_val(selected_parent, indexes[i_write_idx], selected_new_elem_val);
         }
         lhs.parent()->store(selected_parent);
         return;
@@ -199,8 +193,7 @@ multi_value cgs_simd::cast_f2b(multi_value const &v) {
   return multi_value();
 }
 
-multi_value cgs_simd::create_vector(vector<multi_value> const &scalars,
-                                    abis abi) {
+multi_value cgs_simd::create_vector(vector<multi_value> const &scalars, abis abi) {
   EFLIB_UNREF_DECLARATOR(scalars);
   EFLIB_UNREF_DECLARATOR(abi);
 
@@ -226,8 +219,7 @@ void cgs_simd::emit_return(multi_value const &ret_v, abis abi) {
 
 void cgs_simd::function_body_beg() {
   cg_service::function_body_beg();
-  exec_masks.push_back(fn().partial_execution ? fn().execution_mask().load()[0]
-                                              : all_one_mask());
+  exec_masks.push_back(fn().partial_execution ? fn().execution_mask().load()[0] : all_one_mask());
   break_masks.push_back(nullptr);
   continue_masks.push_back(nullptr);
 }
@@ -251,8 +243,7 @@ void cgs_simd::if_cond_end(multi_value const &cond) {
 }
 
 void cgs_simd::then_beg() {
-  Value *then_mask = builder().CreateAnd(cond_exec_masks.back(),
-                                         exec_masks.back(), "mask.then");
+  Value *then_mask = builder().CreateAnd(cond_exec_masks.back(), exec_masks.back(), "mask.then");
   exec_masks.push_back(then_mask);
 }
 
@@ -262,10 +253,8 @@ void cgs_simd::then_end() {
 }
 
 void cgs_simd::else_beg() {
-  Value *inv_cond_exec_mask =
-      builder().CreateNot(cond_exec_masks.back(), "cond.inv");
-  Value *else_mask =
-      builder().CreateAnd(inv_cond_exec_mask, exec_masks.back(), "mask.else");
+  Value *inv_cond_exec_mask = builder().CreateNot(cond_exec_masks.back(), "cond.inv");
+  Value *else_mask = builder().CreateAnd(inv_cond_exec_mask, exec_masks.back(), "mask.else");
   exec_masks.push_back(else_mask);
 }
 
@@ -274,16 +263,11 @@ void cgs_simd::else_end() {
   apply_break_and_continue();
 }
 
-multi_value cgs_simd::emit_ddx(multi_value const &v) {
-  return derivation(v, dd_horizontal);
-}
+multi_value cgs_simd::emit_ddx(multi_value const &v) { return derivation(v, dd_horizontal); }
 
-multi_value cgs_simd::emit_ddy(multi_value const &v) {
-  return derivation(v, dd_vertical);
-}
+multi_value cgs_simd::emit_ddy(multi_value const &v) { return derivation(v, dd_vertical); }
 
-multi_value cgs_simd::derivation(multi_value const &v,
-                                 derivation_directional dd) {
+multi_value cgs_simd::derivation(multi_value const &v, derivation_directional dd) {
   // int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT /
   // PACKAGE_LINE_ELEMENT_COUNT;
 
@@ -294,8 +278,8 @@ multi_value cgs_simd::derivation(multi_value const &v,
   value_array values = v.load();
   value_array diff_values(parallel_factor_, nullptr);
 
-  multi_value source0 = create_value(v.ty(), hint, value_array(1, nullptr),
-                                     value_kinds::value, v.abi());
+  multi_value source0 =
+      create_value(v.ty(), hint, value_array(1, nullptr), value_kinds::value, v.abi());
   multi_value source1 = source0;
 
   for (size_t i = 0; i < 2; i += 2) {
@@ -312,26 +296,21 @@ multi_value cgs_simd::derivation(multi_value const &v,
       }
 
       Value *source_vm_value[2] = {values[value_index0], values[value_index1]};
-      source0.emplace(value_array(1, source_vm_value[0]), value_kinds::value,
-                      v.abi());
-      source1.emplace(value_array(1, source_vm_value[1]), value_kinds::value,
-                      v.abi());
+      source0.emplace(value_array(1, source_vm_value[0]), value_kinds::value, v.abi());
+      source1.emplace(value_array(1, source_vm_value[1]), value_kinds::value, v.abi());
 
       multi_value diff = emit_sub(source1, source0);
       diff_values[value_index0] = diff_values[value_index1] = diff.load()[0];
     }
   }
 
-  return create_value(v.ty(), v.hint(), diff_values, value_kinds::value,
-                      v.abi());
+  return create_value(v.ty(), v.hint(), diff_values, value_kinds::value, v.abi());
 }
 
 void cgs_simd::for_init_beg() { enter_loop(); }
 void cgs_simd::for_init_end() {}
 void cgs_simd::for_cond_beg() {}
-void cgs_simd::for_cond_end(multi_value const &cond) {
-  apply_loop_condition(cond);
-}
+void cgs_simd::for_cond_end(multi_value const &cond) { apply_loop_condition(cond); }
 void cgs_simd::for_body_beg() {}
 void cgs_simd::for_body_end() {}
 void cgs_simd::for_iter_beg() {}
@@ -362,8 +341,7 @@ void cgs_simd::apply_break() {
 void cgs_simd::apply_continue() {
   Value *mask = exec_masks.back();
   if (continue_masks.back()) {
-    mask =
-        builder().CreateAnd(builder().CreateNot(continue_masks.back()), mask);
+    mask = builder().CreateAnd(builder().CreateNot(continue_masks.back()), mask);
   }
   exec_masks.back() = mask;
 }
@@ -393,16 +371,14 @@ void cgs_simd::continue_() {
 multi_value cgs_simd::any_mask_true() {
   Value *mask = exec_masks.back();
   Value *ret_value = builder().CreateICmpNE(mask, ext_->get_int(0));
-  return create_value(builtin_types::_boolean, value_array(1, ret_value),
-                      value_kinds::value, abis::llvm);
+  return create_value(builtin_types::_boolean, value_array(1, ret_value), value_kinds::value,
+                      abis::llvm);
 }
 
 void cgs_simd::while_beg() { enter_loop(); }
 void cgs_simd::while_end() { exit_loop(); }
 void cgs_simd::while_cond_beg() {}
-void cgs_simd::while_cond_end(multi_value const &cond) {
-  apply_loop_condition(cond);
-}
+void cgs_simd::while_cond_end(multi_value const &cond) { apply_loop_condition(cond); }
 void cgs_simd::while_body_beg() {}
 void cgs_simd::while_body_end() { save_next_iteration_exec_mask(); }
 
@@ -445,8 +421,7 @@ void cgs_simd::do_cond_end(multi_value const &cond) {
 void cgs_simd::save_next_iteration_exec_mask() {
   Value *next_iter_exec_mask = exec_masks.back();
   if (continue_masks.back()) {
-    next_iter_exec_mask =
-        builder().CreateOr(exec_masks.back(), continue_masks.back());
+    next_iter_exec_mask = builder().CreateOr(exec_masks.back(), continue_masks.back());
   }
   save_loop_execution_mask(next_iter_exec_mask);
 }

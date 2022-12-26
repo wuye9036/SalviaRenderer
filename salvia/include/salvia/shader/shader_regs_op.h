@@ -9,7 +9,6 @@ namespace salvia::shader {
 
 class vs_output;
 
-
 struct vs_input_op {
   typedef vs_input &(*vs_input_construct)(vs_input &out, eflib::vec4 const *attrs);
   typedef vs_input &(*vs_input_copy)(vs_input &out, const vs_input &in);

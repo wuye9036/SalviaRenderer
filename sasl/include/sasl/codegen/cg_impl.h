@@ -2,9 +2,9 @@
 
 #include <sasl/codegen/forward.h>
 
+#include <sasl/codegen/cgs_sisd.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
-#include <sasl/codegen/cgs_sisd.h>
 #include <sasl/syntax_tree/visitor.h>
 
 #include <memory>
@@ -20,7 +20,7 @@ class module_semantic;
 class reflection_impl;
 class caster_t;
 class symbol;
-}
+} // namespace sasl::semantic
 
 namespace llvm {
 
@@ -33,7 +33,7 @@ class IRBuilderDefaultInserter;
 template <typename T, typename Inserter> class IRBuilder;
 class ConstantFolder;
 using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
-}
+} // namespace llvm
 
 enum class builtin_types : uint32_t;
 
@@ -50,8 +50,7 @@ public:
                 sasl::semantic::reflection_impl const *abii);
 
   // Get context by node.
-  node_context *node_ctxt(sasl::syntax_tree::node const *n,
-                          bool create_if_need = false);
+  node_context *node_ctxt(sasl::syntax_tree::node const *n, bool create_if_need = false);
 
 protected:
   cg_impl();
@@ -107,18 +106,15 @@ protected:
   SASL_SPECIFIC_VISIT_DCL(bin_logic, binary_expression) = 0;
 
   // Easy to visit child with context data.
-  template <typename NodeT>
-  void visit_child(std::shared_ptr<NodeT> const &child);
+  template <typename NodeT> void visit_child(std::shared_ptr<NodeT> const &child);
   void visit_child(sasl::syntax_tree::node *child);
 
   template <typename NodeT>
-  node_context *node_ctxt(std::shared_ptr<NodeT> const &,
-                          bool create_if_need = false);
+  node_context *node_ctxt(std::shared_ptr<NodeT> const &, bool create_if_need = false);
   template <typename NodeT>
   node_context *
   node_ctxt(NodeT const &, bool create_if_need = false,
-            typename std::enable_if<!std::is_pointer<NodeT>::value>::type * =
-                nullptr);
+            typename std::enable_if<!std::is_pointer<NodeT>::value>::type * = nullptr);
 
   // Direct access member from module.
   llvm::DefaultIRBuilder *builder() const;
@@ -148,14 +144,13 @@ protected:
   cg_type *current_cg_type_; ///< Type information used by declarator.
   node_context *parent_struct_;
   llvm::BasicBlock *block_;
-  sasl::semantic::symbol *current_symbol_; ///< Current symbol scope.
-  sasl::syntax_tree::node
-      *variable_to_initialize_; ///< The variable which will pass in initializer
-                                ///< to generate initialization code.
+  sasl::semantic::symbol *current_symbol_;          ///< Current symbol scope.
+  sasl::syntax_tree::node *variable_to_initialize_; ///< The variable which will pass in initializer
+                                                    ///< to generate initialization code.
 
   // For debugging
   std::unordered_map<operators, char const *> operator_names;
   std::unordered_map<builtin_types, char const *> bt_names;
 };
 
-}
+} // namespace sasl::codegen

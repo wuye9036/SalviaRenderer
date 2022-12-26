@@ -84,6 +84,8 @@ size_t hash_value(input_element_desc const &v) {
   return seed;
 }
 
-size_t hash_value(input_layout const &v) { return eflib::hash_range{}(v.desc_begin(), v.desc_end()); }
-
+size_t hash_value(input_layout const &v) {
+  return eflib::hash_range{}(v.desc_begin(), v.desc_end());
 }
+
+} // namespace salvia::resource

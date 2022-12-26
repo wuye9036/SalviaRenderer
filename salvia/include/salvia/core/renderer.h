@@ -119,7 +119,7 @@ public:
 
   virtual result flush() = 0;
 
-  virtual ~renderer(){}
+  virtual ~renderer() {}
 };
 
 renderer_ptr create_software_renderer();

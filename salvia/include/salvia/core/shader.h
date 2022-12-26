@@ -126,8 +126,7 @@ public:
 private:
   typedef std::map<std::string, shader_constant::voidptr> variable_map;
   typedef std::map<std::string, sampler_ptr *> sampler_map;
-  typedef std::map<std::string, std::shared_ptr<detail::container>>
-      container_variable_map;
+  typedef std::map<std::string, std::shared_ptr<detail::container>> container_variable_map;
   typedef std::unordered_map<shader::semantic_value, size_t> register_map;
 
   variable_map varmap_;

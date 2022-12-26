@@ -1,59 +1,55 @@
 #pragma once
 
-#include <salviax/include/resource/resource_forward.h>
+#include <salvia/resource/input_layout.h>
 #include <salviar/include/decl.h>
 #include <salviar/include/stream_assembler.h>
-#include <salvia/resource/input_layout.h>
+#include <salviax/include/resource/resource_forward.h>
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-namespace salviax::resource{
+namespace salviax::resource {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(attached_data);
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
 EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
 
-class attached_data{
+class attached_data {
 public:
-	virtual ~attached_data()
-	{
-	}
+  virtual ~attached_data() {}
 };
 
-class mesh
-{
+class mesh {
 public:
-	virtual size_t get_buffer_count() = 0;
-	virtual size_t get_face_count() = 0;
+  virtual size_t get_buffer_count() = 0;
+  virtual size_t get_face_count() = 0;
 
-	virtual salviar::buffer_ptr get_index_buffer() = 0;
-	virtual salviar::buffer_ptr get_vertex_buffer( size_t buffer_index ) = 0;
+  virtual salviar::buffer_ptr get_index_buffer() = 0;
+  virtual salviar::buffer_ptr get_vertex_buffer(size_t buffer_index) = 0;
 
-	virtual attached_data_ptr get_attached() = 0;
+  virtual attached_data_ptr get_attached() = 0;
 
-	virtual void gen_adjancency() = 0;
+  virtual void gen_adjancency() = 0;
 
-	virtual void render() = 0;
+  virtual void render() = 0;
 
-	virtual ~mesh(){}
+  virtual ~mesh() {}
 };
 
-class skin_mesh
-{
+class skin_mesh {
 public:
-	virtual size_t	submesh_count() const = 0;
-	virtual void	render( uint32_t submesh_id ) = 0;
-	virtual void	update_time(float t) = 0;
-	virtual void	set_time(float t) = 0;
-	virtual float	animation_length() const = 0;
-	virtual std::vector<eflib::mat44> joint_matrices() = 0;
-	virtual std::vector<eflib::mat44> bind_inv_matrices() const = 0;
+  virtual size_t submesh_count() const = 0;
+  virtual void render(uint32_t submesh_id) = 0;
+  virtual void update_time(float t) = 0;
+  virtual void set_time(float t) = 0;
+  virtual float animation_length() const = 0;
+  virtual std::vector<eflib::mat44> joint_matrices() = 0;
+  virtual std::vector<eflib::mat44> bind_inv_matrices() const = 0;
 
-	virtual ~skin_mesh(){}
+  virtual ~skin_mesh() {}
 };
 
-}
+} // namespace salviax::resource
 
 /********************************************************************
 Copyright (C) 2007-2012 Ye Wu

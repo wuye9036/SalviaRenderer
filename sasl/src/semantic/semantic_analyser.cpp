@@ -497,11 +497,11 @@ SASL_VISIT_DEF(call_expression) {
           atr.arg(shared_ptr<tynode>());
         }
       }
-      diags->report(function_param_unmatched, v.token_begin(), v.token_end(),
-                    fnsi->function_name(), atr.str());
+      diags->report(function_param_unmatched, v.token_begin(), v.token_end(), fnsi->function_name(),
+                    atr.str());
     } else if (syms.size() > 1) {
-      diags->report(function_multi_overloads, v.token_begin(), v.token_end(),
-                    fnsi->function_name(), syms.size());
+      diags->report(function_multi_overloads, v.token_begin(), v.token_end(), fnsi->function_name(),
+                    syms.size());
     } else {
       symbol *func_sym = syms[0];
       assert(func_sym);
@@ -590,8 +590,7 @@ SASL_VISIT_DEF(member_expression) {
       builtin_types swizzled_btc = vector_of(elem_btc, field_count);
       mem_typeid = module_semantic_->pety()->get(swizzled_btc);
     } else {
-      diags->report(invalid_swizzle, v.member, v.member, v.member.lit(),
-                    type_repr(agg_type).str());
+      diags->report(invalid_swizzle, v.member, v.member, v.member.lit(), type_repr(agg_type).str());
       return;
     }
   } else {
@@ -2028,7 +2027,8 @@ void semantic_analyser::register_function2(string_view name, vector<size_t> cons
     assert(fn_def->type);
 
     for (size_t i_param = 0; i_param < proto.params_count; ++i_param) {
-      shared_ptr<parameter> param = create_node<parameter>(token::uninitialized(), token::uninitialized());
+      shared_ptr<parameter> param =
+          create_node<parameter>(token::uninitialized(), token::uninitialized());
       fn_def->params.push_back(param);
       node_semantic *param_sem = create_node_semantic(param);
       param_sem->tid(proto.params_tid[i_param]);

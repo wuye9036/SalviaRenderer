@@ -10,7 +10,6 @@
 
 // #include <salvia/shader/reflection.h>
 
-
 // #include <eflib/diagnostics/assert.h>
 
 // #include <eflib/platform/boost_begin.h>
@@ -112,7 +111,7 @@
 // 	}
 
 // 	alloc_result alloc_reg(size_t sz, reg_name const& rname)
-// 	{	
+// 	{
 // 		reg_name reg_end;
 // 		return alloc_reg(reg_end, rname, sz);
 // 	}
@@ -147,7 +146,8 @@
 // 		if(sz > REGISTER_SIZE)
 // 		{
 // 			auto cur_sv = sv_beg;
-// 			for(size_t reg_offset = REGISTER_SIZE; reg_offset < sz; reg_offset += REGISTER_SIZE)
+// 			for(size_t reg_offset = REGISTER_SIZE; reg_offset < sz; reg_offset +=
+// REGISTER_SIZE)
 // 			{
 // 				auto rname  = beg.advance(reg_offset);
 // 				cur_sv = cur_sv.advance_index(1);
@@ -196,7 +196,8 @@
 // 		{
 // 			return static_cast<uint32_t>(-1);
 // 		}
-// 		return ( reg_addr_.at(iter->lower().reg_index) + (rname.reg_index - iter->lower().reg_index) ) * 16 + rname.elem * 4;
+// 		return ( reg_addr_.at(iter->lower().reg_index) + (rname.reg_index -
+// iter->lower().reg_index) ) * 16 + rname.elem * 4;
 // 	}
 
 // 	vector<semantic_value> semantics() const
@@ -222,8 +223,8 @@
 // 	}
 
 // 	// 1. Automatic allocated registers are always at the tail of register file.
-// 	// 2. The variable is always allocated on new register, even it could be packed into former variable.
-// 	alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz)
+// 	// 2. The variable is always allocated on new register, even it could be packed into former
+// variable. 	alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz)
 // 	{
 // 		beg = first_free_reg();
 // 		return alloc_reg(end, beg, sz);
@@ -245,8 +246,8 @@
 // 			return alloc_result::register_has_been_allocated;
 // 		}
 // 		used_elems_.add(reg_range);
-// 		used_regs_.add( interval_set<uint32_t>::interval_type::right_open(beg.reg_index, end.align_up_to_reg().reg_index) );
-// 		return alloc_result::ok;
+// 		used_regs_.add( interval_set<uint32_t>::interval_type::right_open(beg.reg_index,
+// end.align_up_to_reg().reg_index) ); 		return alloc_result::ok;
 // 	}
 
 // 	rfile_name						uid_;
@@ -280,7 +281,8 @@
 // 			rfile_start_addr_[i_cat].resize(REG_CATEGORY_REGFILE_COUNTS[i_cat], 0);
 // 			for(uint32_t i_rf = 0; i_rf < REG_CATEGORY_REGFILE_COUNTS[i_cat]; ++i_rf)
 // 			{
-// 				cat_rfiles.push_back( reg_file(static_cast<reg_categories>(i_cat), i_rf) );
+// 				cat_rfiles.push_back( reg_file(static_cast<reg_categories>(i_cat), i_rf)
+// );
 // 			}
 
 // 			used_reg_count_[i_cat] = 0;
@@ -296,7 +298,7 @@
 // 	{
 // 		return entry_fn_name_;
 // 	}
-	
+
 // 	virtual vector<semantic_value> varying_semantics() const override
 // 	{
 // 		return rfile( rfile_name::varyings() )->semantics();
@@ -314,14 +316,11 @@
 // 		case reg_categories::uniforms:
 // 			// NOTE:
 // 			//	only GLOBAL uniforms can bind to semantic for now,
-// 			//	Will try: uniform parameters, cbuffer/vars in cbuffer, samplers/textures, 	
-// 			return rfile( rfile_name::global() )->find_reg(sv);
-// 		case reg_categories::varying:
-// 			return rfile( rfile_name::varyings() )->find_reg(sv);
-// 		case reg_categories::outputs:
-// 			return rfile( rfile_name::outputs() )->find_reg(sv);
-// 		default:
-// 			return reg_name();
+// 			//	Will try: uniform parameters, cbuffer/vars in cbuffer,
+// samplers/textures, 			return rfile( rfile_name::global() )->find_reg(sv); 		case
+// reg_categories::varying: 			return rfile( rfile_name::varyings() )->find_reg(sv); 		case
+// reg_categories::outputs: 			return rfile( rfile_name::outputs() )->find_reg(sv); 		default: 			return
+// reg_name();
 // 		}
 // 	}
 
@@ -338,7 +337,7 @@
 // 		auto& cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
 // 		return &cat_rfiles[rfname.index];
 // 	}
-	
+
 // 	reg_file* rfile(rfile_name rfname)
 // 	{
 // 		auto& cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
@@ -372,7 +371,8 @@
 
 // 		for(auto& var_reg: var_auto_regs_)
 // 		{
-// 			add_variable_reg( var_reg.first, var_reg.second.rfile->find_reg(var_reg.second) );
+// 			add_variable_reg( var_reg.first, var_reg.second.rfile->find_reg(var_reg.second)
+// );
 // 		}
 
 // 		var_auto_regs_.clear();
@@ -380,11 +380,12 @@
 
 // 	void update_reg_address()
 // 	{
-// 		for(uint32_t cat = static_cast<uint32_t>(reg_categories::unknown); cat < static_cast<uint32_t>(reg_categories::count); ++cat)
+// 		for(uint32_t cat = static_cast<uint32_t>(reg_categories::unknown); cat <
+// static_cast<uint32_t>(reg_categories::count); ++cat)
 // 		{
 // 			auto& cat_rfiles		= rfiles_[cat];
 // 			auto& cat_rfiles_addr	= rfile_start_addr_[cat];
-			
+
 // 			cat_rfiles_addr.clear();
 // 			uint32_t total = 0;
 
@@ -416,9 +417,10 @@
 // 	symbol*				entry_fn_;
 // 	eflib::fixed_string	entry_fn_name_;
 
-// 	vector<reg_file>	rfiles_				[static_cast<uint32_t>(reg_categories::count)];
-// 	uint32_t			used_reg_count_		[static_cast<uint32_t>(reg_categories::count)];
-// 	vector<uint32_t>	rfile_start_addr_	[static_cast<uint32_t>(reg_categories::count)];
+// 	vector<reg_file>	rfiles_
+// [static_cast<uint32_t>(reg_categories::count)]; 	uint32_t			used_reg_count_
+// [static_cast<uint32_t>(reg_categories::count)]; 	vector<uint32_t>	rfile_start_addr_
+// [static_cast<uint32_t>(reg_categories::count)];
 
 // 	vector< pair<node_semantic const*, reg_handle> >
 // 						var_auto_regs_;
@@ -442,8 +444,8 @@
 // 	{
 // 		if( !entry_name_.empty() )
 // 		{
-// 			vector<symbol*> overloads = sem_->root_symbol()->find_overloads(entry_name_);
-// 			if ( overloads.size() != 1 )
+// 			vector<symbol*> overloads =
+// sem_->root_symbol()->find_overloads(entry_name_); 			if ( overloads.size() != 1 )
 // 			{
 // 				return reflection_impl2_ptr();
 // 			}
@@ -495,8 +497,8 @@
 // 			{
 // 				// Process entry function.
 // 				shared_ptr<function_def> entry_fn
-// 					= current_entry_->associated_node()->as_handle<function_def>();
-// 				assert(entry_fn);
+// 					=
+// current_entry_->associated_node()->as_handle<function_def>(); 				assert(entry_fn);
 
 // 				// 3 things to do:
 // 				//		1. struct member offset computation;
@@ -506,7 +508,8 @@
 // 				// Process parameters
 // 				for(auto& param: entry_fn->params)
 // 				{
-// 					if( !process_entry_inputs(nullptr, param, input_types::param) )
+// 					if( !process_entry_inputs(nullptr, param, input_types::param)
+// )
 // 					{
 // 						//TODO: It an semantic error need to be reported.
 // 						ret.reset();
@@ -517,8 +520,9 @@
 // 				// Process global variables.
 // 				for(symbol* gvar_sym: sem_->global_vars())
 // 				{
-// 					auto gvar = gvar_sym->associated_node()->as_handle<declarator>();
-// 					if( !process_entry_inputs(nullptr, gvar, input_types::global) )
+// 					auto gvar =
+// gvar_sym->associated_node()->as_handle<declarator>(); 					if( !process_entry_inputs(nullptr, gvar,
+// input_types::global) )
 // 					{
 // 						//TODO: It an semantic error need to be reported.
 // 						ret.reset();
@@ -548,7 +552,7 @@
 // 		size_t			offset;
 // 		size_t			size;
 // 		semantic_value	sv;					// only available for leaf.
-		
+
 // 		reg_name		reg;
 // 		reg_handle		rhandle;
 
@@ -610,7 +614,8 @@
 
 // 		bool		use_parent_sv	= false;
 // 		auto const* node_sv			= &node_sem->semantic_value_ref();
-// 		auto		user_reg		= rfile->absolute_reg( node_sem->user_defined_reg() );
+// 		auto		user_reg		= rfile->absolute_reg( node_sem->user_defined_reg()
+// );
 
 // 		// Member-special check: for register and semantic overwrite
 // 		if(is_member)
@@ -666,10 +671,9 @@
 // 		// For structure
 // 		else if( ty->node_class() == node_ids::struct_type )
 // 		{
-// 			// TODO: statistic total size, and member offset of structure via 'struct_layout'
-// 			struct_type*	struct_ty = dynamic_cast<struct_type*>(ty);
-// 			struct_layout	layout;
-// 			for(auto const& decl: struct_ty->decls)
+// 			// TODO: statistic total size, and member offset of structure via
+// 'struct_layout' 			struct_type*	struct_ty = dynamic_cast<struct_type*>(ty); 			struct_layout
+// layout; 			for(auto const& decl: struct_ty->decls)
 // 			{
 // 				if ( decl->node_class() != node_ids::variable_declaration )
 // 				{
@@ -698,7 +702,7 @@
 // 		}
 
 // 		if(parent_info)
-// 		{  
+// 		{
 // 			if(!parent_info->first_child)
 // 			{
 // 				parent_info->first_child = parent_info->last_child = minfo;
@@ -716,8 +720,8 @@
 // 			{
 // 				if( rfile->alloc_reg(minfo->size, user_reg) != alloc_result::ok)
 // 				{
-// 					// TODO: error: register allocation failed. Maybe out of capacity or register has been allocated.
-// 					return false;
+// 					// TODO: error: register allocation failed. Maybe out of capacity or
+// register has been allocated. 					return false;
 // 				}
 // 				reflection_->add_variable_reg(node_sem, user_reg);
 // 				minfo->reg = user_reg;
@@ -751,7 +755,8 @@
 // 			// Assign semantics to reg, only apply leaf nodes.
 // 			if(var_info.first_child == nullptr && var_info.sv.valid())
 // 			{
-// 				reflection_->assign_semantic(var_info.reg, var_info.size, var_info.sv);
+// 				reflection_->assign_semantic(var_info.reg, var_info.size,
+// var_info.sv);
 // 			}
 // 		}
 // 	}
@@ -770,7 +775,8 @@
 // 	return rfl.reflect();
 // }
 
-// salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, std::string_view entry_name)
+// salviar::shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, std::string_view
+// entry_name)
 // {
 // 	reflector2 rfl( sem.get(), entry_name );
 // 	return rfl.reflect();

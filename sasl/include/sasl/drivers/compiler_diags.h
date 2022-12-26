@@ -13,6 +13,6 @@ extern sasl::common::diag_template unknown_detail_level;
 extern sasl::common::diag_template input_file_is_missing;
 extern sasl::common::diag_template unknown_lang;
 extern sasl::common::diag_template compiling_input;
-}
+} // namespace sasl::drivers
 
 #endif

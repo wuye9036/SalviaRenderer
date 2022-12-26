@@ -16,7 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace salviar {
+namespace salvia::core {
 
 class shader_reflection;
 class shader_object;
@@ -69,4 +69,4 @@ public:
   virtual ~vx_shader_unit() {}
 };
 
-} // namespace salviar
+} // namespace salvia::core

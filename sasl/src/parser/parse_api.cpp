@@ -28,8 +28,8 @@ using std::endl;
 using std::shared_ptr;
 
 namespace sasl::parser {
-bool parse(shared_ptr<attribute> &pt_root, const std::string &code,
-                         shared_ptr<lex_context> ctxt, lexer &l, grammars &g, diag_chat *diags) {
+bool parse(shared_ptr<attribute> &pt_root, const std::string &code, shared_ptr<lex_context> ctxt,
+           lexer &l, grammars &g, diag_chat *diags) {
   token_seq toks;
 
   bool tok_result = l.tokenize_with_end(code, ctxt, toks);
@@ -44,8 +44,8 @@ bool parse(shared_ptr<attribute> &pt_root, const std::string &code,
   return g.prog.parse(it, toks.end() - 1, pt_root, diags).is_succeed();
 }
 
-bool parse(shared_ptr<attribute> &pt_root, code_source *src,
-                         shared_ptr<lex_context> ctxt, lexer &l, grammars &g, diag_chat *diags) {
+bool parse(shared_ptr<attribute> &pt_root, code_source *src, shared_ptr<lex_context> ctxt, lexer &l,
+           grammars &g, diag_chat *diags) {
   token_seq toks;
 
   l.begin_incremental();

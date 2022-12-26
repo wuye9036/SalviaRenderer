@@ -15,9 +15,11 @@ class lexer;
 class grammars;
 
 bool parse(std::shared_ptr<attribute> &pt_root, const std::string &code,
-           std::shared_ptr<::sasl::common::lex_context> ctxt, lexer &l, grammars &g, sasl::common::diag_chat *diags);
+           std::shared_ptr<::sasl::common::lex_context> ctxt, lexer &l, grammars &g,
+           sasl::common::diag_chat *diags);
 
 bool parse(std::shared_ptr<attribute> &pt_root, sasl::common::code_source *src,
-           std::shared_ptr<::sasl::common::lex_context> ctxt, lexer &l, grammars &g, sasl::common::diag_chat *diags);
+           std::shared_ptr<::sasl::common::lex_context> ctxt, lexer &l, grammars &g,
+           sasl::common::diag_chat *diags);
 } // namespace parser
 } // namespace sasl

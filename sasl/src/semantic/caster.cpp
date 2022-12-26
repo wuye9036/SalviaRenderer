@@ -156,7 +156,7 @@ caster_t::cast_info const *caster_t::find_caster(cast_info const *&first_caster,
   }
 
   // SRC --eql-> IMM --xxx-> DST
- do {
+  do {
     // get IMM
     bimap<tid_t, tid_t>::left_const_iterator eqlcasts_it = eql_casts.left.find(src);
     if (eqlcasts_it == eql_casts.left.end()) {
@@ -186,7 +186,7 @@ caster_t::cast_info const *caster_t::find_caster(cast_info const *&first_caster,
     second_caster = caster_1st;
     immediate_tid = eql_tid;
     return second_caster;
- } while (0);
+  } while (0);
 
   // SRC --xxx-> IMM --eql-> DST
   do {

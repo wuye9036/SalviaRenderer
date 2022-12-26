@@ -2,8 +2,8 @@
 
 #include <eflib/utility/hash.h>
 
-#include <string>
 #include <cassert>
+#include <string>
 #include <utility>
 
 namespace salvia::shader {
@@ -40,7 +40,7 @@ class semantic_value {
 public:
   static constexpr std::string lower_copy(std::string const &name) {
     std::string ret(name);
-    for (auto& ch : ret) {
+    for (auto &ch : ret) {
       if ('A' <= ch && ch <= 'Z') {
         ch -= ('A' - 'a');
       }
@@ -101,9 +101,7 @@ public:
 
   constexpr bool operator==(system_values rhs) const { return sv == rhs && index == 0; }
 
-  template <typename T> bool operator!=(T const &v) const {
-    return !(*this == v);
-  }
+  template <typename T> bool operator!=(T const &v) const { return !(*this == v); }
 
   semantic_value advance_index(size_t i) const {
     semantic_value ret;
@@ -131,11 +129,10 @@ private:
   }
 };
 
-}
+} // namespace salvia::shader
 
-template<>
-struct std::hash <salvia::shader::semantic_value> {
-  constexpr size_t operator() (salvia::shader::semantic_value const& sv) const noexcept {
+template <> struct std::hash<salvia::shader::semantic_value> {
+  constexpr size_t operator()(salvia::shader::semantic_value const &sv) const noexcept {
     size_t seed = sv.get_index();
     if (sv.get_system_value() != salvia::shader::sv_customized) {
       eflib::hash_combine(seed, static_cast<size_t>(sv.get_system_value()));

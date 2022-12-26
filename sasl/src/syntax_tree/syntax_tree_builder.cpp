@@ -50,21 +50,24 @@ namespace sasl::syntax_tree {
 
 #define INSERT_INTO_BTCACHE(litname, enum_code)                                                    \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::make_empty(), token::make_empty());     \
+    shared_ptr<builtin_type> bt =                                                                  \
+        create_node<builtin_type>(token::make_empty(), token::make_empty());                       \
     bt->tycode = builtin_types::enum_code;                                                         \
     bt_cache.insert(make_pair(std::string(#litname), bt));                                         \
   }
 
 #define INSERT_VECTOR_INTO_BTCACHE(component_type, dim, enum_code)                                 \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::make_empty(), token::make_empty());     \
+    shared_ptr<builtin_type> bt =                                                                  \
+        create_node<builtin_type>(token::make_empty(), token::make_empty());                       \
     bt->tycode = vector_of(builtin_types::enum_code, dim);                                         \
     bt_cache.insert(make_pair(string(#component_type) + char_tbl[dim], bt));                       \
   }
 
 #define INSERT_MATRIX_INTO_BTCACHE(component_type, vsize, vcnt, enum_code)                         \
   {                                                                                                \
-    shared_ptr<builtin_type> bt = create_node<builtin_type>(token::make_empty(), token::make_empty());     \
+    shared_ptr<builtin_type> bt =                                                                  \
+        create_node<builtin_type>(token::make_empty(), token::make_empty());                       \
     bt->tycode = matrix_of(builtin_types::enum_code, vsize, vcnt);                                 \
     bt_cache.insert(                                                                               \
         make_pair(string(#component_type) + char_tbl[vcnt] + "x" + char_tbl[vsize], bt));          \
@@ -352,8 +355,7 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst(shared_ptr<attrib
   return ret;
 }
 
-operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr,
-                                               token &op_tok) {
+operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, token &op_tok) {
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
 
   assert(tok_attr);
@@ -383,8 +385,7 @@ operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr,
   return operators::none;
 }
 
-operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr,
-                                                token &op_tok) {
+operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr, token &op_tok) {
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
   op_tok = tok_attr->tok;
   switch (op_tok.lit()[0]) {
@@ -1053,8 +1054,7 @@ void syntax_tree_builder::build_initdecl(shared_ptr<attribute> attr, shared_ptr<
   }
 }
 
-operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr,
-                                           token &op_tok) {
+operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr, token &op_tok) {
   // Get terminal attribute of operator from attr or direct child of attr.
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
   if (!tok_attr) {
@@ -1135,8 +1135,7 @@ operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr,
   return operators::none;
 }
 
-void syntax_tree_builder::build_semantic(shared_ptr<attribute> const &attr,
-                                         token &out_semantic,
+void syntax_tree_builder::build_semantic(shared_ptr<attribute> const &attr, token &out_semantic,
                                          token &out_semantic_index) {
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, typed_attr, attr);
   if (!typed_attr->attrs.empty()) {

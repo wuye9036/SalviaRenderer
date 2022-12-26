@@ -2,9 +2,9 @@
 
 #include <sasl/semantic/semantic_forward.h>
 
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
-#include <string_view>
 #include <vector>
 
 namespace sasl {

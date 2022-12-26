@@ -84,7 +84,7 @@ constexpr uint32_t _recover_failed_offset = 4;
 constexpr uint32_t _recover_failed_mask = 0xF0;
 constexpr uint32_t _expected_offset = 0;
 constexpr uint32_t _expected_mask = 0x0F;
-}
+} // namespace
 
 enum class result_state : uint32_t {
   succeed = 0,
@@ -168,8 +168,7 @@ struct named_p {
 };
 
 template <typename T> struct is_parsing_result : std::false_type {};
-template <attribute Attr>
-struct is_parsing_result<parsing_result<Attr>> : std::true_type {};
+template <attribute Attr> struct is_parsing_result<parsing_result<Attr>> : std::true_type {};
 
 template <typename T> constexpr auto is_parsing_result_v = is_parsing_result<T>::value;
 

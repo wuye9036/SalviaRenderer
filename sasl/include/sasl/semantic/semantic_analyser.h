@@ -41,7 +41,7 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(proto_info);
 class semantic_analyser : public sasl::syntax_tree::syntax_tree_visitor {
 private:
   using token = sasl::common::token;
-  
+
 public:
   semantic_analyser();
 

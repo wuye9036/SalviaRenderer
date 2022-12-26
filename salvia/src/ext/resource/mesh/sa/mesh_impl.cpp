@@ -1,6 +1,6 @@
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviar/include/sync_renderer.h>
 #include <salvia/resource/resource_manager.h>
+#include <salviar/include/sync_renderer.h>
+#include <salviax/include/resource/mesh/sa/mesh_impl.h>
 
 #include <eflib/diagnostics/assert.h>
 
@@ -8,129 +8,102 @@ using namespace std;
 using namespace eflib;
 using namespace salviar;
 
-namespace salviax::resource{
+namespace salviax::resource {
 
-mesh_impl::mesh_impl(salviar::renderer* psr)
-{
-	assert(psr);
+mesh_impl::mesh_impl(salviar::renderer *psr) {
+  assert(psr);
 
-	device_ = psr;
-	primcount_ = 0;
-	index_format_ = format_unknown;
+  device_ = psr;
+  primcount_ = 0;
+  index_format_ = format_unknown;
 }
 
 /*
 inherited
 */
-size_t mesh_impl::get_buffer_count()
-{
-	return vertex_buffers_.size();
+size_t mesh_impl::get_buffer_count() { return vertex_buffers_.size(); }
+
+size_t mesh_impl::get_face_count() { return primcount_; }
+
+salviar::buffer_ptr mesh_impl::get_index_buffer() { return index_buffer_; }
+
+salviar::buffer_ptr mesh_impl::get_vertex_buffer(size_t buffer_index) {
+  if (buffer_index < vertex_buffers_.size()) {
+    return vertex_buffers_[buffer_index];
+  } else {
+    return buffer_ptr();
+  }
 }
 
-size_t mesh_impl::get_face_count()
-{
-	return primcount_;
-}
+void mesh_impl::gen_adjancency() { EFLIB_ASSERT_UNIMPLEMENTED(); }
 
-salviar::buffer_ptr mesh_impl::get_index_buffer()
-{
-	return index_buffer_;
-}
+void mesh_impl::render() {
+  assert(device_);
+  if (!device_)
+    return;
 
-salviar::buffer_ptr mesh_impl::get_vertex_buffer( size_t buffer_index )
-{
-	if( buffer_index < vertex_buffers_.size() ){
-		return vertex_buffers_[buffer_index];
-	} else {
-		return buffer_ptr();
-	}
-}
+  if (device_->get_vertex_shader_code()) {
+    cached_layout_ = device_->create_input_layout(&(elem_descs_[0]), elem_descs_.size(),
+                                                  device_->get_vertex_shader_code());
+  } else if (device_->get_vertex_shader()) {
+    cached_layout_ = device_->create_input_layout(&(elem_descs_[0]), elem_descs_.size(),
+                                                  device_->get_vertex_shader());
+  } else {
+    return;
+  }
+  if (!cached_layout_) {
+    return;
+  }
+  for (size_t i_buffer = 0; i_buffer < vertex_buffers_.size(); ++i_buffer) {
+    device_->set_vertex_buffers(slots_[i_buffer], 1, &vertex_buffers_[i_buffer],
+                                &(strides_[i_buffer]), &(offsets_[i_buffer]));
+  }
 
-void mesh_impl::gen_adjancency(){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
+  device_->set_index_buffer(get_index_buffer(), index_format_);
+  device_->set_input_layout(cached_layout_);
+  device_->set_primitive_topology(primitive_triangle_list);
 
-void mesh_impl::render(){
-	assert(device_);
-	if(!device_) return;
-	
-	if ( device_->get_vertex_shader_code()  ){
-		cached_layout_ = device_->create_input_layout(
-			&( elem_descs_[0] ), elem_descs_.size(),
-			device_->get_vertex_shader_code()
-			);
-	} else if( device_->get_vertex_shader() ){
-		cached_layout_ = device_->create_input_layout(
-			&( elem_descs_[0] ), elem_descs_.size(),
-			device_->get_vertex_shader()
-			);
-	} else {
-		return;
-	}
-	if( !cached_layout_ ){ return; }
-	for(size_t i_buffer = 0; i_buffer < vertex_buffers_.size(); ++i_buffer){
-		device_->set_vertex_buffers(
-			slots_[i_buffer], 1, &vertex_buffers_[i_buffer],
-			&(strides_[i_buffer]), &(offsets_[i_buffer])
-			);
-	}
-
-	device_->set_index_buffer( get_index_buffer(), index_format_ );
-	device_->set_input_layout( cached_layout_ );
-	device_->set_primitive_topology( primitive_triangle_list );
-
-	device_->draw_index(0, primcount_, 0);
+  device_->draw_index(0, primcount_, 0);
 }
 
 /*
 mesh
 */
-salviar::buffer_ptr mesh_impl::create_buffer( size_t size ){
-	return device_->create_buffer(size);
+salviar::buffer_ptr mesh_impl::create_buffer(size_t size) { return device_->create_buffer(size); }
+
+void mesh_impl::set_primitive_count(size_t primcount) { primcount_ = primcount; }
+
+void mesh_impl::set_index_buffer(salviar::buffer_ptr const &v) { index_buffer_ = v; }
+
+void mesh_impl::set_index_type(format fmt) {
+  switch (fmt) {
+  case format_r16_uint:
+  case format_r32_uint:
+    index_format_ = fmt;
+    break;
+  default:
+    EFLIB_ASSERT_UNEXPECTED();
+  }
 }
 
-void mesh_impl::set_primitive_count(size_t primcount)
-{
-	primcount_ = primcount;
+void mesh_impl::add_vertex_buffer(size_t slot, salviar::buffer_ptr const &buf, size_t stride,
+                                  size_t offset) {
+  assert(buf);
+  vertex_buffers_.push_back(buf);
+  strides_.push_back(stride);
+  offsets_.push_back(offset);
+  slots_.push_back(slot);
 }
 
-void mesh_impl::set_index_buffer( salviar::buffer_ptr const& v ){
-	index_buffer_ = v;
+void mesh_impl::set_input_element_descs(const vector<input_element_desc> &descs) {
+  elem_descs_ = descs;
 }
 
-void mesh_impl::set_index_type( format fmt )
-{
-	switch(fmt){
-		case format_r16_uint:
-		case format_r32_uint:
-			index_format_ = fmt;
-			break;
-		default:
-			EFLIB_ASSERT_UNEXPECTED();
-	}
-}
+salviax::resource::attached_data_ptr mesh_impl::get_attached() { return attached_; }
 
-void mesh_impl::add_vertex_buffer( size_t slot, salviar::buffer_ptr const& buf, size_t stride, size_t offset ){
-	assert(buf);
-	vertex_buffers_.push_back( buf );
-	strides_.push_back( stride );
-	offsets_.push_back( offset );
-	slots_.push_back( slot );
-}
+void mesh_impl::set_attached_data(attached_data_ptr const &attached) { attached_ = attached; }
 
-void mesh_impl::set_input_element_descs(const vector<input_element_desc>& descs){
-	elem_descs_ = descs;
-}
-
-salviax::resource::attached_data_ptr mesh_impl::get_attached(){
-	return attached_;
-}
-
-void mesh_impl::set_attached_data( attached_data_ptr const& attached ){
-	attached_ = attached;
-}
-
-}
+} // namespace salviax::resource
 
 /*
 Copyright (C) 2007-2012 Ye Wu, Minmin Gong

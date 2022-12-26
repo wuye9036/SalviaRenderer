@@ -5,19 +5,22 @@
 
 #include <eflib/utility/shared_declaration.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 
-namespace salviar { class renderer; }
+namespace salviar {
+class renderer;
+}
 
-namespace salviax::resource{
+namespace salviax::resource {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
 
-skin_mesh_ptr	create_mesh_from_collada( salviar::renderer* render, std::string const& file_name );
-mesh_ptr		create_morph_mesh_from_collada( salviar::renderer* render, std::string const& src, std::string const& dst);
+skin_mesh_ptr create_mesh_from_collada(salviar::renderer *render, std::string const &file_name);
+mesh_ptr create_morph_mesh_from_collada(salviar::renderer *render, std::string const &src,
+                                        std::string const &dst);
 
-}
+} // namespace salviax::resource
 
 #endif

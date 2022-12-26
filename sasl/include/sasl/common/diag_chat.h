@@ -38,7 +38,8 @@ public:
 
   template <typename... Args>
   void report(diag_template tmpl, token token_beg, token token_end, Args &&...args) {
-    report_impl(tmpl, token_beg.file_name(), sasl::common::merge(token_beg.span(), token_end.span()),
+    report_impl(tmpl, token_beg.file_name(),
+                sasl::common::merge(token_beg.span(), token_end.span()),
                 fmt::make_format_args(std::forward<Args>(args)...));
   }
 

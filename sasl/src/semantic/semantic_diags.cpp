@@ -141,8 +141,7 @@ string args_type_repr::str() {
 args_type_repr::args_type_repr() {}
 
 source_position_repr::source_position_repr(shared_ptr<token> const &beg,
-                                           shared_ptr<token> const &end,
-                                           compiler_compatibility cc)
+                                           shared_ptr<token> const &end, compiler_compatibility cc)
     : beg(beg), end(end), cc(cc) {}
 
 std::string source_position_repr::str() {

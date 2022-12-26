@@ -17,7 +17,7 @@ struct declaration;
 
 using token = sasl::common::token;
 
-struct program: public node_impl<program, node, node_ids::program> {
+struct program : public node_impl<program, node, node_ids::program> {
   std::string name;
   std::vector<std::shared_ptr<declaration>> decls;
 };

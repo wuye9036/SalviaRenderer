@@ -7,28 +7,28 @@
 #include <salviax/include/resource/mesh/sa/mesh.h>
 #include <string>
 
-namespace salviax::resource{
+namespace salviax::resource {
 
-class obj_material: public attached_data{
+class obj_material : public attached_data {
 public:
-	obj_material();
+  obj_material();
 
-	std::string name;
+  std::string name;
 
-	eflib::vec4 ambient;
-	eflib::vec4 diffuse;
-	eflib::vec4 specular;
+  eflib::vec4 ambient;
+  eflib::vec4 diffuse;
+  eflib::vec4 specular;
 
-	int shininess;
-	float alpha;
+  int shininess;
+  float alpha;
 
-	bool is_specular;
+  bool is_specular;
 
-	std::string	tex_name;
-	salviar::texture_ptr tex;
-	~obj_material(){}
+  std::string tex_name;
+  salviar::texture_ptr tex;
+  ~obj_material() {}
 };
 
-}
+} // namespace salviax::resource
 
 #endif

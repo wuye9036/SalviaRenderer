@@ -36,8 +36,8 @@ std::string str(diag_item const *item, compiler_compatibility cc) {
     case diag_levels::warning:
     case diag_levels::error:
     case diag_levels::fatal_error:
-      return fmt::format("{}({}): {} C{:04d}: {}", item->file_name(), item->span().begin.line, error_level, item->id(),
-                         item->str());
+      return fmt::format("{}({}): {} C{:04d}: {}", item->file_name(), item->span().begin.line,
+                         error_level, item->id(), item->str());
     }
 
     break;

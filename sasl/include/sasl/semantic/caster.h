@@ -62,8 +62,8 @@ private:
                      >
       cast_info;
 
-  typedef std::unordered_map<std::pair<tid_t /*src*/, tid_t /*dest*/>, size_t /*cast info index*/, eflib::hash_tuple
-                             >
+  typedef std::unordered_map<std::pair<tid_t /*src*/, tid_t /*dest*/>, size_t /*cast info index*/,
+                             eflib::hash_tuple>
       cast_info_dict_t;
 
   cast_info const *find_caster(cast_info const *&first_caster, cast_info const *&second_caster,

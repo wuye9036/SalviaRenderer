@@ -13,4 +13,4 @@ struct internal_mapped_resource {
   std::function<void *(size_t)> reallocator;
 };
 
-} // namespace salviar
+} // namespace salvia::resource

@@ -42,8 +42,8 @@ public:
 
   void copy_from(shader_cbuffer const *src) { *this = *src; }
 
-  virtual ~shader_cbuffer(){}
-  
+  virtual ~shader_cbuffer() {}
+
 private:
   std::unordered_map<std::string, shader_cdata> variables_;
   std::vector<char> data_memory_;

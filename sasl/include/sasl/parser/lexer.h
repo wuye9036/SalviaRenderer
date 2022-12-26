@@ -17,6 +17,7 @@ struct lexer_impl;
 class lexer {
 private:
   using token = sasl::common::token;
+
 public:
   lexer();
 
@@ -24,8 +25,7 @@ public:
   public:
     token_definer(lexer &owner);
     token_definer(token_definer const &rhs);
-    token_definer const &operator()(std::string const &name,
-                                    std::string const &patterndef) const;
+    token_definer const &operator()(std::string const &name, std::string const &patterndef) const;
 
   private:
     token_definer &operator=(token_definer const &rhs);
@@ -36,8 +36,7 @@ public:
   public:
     pattern_adder(lexer &owner);
     pattern_adder(pattern_adder const &rhs);
-    pattern_adder const &operator()(std::string const &name,
-                                    std::string const &patterndef) const;
+    pattern_adder const &operator()(std::string const &name, std::string const &patterndef) const;
 
   private:
     pattern_adder &operator=(pattern_adder const &rhs);
@@ -49,8 +48,7 @@ public:
     token_adder(lexer &owner, char const *state);
     token_adder(token_adder const &rhs);
     token_adder const &operator()(std::string const &name) const;
-    token_adder const &operator()(std::string const &name,
-                                  std::string const &jump_to) const;
+    token_adder const &operator()(std::string const &name, std::string const &jump_to) const;
 
   private:
     token_adder &operator=(token_adder const &rhs);
@@ -80,10 +78,8 @@ public:
     lexer &owner;
   };
 
-  token_definer define_tokens(std::string const &name,
-                              std::string const &patterndef);
-  pattern_adder add_pattern(std::string const &name,
-                            std::string const &patterndef);
+  token_definer define_tokens(std::string const &name, std::string const &patterndef);
+  pattern_adder add_pattern(std::string const &name, std::string const &patterndef);
   token_adder add_token(const char *state);
 
   skippers_adder skippers(std::string const &s);
@@ -95,21 +91,18 @@ public:
   std::shared_ptr<lexer_impl> get_impl() const;
 
   bool tokenize_with_end(
-      /*INPUTS*/ std::string const &code,
-      std::shared_ptr<sasl::common::lex_context> ctxt,
+      /*INPUTS*/ std::string const &code, std::shared_ptr<sasl::common::lex_context> ctxt,
       /*OUTPUT*/ std::vector<token> &seq);
 
   bool begin_incremental();
   bool incremental_tokenize(std::string const &word,
                             std::shared_ptr<sasl::common::lex_context> ctxt,
                             std::vector<token> &seq);
-  bool end_incremental(std::shared_ptr<sasl::common::lex_context> ctxt,
-                       std::vector<token> &seq);
+  bool end_incremental(std::shared_ptr<sasl::common::lex_context> ctxt, std::vector<token> &seq);
 
 private:
   bool tokenize(
-      /*INPUTS*/ std::string const &code,
-      std::shared_ptr<sasl::common::lex_context> ctxt,
+      /*INPUTS*/ std::string const &code, std::shared_ptr<sasl::common::lex_context> ctxt,
       /*OUTPUT*/ std::vector<token> &seq);
   std::shared_ptr<lexer_impl> impl;
 };

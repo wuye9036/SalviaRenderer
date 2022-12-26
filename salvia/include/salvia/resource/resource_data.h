@@ -92,7 +92,7 @@ public:
       renderer_->flush();
     }
 #else
-    EFLIB_UNREF_DECLARATOR(do_not_wait);
+      EFLIB_UNREF_DECLARATOR(do_not_wait);
 #endif
     }
 

@@ -27,7 +27,8 @@ private:
   Type *create_ty(LLVMContext &ctxt, builtin_types bt, abis abi);
   Type *create_abi_ty(LLVMContext &ctxt, builtin_types bt, abis abi);
 
-  unordered_flat_map<LLVMContext *, unordered_flat_map<builtin_types, Type *>> cache[e2i(abis::count)];
+  unordered_flat_map<LLVMContext *, unordered_flat_map<builtin_types, Type *>>
+      cache[e2i(abis::count)];
   unordered_flat_map<builtin_types, std::string> ty_name[e2i(abis::count)];
 };
 
@@ -101,7 +102,8 @@ std::string const &ty_cache_t::name(builtin_types bt, abis abi) {
     } else if (is_vector(bt)) {
       ret_name = fmt::format("{:s}.v{:d}{:s}", name(scalar_of(bt), abi), vector_size(bt), suffix);
     } else if (is_matrix(bt)) {
-      ret_name = fmt::format("{:s}.m{:d}{:d}{:s}", name(scalar_of(bt), abi), vector_size(bt), vector_count(bt), suffix);
+      ret_name = fmt::format("{:s}.m{:d}{:d}{:s}", name(scalar_of(bt), abi), vector_size(bt),
+                             vector_count(bt), suffix);
     }
   }
   return ret_name;

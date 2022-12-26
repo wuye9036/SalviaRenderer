@@ -6,7 +6,7 @@
 
 #include <eflib/utility/shared_declaration.h>
 
-namespace salviar{
+namespace salvia::core {
 
 struct vs_input_op;
 struct vs_output_op;
@@ -19,14 +19,13 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(render_state);
 
-class sync_renderer : public renderer_impl
-{
+class sync_renderer : public renderer_impl {
 public:
-	virtual result flush();
-    virtual result commit_state_and_command();
-	sync_renderer();
+  virtual result flush();
+  virtual result commit_state_and_command();
+  sync_renderer();
 };
 
 renderer_ptr create_sync_renderer();
 
-}
+} // namespace salvia::core

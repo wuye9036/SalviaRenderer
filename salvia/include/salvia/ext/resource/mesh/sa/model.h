@@ -3,18 +3,20 @@
 
 #include <slaviax/include/resource/resource_forward.h>
 
-namespace salviax::resource{
+namespace salviax::resource {
 
-class model{
+class model {
 public:
-	void add_mesh( salviar::h_mesh const& );
-	
-	void render();
-	
+  void add_mesh(salviar::h_mesh const &);
+
+  void render();
+
 private:
-	std::vector<h_mesh> meshes;
+  std::vector<h_mesh> meshes;
 };
 
-}};
+}
+}
+;
 
 #endif

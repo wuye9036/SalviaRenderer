@@ -140,7 +140,7 @@ public:
   bool prefer_scalar_code() const override;
   /// @}
 
-  llvm::Value *current_execution_mask() const override{ return nullptr; }
+  llvm::Value *current_execution_mask() const override { return nullptr; }
 };
 
 } // namespace sasl::codegen

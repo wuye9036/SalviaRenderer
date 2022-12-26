@@ -15,8 +15,8 @@
 #include <any>
 #include <memory>
 #include <type_traits>
-#include <vector>
 #include <variant>
+#include <vector>
 
 using std::vector;
 
@@ -33,7 +33,7 @@ public:
   follow_up_visitor(std::function<void(node &, ::std::any *)> applied) : applied(applied) {}
 
   template <typename NodePtr, typename = decltype(std::declval<NodePtr>().get())>
-    void invoke_accept(NodePtr &&pnode, std::any *data) {
+  void invoke_accept(NodePtr &&pnode, std::any *data) {
     if (std::forward<NodePtr>(pnode)) {
       pnode->accept(this, data);
     }
@@ -214,7 +214,6 @@ public:
   }
 
 private:
-
   std::function<void(node &, ::std::any *)> applied;
 };
 

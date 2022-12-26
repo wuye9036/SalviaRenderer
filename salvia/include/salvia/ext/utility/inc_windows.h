@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 created:	2008/06/08
 author:		Ye Wu
 
-purpose:	
+purpose:
 
 Modify Log:
 
@@ -28,11 +28,11 @@ Modify Log:
 
 #ifndef EFLIB_USE_STD_MINMAX
 #include <algorithm>
-using ::std::min;
 using ::std::max;
+using ::std::min;
 #define NOMINMAX
 #define EFLIB_USE_STD_MINMAX
 #endif
-#include <windows.h> 
+#include <windows.h>
 
-#endif //SALVIAX_INC_WINDOWS_H
+#endif // SALVIAX_INC_WINDOWS_H

@@ -7,11 +7,11 @@
 
 #include <eflib/utility/shared_declaration.h>
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
-namespace salviar{
+namespace salvia::core {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
@@ -20,26 +20,19 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 struct external_function_desc;
 struct shader_profile;
 
-namespace modules
-{
-	class host
-	{
-	public:
-		static void compile(
-			shader_object_ptr& obj, shader_log_ptr& log,
-			std::string const& code, shader_profile const& prof,
-			std::vector<external_function_desc> const& funcs
-			);
-		static void compile_from_file(
-			shader_object_ptr& obj, shader_log_ptr& log,
-			std::string const& file_name, shader_profile const& prof,
-			std::vector<external_function_desc> const& funcs
-			);
-		static host_ptr create_host();
-	};
+namespace modules {
+class host {
+public:
+  static void compile(shader_object_ptr &obj, shader_log_ptr &log, std::string const &code,
+                      shader_profile const &prof, std::vector<external_function_desc> const &funcs);
+  static void compile_from_file(shader_object_ptr &obj, shader_log_ptr &log,
+                                std::string const &file_name, shader_profile const &prof,
+                                std::vector<external_function_desc> const &funcs);
+  static host_ptr create_host();
+};
 
-}
+} // namespace modules
 
-}
+} // namespace salvia::core
 
 #endif

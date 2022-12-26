@@ -28,18 +28,16 @@ using std::vector;
 namespace sasl::parser {
 
 struct pair_hash {
-  template <typename T, typename U>
-  size_t operator()(std::pair<T, U> const &v) const noexcept {
+  template <typename T, typename U> size_t operator()(std::pair<T, U> const &v) const noexcept {
     using std::hash;
-	return hash<T>()(v.first) ^ hash<U>()(v.second);
+    return hash<T>()(v.first) ^ hash<U>()(v.second);
   }
 };
 
 class shared_data {
 public:
   shared_data() : attrs(nullptr) {}
-  std::unordered_map<std::pair<size_t, std::string>, std::string, pair_hash>
-      state_translations;
+  std::unordered_map<std::pair<size_t, std::string>, std::string, pair_hash> state_translations;
   unordered_set<std::string> skippers;
   unordered_set<std::string> init_states;
   std::vector<token> *attrs;
@@ -65,20 +63,17 @@ public:
   void add_init_states(std::string const &s) { data->init_states.insert(s); }
 
   vector<std::string> get_init_states() const {
-    return vector<std::string>(data->init_states.begin(),
-                               data->init_states.end());
+    return vector<std::string>(data->init_states.begin(), data->init_states.end());
   }
 
-  void add_state_translation_rule(size_t tok_def_id,
-                                  std::string const &on_state,
+  void add_state_translation_rule(size_t tok_def_id, std::string const &on_state,
                                   std::string const &jump_to) {
     std::pair<size_t, std::string> key_pair = make_pair(tok_def_id, on_state);
     assert(data->state_translations.count(key_pair) == 0);
     data->state_translations.insert(make_pair(key_pair, jump_to));
   }
 
-  template <typename IteratorT, typename PassFlagT, typename IdT,
-            typename ContextT>
+  template <typename IteratorT, typename PassFlagT, typename IdT, typename ContextT>
   void operator()(IteratorT &beg, IteratorT &end, PassFlagT & /*flag*/, IdT &id,
                   ContextT &splexer_ctxt) {
     // process token
@@ -88,16 +83,14 @@ public:
     std::string splexer_state(splexer_ctxt.get_state_name());
     if (data->skippers.count(splexer_state) == 0) {
       token tok =
-          token::make(id, str, data->ctxt->line(), data->ctxt->column(),
-                        data->ctxt->file_name());
+          token::make(id, str, data->ctxt->line(), data->ctxt->column(), data->ctxt->file_name());
       data->attrs->push_back(tok);
       data->ctxt->update_position(str);
     }
 
     // change state
     if (data->state_translations.count(make_pair(id, splexer_state)) > 0) {
-      splexer_ctxt.set_state_name(
-          data->state_translations[make_pair(id, splexer_state)].c_str());
+      splexer_ctxt.set_state_name(data->state_translations[make_pair(id, splexer_state)].c_str());
     }
   }
 
@@ -124,36 +117,29 @@ lexer_impl::lexer_impl(shared_ptr<attr_processor> proc) : proc(proc) {}
 // adders
 lexer::token_definer::token_definer(lexer &owner) : owner(owner) {}
 
-lexer::token_definer::token_definer(token_definer const &rhs)
-    : owner(rhs.owner) {}
+lexer::token_definer::token_definer(token_definer const &rhs) : owner(rhs.owner) {}
 
-lexer::token_definer const &
-lexer::token_definer::operator()(std::string const &name,
-                                 std::string const &patterndef) const {
+lexer::token_definer const &lexer::token_definer::operator()(std::string const &name,
+                                                             std::string const &patterndef) const {
   owner.get_impl()->defs[name] = patterndef;
   return *this;
 }
 
 lexer::pattern_adder::pattern_adder(lexer &owner) : owner(owner) {}
 
-lexer::pattern_adder::pattern_adder(pattern_adder const &rhs)
-    : owner(rhs.owner) {}
+lexer::pattern_adder::pattern_adder(pattern_adder const &rhs) : owner(rhs.owner) {}
 
-lexer::pattern_adder const &
-lexer::pattern_adder::operator()(std::string const &name,
-                                 std::string const &patterndef) const {
+lexer::pattern_adder const &lexer::pattern_adder::operator()(std::string const &name,
+                                                             std::string const &patterndef) const {
   owner.get_impl()->self.add_pattern(name, patterndef);
   return *this;
 }
 
-lexer::token_adder::token_adder(lexer &owner, char const *state)
-    : owner(owner), state(state) {}
+lexer::token_adder::token_adder(lexer &owner, char const *state) : owner(owner), state(state) {}
 
-lexer::token_adder::token_adder(token_adder const &rhs)
-    : owner(rhs.owner), state(rhs.state) {}
+lexer::token_adder::token_adder(token_adder const &rhs) : owner(rhs.owner), state(rhs.state) {}
 
-lexer::token_adder const &
-lexer::token_adder::operator()(std::string const &name) const {
+lexer::token_adder const &lexer::token_adder::operator()(std::string const &name) const {
   shared_ptr<lexer_impl> impl = owner.get_impl();
   splex::token_def<std::string> &def = impl->defs[name];
   impl->self(state).define(def[*(impl->proc)]);
@@ -161,9 +147,8 @@ lexer::token_adder::operator()(std::string const &name) const {
   return *this;
 }
 
-lexer::token_adder const &
-lexer::token_adder::operator()(std::string const &name,
-                               std::string const &jump_to) const {
+lexer::token_adder const &lexer::token_adder::operator()(std::string const &name,
+                                                         std::string const &jump_to) const {
   (*this)(name);
   shared_ptr<lexer_impl> impl = owner.get_impl();
   impl->proc->add_state_translation_rule(impl->defs[name].id(), state, jump_to);
@@ -172,19 +157,16 @@ lexer::token_adder::operator()(std::string const &name,
 
 lexer::skippers_adder::skippers_adder(lexer &owner) : owner(owner) {}
 
-lexer::skippers_adder::skippers_adder(skippers_adder const &rhs)
-    : owner(rhs.owner) {}
+lexer::skippers_adder::skippers_adder(skippers_adder const &rhs) : owner(rhs.owner) {}
 
-lexer::skippers_adder const &
-lexer::skippers_adder::operator()(std::string const &name) const {
+lexer::skippers_adder const &lexer::skippers_adder::operator()(std::string const &name) const {
   owner.get_impl()->proc->add_skipper(name);
   return *this;
 }
 
 lexer::init_states_adder::init_states_adder(lexer &owner) : owner(owner) {}
 
-lexer::init_states_adder::init_states_adder(init_states_adder const &rhs)
-    : owner(rhs.owner) {}
+lexer::init_states_adder::init_states_adder(init_states_adder const &rhs) : owner(rhs.owner) {}
 
 lexer::init_states_adder const &
 lexer::init_states_adder::operator()(std::string const &name) const {
@@ -199,23 +181,17 @@ lexer::lexer() {
   impl = std::make_shared<lexer_impl>(proc);
 }
 
-lexer::token_definer lexer::define_tokens(std::string const &name,
-                                          std::string const &patterndef) {
+lexer::token_definer lexer::define_tokens(std::string const &name, std::string const &patterndef) {
   return token_definer(*this)(name, patterndef);
 }
 
-lexer::pattern_adder lexer::add_pattern(std::string const &name,
-                                        std::string const &patterndef) {
+lexer::pattern_adder lexer::add_pattern(std::string const &name, std::string const &patterndef) {
   return pattern_adder(*this)(name, patterndef);
 }
 
-lexer::token_adder lexer::add_token(const char *state) {
-  return token_adder(*this, state);
-}
+lexer::token_adder lexer::add_token(const char *state) { return token_adder(*this, state); }
 
-lexer::skippers_adder lexer::skippers(std::string const &s) {
-  return skippers_adder(*this)(s);
-}
+lexer::skippers_adder lexer::skippers(std::string const &s) { return skippers_adder(*this)(s); }
 
 lexer::init_states_adder lexer::init_states(std::string const &s) {
   return init_states_adder(*this)(s);
@@ -225,8 +201,8 @@ std::string const &lexer::get_name(size_t id) { return impl->ids[id]; }
 
 size_t lexer::get_id(std::string const &name) { return impl->defs[name].id(); }
 
-bool lexer::tokenize(/*INPUTS*/ std::string const &code,
-                     shared_ptr<lex_context> ctxt, /*OUTPUT*/ std::vector<token> &seq) {
+bool lexer::tokenize(/*INPUTS*/ std::string const &code, shared_ptr<lex_context> ctxt,
+                     /*OUTPUT*/ std::vector<token> &seq) {
   impl->proc->output(seq);
   impl->proc->context(ctxt);
 
@@ -235,8 +211,7 @@ bool lexer::tokenize(/*INPUTS*/ std::string const &code,
 
   // Try to use all lex state for tokenize character sequence.
   std::vector<std::string> tok_states = impl->proc->get_init_states();
-  EFLIB_ASSERT_AND_IF(!tok_states.empty(),
-                      "Initial state set should not be empty.") {
+  EFLIB_ASSERT_AND_IF(!tok_states.empty(), "Initial state set should not be empty.") {
     return false;
   }
 
@@ -248,8 +223,7 @@ bool lexer::tokenize(/*INPUTS*/ std::string const &code,
   while (lex_first != lex_last && toked_state == 0) {
     // Use current state, and match as long as possible.
     const char *next_lex_first = lex_first;
-    splex::tokenize(next_lex_first, lex_last, *impl,
-                    tok_states[i_state].c_str());
+    splex::tokenize(next_lex_first, lex_last, *impl, tok_states[i_state].c_str());
 
     // All was matched, return success(1).
     if (next_lex_first == lex_last) {
@@ -284,26 +258,23 @@ shared_ptr<lexer_impl> lexer::get_impl() const { return impl; }
 
 bool lexer::begin_incremental() { return true; }
 
-bool lexer::incremental_tokenize(string const &word,
-                                 shared_ptr<lex_context> ctxt, std::vector<token> &seq) {
+bool lexer::incremental_tokenize(string const &word, shared_ptr<lex_context> ctxt,
+                                 std::vector<token> &seq) {
   return tokenize(word, ctxt, seq);
 }
 
 bool lexer::end_incremental(shared_ptr<lex_context> ctxt, std::vector<token> &seq) {
-  token tok = token::make(size_t(-1), "", ctxt->line(), ctxt->column(),
-                                ctxt->file_name(), true);
+  token tok = token::make(size_t(-1), "", ctxt->line(), ctxt->column(), ctxt->file_name(), true);
   seq.push_back(tok);
 
   return true;
 }
 
-bool lexer::tokenize_with_end(std::string const &code,
-                              shared_ptr<lex_context> ctxt,
+bool lexer::tokenize_with_end(std::string const &code, shared_ptr<lex_context> ctxt,
                               /*OUTPUT*/ std::vector<token> &seq) {
   bool ret = tokenize(code, ctxt, seq);
   if (ret) {
-    token tok = token::make(size_t(-1), "", ctxt->line(), ctxt->column(),
-                                  ctxt->file_name(), true);
+    token tok = token::make(size_t(-1), "", ctxt->line(), ctxt->column(), ctxt->file_name(), true);
     seq.push_back(tok);
   }
   return ret;

@@ -7,12 +7,11 @@
 
 using eflib::num_available_threads;
 
-namespace salviar {
+namespace salvia::core {
 
-eflib::thread_pool& global_thread_pool()
-{
-	static eflib::thread_pool tp(std::thread::hardware_concurrency() - 1);
-	return tp;
+eflib::thread_pool &global_thread_pool() {
+  static eflib::thread_pool tp(std::thread::hardware_concurrency() - 1);
+  return tp;
 }
 
-}
+} // namespace salvia::core

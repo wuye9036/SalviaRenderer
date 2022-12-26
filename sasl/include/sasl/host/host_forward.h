@@ -1,8 +1,11 @@
 #ifndef SASL_HOST_HOST_FORWARD_H
 #define SASL_HOST_HOST_FORWARD_H
 
-#define namespace sasl::host { namespace sasl{ namespace host{
-#define } }}
+#define namespace                                                                                  \
+  sasl::host {                                                                                     \
+    namespace sasl {                                                                               \
+    namespace host {
+#define } } }
 
 #include <eflib/platform/dl_sym_vis.h>
 

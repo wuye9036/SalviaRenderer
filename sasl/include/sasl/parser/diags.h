@@ -3,7 +3,7 @@
 #include <sasl/common/diag_item.h>
 #include <string_view>
 
-namespace sasl::parser::diags{
+namespace sasl::parser::diags {
 
 using sasl::common::diag_levels;
 using sasl::common::diag_template;
@@ -21,7 +21,7 @@ constexpr sasl::common::diag_template unrecognized_token                  {1102,
 constexpr sasl::common::diag_template unknown_tokenize_error              {1103, diag_levels::error,          "unknown exception in tokenize stage was raised. exception info: '{info:s}'."};
 constexpr sasl::common::diag_template end_of_file                         {1104, diag_levels::error,          "end of file found but '{:s}' needed."};
 constexpr sasl::common::diag_template unmatched_token                     {1105, diag_levels::error,          "syntax error: '{syntax_error:s}'"};
-constexpr sasl::common::diag_template unmatched_expected_token            {1106, diag_levels::error,          "syntax error: missing '{:s}' before '{:s}'."}; 
+constexpr sasl::common::diag_template unmatched_expected_token            {1106, diag_levels::error,          "syntax error: missing '{:s}' before '{:s}'."};
 
 // clang-format on
-}
+} // namespace sasl::parser::diags

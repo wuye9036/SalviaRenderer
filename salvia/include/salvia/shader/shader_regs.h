@@ -2,9 +2,9 @@
 
 #include <salvia/common/renderer_capacity.h>
 #include <salvia/core/decl.h>
+#include <salvia/core/viewport.h>
 #include <salvia/resource/colors.h>
 #include <salvia/resource/surface.h>
-#include <salvia/core/viewport.h>
 
 #include <eflib/math/math.h>
 #include <eflib/memory/allocator.h>
@@ -151,4 +151,4 @@ private:
   size_t x_, y_;
 };
 
-} // namespace salviar
+} // namespace salvia::shader

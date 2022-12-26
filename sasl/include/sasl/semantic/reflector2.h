@@ -2,8 +2,8 @@
 
 #include <sasl/semantic/semantic_forward.h>
 
-#include <salvia/shader/constants.h>
 #include <eflib/utility/shared_declaration.h>
+#include <salvia/shader/constants.h>
 
 #include <memory>
 

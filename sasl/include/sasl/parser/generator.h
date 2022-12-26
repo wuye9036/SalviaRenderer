@@ -61,7 +61,7 @@ public:
 
   virtual token token_beg() const;
   virtual token token_end() const;
-  
+
   virtual void token_range(token, token = token::uninitialized());
 
 protected:

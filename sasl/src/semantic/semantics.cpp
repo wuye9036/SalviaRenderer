@@ -8,11 +8,9 @@
 #include <sasl/syntax_tree/node.h>
 #include <sasl/syntax_tree/program.h>
 
-
 #include <boost/lexical_cast.hpp>
 #include <boost/pool/pool.hpp>
 #include <boost/utility/string_ref.hpp>
-
 
 #include <eflib/diagnostics/assert.h>
 
@@ -20,7 +18,6 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
-
 
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);

@@ -9,7 +9,7 @@ namespace sasl::syntax_tree {
 
 using sasl::common::token;
 
-struct identifier: public node_impl<identifier, node, node_ids::identifier> {
+struct identifier : public node_impl<identifier, node, node_ids::identifier> {
   std::string_view name;
 };
 

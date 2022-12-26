@@ -3,18 +3,18 @@
 
 #include <salviax/include/resource/resource_forward.h>
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
-namespace salviar
-{
-	class renderer;
+namespace salviar {
+class renderer;
 }
 
-namespace salviax::resource{
+namespace salviax::resource {
 typedef std::shared_ptr<class mesh> mesh_ptr;
-std::vector<mesh_ptr> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v );
-}
+std::vector<mesh_ptr> create_mesh_from_obj(salviar::renderer *render, std::string const &file_name,
+                                           bool flip_tex_v);
+} // namespace salviax::resource
 
 #endif

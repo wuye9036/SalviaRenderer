@@ -41,7 +41,7 @@ void shader_cbuffer::set_variable(std::string_view name, void const *data, size_
     }
   }
 
-  memcpy(static_cast<void*>(data_memory_.data() + offset), data, data_length);
+  memcpy(static_cast<void *>(data_memory_.data() + offset), data, data_length);
 }
 
 } // namespace salviar

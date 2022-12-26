@@ -72,10 +72,9 @@ protected:
   node(const node &) = delete;
 };
 
-template <typename DerivedT, typename BaseT, node_ids TypeId>
-class node_impl: public BaseT {
+template <typename DerivedT, typename BaseT, node_ids TypeId> class node_impl : public BaseT {
 public:
-  constexpr node_ids node_class() const noexcept override{ return TypeId; }
+  constexpr node_ids node_class() const noexcept override { return TypeId; }
   virtual void accept(syntax_tree_visitor *vis, std::any *data) override;
 };
 

@@ -49,7 +49,8 @@ private:
     bool end_of_file = false;
   };
 
-  using data_ptr = std::conditional_t<is_shared_storage, boost::local_shared_ptr<token_data>, std::unique_ptr<token_data>>;
+  using data_ptr = std::conditional_t<is_shared_storage, boost::local_shared_ptr<token_data>,
+                                      std::unique_ptr<token_data>>;
 
   data_ptr data_;
 
@@ -88,9 +89,8 @@ public:
   EF_CONSTEXPR23 static token_base make(std::string_view lit) {
     return make(0, lit, 0, 0, std::string_view{});
   }
-  EF_CONSTEXPR23 static token_base make(size_t id, std::string_view lit, size_t line,
-                                                      size_t col, std::string_view fname,
-                                                      bool end_of_file = false) {
+  EF_CONSTEXPR23 static token_base make(size_t id, std::string_view lit, size_t line, size_t col,
+                                        std::string_view fname, bool end_of_file = false) {
     auto span = inline_code_span(line, col, col);
     size_t cur_line = line;
     size_t cur_col = col;
@@ -109,9 +109,7 @@ public:
     return token_base(std::move(data));
   }
 
-  [[nodiscard]] EF_CONSTEXPR23 bool is_uninitialized() const noexcept {
-    return !data_;
-  }
+  [[nodiscard]] EF_CONSTEXPR23 bool is_uninitialized() const noexcept { return !data_; }
 
   [[nodiscard]] EF_CONSTEXPR23 bool is_valid() const noexcept {
     return !is_uninitialized() && !lit().empty();

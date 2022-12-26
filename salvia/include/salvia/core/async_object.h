@@ -12,7 +12,7 @@
 #include <condition_variable>
 #include <mutex>
 
-namespace salviar {
+namespace salvia::core {
 
 class async_object {
 protected:
@@ -114,35 +114,25 @@ public:
   template <pipeline_statistic_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
     assert(dynamic_cast<async_pipeline_statistics *>(query_obj) != nullptr);
-    static_cast<async_pipeline_statistics *>(query_obj)
-        ->counters_[static_cast<uint32_t>(StatID)] += v;
+    static_cast<async_pipeline_statistics *>(query_obj)->counters_[static_cast<uint32_t>(StatID)] +=
+        v;
   }
 
-  virtual async_object_ids id() {
-    return async_object_ids::pipeline_statistics;
-  }
+  virtual async_object_ids id() { return async_object_ids::pipeline_statistics; }
 
 protected:
   std::array<std::atomic<uint64_t>, 8> counters_;
 
   void get_value(void *v) {
     auto ret = reinterpret_cast<pipeline_statistics *>(v);
-    ret->cinvocations =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::cinvocations)];
-    ret->cprimitives =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::cprimitives)];
-    ret->gs_invocations =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::gs_invocations)];
-    ret->gs_primitives =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::gs_primitives)];
-    ret->ia_primitives =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::ia_primitives)];
-    ret->ia_vertices =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::ia_vertices)];
-    ret->ps_invocations =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::ps_invocations)];
-    ret->vs_invocations =
-        counters_[static_cast<uint32_t>(pipeline_statistic_id::vs_invocations)];
+    ret->cinvocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::cinvocations)];
+    ret->cprimitives = counters_[static_cast<uint32_t>(pipeline_statistic_id::cprimitives)];
+    ret->gs_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::gs_invocations)];
+    ret->gs_primitives = counters_[static_cast<uint32_t>(pipeline_statistic_id::gs_primitives)];
+    ret->ia_primitives = counters_[static_cast<uint32_t>(pipeline_statistic_id::ia_primitives)];
+    ret->ia_vertices = counters_[static_cast<uint32_t>(pipeline_statistic_id::ia_vertices)];
+    ret->ps_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::ps_invocations)];
+    ret->vs_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::vs_invocations)];
   }
 
   virtual void init_async_data() {
@@ -152,10 +142,7 @@ protected:
   }
 };
 
-enum class internal_statistics_id : uint32_t {
-  backend_input_pixels = 0,
-  count
-};
+enum class internal_statistics_id : uint32_t { backend_input_pixels = 0, count };
 
 struct internal_statistics {
   uint64_t backend_input_pixels;
@@ -166,23 +153,19 @@ public:
   template <internal_statistics_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
     assert(dynamic_cast<async_internal_statistics *>(query_obj) != nullptr);
-    static_cast<async_internal_statistics *>(query_obj)
-        ->counters_[static_cast<uint32_t>(StatID)] += v;
+    static_cast<async_internal_statistics *>(query_obj)->counters_[static_cast<uint32_t>(StatID)] +=
+        v;
   }
 
-  virtual async_object_ids id() {
-    return async_object_ids::internal_statistics;
-  }
+  virtual async_object_ids id() { return async_object_ids::internal_statistics; }
 
 protected:
-  std::array<std::atomic<uint64_t>,
-             static_cast<uint32_t>(internal_statistics_id::count)>
-      counters_;
+  std::array<std::atomic<uint64_t>, static_cast<uint32_t>(internal_statistics_id::count)> counters_;
 
   void get_value(void *v) {
     auto ret = reinterpret_cast<internal_statistics *>(v);
-    ret->backend_input_pixels = counters_[static_cast<uint32_t>(
-        internal_statistics_id::backend_input_pixels)];
+    ret->backend_input_pixels =
+        counters_[static_cast<uint32_t>(internal_statistics_id::backend_input_pixels)];
   }
 
   virtual void init_async_data() {
@@ -193,8 +176,7 @@ protected:
 };
 
 struct pipeline_profiles {
-  uint64_t
-      gather_vtx; // Including: Genenrate index of primitives and unique indexes
+  uint64_t gather_vtx; // Including: Genenrate index of primitives and unique indexes
   uint64_t vtx_proc;
   uint64_t clipping;
   uint64_t compact_clip;
@@ -219,40 +201,30 @@ public:
   static uint64_t time_stamp() {
     using namespace std::chrono;
     return static_cast<uint64_t>(
-        duration_cast<nanoseconds>(
-            high_resolution_clock::now().time_since_epoch())
-            .count());
+        duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count());
   }
 
   template <pipeline_profile_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
     assert(dynamic_cast<async_pipeline_profiles *>(query_obj) != nullptr);
-    static_cast<async_pipeline_profiles *>(query_obj)
-        ->counters_[static_cast<uint32_t>(StatID)] += v;
+    static_cast<async_pipeline_profiles *>(query_obj)->counters_[static_cast<uint32_t>(StatID)] +=
+        v;
   }
 
   virtual async_object_ids id() { return async_object_ids::pipeline_profiles; }
 
 protected:
-  std::array<std::atomic<uint64_t>,
-             static_cast<uint32_t>(pipeline_profile_id::count)>
-      counters_;
+  std::array<std::atomic<uint64_t>, static_cast<uint32_t>(pipeline_profile_id::count)> counters_;
 
   void get_value(void *v) {
     auto ret = reinterpret_cast<pipeline_profiles *>(v);
-    ret->gather_vtx =
-        counters_[static_cast<uint32_t>(pipeline_profile_id::gather_vtx)];
-    ret->clipping =
-        counters_[static_cast<uint32_t>(pipeline_profile_id::clipping)];
-    ret->compact_clip =
-        counters_[static_cast<uint32_t>(pipeline_profile_id::compact_clip)];
-    ret->vp_trans =
-        counters_[static_cast<uint32_t>(pipeline_profile_id::vp_trans)];
-    ret->tri_dispatch =
-        counters_[static_cast<uint32_t>(pipeline_profile_id::tri_dispatch)];
+    ret->gather_vtx = counters_[static_cast<uint32_t>(pipeline_profile_id::gather_vtx)];
+    ret->clipping = counters_[static_cast<uint32_t>(pipeline_profile_id::clipping)];
+    ret->compact_clip = counters_[static_cast<uint32_t>(pipeline_profile_id::compact_clip)];
+    ret->vp_trans = counters_[static_cast<uint32_t>(pipeline_profile_id::vp_trans)];
+    ret->tri_dispatch = counters_[static_cast<uint32_t>(pipeline_profile_id::tri_dispatch)];
     ret->ras = counters_[static_cast<uint32_t>(pipeline_profile_id::ras)];
-    ret->vtx_proc =
-        counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
+    ret->vtx_proc = counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
   }
 
   virtual void init_async_data() {
@@ -272,4 +244,4 @@ template <typename ValueT> struct accumulate_fn {
   static void null(async_object *, ValueT) {}
 };
 
-} // namespace salviar
+} // namespace salvia::core

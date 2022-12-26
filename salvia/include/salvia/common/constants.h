@@ -6,7 +6,7 @@
 
 namespace salvia {
 
-enum class result : uint32_t { ok, failed, outofmemory, invalid_parameter };
+enum class result : uint32_t { ok, failed, out_of_memory, invalid_parameter };
 
 enum map_mode {
   map_mode_none = 0,
@@ -179,4 +179,4 @@ enum class async_status : uint32_t { error, timeout, ready };
 
 enum class shading_rate : uint32_t { axis_1x, axis_2x, axis_4x };
 
-} // namespace salviar
+} // namespace salvia

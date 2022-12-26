@@ -111,4 +111,4 @@ void *resource_manager::reallocate_buffer(size_t sz) {
   return mapped_data_.data();
 }
 
-} // namespace salviar
+} // namespace salvia::resource

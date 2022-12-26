@@ -10,7 +10,6 @@
 #include <memory>
 #include <vector>
 
-
 namespace salvia::resource {
 
 class buffer {
