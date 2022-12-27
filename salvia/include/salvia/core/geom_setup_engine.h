@@ -30,10 +30,9 @@ struct geom_setup_context {
   accumulate_fn<uint64_t>::type acc_cinvocations;
 };
 
-/*
-        Primitive Verts -> Primitive Packages -> Clipped Packages (Sparse) -> Compacted Clipped
-   Primitive Verts
-*/
+// Processing:
+//   Primitive Vertexes -> Primitive Packages -> Clipped Packages (Sparse)
+//   -> Compacted Clipped Primitive Vertexes
 class geom_setup_engine {
 
 public:

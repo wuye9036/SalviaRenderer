@@ -15,18 +15,20 @@
     * Git
       * Need to install LFS plug-in.
       * [About Git LFS](https://git-lfs.github.com/)
-    * Visual Studio 2019/2022
-      * Need C++17 support.
+    * Visual Studio 2022
+      * Need C++20 support.
     * CMake 3.21+
     * vcpkg (See build steps)
   * Linux
-    * NOT tested in 22.02. Will be tested in following version.
+    * Clang-14.0 or higher
+    * stdlibc++ 11 (It may be distributed with same version of GCC) or higher.
+    * *All samples cannot be run in Linux*. Will be supported in 2023.
+    * Our build & test environment is WSL2 + Ubuntu 22.04 LTS
     
 ## Build steps
   * Install [vcpkg](https://github.com/microsoft/vcpkg).
   * Edit SAMPLE_Build.bat.
   * Run the modified script.
-  
-  
+
 ## Support Info
   * If you have any question, please contact: wuye9036 _at_ gmail _dot_ com

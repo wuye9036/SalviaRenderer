@@ -16,15 +16,15 @@ namespace salvia::core {
 
 class async_object {
 protected:
-  int32_t pending_writes_count_;
-  bool started_; // Mark to prevent invalid call such as BEG-GET-END, END-BEG,
+  int32_t pending_writes_count_ = 0;
+  bool started_ = false; // Mark to prevent invalid call such as BEG-GET-END, END-BEG,
                  // BEG-BEG cases.
 
   std::mutex pending_writes_mutex_;
   std::condition_variable pending_writes_condition_;
 
 public:
-  async_object() : started_(false), pending_writes_count_(0) {}
+  async_object() = default;
 
   virtual async_object_ids id() { return async_object_ids::none; }
 
@@ -109,7 +109,7 @@ enum class pipeline_statistic_id : uint32_t {
   ps_invocations
 };
 
-class async_pipeline_statistics : public async_object {
+class async_pipeline_statistics final : public async_object {
 public:
   template <pipeline_statistic_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
@@ -118,12 +118,12 @@ public:
         v;
   }
 
-  virtual async_object_ids id() { return async_object_ids::pipeline_statistics; }
+  virtual async_object_ids id() override { return async_object_ids::pipeline_statistics; }
 
 protected:
   std::array<std::atomic<uint64_t>, 8> counters_;
 
-  void get_value(void *v) {
+  void get_value(void *v) override {
     auto ret = reinterpret_cast<pipeline_statistics *>(v);
     ret->cinvocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::cinvocations)];
     ret->cprimitives = counters_[static_cast<uint32_t>(pipeline_statistic_id::cprimitives)];
@@ -135,7 +135,7 @@ protected:
     ret->vs_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::vs_invocations)];
   }
 
-  virtual void init_async_data() {
+  virtual void init_async_data() override {
     for (auto &counter : counters_) {
       counter = 0;
     }
@@ -148,7 +148,7 @@ struct internal_statistics {
   uint64_t backend_input_pixels;
 };
 
-class async_internal_statistics : public async_object {
+class async_internal_statistics final : public async_object {
 public:
   template <internal_statistics_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
@@ -156,18 +156,18 @@ public:
         ->counters_[static_cast<uint32_t>(StatID)] += v;
   }
 
-  virtual async_object_ids id() { return async_object_ids::internal_statistics; }
+  virtual async_object_ids id() override { return async_object_ids::internal_statistics; }
 
 protected:
   std::array<std::atomic<uint64_t>, static_cast<uint32_t>(internal_statistics_id::count)> counters_;
 
-  void get_value(void *v) {
+  void get_value(void *v) override {
     auto ret = reinterpret_cast<internal_statistics *>(v);
     ret->backend_input_pixels =
         counters_[static_cast<uint32_t>(internal_statistics_id::backend_input_pixels)];
   }
 
-  virtual void init_async_data() {
+  virtual void init_async_data() override {
     for (auto &counter : counters_) {
       counter = 0;
     }
@@ -209,12 +209,12 @@ public:
         ->counters_[static_cast<uint32_t>(StatID)] += v;
   }
 
-  virtual async_object_ids id() { return async_object_ids::pipeline_profiles; }
+  virtual async_object_ids id() override { return async_object_ids::pipeline_profiles; }
 
 protected:
   std::array<std::atomic<uint64_t>, static_cast<uint32_t>(pipeline_profile_id::count)> counters_;
 
-  void get_value(void *v) {
+  void get_value(void *v) override {
     auto ret = reinterpret_cast<pipeline_profiles *>(v);
     ret->gather_vtx = counters_[static_cast<uint32_t>(pipeline_profile_id::gather_vtx)];
     ret->clipping = counters_[static_cast<uint32_t>(pipeline_profile_id::clipping)];
@@ -225,7 +225,7 @@ protected:
     ret->vtx_proc = counters_[static_cast<uint32_t>(pipeline_profile_id::vtx_proc)];
   }
 
-  virtual void init_async_data() {
+  virtual void init_async_data() override {
     for (auto &counter : counters_) {
       counter = 0;
     }

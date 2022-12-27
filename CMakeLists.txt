@@ -31,5 +31,6 @@ add_subdirectory(sasl)
 # endif()
 
 enable_testing()
-add_test(NAME ShaderTests COMMAND $<TARGET_FILE:sasl_test>)
-add_test(NAME EFLibTests COMMAND $<TARGET_FILE:eflib_test>)
+add_test(NAME Test-Shader COMMAND $<TARGET_FILE:sasl_test>)
+add_test(NAME Test-EFLib COMMAND $<TARGET_FILE:eflib_test>)
+add_test(NAME Test-Salvia COMMAND $<TARGET_FILE:salvia_test>)
