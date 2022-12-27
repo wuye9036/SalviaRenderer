@@ -13,10 +13,10 @@ LINK_DIRECTORIES(
 )
 
 set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/host/host_impl.h
-	${SASL_HOME_DIR}/sasl/include/host/shader_log_impl.h
-	${SASL_HOME_DIR}/sasl/include/host/shader_object_impl.h
-	${SASL_HOME_DIR}/sasl/include/host/shader_unit_impl.h
+	${SASL_HOME_DIR}/sasl/host/host_impl.h
+	${SASL_HOME_DIR}/sasl/host/shader_log_impl.h
+	${SASL_HOME_DIR}/sasl/host/shader_object_impl.h
+	${SASL_HOME_DIR}/sasl/host/shader_unit_impl.h
 )
 
 set( SOURCE_FILES
@@ -31,5 +31,5 @@ ADD_LIBRARY( sasl_host SHARED
 )
 
 TARGET_LINK_LIBRARIES( sasl_host sasl_drivers EFLIB )
-SET_TARGET_PROPERTIES( sasl_host PROPERTIES FOLDER "Shader Drivers")
+set_target_properties( sasl_host PROPERTIES FOLDER "Shader Drivers")
 install(TARGETS sasl_host)

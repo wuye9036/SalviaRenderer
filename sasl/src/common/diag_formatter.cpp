@@ -1,63 +1,54 @@
-#include <sasl/include/common/diag_formatter.h>
+#include <sasl/common/diag_formatter.h>
 
-#include <eflib/include/string/ustring.h>
+#include <eflib/diagnostics/assert.h>
+#include <sasl/common/diag_item.h>
 
-#include <sasl/include/common/diag_item.h>
-#include <eflib/include/diagnostics/assert.h>
+#include <fmt/format.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/format.hpp>
-#include <eflib/include/platform/boost_end.h>
+using fmt::format;
+using std::string_view;
 
-using eflib::fixed_string;
-using boost::format;
+namespace sasl::common {
 
-BEGIN_NS_SASL_COMMON();
+std::string str(diag_item const *item, compiler_compatibility cc) {
+  std::string error_level;
 
-fixed_string str( diag_item const* item, compiler_compatibility cc )
-{
-	std::string error_level;
+  switch (item->level()) {
+  case diag_levels::info:
+    error_level = "info";
+    break;
+  case diag_levels::warning:
+    error_level = "warning";
+    break;
+  case diag_levels::error:
+    error_level = "error";
+    break;
+  case diag_levels::fatal_error:
+    error_level = "fatal error";
+    break;
+  }
 
-	switch ( item->level() )
-	{
-	case dl_info:
-		error_level = "info";
-		break;
-	case dl_warning:
-		error_level = "warning";
-		break;
-	case dl_error:
-		error_level = "error";
-		break;
-	case dl_fatal_error:
-		error_level = "fatal error";
-		break;
-	}
+  switch (cc) {
+  case cc_msvc:
+    switch (item->level()) {
+    case diag_levels::debug:
+    case diag_levels::info:
+    case diag_levels::warning:
+    case diag_levels::error:
+    case diag_levels::fatal_error:
+      return fmt::format("{}({}): {} C{:04d}: {}", item->file_name(), item->span().begin.line,
+                         error_level, item->id(), item->str());
+    }
 
-	switch(cc)
-	{
-	case cc_msvc:
-		switch ( item->level() )
-		{
-		case dl_text:
-			return item->str();
-		case dl_info:
-		case dl_warning:
-		case dl_error:
-		case dl_fatal_error:
-			return ( format("%s(%d): %s C%04d: %s") % item->file() % item->span().line_beg % error_level % item->id() % item->str() ).str();
-		}
-		
-		break;
-	case cc_gcc:
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return item->str();
-		break;
-	}
+    break;
+  case cc_gcc:
+    EFLIB_ASSERT_UNIMPLEMENTED();
+    return std::string{item->str()};
+    break;
+  }
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return item->str();
+  EFLIB_ASSERT_UNIMPLEMENTED();
+  return std::string{item->str()};
 }
 
-END_NS_SASL_COMMON();
-
+} // namespace sasl::common

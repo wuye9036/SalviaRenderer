@@ -1,24 +1,24 @@
-#define BOOST_TEST_MODULE @SASL_TEST_PROJECT_NAME@
+#define BOOST_TEST_MODULE @SASL_TEST_PROJECT_NAME @
 #define BOOST_TEST_NO_MAIN
 
-#include <eflib/include/platform/config.h>
+#include <eflib/platform/config.h>
 
 #if defined(EFLIB_LINUX)
 //	We need alternative init API. It is default in Windows because DYN_LINK is enabled.
 //  But on Linux, we need to force open it.
-#	define BOOST_TEST_ALTERNATIVE_INIT_API
+#define BOOST_TEST_ALTERNATIVE_INIT_API
 #endif
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/test/unit_test.hpp>
 #include <boost/chrono.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <boost/test/unit_test.hpp>
+#include <eflib/platform/boost_begin.h>
+#include <eflib/platform/boost_end.h>
 
 #if defined(SASL_USE_LLVM)
-#	include <sasl/include/drivers/drivers_api.h>
+#include <sasl/drivers/drivers_api.h>
 #endif
 
-#include <eflib/include/memory/lifetime_manager.h>
+#include <eflib/memory/lifetime_manager.h>
 
 #if defined(EFLIB_WINDOWS)
 #define NOMINMAX
@@ -29,87 +29,72 @@ namespace chrono = boost::chrono;
 
 bool normal_exit = false;
 
-void check_on_exit()
-{
-	if(!normal_exit)
-	{
-		assert(false);
-	}
+void check_on_exit() {
+  if (!normal_exit) {
+    assert(false);
+  }
 }
 
-bool enable_pause(int argc, char* argv[])
-{
-	for(int i_arg = 0; i_arg < argc; ++i_arg)
-	{
-		if( strncmp("--nopause", argv[i_arg], 9) == 0 )
-		{
-			return false;
-		}
-	}
-	return true;
+bool enable_pause(int argc, char *argv[]) {
+  for (int i_arg = 0; i_arg < argc; ++i_arg) {
+    if (strncmp("--nopause", argv[i_arg], 9) == 0) {
+      return false;
+    }
+  }
+  return true;
 }
 
-bool display_time(int argc, char* argv[])
-{
-	for(int i_arg = 0; i_arg < argc; ++i_arg)
-	{
-		if( strncmp("--display-time", argv[i_arg], 14) == 0 )
-		{
-			return true;
-		}
-	}
-	return false;
+bool display_time(int argc, char *argv[]) {
+  for (int i_arg = 0; i_arg < argc; ++i_arg) {
+    if (strncmp("--display-time", argv[i_arg], 14) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
-bool set_highest_priority(int argc, char* argv[])
-{
-	for(int i_arg = 0; i_arg < argc; ++i_arg)
-	{
-		if( strncmp("--highest-prior", argv[i_arg], 15) == 0 )
-		{
-			printf("Process Priority is HIGH_PRIORITY_CLASS");
+bool set_highest_priority(int argc, char *argv[]) {
+  for (int i_arg = 0; i_arg < argc; ++i_arg) {
+    if (strncmp("--highest-prior", argv[i_arg], 15) == 0) {
+      printf("Process Priority is HIGH_PRIORITY_CLASS");
 #if defined(EFLIB_WINDOWS)
-			HANDLE process_handle = GetCurrentProcess();
-			SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
+      HANDLE process_handle = GetCurrentProcess();
+      SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
 #endif
-			return true;
-		}
-	}
-	return false;
+      return true;
+    }
+  }
+  return false;
 }
 
-int BOOST_TEST_CALL_DECL
-main( int argc, char* argv[] )
-{
-	set_highest_priority(argc, argv);
+int BOOST_TEST_CALL_DECL main(int argc, char *argv[]) {
+  set_highest_priority(argc, argv);
 
-	normal_exit = false;
-	atexit(&check_on_exit);
+  normal_exit = false;
+  atexit(&check_on_exit);
 
-	setvbuf( stdout, NULL, _IONBF, 0 );
-	setvbuf( stderr, NULL, _IONBF, 0 );
+  setvbuf(stdout, nullptr, _IONBF, 0);
+  setvbuf(stderr, nullptr, _IONBF, 0);
 
-	int ret = 0;
-	{
-		eflib::lifetime_manager lfmgr;
+  int ret = 0;
+  {
+    eflib::lifetime_manager lfmgr;
 
-		chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
-		ret = ::boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
-		chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
+    chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
+    ret = ::boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+    chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
 
-		if( display_time(argc, argv) )
-		{
-			chrono::milliseconds elapsed_ms
-				= chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-			printf("Total elapsed time: %6dms\n", static_cast<int32_t>( elapsed_ms.count() ) );
-		}
-	}
+    if (display_time(argc, argv)) {
+      chrono::milliseconds elapsed_ms =
+          chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
+      printf("Total elapsed time: %6dms\n", static_cast<int32_t>(elapsed_ms.count()));
+    }
+  }
 
-	if( enable_pause(argc, argv) )
-	{
-		system("pause");
-	}
+  if (enable_pause(argc, argv)) {
+    system("pause");
+  }
 
-	normal_exit = true;
-	return ret;
+  normal_exit = true;
+  return ret;
 }

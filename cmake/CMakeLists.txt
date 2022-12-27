@@ -31,18 +31,6 @@ function(SALVIA_CREATE_VCPROJ_USERFILE TARGETNAME)
         ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
         @ONLY
       )
-    elseif(MSVC_VERSION EQUAL 1800)
-      configure_file(
-        ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2013UserFile.vcxproj.user.in
-        ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
-        @ONLY
-      )
-    elseif(MSVC_VERSION EQUAL 1700)
-        configure_file(
-        ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2012UserFile.vcxproj.user.in
-        ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
-        @ONLY
-      )
     else()
        MESSAGE(FATAL_ERROR "Cannot support Microsoft Visual C++ version ${MSVC_VERSION}. Build will be stopped." )
     endif()

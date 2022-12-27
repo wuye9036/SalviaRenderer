@@ -1,15 +1,15 @@
 #define INITGUID
 #include <salvia_d3d_sw_driver/include/common.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 #include <salvia_d3d_sw_driver/include/umd_device.h>
 #include <salvia_d3d_sw_driver/include/umd_resource.h>
 
-#include <salviar/include/renderer.h>
-#include <salviar/include/buffer.h>
-#include <salviar/include/texture.h>
-#include <salviar/include/internal_mapped_resource.h>
+#include <salvia/core/renderer.h>
+#include <salvia/resource/buffer.h>
+#include <salvia/resource/texture.h>
+#include <salvia/resource/internal_mapped_resource.h>
 
 using namespace salviar;
 
@@ -23,7 +23,7 @@ umd_resource::umd_resource(umd_device* dev, const D3D11DDIARG_CREATERESOURCE* cr
 	
 	mip_info_list_.assign(create_resource->pMipInfoList, create_resource->pMipInfoList + create_resource->MipLevels);
 	creation_param_.pMipInfoList = &mip_info_list_[0];
-	if (create_resource->pInitialDataUP != NULL)
+	if (create_resource->pInitialDataUP != nullptr)
 	{
 		initial_data_up_.assign(create_resource->pInitialDataUP, create_resource->pInitialDataUP + surfs);
 		creation_param_.pInitialDataUP = &initial_data_up_[0];

@@ -27,18 +27,18 @@ configure_file(
 set( HEADER_FILES ${SASL_JIT_TEST_HEADERS} )
 set( SOURCE_FILES test_main.cpp ${SASL_JIT_TEST_SOURCES} )
 
-ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
-TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
+add_executable( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
+target_link_libraries( ${SASL_TEST_PROJECT_NAME}
 	sasl_drivers
 	sasl_semantic sasl_syntaxtree
 	sasl_parser
 	sasl_enums sasl_common
 	${Boost_LIBRARIES}
 	${LLVM_LIBS}
+	PRIVATE GTest::gtest GTest::gtest_main
 )
-ADD_DEPENDENCIES(${SASL_TEST_PROJECT_NAME} sasl_test_shader_repo)
-
-SET_TARGET_PROPERTIES( ${SASL_TEST_PROJECT_NAME} PROPERTIES FOLDER "Shader Tests")
+add_dependencies(${SASL_TEST_PROJECT_NAME} sasl_test_shader_repo)
+set_target_properties( ${SASL_TEST_PROJECT_NAME} PROPERTIES FOLDER "Shader Tests")
 SASL_TEST_CREATE_VCPROJ_USERFILE( ${SASL_TEST_PROJECT_NAME} )
 
 install(TARGETS sasl_test_jit)

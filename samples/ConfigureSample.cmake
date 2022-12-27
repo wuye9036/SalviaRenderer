@@ -42,7 +42,7 @@ SOURCE_GROUP( "Resources" 		FILES ${RESOURCE_FILES} )
 ADD_EXECUTABLE( ${ProjectName} ${SOURCE_FILES} ${HEADER_FILES} ${RESOURCE_FILES} ${ADDITIONAL_FILES})
 
 TARGET_LINK_LIBRARIES(${ProjectName} salviau salviax salviar EFLIB ${ADDITIONAL_LIBS} ${ADDITIONAL_LIBS})
-SET_TARGET_PROPERTIES(${ProjectName} PROPERTIES FOLDER "Samples")
+set_target_properties(${ProjectName} PROPERTIES FOLDER "Samples")
 SALVIA_CREATE_VCPROJ_USERFILE(${ProjectName})
 install(TARGETS ${ProjectName})
 

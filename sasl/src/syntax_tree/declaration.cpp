@@ -1,142 +1,29 @@
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/syntax_tree/declaration.h>
+#include <sasl/syntax_tree/node.h>
+#include <sasl/syntax_tree/statement.h>
+#include <sasl/syntax_tree/visitor.h>
+
+#include <eflib/utility/enum.h>
+
+using namespace eflib::enum_operators;
 
 using std::shared_ptr;
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl::syntax_tree {
 
-initializer::initializer( node_ids type_id, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: node( type_id, tok_beg, tok_end ){
-}
+bool tynode::is_builtin() const { return node_class() == node_ids::builtin_type; }
 
-expression_initializer::expression_initializer( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: initializer( node_ids::expression_initializer, tok_beg, tok_end ) {
-}
+bool tynode::is_struct() const { return node_class() == node_ids::struct_type; }
 
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( expression_initializer );
+bool tynode::is_array() const { return node_class() == node_ids::array_type; }
 
-member_initializer::member_initializer( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: initializer( node_ids::member_initializer, tok_beg, tok_end ) { }
+bool tynode::is_function() const { return node_class() == node_ids::function_full_def; }
 
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( member_initializer );
+bool tynode::is_alias() const { return node_class() == node_ids::alias_type; }
 
-declaration::declaration( node_ids type_id, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: node( type_id, tok_beg, tok_end )
-{
-}
+bool tynode::is_uniform() const { return eflib::e2i(qual & type_qualifiers::_uniform) != 0; }
 
-declarator::declarator( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end ): node(node_ids::declarator, tok_beg, tok_end) {}
+bool function_full_def::declaration_only() { return body || body->stmts.empty(); }
 
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( declarator );
-
-variable_declaration::variable_declaration( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: declaration(node_ids::variable_declaration, tok_beg, tok_end ) {
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( variable_declaration );
-
-type_definition::type_definition( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: declaration( node_ids::typedef_definition, tok_beg, tok_end ){
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( type_definition );
-
-tynode::tynode( node_ids type_id, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: declaration( type_id, tok_beg, tok_end ),
-	tycode( builtin_types::none),
-	qual( type_qualifiers::none )
-{ }
-
-bool tynode::is_builtin() const{
-	return node_class() == node_ids::builtin_type;
-}
-
-bool tynode::is_struct() const{
-	return node_class() == node_ids::struct_type;
-}
-
-bool tynode::is_array() const{
-	return node_class() == node_ids::array_type;
-}
-
-bool tynode::is_function() const{
-	return node_class() == node_ids::function_full_def;
-}
-
-bool tynode::is_alias() const{
-	return node_class() == node_ids::alias_type;
-}
-
-bool tynode::is_uniform() const
-{
-	return to_underlying(qual & type_qualifiers::_uniform) != 0;
-}
-
-builtin_type::builtin_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode( node_ids::builtin_type, tok_beg, tok_end ){ }
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( builtin_type );
-
-array_type::array_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode( node_ids::array_type, tok_beg, tok_end ) { }
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( array_type );
-
-struct_type::struct_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode( node_ids::struct_type, tok_beg, tok_end ), has_body(false) {}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( struct_type );
-
-parameter::parameter( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: declaration( node_ids::parameter, tok_beg, tok_end ) {
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( parameter );
-
-parameter_full::parameter_full( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: declaration(node_ids::parameter_full, tok_beg, tok_end) {
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL(parameter_full);
-
-function_full_def::function_full_def( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode( node_ids::function_full_def, tok_beg, tok_end )
-{
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( function_full_def );
-
-bool function_full_def::declaration_only(){
-	return body || body->stmts.empty();
-}
-
-function_def::function_def( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: declaration(node_ids::function_def, tok_beg, tok_end)
-{
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL(function_def);
-
-bool function_def::declaration_only(){
-	return body || body->stmts.empty();
-}
-
-function_type::function_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode(node_ids::function_type, tok_beg, tok_end) {
-}
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL(function_type);
-
-null_declaration::null_declaration( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-: declaration( node_ids::null_declaration, tok_beg, tok_end ){
-}
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( null_declaration );
-
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( alias_type );
-
-alias_type::alias_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-: tynode( node_ids::alias_type, tok_beg, tok_end ){
-}
-END_NS_SASL_SYNTAX_TREE();
+bool function_def::declaration_only() { return body || body->stmts.empty(); }
+} // namespace sasl::syntax_tree

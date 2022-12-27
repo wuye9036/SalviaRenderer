@@ -1,19 +1,9 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
+file(GLOB HEADER_LIST CONFIGURE_DEPENDS "../../include/sasl/parser/*.h")
+file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "*.cpp")
 
-set( ADDITIONAL_INCLUDE_DIRECTORIES
-	${SALVIA_LLVM_INCLUDE_PATH}
-	)
-	
-set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/shims/ia_shim.h
-	${SASL_HOME_DIR}/sasl/include/shims/interp_shim.h
-	${SASL_HOME_DIR}/sasl/include/shims/om_shim.h
-)
+add_library(sasl_shims ${HEADER_LIST} ${SOURCE_LIST})
+target_include_directories(sasl_shims PUBLIC ../../include)
+target_link_libraries(sasl_shims eflib shader)
+target_compile_features(sasl_shims PUBLIC cxx_std_20)
 
-set( SOURCE_FILES
-	ia_shim.cpp
-	interp_shim.cpp
-	om_shim.cpp
-)
-
-SASL_CONFIG_LIBRARY(sasl_shims)
+set_target_properties(sasl_shims PROPERTIES FOLDER "Shader Libs")

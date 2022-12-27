@@ -1,6 +1,6 @@
 #pragma once
 
-#include <salviar/include/renderer.h>
+#include <salvia/core/renderer.h>
 
 class umd_resource;
 

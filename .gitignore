@@ -1,5 +1,9 @@
 test_main.cpp
-.idea/
-.vscode/
 *.suo
 *.pyc
+build/
+.build/
+.cache/
+.idea/
+.vs/
+.vscode/

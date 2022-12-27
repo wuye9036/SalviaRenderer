@@ -2,7 +2,7 @@
 SALVIA Release License
 =======================================
 
-Copyright (C) 2007-2014 SALVIA Project Group
+Copyright (C) 2007-2023 SALVIA Project Group
 All rights reserved.
 
 Developed by SALVIA Project Group
@@ -21,12 +21,5 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-The following pieces of software have additional or alternate copyrights,
-licenses, and/or restrictions:
-		
-	Program               Position
-	=================     ===================
-	LLVM                  /3rd_party/llvm
-	WTL                   /3rd_party/wtl
-	FreeImage             /3rd_party/FreeImage
-	threadpool            /3rd_party/threadpool
+The dependencies of software have additional or alternate copyrights,
+licenses, and/or restrictions. All dependencies are listed in vcpkg.json.

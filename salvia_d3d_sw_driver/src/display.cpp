@@ -1,6 +1,6 @@
 #include <salvia_d3d_sw_driver/include/common.h>
 
-#include <eflib/include/platform/typedefs.h>
+#include <eflib/platform/typedefs.h>
 
 #include <boost/make_shared.hpp>
 

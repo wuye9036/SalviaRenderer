@@ -4,19 +4,19 @@
 
 #include <salviau/include/common/sample_app.h>
 
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_regs.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_regs.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
-#include <eflib/include/utility/unref_declarator.h>
-#include <eflib/include/diagnostics/profiler.h>
-#include <eflib/include/platform/main.h>
+#include <eflib/utility/unref_declarator.h>
+#include <eflib/diagnostics/profiler.h>
+#include <eflib/platform/main.h>
 
-#include <eflib/include/platform/boost_begin.h>
+#include <eflib/platform/boost_begin.h>
 #include <boost/assign.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/platform/boost_end.h>
 
 #include <iostream>
 #include <fstream>

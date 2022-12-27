@@ -3,21 +3,21 @@
 #include <salviau/include/common/gui.h>
 #include <salviau/include/common/window.h>
 
-#include <salviar/include/shader.h>
-#include <salviar/include/shader_regs.h>
-#include <salviar/include/shader_object.h>
+#include <salvia/shader/shader.h>
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/shader_object.h>
 #include <salviar/include/sync_renderer.h>
-#include <salviar/include/resource_manager.h>
+#include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
-#include <salviar/include/colors.h>
-#include <salviar/include/texture.h>
+#include <salvia/resource/colors.h>
+#include <salvia/resource/texture.h>
 
 #include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/tex_io.h>
 
-#include <eflib/include/platform/main.h>
+#include <eflib/platform/main.h>
 
 #include <vector>
 #include <cmath>

@@ -20,5 +20,5 @@ ADD_EXECUTABLE( sasl_command ${HEADER_FILES} ${SOURCE_FILES} )
 
 TARGET_LINK_LIBRARIES( sasl_command sasl_common EFLIB )
 
-SET_TARGET_PROPERTIES( sasl_command PROPERTIES FOLDER "Shader Drivers")
+set_target_properties( sasl_command PROPERTIES FOLDER "Shader Drivers")
 

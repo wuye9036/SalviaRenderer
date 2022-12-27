@@ -7,7 +7,7 @@
 #include <salvia_d3d_sw_driver/include/kmd_context.h>
 #include <salvia_d3d_sw_driver/include/umd_device.h>
 
-#include <salviar/include/texture.h>
+#include <salvia/resource/texture.h>
 
 using namespace salviar;
 
@@ -198,8 +198,8 @@ NTSTATUS APIENTRY D3DKMTPresent(const D3DKMT_PRESENT* pData)
 					dc_from_mem.Width = surf->width();
 					dc_from_mem.Height = surf->height();
 					dc_from_mem.Pitch = static_cast<UINT>(surf->pitch());
-					dc_from_mem.hDeviceDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
-					dc_from_mem.pColorTable = NULL;
+					dc_from_mem.hDeviceDc = CreateDCW(L"DISPLAY", nullptr, nullptr, nullptr);
+					dc_from_mem.pColorTable = nullptr;
 					D3DKMTCreateDCFromMemory(&dc_from_mem);
 
 					DeleteDC(dc_from_mem.hDeviceDc);

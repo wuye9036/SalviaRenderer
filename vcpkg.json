@@ -24,6 +24,10 @@
       "boost-wave",
       "freeimage",
       "freetype",
+      "gtest",
+      "fmt",
+      "range-v3",
+      "magic-enum",
       {
         "name": "llvm",
         "default-features": false,
