@@ -8,8 +8,6 @@
 #include <sasl/syntax_tree/node.h>
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
 
-#include <eflib/utility/enable_if.h>
-
 #include <memory>
 #include <vector>
 

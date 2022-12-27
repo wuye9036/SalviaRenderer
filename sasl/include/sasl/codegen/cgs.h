@@ -10,7 +10,6 @@
 #include <sasl/enums/operators.h>
 
 #include <eflib/diagnostics/assert.h>
-#include <eflib/utility/enable_if.h>
 
 #include <functional>
 #include <type_traits>
@@ -230,17 +229,14 @@ public:
 
   cg_function *fetch_function(sasl::syntax_tree::function_def *fn_node);
 
-  template <typename T>
-  multi_value create_constant_scalar(T const &v, cg_type *tyinfo, builtin_types hint,
-                                     EFLIB_ENABLE_IF_COND(std::is_integral<T>)) {
-    llvm::Value *ll_val = llvm::ConstantInt::get(llvm::IntegerType::get(context(), sizeof(T) * 8),
-                                                 uint64_t(v), std::is_signed<T>::value);
+  multi_value create_constant_scalar(std::integral auto v, cg_type *tyinfo, builtin_types hint) {
+    llvm::Value *ll_val = llvm::ConstantInt::get(llvm::IntegerType::get(context(), sizeof(v)* 8),
+                                                 uint64_t(v), std::is_signed_v<decltype(v)>);
     return create_scalar(ll_val, tyinfo, hint);
   }
 
-  template <typename T>
-  multi_value create_constant_scalar(T const &v, cg_type *tyinfo, builtin_types hint,
-                                     EFLIB_ENABLE_IF_COND(std::is_floating_point<T>)) {
+  multi_value create_constant_scalar(std::floating_point auto v, cg_type *tyinfo,
+                                     builtin_types hint) {
     llvm::Value *ll_val = llvm::ConstantFP::get(llvm::Type::getFloatTy(context()), v);
     return create_scalar(ll_val, tyinfo, hint);
   }

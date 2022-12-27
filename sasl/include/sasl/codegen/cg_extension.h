@@ -5,8 +5,6 @@
 #include <sasl/codegen/cg_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/utility/enable_if.h>
-
 #include <eflib/platform/disable_warnings.h>
 #include <eflib/platform/enable_warnings.h>
 #include <llvm/ADT/APInt.h>
@@ -165,21 +163,20 @@ public:
   template <typename T> llvm::APInt apint(T v) {
     return llvm::APInt(sizeof(v) << 3, static_cast<uint64_t>(v), std::is_signed<T>::value);
   }
-  template <typename T> llvm::ConstantInt *get_int(T v, EFLIB_ENABLE_IF_PRED1(is_integral, T)) {
+  llvm::ConstantInt *get_int(std::integral auto v) {
     return llvm::ConstantInt::get(context_, apint(v));
   }
   llvm::Value *get_int(llvm::Type *ty, llvm::APInt const &v) {
     return get_constant_by_scalar(ty, llvm::ConstantInt::get(context_, v));
   }
 
-  template <typename U, typename T>
-  llvm::ConstantVector *get_vector(llvm::ArrayRef<T> const &elements,
-                                   EFLIB_ENABLE_IF_PRED1(is_floating_point, T));
+  template <typename U, std::floating_point T>
+  llvm::ConstantVector *get_vector(llvm::ArrayRef<T> const &elements);
 
-  template <typename U, typename T>
-  llvm::Constant *get_vector(llvm::ArrayRef<T> const &elements,
-                             EFLIB_ENABLE_IF_PRED1(is_integral, T)) {
+  template <typename U, std::integral T>
+  llvm::Constant *get_vector(llvm::ArrayRef<T> const &elements) {
     assert(!elements.empty());
+
     std::vector<llvm::Constant *> constant_elems(elements.size());
     for (size_t i = 0; i < elements.size(); ++i) {
       constant_elems[i] = get_int(U(elements[i]));

@@ -8,7 +8,6 @@
 #include <sasl/syntax_tree/visitor.h>
 
 #include <eflib/diagnostics/assert.h>
-#include <eflib/utility/enable_if.h>
 
 #include <boost/preprocessor.hpp>
 
@@ -262,9 +261,8 @@ void copy_member(T &lhs, T const &rhs) {
 
 template <typename T> void copy_from_any(T &lhs, const std::any &rhs) { lhs = any_cast<T>(rhs); }
 
-template <typename NodeT>
-void copy_from_any(shared_ptr<NodeT> &lhs, const any &rhs,
-                   EFLIB_ENABLE_IF_PRED2(is_base_of, node, NodeT)) {
+template <std::derived_from<node> NodeT>
+void copy_from_any(shared_ptr<NodeT> &lhs, const any &rhs) {
   shared_ptr<node> any_v = any_cast<shared_ptr<node>>(rhs);
   if (any_v) {
     lhs = dynamic_pointer_cast<NodeT>(any_v);
