@@ -2,6 +2,10 @@
 
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/platform/typedefs.h>
+#include <eflib/utility/extension.h>
+
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/range/concepts.hpp>
 
 #include <atomic>
 
@@ -12,84 +16,77 @@ struct thread_context {
   private:
     friend struct thread_context;
 
-    thread_context const *owner;
-    int32_t cur;
+    thread_context const *owner = nullptr;
+    size_t cur = 0;
 
-    package_cursor(thread_context const *owner, int32_t cur) : owner(owner), cur(cur) {}
+    package_cursor(thread_context const *owner, size_t cur) : owner(owner), cur(cur) {}
 
   public:
-    package_cursor() : owner(nullptr), cur(0) {}
+    package_cursor() = default;
+    package_cursor(package_cursor const &rhs) = default;
+    package_cursor &operator=(package_cursor const &rhs) = default;
 
-    package_cursor(package_cursor const &rhs) : owner(rhs.owner), cur(rhs.cur) {}
-
-    package_cursor &operator=(package_cursor const &rhs) {
-      owner = rhs.owner;
-      cur = rhs.cur;
-      return *this;
-    }
-
-    int32_t package_index() const { return cur; }
-
-    std::pair<int32_t, int32_t> item_range() const {
-      int32_t beg = cur * owner->package_size;
-      int32_t end = std::min(beg + owner->package_size, owner->item_count);
+    [[nodiscard]] size_t package_index() const noexcept { return cur; }
+    [[nodiscard]] auto item_range() const noexcept {
+      size_t beg = cur * owner->package_size;
+      size_t end = std::min(beg + owner->package_size, owner->item_count);
       return std::make_pair(beg, end);
     }
 
-    bool valid() const { return cur < owner->package_count; }
+    [[nodiscard]] bool valid() const noexcept { return cur < owner->package_count; }
   };
 
   size_t thread_id;
 
-  int32_t item_count;
-  std::atomic<int32_t> *working_package_id;
-  int32_t package_size;
-  int32_t package_count;
+  size_t item_count;
+  std::atomic<size_t> *working_package_id;
+  size_t package_size;
+  size_t package_count;
 
-  static int32_t compute_package_count(int32_t item_count, int32_t package_size) {
+  [[nodiscard]] static size_t compute_package_count(size_t item_count, size_t package_size) {
     return (item_count + package_size - 1) / package_size;
   }
 
-  package_cursor next_package() const { return package_cursor(this, (*working_package_id)++); }
+  [[nodiscard]] package_cursor next_package() const {
+    return package_cursor{this, (*working_package_id)++};
+  }
 };
 
-inline void init_thread_context(thread_context *ctxts, size_t N, int32_t item_count,
-                                std::atomic<int32_t> *working_package_id, int32_t package_size) {
-  int32_t package_count = thread_context::compute_package_count(item_count, package_size);
+template <typename ContextRng>
+inline void init_thread_context(ContextRng &&rng, size_t item_count,
+                                std::atomic<size_t> *working_package_id, size_t package_size) {
+  size_t package_count = thread_context::compute_package_count(item_count, package_size);
 
-  for (size_t i = 0; i < N; ++i) {
-    ctxts[i].thread_id = i;
-    ctxts[i].item_count = item_count;
-    ctxts[i].working_package_id = working_package_id;
-    ctxts[i].package_size = package_size;
-    ctxts[i].package_count = package_count;
+  for (size_t i = 0; i < rng.size(); ++i) {
+    rng[i] = thread_context{.thread_id = i,
+                            .item_count = item_count,
+                            .working_package_id = working_package_id,
+                            .package_size = package_size,
+                            .package_count = package_count};
   }
 }
 
-template <typename ThreadPool, typename ThreadFuncT> // ThreadFuncT = function <void (thread_context const*)>
-inline void execute_threads(ThreadPool&& pool, ThreadFuncT const &fn, int32_t item_count, int32_t package_size,
-                            int32_t thread_count) {
-  // Compute package information
-  std::atomic<int32_t> working_package(0);
-  std::shared_ptr<thread_context[]> thread_ctxts(new thread_context[thread_count]);
+template <typename ThreadFunc>
+concept thread_func = std::invocable<ThreadFunc, thread_context const *>;
 
-  // Initialize contexts per thread
-  thread_context *pctxts = thread_ctxts.get();
-  init_thread_context(thread_ctxts.get(), thread_count, item_count, &working_package, package_size);
+template <typename ThreadPool>
+inline void execute_threads(ThreadPool &&pool, thread_func auto &&fn, size_t item_count,
+                            size_t package_size, size_t thread_count = eflib::num_available_threads()) {
+  // Compute package information
+  std::atomic<size_t> working_package(0);
+  std::vector<thread_context> contexts(thread_count);
+
+  init_thread_context(contexts, item_count, &working_package, package_size);
 
   // Call functions by context.
   for (size_t i = 0; i < thread_count - 1; ++i) {
-    std::forward<ThreadPool>(pool).schedule([&fn, pctxts, i]() { fn(&pctxts[i]); });
+    std::forward<ThreadPool>(pool).schedule([fn = EF_FORWARD(fn), &contexts, i]() mutable {
+      std::invoke(EF_FORWARD(fn), contexts.data() + i);
+    });
   }
-  fn(&pctxts[thread_count - 1]);
+  std::invoke(EF_FORWARD(fn), &contexts.back());
 
   std::forward<ThreadPool>(pool).wait();
-}
-
-template <typename ThreadPool, typename ThreadFuncT> // ThreadFuncT = function <void (thread_context const*)>
-inline void execute_threads(ThreadPool&& pool, ThreadFuncT const &fn, int32_t item_count, int32_t package_size) {
-  int32_t thread_count = static_cast<int32_t>(eflib::num_available_threads());
-  execute_threads(std::forward<ThreadPool>(pool), fn, item_count, package_size, thread_count);
 }
 
 } // namespace eflib

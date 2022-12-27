@@ -36,6 +36,7 @@ protected:
 
 public:
   texture() : max_lod_(0), min_lod_(0) {}
+  virtual ~texture() {}
 
   virtual texture_type get_texture_type() const = 0;
 

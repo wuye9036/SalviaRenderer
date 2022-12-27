@@ -132,9 +132,9 @@ public:
     min_index_ = std::numeric_limits<uint32_t>::max();
     max_index_ = 0;
 
-    auto generate_indicies_ = [this](thread_context *ctx) { this->generate_indices(ctx); };
-    execute_threads(global_thread_pool(), generate_indicies_, prim_count_,
-                    GENERATE_INDICES_PACKAGE_SIZE);
+    execute_threads(
+        global_thread_pool(), [this](auto ctx) { this->generate_indices(ctx); }, prim_count_,
+        GENERATE_INDICES_PACKAGE_SIZE);
 
     uint32_t verts_count = 0;
 
@@ -172,17 +172,15 @@ public:
     // Transform vertexes
     uint64_t vtx_proc_start_time = fetch_time_stamp_();
 
-    if (cpp_vs_) {
-      auto execute_vert_shader = [this](thread_context *thread_ctx) {
-        this->transform_vertex_cppvs(thread_ctx);
-      };
-      execute_threads(global_thread_pool(), execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
-    } else {
-      auto execute_vert_shader = [this](thread_context *thread_ctx) {
-        this->transform_vertex_vs(thread_ctx);
-      };
-      execute_threads(global_thread_pool(), execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
-    }
+    auto transform_vertex_fn =
+        cpp_vs_ ? &EF_THIS_MEM_FN(transform_vertex_cppvs) : &EF_THIS_MEM_FN(transform_vertex_vs);
+
+    execute_threads(
+        global_thread_pool(),
+        [this, transform_vertex_fn](thread_context const *thread_ctx) {
+          std::invoke(transform_vertex_fn, this, thread_ctx);
+        },
+        verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
 
     acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
   }
@@ -249,13 +247,13 @@ private:
   }
 
 #if !USE_INDEX_RANGE
-  void transform_vertex_cppvs(thread_context *thread_ctx) {
+  void transform_vertex_cppvs(thread_context const *thread_ctx) {
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
       auto vert_range = current_package.item_range();
       for (auto i = vert_range.first; i < vert_range.second; ++i) {
         uint32_t id = unique_indices_[i];
-        used_verts_[id] = i;
+        used_verts_[id] = static_cast<int32_t>(i);
         vs_input vertex;
         assembler_->fetch_vertex(vertex, id);
         cpp_vs_->execute(vertex, transformed_verts_[i]);
@@ -264,7 +262,7 @@ private:
     }
   }
 
-  void transform_vertex_vs(thread_context *thread_ctx) {
+  void transform_vertex_vs(thread_context const *thread_ctx) {
     vx_shader_unit_ptr vsu = host_->get_vx_shader_unit();
 
     thread_context::package_cursor current_package = thread_ctx->next_package();
@@ -272,7 +270,7 @@ private:
       auto vert_range = current_package.item_range();
       for (auto i = vert_range.first; i < vert_range.second; ++i) {
         uint32_t vert_index = unique_indices_[i];
-        used_verts_[vert_index] = i;
+        used_verts_[vert_index] = static_cast<int32_t>(i);
         vsu->execute(vert_index, transformed_verts_[i]);
       }
       current_package = thread_ctx->next_package();

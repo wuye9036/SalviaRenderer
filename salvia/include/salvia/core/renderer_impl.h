@@ -37,7 +37,7 @@ public:
   virtual buffer_ptr get_index_buffer() const;
   virtual format get_index_format() const;
 
-  virtual result set_primitive_topology(primitive_topology primtopo);
+  virtual result set_primitive_topology(primitive_topology topology);
   virtual primitive_topology get_primitive_topology() const;
 
   virtual result set_vertex_shader(cpp_vertex_shader_ptr const &hvs);

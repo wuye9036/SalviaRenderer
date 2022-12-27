@@ -8,6 +8,7 @@
 #include <eflib/memory/allocator.h>
 
 #include <vector>
+#include <memory>
 
 namespace salvia::resource {
 
@@ -22,12 +23,12 @@ public:
   buffer_ptr create_buffer(size_t size) { return std::make_shared<buffer>(size); }
 
   texture_ptr create_texture_2d(size_t width, size_t height, size_t num_samples, pixel_format fmt) {
-    return texture_ptr(new texture_2d(width, height, num_samples, fmt));
+    return std::make_shared<texture_2d>(width, height, num_samples, fmt);
   }
 
   texture_ptr create_texture_cube(size_t width, size_t height, size_t num_samples,
                                   pixel_format fmt) {
-    return texture_ptr(new texture_cube(width, height, num_samples, fmt));
+    return std::make_shared<texture_cube>(width, height, num_samples, fmt);
   }
 
   result map(mapped_resource &, buffer_ptr const &buf, map_mode mm);
