@@ -1,23 +1,25 @@
-#ifndef SALVIAR_HOST_H
-#define SALVIAR_HOST_H
+#pragma once
 
-#include <salviar/include/salviar_forward.h>
-
-#include <eflib/string/ustring.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <memory>
 
-namespace salvia::core {
-
-class stream_assembler;
-struct renderer_parameters;
+namespace salvia::shader {
 struct shader_profile;
-struct render_stages;
-struct render_state;
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
+}
+
+namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
-EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
+}
+namespace salvia::core {
+class stream_assembler;
+struct renderer_parameters;
+
+struct render_stages;
+struct render_state;
+
 EFLIB_DECLARE_CLASS_SHARED_PTR(vx_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(px_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
@@ -38,5 +40,3 @@ public:
 };
 
 } // namespace salvia::core
-
-#endif

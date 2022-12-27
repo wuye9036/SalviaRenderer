@@ -210,8 +210,7 @@ struct vector_<ScalarT, 4> : public vector_swizzle<ScalarT, 4>, public vector_da
   static constexpr vector_<ScalarT, 4> gen_vector(ScalarT x, ScalarT y, ScalarT z) noexcept;
 };
 
-template <typename ScalarT>
-constexpr vector_<ScalarT, 4> vector_<ScalarT, 4>::zero() noexcept {
+template <typename ScalarT> constexpr vector_<ScalarT, 4> vector_<ScalarT, 4>::zero() noexcept {
   return vector_<ScalarT, 4>(0, 0, 0, 0);
 }
 template <typename ScalarT>

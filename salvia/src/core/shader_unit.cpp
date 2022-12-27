@@ -1,10 +1,11 @@
-#include <salvia/shader/shader_unit.h>
+#include <salvia/core/shader_unit.h>
 
 #include <salvia/core/renderer.h>
+#include <salvia/core/stream_assembler.h>
+
 #include <salvia/resource/buffer.h>
 #include <salvia/shader/shader_object.h>
 #include <salvia/shader/shader_regs.h>
-#include <salviar/include/stream_assembler.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/math/math.h>
@@ -12,6 +13,8 @@
 #include <memory>
 
 using namespace eflib;
+using namespace salvia::shader;
+
 using std::make_shared;
 using std::shared_ptr;
 using std::vector;
@@ -22,7 +25,7 @@ void invoke(void *callee, void *psi, void *pbi, void *pso, void *pbo) {
 
 namespace salvia::core {
 
-void pixel_shader_unit::initialize(shader_object const *code) {
+void pixel_shader_unit::initialize(shader::shader_object const *code) {
   this->code = code;
   size_t pixel_input_data_size = code->get_reflection()->total_size(su_stream_in);
   size_t pixel_output_data_size = code->get_reflection()->total_size(su_stream_out);
@@ -102,7 +105,7 @@ void pixel_shader_unit::update(vs_output *inputs, shader_reflection const *vs_ab
 
   for (sv_layout *info : infos) {
     size_t pixel_data_size = info->total_size();
-    if (info->sv == semantic_value(sv_position)) {
+    if (semantic_value(sv_position) == info->sv) {
       for (size_t i_pixel = 0; i_pixel < PACKAGE_ELEMENT_COUNT; ++i_pixel) {
         uintptr_t pixel_addr =
             *reinterpret_cast<uintptr_t *>(&(stream_data[i_pixel * sizeof(void *)]));

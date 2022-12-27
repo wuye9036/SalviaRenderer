@@ -1,8 +1,10 @@
-#include <salviar/include/binary_modules.h>
+#include <salvia/core/binary_modules.h>
 
 #include <eflib/platform/dl_loader.h>
 
 #include <cassert>
+
+using namespace salvia::shader;
 
 using eflib::dynamic_lib;
 

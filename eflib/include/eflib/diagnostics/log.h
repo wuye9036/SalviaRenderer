@@ -3,7 +3,6 @@
 #include <eflib/platform/typedefs.h>
 
 #include <eflib/diagnostics/log_serializer.h>
-#include <eflib/string/string.h>
 
 #include <functional>
 #include <memory>
@@ -83,13 +82,9 @@ public:
     return ret;
   }
 
-  void push(std::shared_ptr<const state_t> hstate) {
-    states_.push_back(hstate);
-  }
+  void push(std::shared_ptr<const state_t> hstate) { states_.push_back(hstate); }
 
-  void push(const state_t *pstate) {
-    states_.push_back(std::shared_ptr<const state_t>(pstate));
-  }
+  void push(const state_t *pstate) { states_.push_back(std::shared_ptr<const state_t>(pstate)); }
 
 private:
   std::vector<std::shared_ptr<const state_t>> states_;
@@ -116,15 +111,11 @@ public:
   log(const uint32_t ref_log_level = 0)
       : loglvlcmp_(log_level_cmp_ge()), ref_log_level_(ref_log_level) {}
 
-  void set_serializer(std::shared_ptr<serializier_t> hsrl) {
-    logserializer_ptr = hsrl;
-  }
+  void set_serializer(std::shared_ptr<serializier_t> hsrl) { logserializer_ptr = hsrl; }
 
   void set_log_level(uint32_t loglvl) { ref_log_level_ = loglvl; }
 
-  void set_comparer(std::function<bool(uint32_t, uint32_t)> cmpr) {
-    loglvlcmp_ = cmpr;
-  }
+  void set_comparer(std::function<bool(uint32_t, uint32_t)> cmpr) { loglvlcmp_ = cmpr; }
 
   void begin_log() {
     if (!logserializer_ptr)
@@ -141,8 +132,7 @@ public:
   }
 
   template <class T>
-  bool write(const std::_tstring &key, const T &val,
-             const uint32_t cur_log_level) {
+  bool write(const std::string &key, const T &val, const uint32_t cur_log_level) {
     if (!loglvlcmp_(cur_log_level, ref_log_level_)) {
       return false;
     }
@@ -186,9 +176,7 @@ private:
 
 template <class T> class log_serializer_state_scope {
 public:
-  log_serializer_state_scope(T *psrl) : psrl_(psrl) {
-    psrl->push_token_state();
-  }
+  log_serializer_state_scope(T *psrl) : psrl_(psrl) { psrl->push_token_state(); }
   ~log_serializer_state_scope() { psrl_->pop_token_state(); }
 
 private:
@@ -214,15 +202,13 @@ public:
   typedef LogT log_t;
   typedef std::shared_ptr<typename log_t::serializier_t> serializer_ptr;
 
-  static LogT &instance(
-      std::shared_ptr<std::_tostream> hos = std::shared_ptr<std::_tostream>()) {
+  static LogT &instance(std::shared_ptr<std::ostream> hos = std::shared_ptr<std::ostream>()) {
     static bool is_first_run = true;
     static LogT log_instance;
     if (is_first_run) {
       serializer_ptr hsrl;
       if (hos) {
-        hsrl = serializer_ptr(new (typename log_t::serializier_t)(
-            *hos, _EFLIB_T("\t"), _EFLIB_T("\n"), _EFLIB_T("=")));
+        hsrl = serializer_ptr(new (typename log_t::serializier_t)(*hos, "\t", "\n", "="));
       }
       log_instance.set_serializer(hsrl);
       is_first_run = false;

@@ -1,7 +1,7 @@
 #include <salvia/shader/shader_regs.h>
-#include <salviar/include/clipper.h>
-#include <salviar/include/raster_state.h>
-#include <salviar/include/rasterizer.h>
+#include <salvia/core/clipper.h>
+#include <salvia/core/raster_state.h>
+#include <salvia/core/rasterizer.h>
 
 using std::function;
 

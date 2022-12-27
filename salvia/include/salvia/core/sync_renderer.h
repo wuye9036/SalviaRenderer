@@ -1,10 +1,12 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
-#include <salviar/include/renderer_impl.h>
+#include <salvia/core/renderer_impl.h>
 
 #include <eflib/utility/shared_declaration.h>
+
+namespace salvia::shader {
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
+}
 
 namespace salvia::core {
 
@@ -13,7 +15,6 @@ struct vs_output_op;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sync_renderer);
-EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 

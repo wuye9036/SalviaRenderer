@@ -1,9 +1,7 @@
 #include <eflib/platform/config.h>
 #include <eflib/platform/cpuinfo.h>
 
-#include <eflib/thread_pool/threadpool.h>
-
-#include <salviar/include/salviar_forward.h>
+#include <eflib/concurrency/thread_pool/threadpool.h>
 
 using eflib::num_available_threads;
 

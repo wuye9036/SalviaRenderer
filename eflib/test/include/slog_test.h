@@ -1,3 +1,2 @@
 //
 #include <SUnitTest/SUnitTestConsole.h>
-

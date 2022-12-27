@@ -7,6 +7,10 @@
 
 namespace salvia::shader {
 
+struct shader_profile {
+  salvia::shader::languages language;
+};
+
 #define SALVIA_LVT_VECTOR_OF(scalar, length)
 #define SALVIA_LVT_MATRIX_OF(scalar, vector_size, vector_count)
 

@@ -1,10 +1,10 @@
-#include <salviar/include/stream_state.h>
+#include <salvia/core/stream_state.h>
 
 using std::distance;
 
 namespace salvia::core {
 
-void stream_state::update(size_t starts_slot, size_t buffers_count, buffer_ptr const *bufs,
+void stream_state::update(size_t starts_slot, size_t buffers_count, resource::buffer_ptr const *bufs,
                           size_t const *strides, size_t const *offsets) {
   if (bufs == nullptr || strides == nullptr || offsets == nullptr) {
     return;

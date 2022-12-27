@@ -1,7 +1,6 @@
 #pragma once
 
 #include <eflib/utility/shared_declaration.h>
-#include <salviar/include/salviar_forward.h>
 
 namespace salvia::core {
 

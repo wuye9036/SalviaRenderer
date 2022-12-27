@@ -1,17 +1,19 @@
 #include <eflib/platform/config.h>
 
-#include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salvia/shader/shader_unit.h>
-#include <salviar/include/async_object.h>
-#include <salviar/include/host.h>
-#include <salviar/include/render_state.h>
-#include <salviar/include/stream_assembler.h>
-#include <salviar/include/sync_renderer.h>
-#include <salviar/include/thread_context.h>
-#include <salviar/include/vertex_cache.h>
 
+#include <salvia/core/async_object.h>
+#include <salvia/core/host.h>
+#include <salvia/core/render_state.h>
+#include <salvia/core/shader.h>
+#include <salvia/core/shader_unit.h>
+#include <salvia/core/stream_assembler.h>
+#include <salvia/core/sync_renderer.h>
+#include <salvia/core/thread_pool.h>
+#include <salvia/core/vertex_cache.h>
+
+#include <eflib/concurrency/thread_context.h>
 #include <eflib/memory/allocator.h>
 #include <eflib/memory/pool.h>
 #include <eflib/platform/cpuinfo.h>
@@ -21,15 +23,11 @@
 #include <iostream>
 #include <memory>
 
-#if defined(EFLIB_MSVC)
-#include <ppl.h>
-#endif
-
-using eflib::num_available_threads;
+using namespace salvia::shader;
+using namespace eflib;
 
 using std::atomic;
 using std::shared_ptr;
-
 using std::vector;
 
 namespace salvia::core {
@@ -135,7 +133,8 @@ public:
     max_index_ = 0;
 
     auto generate_indicies_ = [this](thread_context *ctx) { this->generate_indices(ctx); };
-    execute_threads(generate_indicies_, prim_count_, GENERATE_INDICES_PACKAGE_SIZE);
+    execute_threads(global_thread_pool(), generate_indicies_, prim_count_,
+                    GENERATE_INDICES_PACKAGE_SIZE);
 
     uint32_t verts_count = 0;
 
@@ -177,12 +176,12 @@ public:
       auto execute_vert_shader = [this](thread_context *thread_ctx) {
         this->transform_vertex_cppvs(thread_ctx);
       };
-      execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
+      execute_threads(global_thread_pool(), execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
     } else {
       auto execute_vert_shader = [this](thread_context *thread_ctx) {
         this->transform_vertex_vs(thread_ctx);
       };
-      execute_threads(execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
+      execute_threads(global_thread_pool(), execute_vert_shader, verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
     }
 
     acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);

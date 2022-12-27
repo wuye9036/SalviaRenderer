@@ -6,7 +6,10 @@
 #define SALVIA_API __declspec(dllimport)
 #endif
 
-#include <salviar/include/decl.h>
+#include <salvia/core/decl.h>
+
+#include <salvia/shader/shader_regs.h>
+#include <salvia/shader/reflection.h>
 
 #include <eflib/memory/allocator.h>
 #include <eflib/platform/typedefs.h>
@@ -18,10 +21,6 @@
 
 namespace salvia::core {
 
-class shader_reflection;
-class shader_object;
-class vs_output;
-struct ps_output;
 class stream_assembler;
 
 class pixel_shader_unit {
@@ -34,19 +33,19 @@ public:
 
   std::shared_ptr<pixel_shader_unit> clone() const;
 
-  void initialize(shader_object const *);
+  void initialize(shader::shader_object const *);
   void reset_pointers();
 
   void set_variable(std::string const &, void const *data);
-  void set_sampler(std::string const &, sampler_ptr const &samp);
+  void set_sampler(std::string const &, resource::sampler_ptr const &samp);
 
-  void update(vs_output *inputs, shader_reflection const *vs_abi);
-  void execute(ps_output *outs, float *depths);
+  void update(shader::vs_output *inputs, shader::shader_reflection const *vs_abi);
+  void execute(shader::ps_output *outs, float *depths);
 
 public:
-  shader_object const *code;
+  shader::shader_object const *code;
 
-  std::vector<sampler_ptr> used_samplers; // For take ownership
+  std::vector<resource::sampler_ptr> used_samplers; // For take ownership
 
   typedef std::vector<char, eflib::aligned_allocator<char, 32>> aligned_vector;
 
@@ -63,8 +62,8 @@ public:
   virtual uint32_t output_attributes_count() const = 0;
   virtual uint32_t output_attribute_modifiers(size_t index) const = 0;
 
-  virtual void execute(size_t ivert, void *out_data) = 0;
-  virtual void execute(size_t ivert, vs_output &out) = 0;
+  virtual void execute(size_t i_vertex, void *out_data) = 0;
+  virtual void execute(size_t i_vertex, shader::vs_output &out) = 0;
 
   virtual ~vx_shader_unit() {}
 };

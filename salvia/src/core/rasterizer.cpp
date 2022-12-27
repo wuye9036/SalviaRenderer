@@ -1,27 +1,25 @@
-#include <salviar/include/rasterizer.h>
+#include <salvia/core/rasterizer.h>
 
+#include <salvia/core/clipper.h>
+#include <salvia/core/framebuffer.h>
+#include <salvia/core/host.h>
+#include <salvia/core/render_stages.h>
+#include <salvia/core/render_state.h>
+#include <salvia/core/shader_unit.h>
+#include <salvia/core/thread_pool.h>
+#include <salvia/core/vertex_cache.h>
 #include <salvia/shader/reflection.h>
 #include <salvia/shader/shader_object.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salvia/shader/shader_unit.h>
-#include <salviar/include/clipper.h>
-#include <salviar/include/framebuffer.h>
-#include <salviar/include/host.h>
-#include <salviar/include/render_stages.h>
-#include <salviar/include/render_state.h>
-#include <salviar/include/thread_context.h>
-#include <salviar/include/thread_pool.h>
-#include <salviar/include/vertex_cache.h>
 
+#include <eflib/concurrency/thread_context.h>
 #include <eflib/diagnostics/log.h>
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/platform/intrin.h>
 #include <eflib/utility/unref_declarator.h>
 
 #include <boost/format.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 
@@ -29,11 +27,10 @@
 #include <ppl.h>
 #endif
 
-using eflib::num_available_threads;
+using namespace salvia::shader;
+using namespace eflib;
 
 using std::atomic;
-
-class shader_reflection;
 
 namespace salvia::core {
 
@@ -71,16 +68,16 @@ struct drawing_triangle_context {
 };
 
 /*************************************************
- *   Steps for line rasterization��
- *			1 Find major direction and computing distance and differential on major
- *direction. 2 Calculate ddx and ddy for mip-mapping. 3 Computing pixel position and interpolated
- *attribute by DDA with major direction and differential. 4 Executing pixel shader 5 Render pixel
- *into framebuffer.
+ * Steps for line rasterization
+ *      1 Find major direction and computing distance and differential on major direction.
+ *      2 Calculate ddx and ddy for mip-mapping.
+ *      3 Computing pixel position and interpolated attribute by DDA with major direction and
+ *differential. 4 Executing pixel shader 5 Render pixel into framebuffer.
  *
  *   Note:
- *			1 Position is in window coordinate.
- *			2 x y z components of w-pos have been divided by w component.
- *			3 positon.w() = 1.0f / clip w
+ *      1 Position is in window coordinate.
+ *      2 x y z components of w-pos have been divided by w component.
+ *      3 position.w() = 1.0f / clip w
  **************************************************/
 void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
   // Extract to local variables
@@ -457,6 +454,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &
 
 #ifndef EFLIB_NO_SIMD
   static const union {
+    uint32_t masku;
     int maski;
     float maskf;
   } MASK = {0x80000000};
@@ -1158,6 +1156,7 @@ void rasterizer::draw() {
 
   // Execute dispatching primitive
   execute_threads(
+      global_thread_pool(),
       [this](thread_context const *thread_ctx) { this->threaded_dispatch_primitive(thread_ctx); },
       clipped_prims_count_, DISPATCH_PRIMITIVE_PACKAGE_SIZE, num_threads);
   acc_tri_dispatch_(pipeline_prof_, fetch_time_stamp_() - tri_dispatch_start_time);
@@ -1195,6 +1194,7 @@ void rasterizer::draw() {
 
   uint64_t ras_start_time = fetch_time_stamp_();
   execute_threads(
+      global_thread_pool(),
       [this](thread_context const *thread_ctx) { this->threaded_rasterize_multi_prim(thread_ctx); },
       tile_count_, RASTERIZE_PRIMITIVE_PACKAGE_SIZE, num_threads);
   acc_ras_(pipeline_prof_, fetch_time_stamp_() - ras_start_time);
@@ -1239,6 +1239,7 @@ void rasterizer::viewport_and_project_transform(vs_output **vertexes, size_t num
   vs_output **trans_proj_verts = sorted.data();
 
   execute_threads(
+      global_thread_pool(),
       [this, trans_proj_verts](thread_context const *thread_ctx) {
         threaded_viewport_and_project_transform(this->vso_ops_->project, trans_proj_verts,
                                                 this->vp_, thread_ctx);

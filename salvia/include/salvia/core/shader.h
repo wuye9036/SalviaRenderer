@@ -19,6 +19,11 @@
 #include <unordered_map>
 #include <vector>
 
+namespace salvia::resource {
+EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
+class pixel_accessor;
+}
+
 namespace salvia::shader {
 
 inline size_t hash_value(semantic_value const &v) {
@@ -31,30 +36,25 @@ inline size_t hash_value(semantic_value const &v) {
   return seed;
 }
 
+class vs_input;
+class vs_output;
+struct ps_output;
+struct triangle_info;
+
 } // namespace salvia::shader
 
 namespace salvia::core {
 
 struct viewport;
 struct scanline_info;
-struct pixel_accessor;
-struct triangle_info;
-class vs_input;
-class vs_output;
-struct ps_output;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 
 namespace detail = salvia::shader_constant::detail;
 
-struct shader_profile {
-  salvia::shader::languages language;
-};
-
 class cpp_shader {
 public:
-  virtual result set_sampler(const std::string &varname, sampler_ptr const &samp) = 0;
+  virtual result set_sampler(const std::string &varname, resource::sampler_ptr const &samp) = 0;
   virtual result set_constant(const std::string &varname, shader_constant::const_voidptr pval) = 0;
   virtual result set_constant(const std::string &varname, shader_constant::const_voidptr pval,
                               size_t index) = 0;
@@ -74,7 +74,7 @@ public:
 
 class cpp_shader_impl : public cpp_shader {
 public:
-  result set_sampler(std::string const &samp_name, sampler_ptr const &samp) override {
+  result set_sampler(std::string const &samp_name, resource::sampler_ptr const &samp) override {
     auto samp_it = sampmap_.find(samp_name);
     if (samp_it == sampmap_.end()) {
       return result::failed;
@@ -114,7 +114,7 @@ public:
     return result::ok;
   }
 
-  result declare_sampler(const std::string &varname, sampler_ptr &var) {
+  result declare_sampler(const std::string &varname, resource::sampler_ptr &var) {
     sampmap_[varname] = &var;
     return result::ok;
   }
@@ -125,7 +125,7 @@ public:
 
 private:
   typedef std::map<std::string, shader_constant::voidptr> variable_map;
-  typedef std::map<std::string, sampler_ptr *> sampler_map;
+  typedef std::map<std::string, resource::sampler_ptr *> sampler_map;
   typedef std::map<std::string, std::shared_ptr<detail::container>> container_variable_map;
   typedef std::unordered_map<shader::semantic_value, size_t> register_map;
 
@@ -145,8 +145,8 @@ private:
 
 class cpp_vertex_shader : public cpp_shader_impl {
 public:
-  void execute(const vs_input &in, vs_output &out);
-  virtual void shader_prog(const vs_input &in, vs_output &out) = 0;
+  void execute(const shader::vs_input &in, shader::vs_output &out);
+  virtual void shader_prog(const shader::vs_input &in, shader::vs_output &out) = 0;
   virtual uint32_t num_output_attributes() const = 0;
   virtual uint32_t output_attribute_modifiers(uint32_t index) const = 0;
 };
@@ -155,8 +155,8 @@ using namespace salvia::resource;
 
 class cpp_pixel_shader : public cpp_shader_impl {
   bool front_face_;
-  vs_output const *px_;
-  vs_output const *quad_;
+  shader::vs_output const *px_;
+  shader::vs_output const *quad_;
   uint64_t lod_flag_;
   float lod_[MAX_VS_OUTPUT_ATTRS];
 
@@ -182,17 +182,17 @@ protected:
 public:
   void update_front_face(bool v) { front_face_ = v; }
 
-  uint64_t execute(vs_output const *quad_in, ps_output *px_out, float *depth);
+  uint64_t execute(shader::vs_output const *quad_in, shader::ps_output *px_out, float *depth);
 
-  virtual bool shader_prog(vs_output const &in, ps_output &out) = 0;
+  virtual bool shader_prog(shader::vs_output const &in, shader::ps_output &out) = 0;
   virtual bool output_depth() const;
 };
 
 // it is called when render a shaded pixel into framebuffer
 class cpp_blend_shader : public cpp_shader_impl {
 public:
-  void execute(size_t sample, pixel_accessor &inout, const ps_output &in);
-  virtual bool shader_prog(size_t sample, pixel_accessor &inout, const ps_output &in) = 0;
+  void execute(size_t sample, resource::pixel_accessor &inout, const shader::ps_output &in);
+  virtual bool shader_prog(size_t sample, resource::pixel_accessor &inout, const shader::ps_output &in) = 0;
 };
 
 } // namespace salvia::core

@@ -1,17 +1,12 @@
-#ifndef SALVIAR_VERTEX_CACHE_H
-#define SALVIAR_VERTEX_CACHE_H
+#pragma once
 
-#include <salviar/include/salviar_forward.h>
-
-#include <salviar/include/decl.h>
-
-#include <eflib/memory/atomic.h>
+#include <salvia/core/decl.h>
 #include <salvia/core/renderer.h>
-#include <salviar/include/index_fetcher.h>
+#include <salvia/core/index_fetcher.h>
+
+#include <eflib/concurrency/atomic.h>
 
 #include <boost/pool/pool.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <utility>
 #include <vector>
@@ -32,7 +27,7 @@ public:
   virtual void update(render_state const *state) = 0;
 
   virtual void prepare_vertices() = 0;
-  virtual void fetch3(vs_output **v, cache_entry_index id, uint32_t thread_id) = 0;
+  virtual void fetch3(shader::vs_output **v, cache_entry_index id, uint32_t thread_id) = 0;
   virtual void update_statistic() = 0;
 
   virtual ~vertex_cache() {}
@@ -41,5 +36,3 @@ public:
 vertex_cache_ptr create_default_vertex_cache();
 
 } // namespace salvia::core
-
-#endif

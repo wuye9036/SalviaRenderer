@@ -1,11 +1,11 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
 #include <salvia/common/constants.h>
-#include <salvia/core/render_capacity.h>
-#include <salvia/resource/colors.h>
-#include <salviar/include/decl.h>
+#include <salvia/common/renderer_capacity.h>
+
+#include <salvia/common/colors.h>
+
+#include <salvia/core/decl.h>
 
 #include <eflib/math/collision_detection.h>
 
@@ -13,10 +13,10 @@
 
 namespace salvia::core {
 
-struct pixel_accessor;
 struct render_stages;
 struct render_state;
 struct renderer_parameters;
+
 
 struct depth_stencil_op_desc {
   stencil_op stencil_fail_op;
@@ -70,8 +70,8 @@ public:
 
 class framebuffer {
 private:
-  surface *color_targets_[MAX_RENDER_TARGETS];
-  surface *ds_target_;
+  resource::surface *color_targets_[MAX_RENDER_TARGETS];
+  resource::surface *ds_target_;
   depth_stencil_state *ds_state_;
   uint32_t stencil_ref_;
   uint32_t stencil_read_mask_;
@@ -97,9 +97,9 @@ public:
   bool early_z_enabled() const { return early_z_enabled_; }
 
   void render_sample(cpp_blend_shader *cpp_bs, size_t x, size_t y, size_t i_sample,
-                     const ps_output &ps, float depth, bool front_face);
+                     const shader::ps_output &ps, float depth, bool front_face);
   void render_sample_quad(cpp_blend_shader *cpp_bs, size_t x, size_t y, uint64_t quad_mask,
-                          ps_output const *quad, float const *depth, bool front_face,
+                          shader::ps_output const *quad, float const *depth, bool front_face,
                           float const *aa_offset);
   uint64_t early_z_test(size_t x, size_t y, float depth, float const *aa_z_offset);
   uint64_t early_z_test(size_t x, size_t y, uint32_t px_mask, float depth,
@@ -108,7 +108,7 @@ public:
   uint64_t early_z_test_quad(size_t x, size_t y, uint64_t quad_mask, float const *depth,
                              float const *aa_z_offset);
 
-  static void clear_depth_stencil(surface *tar, uint32_t flag, float depth, uint32_t stencil);
+  static void clear_depth_stencil(resource::surface *tar, uint32_t flag, float depth, uint32_t stencil);
 };
 
 } // namespace salvia::core

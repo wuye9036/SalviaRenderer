@@ -1,9 +1,9 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
 #include <eflib/platform/typedefs.h>
+#include <eflib/utility/polymorphic_cast.h>
 #include <eflib/utility/shared_declaration.h>
+
 #include <salvia/common/constants.h>
 
 #include <array>
@@ -152,9 +152,8 @@ class async_internal_statistics : public async_object {
 public:
   template <internal_statistics_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
-    assert(dynamic_cast<async_internal_statistics *>(query_obj) != nullptr);
-    static_cast<async_internal_statistics *>(query_obj)->counters_[static_cast<uint32_t>(StatID)] +=
-        v;
+    eflib::polymorphic_cast<async_internal_statistics *>(query_obj)
+        ->counters_[static_cast<uint32_t>(StatID)] += v;
   }
 
   virtual async_object_ids id() { return async_object_ids::internal_statistics; }
@@ -176,7 +175,7 @@ protected:
 };
 
 struct pipeline_profiles {
-  uint64_t gather_vtx; // Including: Genenrate index of primitives and unique indexes
+  uint64_t gather_vtx; // Including: Generate index of primitives and unique indexes
   uint64_t vtx_proc;
   uint64_t clipping;
   uint64_t compact_clip;
@@ -206,9 +205,8 @@ public:
 
   template <pipeline_profile_id StatID>
   static void accumulate(async_object *query_obj, uint64_t v) {
-    assert(dynamic_cast<async_pipeline_profiles *>(query_obj) != nullptr);
-    static_cast<async_pipeline_profiles *>(query_obj)->counters_[static_cast<uint32_t>(StatID)] +=
-        v;
+    eflib::polymorphic_cast<async_pipeline_profiles *>(query_obj)
+        ->counters_[static_cast<uint32_t>(StatID)] += v;
   }
 
   virtual async_object_ids id() { return async_object_ids::pipeline_profiles; }

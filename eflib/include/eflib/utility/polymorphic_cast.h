@@ -3,35 +3,34 @@
 
 #include <cassert>
 
-namespace eflib
-{
-	template <typename T, typename U>
-	T polymorphic_cast(U const* v)
-	{
-		T ret = nullptr;
+namespace eflib {
+template <typename T, typename U> T polymorphic_cast(U const *v) {
+  T ret = nullptr;
 
 #if defined(EFLIB_DEBUG)
-		ret = dynamic_cast<T>(v);
-		if(v) { assert(ret); }
+  ret = dynamic_cast<T>(v);
+  if (v) {
+    assert(ret);
+  }
 #endif
 
-		ret = static_cast<T>(v);
-		return ret;
-	}
-
-	template <typename T, typename U>
-	T polymorphic_cast(U* v)
-	{
-		T ret = nullptr;
-
-#if defined(EFLIB_DEBUG)
-		ret = dynamic_cast<T>(v);
-		if(v) { assert(ret); }
-#endif
-
-		ret = static_cast<T>(v);
-		return ret;
-	}
+  ret = static_cast<T>(v);
+  return ret;
 }
+
+template <typename T, typename U> T polymorphic_cast(U *v) {
+  T ret = nullptr;
+
+#if defined(EFLIB_DEBUG)
+  ret = dynamic_cast<T>(v);
+  if (v) {
+    assert(ret);
+  }
+#endif
+
+  ret = static_cast<T>(v);
+  return ret;
+}
+} // namespace eflib
 
 #endif

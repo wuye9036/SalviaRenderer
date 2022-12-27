@@ -158,8 +158,9 @@ namespace eflib { namespace threadpool
     * \param timestamp The time when function returns at the latest.
     * \param task_threshold The maximum number of tasks in pool and scheduler.
     * \return true if the task sum is equal or less than the threshold, false otherwise.
-    */       
-    bool wait(xtime const & timestamp, size_t task_threshold = 0) const
+    */
+    template <typename Rep, typename Period>
+    bool wait(std::chrono::duration<Rep, Period> const & timestamp, size_t task_threshold = 0) const
     {
       return m_core->wait(timestamp, task_threshold);
     }

@@ -1,7 +1,4 @@
-#ifndef SALVIAR_COMMAND_BUFFER_H
-#define SALVIAR_COMMAND_BUFFER_H
-
-#include <salviar/include/salviar_forward.h>
+#pragma once
 
 #include <salvia/core/renderer.h>
 
@@ -19,5 +16,3 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 renderer_ptr create_async_renderer();
 
 } // namespace salvia::core
-
-#endif

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
 #include <salvia/common/constants.h>
 
 #include <eflib/utility/shared_declaration.h>
@@ -9,6 +7,10 @@
 #include <functional>
 #include <memory>
 #include <vector>
+
+namespace salvia::shader {
+class vs_output;
+}
 
 namespace salvia::core {
 
@@ -38,8 +40,6 @@ struct clip_context;
 struct clip_results;
 class rasterizer;
 class raster_multi_prim_context;
-class vs_output;
-struct viewport;
 
 class raster_state {
 public:

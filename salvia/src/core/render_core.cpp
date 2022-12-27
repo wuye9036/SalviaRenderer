@@ -1,6 +1,16 @@
-#include <salviar/include/render_core.h>
+#include <salvia/core/render_core.h>
 
+#include <salvia/core/async_object.h>
+#include <salvia/core/binary_modules.h>
+#include <salvia/core/clipper.h>
+#include <salvia/core/framebuffer.h>
+#include <salvia/core/host.h>
+#include <salvia/core/rasterizer.h>
+#include <salvia/core/render_stages.h>
 #include <salvia/core/renderer.h>
+#include <salvia/core/shader_unit.h>
+#include <salvia/core/stream_assembler.h>
+#include <salvia/core/vertex_cache.h>
 #include <salvia/resource/input_layout.h>
 #include <salvia/resource/resource_manager.h>
 #include <salvia/resource/surface.h>
@@ -9,16 +19,6 @@
 #include <salvia/shader/shader_object.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salvia/shader/shader_unit.h>
-#include <salviar/include/async_object.h>
-#include <salviar/include/binary_modules.h>
-#include <salviar/include/clipper.h>
-#include <salviar/include/framebuffer.h>
-#include <salviar/include/host.h>
-#include <salviar/include/rasterizer.h>
-#include <salviar/include/render_stages.h>
-#include <salviar/include/stream_assembler.h>
-#include <salviar/include/vertex_cache.h>
 
 namespace salvia::core {
 
@@ -102,7 +102,7 @@ result render_core::clear_color() {
 }
 
 result render_core::clear_depth_stencil() {
-  if (state_->clear_f == (salviar::clear_depth | salviar::clear_stencil)) {
+  if (state_->clear_f == (clear_depth | clear_stencil)) {
     auto ds_color = color_rgba32f(state_->clear_z,
                                   *reinterpret_cast<float *>(&state_->clear_stencil), 0.0f, 0.0f);
     state_->clear_ds_target->fill_texels(ds_color);

@@ -1,18 +1,17 @@
-#include <salviar/include/stream_assembler.h>
+#include <salvia/core/stream_assembler.h>
 
 #include <salvia/resource/buffer.h>
 #include <salvia/resource/input_layout.h>
-#include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salviar/include/render_state.h>
-#include <salviar/include/stream_state.h>
 
-#include <boost/range/iterator_range.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
+#include <salvia/core/render_state.h>
+#include <salvia/core/stream_state.h>
+#include <salvia/core/shader.h>
 
 using namespace eflib;
+using namespace salvia::shader;
+using namespace salvia::resource;
 
 using std::get;
 using std::make_tuple;

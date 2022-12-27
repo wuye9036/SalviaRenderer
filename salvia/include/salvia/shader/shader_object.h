@@ -1,14 +1,10 @@
-#ifndef SALVIAR_SHADER_OBJECT_H
-#define SALVIAR_SHADER_OBJECT_H
-
-#include <salviar/include/salviar_forward.h>
+#pragma once
 
 #include <salvia/shader/reflection.h>
-#include <salvia/shader/shader.h>
 
 #include <eflib/utility/shared_declaration.h>
 
-namespace salviar {
+namespace salvia::shader {
 
 class shader_reflection;
 
@@ -30,6 +26,5 @@ public:
   }
 };
 
-} // namespace salviar
+} // namespace salvia::shader
 
-#endif

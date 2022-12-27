@@ -1,10 +1,9 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
+#include <salvia/core/decl.h>
 
+#include "salvia/common/format.h"
 #include <salvia/common/constants.h>
-#include <salvia/resource/format.h>
-#include <salviar/include/decl.h>
 
 #include <eflib/platform/typedefs.h>
 
@@ -19,7 +18,7 @@ public:
                      uint32_t prim_id_beg, uint32_t prim_id_end);
 
 private:
-  buffer *index_buffer_;
+  resource::buffer *index_buffer_;
   format index_format_;
   primitive_topology prim_topo_;
   uint32_t start_addr_;

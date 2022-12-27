@@ -1,6 +1,7 @@
-#include <salviar/include/clipper.h>
+#include <salvia/core/clipper.h>
 
-#include <salvia/shader/shader.h>
+#include <salvia/core/shader.h>
+
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
 
@@ -12,6 +13,7 @@ namespace salvia::core {
 
 using namespace eflib;
 using namespace std;
+using namespace salvia::shader;
 
 clip_context::clip_context() : vert_pool(nullptr), prim(pt_none), vso_ops(nullptr), cull(nullptr) {}
 
@@ -36,11 +38,11 @@ void clipper::set_context(clip_context const *ctxt) {
   }
 }
 
-void clipper::clip_wireframe_triangle(vs_output ** /*tri_verts*/, clip_results * /*results*/) {}
+void clipper::clip_wireframe_triangle(shader::vs_output ** /*tri_verts*/, clip_results * /*results*/) {}
 
-void clipper::clip_solid_triangle(vs_output **tri_verts, clip_results *results) {
+void clipper::clip_solid_triangle(shader::vs_output **tri_verts, clip_results *results) {
   // Clip triangles to vertex of result polygon
-  vs_output *tri_clipped_verts[5];
+  shader::vs_output *tri_clipped_verts[5];
   clip_results tri_clip_results;
   tri_clip_results.clipped_verts = tri_clipped_verts;
 

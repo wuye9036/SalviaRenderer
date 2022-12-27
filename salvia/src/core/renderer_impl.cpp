@@ -1,4 +1,4 @@
-#include <salviar/include/renderer_impl.h>
+#include <salvia/core/renderer_impl.h>
 
 #include <salvia/resource/input_layout.h>
 #include <salvia/resource/resource_manager.h>
@@ -8,21 +8,24 @@
 #include <salvia/shader/shader_object.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salvia/shader/shader_unit.h>
-#include <salviar/include/async_object.h>
-#include <salviar/include/binary_modules.h>
-#include <salviar/include/clipper.h>
-#include <salviar/include/framebuffer.h>
-#include <salviar/include/host.h>
-#include <salviar/include/rasterizer.h>
-#include <salviar/include/render_state.h>
-#include <salviar/include/stream_assembler.h>
-#include <salviar/include/vertex_cache.h>
+#include <salvia/core/shader_unit.h>
+#include <salvia/core/async_object.h>
+#include <salvia/core/binary_modules.h>
+#include <salvia/core/clipper.h>
+#include <salvia/core/framebuffer.h>
+#include <salvia/core/host.h>
+#include <salvia/core/rasterizer.h>
+#include <salvia/core/render_state.h>
+#include <salvia/core/stream_assembler.h>
+#include <salvia/core/vertex_cache.h>
+
+using namespace salvia::shader;
+using namespace salvia::resource;
+using namespace eflib;
+
+using std::shared_ptr;
 
 namespace salvia::core {
-
-using namespace eflib;
-using std::shared_ptr;
 
 result renderer_impl::set_input_layout(const input_layout_ptr &layout) {
   size_t min_slot = 0, max_slot = 0;
@@ -286,13 +289,13 @@ result renderer_impl::set_vs_variable_pointer(std::string const &name, void cons
 input_layout_ptr renderer_impl::create_input_layout(input_element_desc const *elem_descs,
                                                     size_t elems_count,
                                                     shader_object_ptr const &vs) {
-  return input_layout::create(elem_descs, elems_count, vs);
+  return input_layout::create(elem_descs, elems_count);
 }
 
-salviar::input_layout_ptr renderer_impl::create_input_layout(input_element_desc const *elem_descs,
+input_layout_ptr renderer_impl::create_input_layout(input_element_desc const *elem_descs,
                                                              size_t elems_count,
                                                              cpp_vertex_shader_ptr const &vs) {
-  return input_layout::create(elem_descs, elems_count, vs);
+  return input_layout::create(elem_descs, elems_count);
 }
 
 result renderer_impl::set_pixel_shader_code(shared_ptr<shader_object> const &code) {

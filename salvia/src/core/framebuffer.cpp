@@ -1,19 +1,22 @@
+#include <salvia/core/framebuffer.h>
+
+#include <salvia/core/render_state.h>
 #include <salvia/core/renderer.h>
+#include <salvia/resource/pixel_accessor.h>
 #include <salvia/resource/surface.h>
-#include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salviar/include/framebuffer.h>
-#include <salviar/include/render_state.h>
 
 #include <eflib/math/collision_detection.h>
 
 #include <algorithm>
 
-namespace salvia::core {
-
 using namespace eflib;
 using namespace std;
+using namespace salvia::shader;
+using namespace salvia::resource;
+
+namespace salvia::core {
 
 template <uint32_t Format> class depth_stencil_accessor {
 public:

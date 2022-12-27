@@ -2,7 +2,9 @@
 
 #include <cstring>
 
-namespace salviar {
+using namespace salvia::resource;
+
+namespace salvia::shader {
 
 void shader_cbuffer::set_sampler(std::string_view name, sampler_ptr const &samp) {
   auto iter = samplers_.find(std::string{name});

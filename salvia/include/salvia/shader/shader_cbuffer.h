@@ -1,18 +1,18 @@
 
 #pragma once
 
-#include <salvia/shader/shader_cbuffer.h>
-
 #include <eflib/utility/shared_declaration.h>
 
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
-namespace salviar {
-
+namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(texture);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
+}
+
+namespace salvia::shader {
 
 enum class shader_cdata_type : uint32_t { sdt_none, sdt_pod, sdt_sampler };
 
@@ -26,7 +26,7 @@ struct shader_cdata {
 
 class shader_cbuffer {
 public:
-  virtual void set_sampler(std::string_view name, sampler_ptr const &samp);
+  virtual void set_sampler(std::string_view name, resource::sampler_ptr const &samp);
   virtual void set_variable(std::string_view name, void const *data, size_t data_length);
 
   auto const &variables() const { return variables_; }
@@ -47,8 +47,8 @@ public:
 private:
   std::unordered_map<std::string, shader_cdata> variables_;
   std::vector<char> data_memory_;
-  std::unordered_map<std::string, sampler_ptr> samplers_;
-  std::vector<texture_ptr> textures_;
+  std::unordered_map<std::string, resource::sampler_ptr> samplers_;
+  std::vector<resource::texture_ptr> textures_;
 };
 
-} // namespace salviar
+} // namespace salvia::shader

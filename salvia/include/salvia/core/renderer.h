@@ -1,12 +1,12 @@
 #pragma once
 
+#include <salvia/common/colors.h>
+#include <salvia/common/colors_convertors.h>
 #include <salvia/common/constants.h>
+#include <salvia/common/format.h>
 #include <salvia/core/decl.h>
 #include <salvia/core/shader.h>
 #include <salvia/core/viewport.h>
-#include <salvia/resource/colors.h>
-#include <salvia/resource/colors_convertors.h>
-#include <salvia/resource/format.h>
 
 #include <eflib/math/collision_detection.h>
 #include <eflib/utility/shared_declaration.h>
@@ -15,18 +15,20 @@
 #include <memory>
 #include <vector>
 
-namespace salvia::core {
-
+namespace salvia::shader {
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 struct shader_profile;
+} // namespace salvia::shader
+
+namespace salvia::resource {
 struct input_element_desc;
 struct mapped_resource;
+} // namespace salvia::resource
 
+namespace salvia::core {
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
-EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
-EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
 EFLIB_DECLARE_CLASS_SHARED_PTR(async_object);
-
-enum class async_status : uint32_t;
 
 struct renderer_parameters {
   size_t backbuffer_width;
@@ -49,11 +51,11 @@ public:
 
   virtual input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
                                                size_t elems_count,
-                                               shader_object_ptr const &code) = 0;
+                                               shader::shader_object_ptr const &code) = 0;
 
   virtual input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
                                                size_t elems_count,
-                                               shader::cpp_vertex_shader_ptr const &vs) = 0;
+                                               cpp_vertex_shader_ptr const &vs) = 0;
 
   virtual result map(mapped_resource &, buffer_ptr const &buf, map_mode mm) = 0;
   virtual result map(mapped_resource &, surface_ptr const &buf, map_mode mm) = 0;
@@ -65,9 +67,9 @@ public:
                                     size_t const *offsets) = 0;
   virtual result set_index_buffer(buffer_ptr const &hbuf, format index_fmt) = 0;
   virtual result set_input_layout(input_layout_ptr const &layout) = 0;
-  virtual result set_vertex_shader(shader::cpp_vertex_shader_ptr const &hvs) = 0;
+  virtual result set_vertex_shader(cpp_vertex_shader_ptr const &hvs) = 0;
   virtual result set_primitive_topology(primitive_topology primtopo) = 0;
-  virtual result set_vertex_shader_code(shader_object_ptr const &) = 0;
+  virtual result set_vertex_shader_code(shader::shader_object_ptr const &) = 0;
   virtual result set_vs_variable_value(std::string const &name, void const *pvariable,
                                        size_t sz) = 0;
   virtual result set_vs_variable_pointer(std::string const &name, void const *pvariable,
@@ -76,9 +78,9 @@ public:
   virtual result set_rasterizer_state(raster_state_ptr const &rs) = 0;
   virtual result set_ps_variable(std::string const &name, void const *data, size_t sz) = 0;
   virtual result set_ps_sampler(std::string const &name, sampler_ptr const &samp) = 0;
-  virtual result set_blend_shader(shader::cpp_blend_shader_ptr const &hbs) = 0;
-  virtual result set_pixel_shader(shader::cpp_pixel_shader_ptr const &hps) = 0;
-  virtual result set_pixel_shader_code(shader_object_ptr const &) = 0;
+  virtual result set_blend_shader(cpp_blend_shader_ptr const &hbs) = 0;
+  virtual result set_pixel_shader(cpp_pixel_shader_ptr const &hps) = 0;
+  virtual result set_pixel_shader_code(shader::shader_object_ptr const &) = 0;
   virtual result set_depth_stencil_state(depth_stencil_state_ptr const &dss,
                                          int32_t stencil_ref) = 0;
   virtual result set_render_targets(size_t color_target_count, surface_ptr const *color_targets,
@@ -96,12 +98,12 @@ public:
   virtual buffer_ptr get_index_buffer() const = 0;
   virtual format get_index_format() const = 0;
   virtual primitive_topology get_primitive_topology() const = 0;
-  virtual shader::cpp_vertex_shader_ptr get_vertex_shader() const = 0;
-  virtual shader_object_ptr get_vertex_shader_code() const = 0;
+  virtual cpp_vertex_shader_ptr get_vertex_shader() const = 0;
+  virtual shader::shader_object_ptr get_vertex_shader_code() const = 0;
   virtual raster_state_ptr get_rasterizer_state() const = 0;
-  virtual shader::cpp_pixel_shader_ptr get_pixel_shader() const = 0;
-  virtual shader_object_ptr get_pixel_shader_code() const = 0;
-  virtual shader::cpp_blend_shader_ptr get_blend_shader() const = 0;
+  virtual cpp_pixel_shader_ptr get_pixel_shader() const = 0;
+  virtual shader::shader_object_ptr get_pixel_shader_code() const = 0;
+  virtual cpp_blend_shader_ptr get_blend_shader() const = 0;
   virtual viewport get_viewport() const = 0;
 
   // render operations
@@ -125,14 +127,16 @@ public:
 renderer_ptr create_software_renderer();
 renderer_ptr create_benchmark_renderer();
 
-shader_object_ptr compile(std::string const &code, shader_profile const &profile,
-                          shader_log_ptr &logs);
-shader_object_ptr compile(std::string const &code, shader_profile const &profile);
-shader_object_ptr compile(std::string const &code, shader::languages lang);
+shader::shader_object_ptr compile(std::string const &code, shader::shader_profile const &profile,
+                                  shader::shader_log_ptr &logs);
+shader::shader_object_ptr compile(std::string const &code, shader::shader_profile const &profile);
+shader::shader_object_ptr compile(std::string const &code, shader::languages lang);
 
-shader_object_ptr compile_from_file(std::string const &file_name, shader_profile const &profile,
-                                    shader_log_ptr &logs);
-shader_object_ptr compile_from_file(std::string const &file_name, shader_profile const &profile);
-shader_object_ptr compile_from_file(std::string const &file_name, shader::languages lang);
+shader::shader_object_ptr compile_from_file(std::string const &file_name,
+                                            shader::shader_profile const &profile,
+                                            shader::shader_log_ptr &logs);
+shader::shader_object_ptr compile_from_file(std::string const &file_name,
+                                            shader::shader_profile const &profile);
+shader::shader_object_ptr compile_from_file(std::string const &file_name, shader::languages lang);
 
 } // namespace salvia::core

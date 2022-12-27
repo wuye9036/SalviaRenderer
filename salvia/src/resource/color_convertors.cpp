@@ -1,4 +1,4 @@
-#include <salvia/resource/colors_convertors.h>
+#include "salvia/common/colors_convertors.h"
 
 #include <memory.h>
 

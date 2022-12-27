@@ -1,11 +1,8 @@
-#ifndef SALVIAR_SHADER_IMPL_H
-#define SALVIAR_SHADER_IMPL_H
-
-#include <salviar/include/salviar_forward.h>
+#pragma once
 
 #include <string>
 
-namespace salviar {
+namespace salvia::shader {
 
 enum interpolation_modifiers {
   im_none = 0UL,
@@ -24,6 +21,4 @@ struct external_function_desc {
   bool is_raw_name;
 };
 
-} // namespace salviar
-
-#endif
+} // namespace salvia::shader

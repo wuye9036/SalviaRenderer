@@ -1,8 +1,8 @@
 #pragma once
 
+#include "salvia/common/colors.h"
+#include "salvia/common/colors_convertors.h"
 #include <salvia/common/constants.h>
-#include <salvia/resource/colors.h>
-#include <salvia/resource/colors_convertors.h>
 
 #include <eflib/math/collision_detection.h>
 

@@ -12,6 +12,10 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(clipper);
 EFLIB_DECLARE_CLASS_SHARED_PTR(raster_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(depth_stencil_state);
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_blend_shader);
 } // namespace salvia::core
 
 namespace salvia::shader {
@@ -20,9 +24,6 @@ class vs_output;
 class vs_input;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
-EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_blend_shader);
 } // namespace salvia::shader
 
 namespace salvia::resource {

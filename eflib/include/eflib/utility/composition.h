@@ -3,16 +3,14 @@
 #include <boost/smart_ptr/local_shared_ptr.hpp>
 #include <boost/smart_ptr/make_local_shared.hpp>
 
-#include <variant>
 #include <type_traits>
+#include <variant>
 
 namespace eflib::composition {
 
 template <class Value> struct indirect_ {
-  indirect_(Value const &v) : value_ { boost::make_local_shared<Value>(v) }
-  {}
-  indirect_(Value &&v) : value_{boost::make_local_shared<Value>(std::move(v))} {
-  }
+  indirect_(Value const &v) : value_{boost::make_local_shared<Value>(v)} {}
+  indirect_(Value &&v) : value_{boost::make_local_shared<Value>(std::move(v))} {}
 
   operator Value &() & { return *value_; }
 
@@ -42,9 +40,8 @@ struct make_variant<directs<DirectArgs...>, indirects<IndirectArgs...>> {
 //      indirect_<unary_expression>, indirect_<binary_expression>>;
 template <typename D, typename I> using make_variant_t = typename make_variant<D, I>::type;
 
-template <typename... Ts>
-struct overload: Ts... {
-  using Ts::operator() ...;
+template <typename... Ts> struct overload : Ts... {
+  using Ts::operator()...;
 };
 template <class... Ts> overload(Ts...) -> overload<Ts...>;
 

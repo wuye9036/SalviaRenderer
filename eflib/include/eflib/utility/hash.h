@@ -2,9 +2,9 @@
 
 #include <functional>
 #include <iterator>
+#include <ranges>
 #include <type_traits>
 #include <vector>
-#include <ranges>
 
 namespace eflib {
 template <class T> inline constexpr void hash_combine(std::size_t &seed, const T &v) {
@@ -14,7 +14,8 @@ template <class T> inline constexpr void hash_combine(std::size_t &seed, const T
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-template <std::forward_iterator It> constexpr void hash_combine(std::size_t &seed, It first, It last) {
+template <std::forward_iterator It>
+constexpr void hash_combine(std::size_t &seed, It first, It last) {
   for (; first != last; ++first) {
     hash_combine(seed, *first);
   }
@@ -40,7 +41,7 @@ struct hash_range {
 
 struct hash_tuple {
   template <typename T1, typename T2>
-  constexpr size_t operator()(std::pair<T1, T2> const& pair) const noexcept {
+  constexpr size_t operator()(std::pair<T1, T2> const &pair) const noexcept {
     std::size_t seed = 0;
     hash_combine(seed, pair.first);
     hash_combine(seed, pair.second);
@@ -48,12 +49,13 @@ struct hash_tuple {
   }
 
   template <typename... ArgsT>
-  constexpr size_t operator()(std::tuple<ArgsT...> const& t) const noexcept {
+  constexpr size_t operator()(std::tuple<ArgsT...> const &t) const noexcept {
     return operator()(t, std::make_index_sequence<std::tuple_size_v<decltype(t)>>{});
   }
 
   template <typename... ArgsT, size_t... ArgInts>
-  constexpr size_t operator()(std::tuple<ArgsT...> const& t, std::index_sequence<ArgInts...>) const noexcept {
+  constexpr size_t operator()(std::tuple<ArgsT...> const &t,
+                              std::index_sequence<ArgInts...>) const noexcept {
     size_t seed = 0;
     (hash_combine(seed, t.template get<ArgInts>()), ...);
     return seed;

@@ -1,14 +1,19 @@
-#include <salviar/include/geom_setup_engine.h>
+#include <salvia/core/geom_setup_engine.h>
+
+#include <salvia/core/clipper.h>
+#include <salvia/core/thread_pool.h>
+#include <salvia/core/vertex_cache.h>
 
 #include <salvia/shader/shader_regs.h>
-#include <salviar/include/clipper.h>
-#include <salviar/include/thread_context.h>
-#include <salviar/include/thread_pool.h>
-#include <salviar/include/vertex_cache.h>
 
 #include <eflib/math/math.h>
 #include <eflib/platform/cpuinfo.h>
+#include <eflib/concurrency/thread_context.h>
 
+using namespace salvia::shader;
+
+using eflib::execute_threads;
+using eflib::thread_context;
 using eflib::clampss;
 using std::atomic;
 
@@ -59,6 +64,7 @@ void geom_setup_engine::clip_geometries() {
 
   // Execute threads
   execute_threads(
+      global_thread_pool(),
       [this](thread_context const *thread_ctx) -> void {
         this->threaded_clip_geometries(thread_ctx);
       },
@@ -131,6 +137,7 @@ void geom_setup_engine::compact_geometries() {
 
   // Execute threads for compacting
   execute_threads(
+      global_thread_pool(),
       [this](thread_context const *thread_ctx) -> void {
         this->threaded_compact_geometries(thread_ctx);
       },

@@ -1,35 +1,35 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
 #include <salvia/common/constants.h>
-#include <salvia/shader/shader.h>
-#include <salviar/include/async_object.h>
-#include <salviar/include/decl.h>
-#include <salviar/include/framebuffer.h>
-#include <salviar/include/geom_setup_engine.h>
-#include <salviar/include/raster_state.h>
 
+#include <salvia/core/async_object.h>
+#include <salvia/core/decl.h>
+#include <salvia/core/framebuffer.h>
+#include <salvia/core/geom_setup_engine.h>
+#include <salvia/core/raster_state.h>
+#include <salvia/core/shader.h>
+
+#include <eflib/concurrency/atomic.h>
 #include <eflib/memory/allocator.h>
-#include <eflib/memory/atomic.h>
 #include <eflib/memory/pool.h>
 
 #include <array>
 #include <functional>
 #include <memory>
 
+namespace salvia::shader {
+class vs_output;
+struct vs_output_op;
+class shader_reflection;
+}
 namespace salvia::core {
 
-typedef eflib::pool::reserved_pool<vs_output> vs_output_pool;
+using vs_output_pool = eflib::pool::reserved_pool<shader::vs_output>;
 
 struct scanline_info;
 class pixel_shader_unit;
-class vs_output;
 class host;
-struct vs_output_op;
 struct clip_context;
-class shader_reflection;
-
 struct pixel_statistic;
 struct drawing_triangle_context;
 
@@ -77,7 +77,7 @@ private:
   size_t target_sample_count_;
   uint64_t full_mask_;
   uint64_t quad_full_mask_;
-  vs_output_op const *vso_ops_;
+  shader::vs_output_op const *vso_ops_;
   bool has_centroid_;
   uint32_t prim_count_;
   bool prim_reorderable_; // Primitives could be reordered to rendering.
@@ -106,9 +106,9 @@ private:
 
   std::vector<std::vector<std::vector<uint32_t>>>
       threaded_tiled_prims_; // vector<prim> prims = thread_tiled_prims[ThreadID][TileID]
-  aligned_vector<triangle_info, 16> tri_infos_;
+  aligned_vector<shader::triangle_info, 16> tri_infos_;
 
-  vs_output **clipped_verts_;
+  shader::vs_output **clipped_verts_;
   size_t clipped_verts_count_;
   size_t clipped_prims_count_;
 
@@ -116,7 +116,7 @@ private:
   size_t tile_y_count_;
   size_t tile_count_;
 
-  shader_reflection const *vs_reflection_;
+  shader::shader_reflection const *vs_reflection_;
 
   std::vector<cpp_pixel_shader *> threaded_cpp_ps_;
   std::vector<pixel_shader_unit *> threaded_psu_;
@@ -124,8 +124,8 @@ private:
   std::function<void(rasterizer *, rasterize_multi_prim_context *)> rasterize_prims_;
   geom_setup_engine gse_;
 
-  void threaded_dispatch_primitive(thread_context const *);
-  void threaded_rasterize_multi_prim(thread_context const *);
+  void threaded_dispatch_primitive(eflib::thread_context const *);
+  void threaded_rasterize_multi_prim(eflib::thread_context const *);
 
   void draw_full_tile(int left, int top, int right, int bottom,
                       drawing_shader_context const *shaders,
@@ -145,7 +145,7 @@ private:
                  drawing_shader_context const *shaders,
                  drawing_triangle_context const *triangle_ctx);
 
-  void viewport_and_project_transform(vs_output **vertexes, size_t num_verts);
+  void viewport_and_project_transform(shader::vs_output **vertexes, size_t num_verts);
   void compute_triangle_info(uint32_t prim_id);
 
   void prepare_draw();

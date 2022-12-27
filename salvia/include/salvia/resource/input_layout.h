@@ -1,6 +1,6 @@
 #pragma once
 
-#include <salvia/resource/format.h>
+#include "salvia/common/format.h"
 
 #include <salvia/shader/constants.h>
 

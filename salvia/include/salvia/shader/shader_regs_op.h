@@ -2,6 +2,10 @@
 
 #include <eflib/math/vector.h>
 
+#include <salvia/common/renderer_capacity.h>
+
+#include <array>
+
 namespace salvia::core {
 struct viewport;
 }

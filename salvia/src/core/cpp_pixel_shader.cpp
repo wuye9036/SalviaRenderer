@@ -1,4 +1,5 @@
-#include <salvia/shader/shader.h>
+#include <salvia/core/shader.h>
+
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
 
@@ -58,7 +59,7 @@ color_rgba32f cpp_pixel_shader::tex2dproj(const sampler &s, size_t iReg) {
   return s.sample_2d_grad(proj_coord.xy(), dcdx.xy(), dcdy.xy(), 0.0f);
 }
 
-uint64_t cpp_pixel_shader::execute(vs_output const *quad, ps_output *out, float * /*depth*/) {
+uint64_t cpp_pixel_shader::execute(shader::vs_output const *quad, shader::ps_output *out, float * /*depth*/) {
   quad_ = quad;
   lod_flag_ = 0;
 

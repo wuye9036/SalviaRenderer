@@ -6,10 +6,11 @@
 
 #include "eflib/platform/intrin.h"
 
-namespace salvia::shader {
+namespace salvia::core {
 
 using namespace boost;
 using namespace eflib;
+using namespace salvia::shader;
 
 using std::make_pair;
 

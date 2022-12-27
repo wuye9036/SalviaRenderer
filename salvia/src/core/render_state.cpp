@@ -1,6 +1,7 @@
-#include <salvia/shader/shader.h>
+#include <salvia/core/shader.h>
+#include <salvia/core/render_state.h>
+
 #include <salvia/shader/shader_cbuffer.h>
-#include <salviar/include/render_state.h>
 
 namespace salvia::core {
 

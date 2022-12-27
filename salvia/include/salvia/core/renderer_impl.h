@@ -1,21 +1,20 @@
 #pragma once
 
-#include <salviar/include/salviar_forward.h>
-
 #include <salvia/core/renderer.h>
-#include <salviar/include/render_core.h>
-#include <salviar/include/render_stages.h>
+#include <salvia/core/render_core.h>
+#include <salvia/core/render_stages.h>
 
 #include <eflib/utility/shared_declaration.h>
 
-namespace salvia::core {
-
+namespace salvia::shader {
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 struct vs_input_op;
 struct vs_output_op;
+}
 
+namespace salvia::core {
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sync_renderer);
-EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
@@ -44,8 +43,8 @@ public:
   virtual result set_vertex_shader(cpp_vertex_shader_ptr const &hvs);
   virtual cpp_vertex_shader_ptr get_vertex_shader() const;
 
-  virtual result set_vertex_shader_code(std::shared_ptr<shader_object> const &);
-  virtual shader_object_ptr get_vertex_shader_code() const;
+  virtual result set_vertex_shader_code(std::shared_ptr<shader::shader_object> const &);
+  virtual shader::shader_object_ptr get_vertex_shader_code() const;
   virtual result set_vs_variable_value(std::string const &name, void const *pvariable, size_t sz);
   virtual result set_vs_variable_pointer(std::string const &name, void const *pvariable, size_t sz);
   virtual result set_vs_sampler(std::string const &name, sampler_ptr const &samp);
@@ -59,8 +58,8 @@ public:
   virtual result set_pixel_shader(cpp_pixel_shader_ptr const &hps);
   virtual cpp_pixel_shader_ptr get_pixel_shader() const;
 
-  virtual result set_pixel_shader_code(std::shared_ptr<shader_object> const &);
-  virtual shader_object_ptr get_pixel_shader_code() const;
+  virtual result set_pixel_shader_code(std::shared_ptr<shader::shader_object> const &);
+  virtual shader::shader_object_ptr get_pixel_shader_code() const;
   virtual result set_ps_variable(std::string const &name, void const *data, size_t sz);
   virtual result set_ps_sampler(std::string const &name, sampler_ptr const &samp);
 
@@ -83,7 +82,7 @@ public:
   virtual async_status get_data(async_object_ptr const &async_obj, void *data, bool do_not_wait);
 
   virtual input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
-                                               size_t elems_count, shader_object_ptr const &vs);
+                                               size_t elems_count, shader::shader_object_ptr const &vs);
   virtual input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
                                                size_t elems_count, cpp_vertex_shader_ptr const &vs);
   virtual buffer_ptr create_buffer(size_t size);

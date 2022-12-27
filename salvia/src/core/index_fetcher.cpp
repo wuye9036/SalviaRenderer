@@ -1,6 +1,10 @@
+#include <salvia/core/index_fetcher.h>
+
+#include <salvia/core/render_state.h>
+
 #include <salvia/resource/buffer.h>
-#include <salviar/include/index_fetcher.h>
-#include <salviar/include/render_state.h>
+
+#include <salvia/common/colors.h>
 
 namespace salvia::core {
 

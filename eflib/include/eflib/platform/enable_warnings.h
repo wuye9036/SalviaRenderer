@@ -1,7 +1,7 @@
 #include <eflib/platform/config.h>
 
 #if defined(EFLIB_MSVC)
-#   pragma warning(pop)
+#pragma warning(pop)
 #endif
 
 #if defined(EFLIB_GCC)

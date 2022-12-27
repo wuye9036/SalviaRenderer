@@ -1,7 +1,7 @@
 #pragma once
 
+#include "salvia/common/colors.h"
 #include <salvia/common/constants.h>
-#include <salvia/resource/colors.h>
 
 #include <eflib/platform/typedefs.h>
 #include <eflib/utility/shared_declaration.h>

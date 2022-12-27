@@ -1,11 +1,11 @@
 #include <salvia/core/renderer.h>
 
+#include <salvia/core/async_renderer.h>
+#include <salvia/core/binary_modules.h>
+#include <salvia/core/sync_renderer.h>
 #include <salvia/resource/sampler_api.h>
+#include <salvia/shader/shader_impl.h>
 #include <salvia/shader/shader_object.h>
-#include <salviar/include/async_renderer.h>
-#include <salviar/include/binary_modules.h>
-#include <salviar/include/shader_impl.h>
-#include <salviar/include/sync_renderer.h>
 
 #include <eflib/platform/dl_loader.h>
 
@@ -13,6 +13,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+using namespace salvia::shader;
 
 using eflib::dynamic_lib;
 using std::cout;

@@ -1,9 +1,9 @@
-#include <salviar/include/async_renderer.h>
+#include <salvia/core/async_renderer.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/memory/bounded_buffer.h>
-#include <salviar/include/render_core.h>
-#include <salviar/include/renderer_impl.h>
+#include <salvia/core/render_core.h>
+#include <salvia/core/renderer_impl.h>
 
 #include <atomic>
 #include <memory>
