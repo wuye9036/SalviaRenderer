@@ -44,7 +44,7 @@ namespace sasl::codegen {
 
 cg_extension::cg_extension(DefaultIRBuilder *builder, LLVMContext &context, Module *module,
                            size_t parallel_factor)
-    : builder_(builder), context_(context), module_(module), alloc_point_(nullptr) {
+    : builder_(builder), module_(module), context_(context), alloc_point_(nullptr) {
   initialize_external_intrinsics(parallel_factor);
 }
 

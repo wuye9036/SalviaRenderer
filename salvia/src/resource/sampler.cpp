@@ -810,7 +810,6 @@ color_rgba32f sampler::sample_2d_grad(eflib::vec2 const &proj_coord, eflib::vec2
 void sampler::calc_anisotropic_info(eflib::uint4 const &size, eflib::vec4 const &ddx,
                                     eflib::vec4 const &ddy, float bias,
                                     anisotropic_info &out_af_info) const {
-  static int i = 0;
   vec4 size_vec4(static_cast<float>(size[0]), static_cast<float>(size[1]),
                  static_cast<float>(size[2]), 0);
 

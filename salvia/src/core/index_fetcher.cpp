@@ -27,38 +27,20 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
                                   uint32_t *max_index, uint32_t prim_id_beg, uint32_t prim_id_end) {
   uint32_t *out_indexes = indexes_of_prim;
   uint32_t prim_vert_count = 0;
-  uint32_t min_id = 0;
-  uint32_t max_id = 0;
-  uint32_t const min_prim_id = prim_id_beg;
-  uint32_t const max_prim_id = prim_id_end - 1;
 
   switch (prim_topo_) {
   case primitive_line_list:
-    prim_vert_count = 2;
-    min_id = min_prim_id * 2;
-    max_id = max_prim_id * 2 + 1;
-    break;
-
   case primitive_line_strip:
     prim_vert_count = 2;
-    min_id = min_prim_id;
-    max_id = max_prim_id + 1;
     break;
 
   case primitive_triangle_list:
-    prim_vert_count = 3;
-    min_id = min_prim_id * 3;
-    max_id = max_prim_id * 3 + 2;
-    break;
-
   case primitive_triangle_strip:
     prim_vert_count = 3;
-    min_id = min_prim_id;
-    max_id = max_prim_id + 2;
     break;
 
   default:
-    EFLIB_ASSERT_UNEXPECTED();
+    ef_unreachable("Unknown primitive type.");
     return;
   }
 
@@ -105,7 +87,7 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
       // TODO: need support feature "index restart" from DX 10 Spec
       uint8_t *index_buffer_address = index_buffer_->raw_data(start_addr_);
       if (format_r16_uint == index_format_) {
-        uint16_t *pidx = reinterpret_cast<uint16_t *>(index_buffer_address);
+        auto *pidx = reinterpret_cast<uint16_t *>(index_buffer_address);
         for (uint32_t i = 0; i < prim_vert_count; ++i) {
           uint16_t biased_index = pidx[ids[i]];
           *min_index = std::min<uint32_t>(biased_index, *min_index);
@@ -115,7 +97,7 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
       } else {
         EF_ASSERT(format_r32_uint == index_format_, "Index type is wrong.");
 
-        uint32_t *pidx = reinterpret_cast<uint32_t *>(index_buffer_address);
+        auto *pidx = reinterpret_cast<uint32_t *>(index_buffer_address);
         for (uint32_t i = 0; i < prim_vert_count; ++i) {
           uint32_t biased_index = pidx[ids[i]];
           *min_index = std::min(biased_index, *min_index);

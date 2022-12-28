@@ -46,7 +46,6 @@ parse_results::parse_results(int t) : tag(t) {}
 namespace parse_result_values {
 int const recover_failed_offset = 4;
 int const recover_failed_mask = 0xF0;
-int const expected_offset = 0;
 int const expected_mask = 0x0F;
 int const expected = 0x01;
 int const succeed = 0;
@@ -88,7 +87,9 @@ parse_results parse_results::better(parse_results const &l, parse_results const 
   return l.tag < r.tag ? l : r;
 }
 
-[[maybe_unused]] bool parse_results::worse_than(parse_results const &v) const { return tag > v.tag; }
+[[maybe_unused]] bool parse_results::worse_than(parse_results const &v) const {
+  return tag > v.tag;
+}
 
 bool parse_results::better_than(parse_results const &v) const { return tag < v.tag; }
 
@@ -331,8 +332,8 @@ parse_results selector::parse(token_iterator &iter, token_iterator end, shared_p
   for (size_t i_result = 1; i_result < branch_diags.size(); ++i_result) {
     parse_results branch_result = results[i_result];
     shared_ptr<diag_chat> branch_chat = branch_diags[i_result];
-    if (branch_result.is_recovered_expected_failed() &&
-            !final_result.is_recovered_expected_failed() ||
+    if ((branch_result.is_recovered_expected_failed() &&
+         !final_result.is_recovered_expected_failed()) ||
         std::distance(iter, iters[i_result]) > 0) {
       least_error_branch_diags = branch_chat;
       final_result = branch_result;
@@ -409,7 +410,6 @@ parse_results queuer::parse(token_iterator &iter, token_iterator end, shared_ptr
 
   for (shared_ptr<parser> p : exprlst) {
     out.reset();
-    token_iterator cur_iter = iter;
 
     parse_results result = p->parse(iter, end, out, diags);
 
@@ -450,9 +450,9 @@ rule::rule() : preset_id(-1) {}
 
 rule::rule(intptr_t id) : preset_id(id) {}
 
-rule::rule(rule const &rhs) : expr(rhs.expr), preset_id(rhs.preset_id) {}
+rule::rule(rule const &rhs) : preset_id(rhs.preset_id), expr(rhs.expr) {}
 
-rule::rule(shared_ptr<parser> expr, intptr_t id /*= -1 */) : expr(expr), preset_id(id) {}
+rule::rule(shared_ptr<parser> expr, intptr_t id /*= -1 */) : preset_id(id), expr(expr) {}
 
 rule::rule(parser const &rhs) : expr(rhs.clone()) {}
 
@@ -512,8 +512,6 @@ std::fstream *pf = nullptr;
 
 parse_results rule::parse(token_iterator &iter, token_iterator end, shared_ptr<attribute> &attr,
                           diag_chat *diags) const {
-  static int indent = 0;
-
 #if OUTPUT_GRAMMAR_MATCHING_PATH
   if (!pf) {
     pf = new std::fstream("rules.xml", std::ios::out);

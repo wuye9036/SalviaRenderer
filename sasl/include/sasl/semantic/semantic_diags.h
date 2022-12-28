@@ -51,8 +51,8 @@ private:
 
 class type_repr {
 public:
-  type_repr(std::shared_ptr<sasl::syntax_tree::tynode> const &);
-  type_repr(sasl::syntax_tree::tynode *);
+  explicit type_repr(std::shared_ptr<sasl::syntax_tree::tynode> const &);
+  explicit type_repr(sasl::syntax_tree::tynode *);
   std::string str();
 
 private:
@@ -69,7 +69,7 @@ public:
 
 private:
   std::shared_ptr<sasl::common::token> beg, end;
-  sasl::common::compiler_compatibility cc;
+  [[maybe_unused]] sasl::common::compiler_compatibility cc;
   std::string str_cache;
 };
 

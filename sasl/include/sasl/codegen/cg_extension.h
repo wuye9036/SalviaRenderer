@@ -219,7 +219,7 @@ private:
 
   llvm::BasicBlock *alloc_point_;
 
-  llvm::Function *externals_[externals::count];
+  llvm::Function *externals_[externals::count]{};
   llvm_intrin_cache intrins_cache_;
 };
 

@@ -28,9 +28,6 @@ result resource_manager::map_impl(mapped_resource &mapped, T const &res, map_mod
   case map_write_no_overwrite:
     // Do not need to synchronize yet.
     break;
-
-  default:
-    return result::invalid_parameter;
   }
 
   result ret = res->map(mapped_resource_, mm);
@@ -85,6 +82,10 @@ result resource_manager::unmap() {
     case map_write:
     case map_write_discard:
       renderer_sync_(); // Sync for actual write.
+      break;
+    default:
+      // do nothing.
+      break;
     }
   }
 

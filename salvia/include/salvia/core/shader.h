@@ -21,7 +21,7 @@
 
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
-class pixel_accessor;
+struct pixel_accessor;
 }
 
 namespace salvia::shader {

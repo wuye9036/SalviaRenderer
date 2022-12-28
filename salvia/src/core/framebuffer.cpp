@@ -152,9 +152,6 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc &desc) : desc_
     case compare_function_always:
       depth_test_ = compare_always<float>;
       break;
-    default:
-      EF_ASSERT(false, "");
-      break;
     }
   } else {
     depth_test_ = compare_always<float>;
@@ -192,9 +189,6 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc &desc) : desc_
       case compare_function_always:
         stencil_test_[i] = compare_always<uint32_t>;
         break;
-      default:
-        EF_ASSERT(false, "");
-        break;
       }
     }
 
@@ -229,19 +223,16 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc &desc) : desc_
       case stencil_op_decr_wrap:
         stencil_op_[i] = sop_decr_wrap;
         break;
-      default:
-        EF_ASSERT(false, "");
-        break;
       }
     }
   } else {
     mask_stencil_ = mask_stencil_0;
-    for (int i = 0; i < 2; ++i) {
-      stencil_test_[i] = compare_always<uint32_t>;
+    for (auto & test_fn : stencil_test_) {
+      test_fn = compare_always<uint32_t>;
     }
 
-    for (int i = 0; i < 6; ++i) {
-      stencil_op_[i] = sop_keep;
+    for (auto & op : stencil_op_) {
+      op = sop_keep;
     }
   }
 }
