@@ -102,42 +102,42 @@ public:
     clean_symbols();
   }
 
-  virtual symbol *root_symbol() const { return root_symbol_; }
+  symbol *root_symbol() const override { return root_symbol_; }
 
-  virtual program_ptr get_program() const { return root_node_; }
+  program_ptr get_program() const override { return root_node_; }
 
-  virtual void set_program(sasl::syntax_tree::program_ptr const &v) { root_node_ = v; }
+  void set_program(sasl::syntax_tree::program_ptr const &v) override { root_node_ = v; }
 
-  virtual pety_t *pety() const { return pety_.get(); }
+  pety_t *pety() const override { return pety_.get(); }
 
-  virtual diag_chat_ptr diags() const { return diag_chat_; }
+  diag_chat_ptr diags() const override { return diag_chat_; }
 
-  virtual vector<symbol *> const &global_vars() const { return global_vars_; }
+  vector<symbol *> const &global_vars() const override { return global_vars_; }
 
-  virtual vector<symbol *> &global_vars() { return global_vars_; }
+  vector<symbol *> &global_vars() override { return global_vars_; }
 
-  virtual vector<symbol *> const &functions() const { return functions_; }
+  vector<symbol *> const &functions() const override { return functions_; }
 
-  virtual vector<symbol *> &functions() { return functions_; }
+  vector<symbol *> &functions() override { return functions_; }
 
-  virtual vector<symbol *> const &intrinsics() const { return intrinsics_; }
+  vector<symbol *> const &intrinsics() const override { return intrinsics_; }
 
-  virtual vector<symbol *> &intrinsics() { return intrinsics_; }
+  vector<symbol *> &intrinsics() override { return intrinsics_; }
 
-  virtual bool is_modified(symbol *v) const { return modified_symbols_.count(v) > 0; }
+  bool is_modified(symbol *v) const override { return modified_symbols_.count(v) > 0; }
 
-  virtual void modify(symbol *v) { modified_symbols_.insert(v); }
+  void modify(symbol *v) override { modified_symbols_.insert(v); }
 
-  virtual node_semantic *get_semantic(node const *v) const {
+  node_semantic *get_semantic(node const *v) const override {
     assert(v);
-    semantics_dict::const_iterator it = semantics_dict_.find(v);
+    auto it = semantics_dict_.find(v);
     if (it == semantics_dict_.end()) {
       return nullptr;
     }
     return it->second;
   }
 
-  virtual node_semantic *create_semantic(node const *v) {
+  node_semantic *create_semantic(node const *v) override {
     assert(v);
     assert(!get_semantic(v));
     node_semantic *ret = alloc_semantic();
@@ -146,14 +146,14 @@ public:
     return ret;
   }
 
-  virtual node_semantic *get_or_create_semantic(node const *v) {
+  node_semantic *get_or_create_semantic(node const *v) override {
     assert(v);
     node_semantic *ret = get_semantic(v);
     return ret ? ret : create_semantic(v);
   }
 
-  virtual symbol *get_symbol(sasl::syntax_tree::node *v) const {
-    symbols_dict::const_iterator it = symbols_dict_.find(v);
+  symbol *get_symbol(sasl::syntax_tree::node *v) const override {
+    auto it = symbols_dict_.find(v);
 
     if (it != symbols_dict_.end()) {
       return it->second;
@@ -162,13 +162,13 @@ public:
     return nullptr;
   }
 
-  virtual symbol *alloc_symbol() {
-    symbol *ret = alloc_object<symbol>(symbol_pool_);
+  symbol *alloc_symbol() override {
+    auto *ret = alloc_object<symbol>(symbol_pool_);
     symbols_.push_back(ret);
     return ret;
   }
 
-  virtual void link_symbol(node *v, symbol *sym) {
+  void link_symbol(node *v, symbol *sym) override {
     // Only available for symbol create by this module.
     assert(sym->owner() == this);
     // symbol* ref_sym = get_symbol(v);
@@ -187,15 +187,15 @@ public:
     sym->associated_node(v);
   }
 
-  void hold_generated_node(sasl::syntax_tree::node_ptr const &v) { extra_nodes_.push_back(v); }
+  void hold_generated_node(sasl::syntax_tree::node_ptr const &v) override { extra_nodes_.push_back(v); }
 
-  salvia::shader::languages get_language() const { return lang_; }
+  salvia::shader::languages get_language() const override { return lang_; }
 
-  void set_language(salvia::shader::languages v) { lang_ = v; }
+  void set_language(salvia::shader::languages v) override { lang_ = v; }
 
 private:
   node_semantic *alloc_semantic() {
-    node_semantic *ret = static_cast<node_semantic *>(node_semantic_pool_.malloc());
+    auto *ret = static_cast<node_semantic *>(node_semantic_pool_.malloc());
     semantics_.push_back(ret);
     memset(ret, 0, sizeof(node_semantic));
     ret->owner(this);
@@ -204,14 +204,14 @@ private:
   }
 
   void clean_node_semantics() {
-    for (vector<node_semantic *>::iterator it = semantics_.begin(); it != semantics_.end(); ++it) {
-      (*it)->~node_semantic();
+    for (auto & semantic : semantics_) {
+      semantic->~node_semantic();
     }
   }
 
   void clean_symbols() {
-    for (vector<symbol *>::iterator it = symbols_.begin(); it != symbols_.end(); ++it) {
-      (*it)->~symbol();
+    for (auto & it : symbols_) {
+      it->~symbol();
     }
   }
 
@@ -359,8 +359,6 @@ void node_semantic::tid(int v) {
     proto_type_ = owner_->pety()->get_proto(tid_);
   }
 }
-
-node_semantic::node_semantic(node_semantic const &) { EFLIB_ASSERT_UNIMPLEMENTED(); }
 
 node_semantic &node_semantic::operator=(node_semantic const &v) {
   memcpy(this, &v, sizeof(node_semantic));

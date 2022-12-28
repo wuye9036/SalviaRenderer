@@ -28,74 +28,74 @@ protected:
 
 public:
   // inherited
-  virtual result set_input_layout(input_layout_ptr const &layout);
-  virtual result set_vertex_buffers(size_t starts_slot, size_t buffers_count,
+  result set_input_layout(input_layout_ptr const &layout) override;
+  result set_vertex_buffers(size_t starts_slot, size_t buffers_count,
                                     buffer_ptr const *buffers, size_t const *strides,
-                                    size_t const *offsets);
+                                    size_t const *offsets) override;
 
-  virtual result set_index_buffer(buffer_ptr const &hbuf, format index_fmt);
-  virtual buffer_ptr get_index_buffer() const;
-  virtual format get_index_format() const;
+  result set_index_buffer(buffer_ptr const &hbuf, format index_fmt) override;
+  [[nodiscard]] buffer_ptr get_index_buffer() const override;
+  [[nodiscard]] format get_index_format() const override;
 
-  virtual result set_primitive_topology(primitive_topology primtopo);
-  virtual primitive_topology get_primitive_topology() const;
+  result set_primitive_topology(primitive_topology topology) override;
+  [[nodiscard]] primitive_topology get_primitive_topology() const override;
 
-  virtual result set_vertex_shader(cpp_vertex_shader_ptr const &hvs);
-  virtual cpp_vertex_shader_ptr get_vertex_shader() const;
+  result set_vertex_shader(cpp_vertex_shader_ptr const &hvs) override;
+  [[nodiscard]] cpp_vertex_shader_ptr get_vertex_shader() const override;
 
-  virtual result set_vertex_shader_code(std::shared_ptr<shader::shader_object> const &);
-  virtual shader::shader_object_ptr get_vertex_shader_code() const;
-  virtual result set_vs_variable_value(std::string const &name, void const *pvariable, size_t sz);
-  virtual result set_vs_variable_pointer(std::string const &name, void const *pvariable, size_t sz);
-  virtual result set_vs_sampler(std::string const &name, sampler_ptr const &samp);
+  result set_vertex_shader_code(std::shared_ptr<shader::shader_object> const &) override;
+  [[nodiscard]] shader::shader_object_ptr get_vertex_shader_code() const override;
+  result set_vs_variable_value(std::string const &name, void const *pvariable, size_t sz) override;
+  result set_vs_variable_pointer(std::string const &name, void const *pvariable, size_t sz) override;
+  result set_vs_sampler(std::string const &name, sampler_ptr const &samp) override;
 
-  virtual result set_rasterizer_state(raster_state_ptr const &rs);
-  virtual raster_state_ptr get_rasterizer_state() const;
-  virtual result set_depth_stencil_state(depth_stencil_state_ptr const &dss, int32_t stencil_ref);
+  result set_rasterizer_state(raster_state_ptr const &rs) override;
+  [[nodiscard]] raster_state_ptr get_rasterizer_state() const override;
+  result set_depth_stencil_state(depth_stencil_state_ptr const &dss, int32_t stencil_ref) override;
   virtual const depth_stencil_state_ptr &get_depth_stencil_state() const;
   virtual int32_t get_stencil_ref() const;
 
-  virtual result set_pixel_shader(cpp_pixel_shader_ptr const &hps);
-  virtual cpp_pixel_shader_ptr get_pixel_shader() const;
+  result set_pixel_shader(cpp_pixel_shader_ptr const &hps) override;
+  [[nodiscard]] cpp_pixel_shader_ptr get_pixel_shader() const override;
 
-  virtual result set_pixel_shader_code(std::shared_ptr<shader::shader_object> const &);
-  virtual shader::shader_object_ptr get_pixel_shader_code() const;
-  virtual result set_ps_variable(std::string const &name, void const *data, size_t sz);
-  virtual result set_ps_sampler(std::string const &name, sampler_ptr const &samp);
+  result set_pixel_shader_code(std::shared_ptr<shader::shader_object> const &) override;
+  [[nodiscard]] shader::shader_object_ptr get_pixel_shader_code() const override;
+  result set_ps_variable(std::string const &name, void const *data, size_t sz) override;
+  result set_ps_sampler(std::string const &name, sampler_ptr const &samp) override;
 
-  virtual result set_blend_shader(cpp_blend_shader_ptr const &hbs);
-  virtual cpp_blend_shader_ptr get_blend_shader() const;
+  result set_blend_shader(cpp_blend_shader_ptr const &hbs) override;
+  [[nodiscard]] cpp_blend_shader_ptr get_blend_shader() const override;
 
-  virtual result set_viewport(viewport const &vp);
-  virtual viewport get_viewport() const;
+  result set_viewport(viewport const &vp) override;
+  [[nodiscard]] viewport get_viewport() const override;
 
-  virtual result set_render_targets(size_t color_target_count, surface_ptr const *color_targets,
-                                    surface_ptr const &ds_target);
+  result set_render_targets(size_t color_target_count, surface_ptr const *color_targets,
+                                    surface_ptr const &ds_target) override;
 
-  virtual result draw(size_t startpos, size_t primcnt);
-  virtual result draw_index(size_t startpos, size_t primcnt, int basevert);
-  virtual result clear_color(surface_ptr const &color_target, color_rgba32f const &c);
-  virtual result clear_depth_stencil(surface_ptr const &depth_stencil_target, uint32_t f, float d,
-                                     uint32_t s);
-  virtual result begin(async_object_ptr const &async_obj);
-  virtual result end(async_object_ptr const &async_obj);
-  virtual async_status get_data(async_object_ptr const &async_obj, void *data, bool do_not_wait);
+  result draw(size_t startpos, size_t primcnt) override;
+  result draw_index(size_t startpos, size_t primcnt, int basevert) override;
+  result clear_color(surface_ptr const &color_target, color_rgba32f const &c) override;
+  result clear_depth_stencil(surface_ptr const &depth_stencil_target, uint32_t f, float d,
+                                     uint32_t s) override;
+  result begin(async_object_ptr const &async_obj) override;
+  result end(async_object_ptr const &async_obj) override;
+  async_status get_data(async_object_ptr const &async_obj, void *data, bool do_not_wait) override;
 
-  virtual input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
-                                               size_t elems_count, shader::shader_object_ptr const &vs);
-  virtual input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
-                                               size_t elems_count, cpp_vertex_shader_ptr const &vs);
-  virtual buffer_ptr create_buffer(size_t size);
-  virtual texture_ptr create_tex2d(size_t width, size_t height, size_t num_samples,
-                                   pixel_format fmt);
-  virtual texture_ptr create_texcube(size_t width, size_t height, size_t num_samples,
-                                     pixel_format fmt);
-  virtual sampler_ptr create_sampler(sampler_desc const &desc, texture_ptr const &tex);
-  virtual async_object_ptr create_query(async_object_ids id);
+  input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
+                                               size_t elems_count, shader::shader_object_ptr const &vs) override;
+  input_layout_ptr create_input_layout(input_element_desc const *elem_descs,
+                                               size_t elems_count, cpp_vertex_shader_ptr const &vs) override;
+  buffer_ptr create_buffer(size_t size) override;
+  texture_ptr create_tex2d(size_t width, size_t height, size_t num_samples,
+                                   pixel_format fmt) override;
+  texture_ptr create_texcube(size_t width, size_t height, size_t num_samples,
+                                     pixel_format fmt) override;
+  sampler_ptr create_sampler(sampler_desc const &desc, texture_ptr const &tex) override;
+  async_object_ptr create_query(async_object_ids id) override;
 
-  virtual result map(mapped_resource &, buffer_ptr const &buf, map_mode mm);
-  virtual result map(mapped_resource &, surface_ptr const &buf, map_mode mm);
-  virtual result unmap();
+  result map(mapped_resource &, buffer_ptr const &buf, map_mode mm) override;
+  result map(mapped_resource &, surface_ptr const &buf, map_mode mm) override;
+  result unmap() override;
 
   renderer_impl();
 

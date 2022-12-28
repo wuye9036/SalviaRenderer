@@ -23,12 +23,12 @@ template <typename ScalarT, int Size> struct vector_data {
   }
 
   template <typename IndexT> ScalarT const &operator[](IndexT index) const {
-    EFLIB_ASSERT(index < Size, "Out of bound.");
+    EF_ASSERT(index < Size, "Out of bound.");
     return data_[index];
   }
 
   template <typename IndexT> ScalarT &operator[](IndexT index) {
-    EFLIB_ASSERT(index < Size, "Out of bound.");
+    EF_ASSERT(index < Size, "Out of bound.");
     return data_[index];
   }
 

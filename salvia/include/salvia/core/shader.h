@@ -21,7 +21,7 @@
 
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
-class pixel_accessor;
+struct pixel_accessor;
 }
 
 namespace salvia::shader {
@@ -137,8 +137,7 @@ private:
   template <class T, class ElemType>
   result declare_container_constant_impl(const std::string &varname, T &var, const ElemType &) {
     varmap_[varname] = shader_constant::voidptr(&var);
-    contmap_[varname] =
-        std::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));
+    contmap_[varname] = std::make_shared<detail::container_impl<T, ElemType>>(var);
     return result::ok;
   }
 };

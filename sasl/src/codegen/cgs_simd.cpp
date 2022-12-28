@@ -151,7 +151,7 @@ multi_value cgs_simd::cast_ints(multi_value const &v, cg_type *dest_tyi) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -159,7 +159,7 @@ multi_value cgs_simd::cast_i2f(multi_value const &v, cg_type *dest_tyi) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -167,7 +167,7 @@ multi_value cgs_simd::cast_f2i(multi_value const &v, cg_type *dest_tyi) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -175,21 +175,21 @@ multi_value cgs_simd::cast_f2f(multi_value const &v, cg_type *dest_tyi) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
 multi_value cgs_simd::cast_i2b(multi_value const &v) {
   EFLIB_UNREF_DECLARATOR(v);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
 multi_value cgs_simd::cast_f2b(multi_value const &v) {
   EFLIB_UNREF_DECLARATOR(v);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -197,7 +197,7 @@ multi_value cgs_simd::create_vector(vector<multi_value> const &scalars, abis abi
   EFLIB_UNREF_DECLARATOR(scalars);
   EFLIB_UNREF_DECLARATOR(abi);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -441,7 +441,7 @@ multi_value cgs_simd::emit_and(multi_value const &lhs, multi_value const &rhs) {
   EFLIB_UNREF_DECLARATOR(lhs);
   EFLIB_UNREF_DECLARATOR(rhs);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -449,7 +449,7 @@ multi_value cgs_simd::emit_or(multi_value const &lhs, multi_value const &rhs) {
   EFLIB_UNREF_DECLARATOR(lhs);
   EFLIB_UNREF_DECLARATOR(rhs);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 

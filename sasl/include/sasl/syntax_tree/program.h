@@ -5,8 +5,6 @@
 #include <sasl/common/token.h>
 #include <sasl/syntax_tree/node.h>
 
-#include <eflib/utility/enable_if.h>
-
 #include <memory>
 #include <vector>
 

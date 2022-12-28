@@ -1,6 +1,6 @@
 #pragma once
 
-#include "salvia/common/colors.h"
+#include <salvia/common/colors.h>
 #include <salvia/common/constants.h>
 #include <salvia/resource/surface.h>
 
@@ -16,11 +16,11 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(texture);
 
 class texture {
 protected:
-  pixel_format fmt_;
-  size_t sample_count_;
-  size_t min_lod_;
-  size_t max_lod_;
-  eflib::uint4 size_;
+  pixel_format fmt_{};
+  size_t sample_count_{};
+  size_t min_lod_{};
+  size_t max_lod_{};
+  eflib::uint4 size_{};
   std::vector<surface_ptr> surfs_;
 
   static size_t calc_lod_limit(eflib::uint4 sz) {
@@ -35,33 +35,34 @@ protected:
   }
 
 public:
-  texture() : max_lod_(0), min_lod_(0) {}
+  texture() = default;
+  virtual ~texture() = default;
 
-  virtual texture_type get_texture_type() const = 0;
+  [[nodiscard]] virtual texture_type get_texture_type() const = 0;
 
-  pixel_format format() const { return fmt_; }
+  [[nodiscard]] pixel_format format() const { return fmt_; }
 
-  size_t min_lod() const { return min_lod_; }
+  [[nodiscard]] size_t min_lod() const { return min_lod_; }
 
-  size_t max_lod() const { return max_lod_; }
+  [[nodiscard]] size_t max_lod() const { return max_lod_; }
 
-  surface_ptr subresource(size_t index) const {
-    if (max_lod_ <= index && index <= index) {
+  [[nodiscard]] surface_ptr subresource(size_t index) const {
+    if (max_lod_ <= index && index <= min_lod_) {
       return surfs_[index];
     }
-    return surface_ptr();
+    return {};
   }
 
-  surface const *subresource_cptr(size_t index) const {
-    if (max_lod_ <= index && index <= index) {
+  [[nodiscard]] surface const *subresource_cptr(size_t index) const {
+    if (max_lod_ <= index && index <= min_lod_) {
       return surfs_[index].get();
     }
     return nullptr;
   }
 
-  eflib::uint4 size() const { return size_; }
+  [[nodiscard]] eflib::uint4 size() const { return size_; }
 
-  eflib::uint4 size(size_t subresource_index) const {
+  [[nodiscard]] eflib::uint4 size(size_t subresource_index) const {
     auto subres = subresource_cptr(subresource_index);
     if (subres) {
       return eflib::uint4(0, 0, 0, 0);
@@ -69,7 +70,7 @@ public:
     return subres->size();
   }
 
-  size_t sample_count() const { return sample_count_; }
+  [[nodiscard]] size_t sample_count() const { return sample_count_; }
 
   void max_lod(int miplevel) { max_lod_ = miplevel; }
 
@@ -82,22 +83,22 @@ class texture_2d : public texture {
 public:
   texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format);
 
-  virtual texture_type get_texture_type() const { return texture_type_2d; };
+  [[nodiscard]] texture_type get_texture_type() const override { return texture_type_2d; };
 
-  virtual void gen_mipmap(filter_type filter, bool auto_gen);
+  void gen_mipmap(filter_type filter, bool auto_gen) override;
 };
 
 class texture_cube : public texture {
 public:
   texture_cube(size_t width, size_t height, size_t num_samples, pixel_format format);
 
-  virtual texture_type get_texture_type() const { return texture_type_cube; };
+  [[nodiscard]] texture_type get_texture_type() const override { return texture_type_cube; };
 
-  surface_ptr subresource(size_t face, size_t lod) const {
+  [[nodiscard]] surface_ptr subresource(size_t face, size_t lod) const {
     return texture::subresource(lod * 6 + face);
   }
 
-  virtual void gen_mipmap(filter_type filter, bool auto_gen);
+  void gen_mipmap(filter_type filter, bool auto_gen) override;
 };
 
 } // namespace salvia::resource

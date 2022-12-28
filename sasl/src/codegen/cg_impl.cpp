@@ -167,7 +167,7 @@ SASL_VISIT_DEF(binary_expression) {
       args.push_back(v.right_expr.get());
 
       symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
-      EFLIB_ASSERT(overloads.size() == 1, "No or more an one overloads.");
+      EF_ASSERT(overloads.size() == 1, "No or more an one overloads.");
 
       function_def *op_proto = dynamic_cast<function_def *>(overloads[0]->associated_node());
 
@@ -280,7 +280,7 @@ SASL_VISIT_DEF(constant_expression) {
     val = service()->create_constant_scalar(static_cast<float>(const_sem->const_double()), ty,
                                             ty->hint());
   } else {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   node_ctxt(v, true)->node_value = val;
@@ -320,7 +320,7 @@ SASL_VISIT_DEF(call_expression) {
   node_semantic *csi = sem_->get_semantic(&v);
   if (csi->is_function_pointer()) {
     visit_child(v.expr);
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   } else {
     // Get LLVM Function
     symbol *fn_sym = csi->overloaded_function();
@@ -391,20 +391,20 @@ SASL_VISIT_DEF(builtin_type) {
 SASL_VISIT_DEF(parameter_full) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 // Generate normal function code.
 SASL_VISIT_DEF(function_full_def) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 SASL_VISIT_DEF(parameter) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 
   // Implementation was inlined in create_fnsig
 }
@@ -713,7 +713,7 @@ SASL_SPECIFIC_VISIT_DEF(bin_assign, binary_expression) {
   args.push_back(v.right_expr.get());
 
   symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
-  EFLIB_ASSERT(overloads.size() == 1, "No or more an one overloads.");
+  EF_ASSERT(overloads.size() == 1, "No or more an one overloads.");
 
   function_def *op_proto = polymorphic_cast<function_def *>(overloads[0]->associated_node());
 
@@ -979,7 +979,7 @@ SASL_SPECIFIC_VISIT_DEF(process_intrinsics, program) {
         }
         service()->emit_return(ret_v, service()->param_abi(false));
       } else {
-        EFLIB_ASSERT_UNIMPLEMENTED();
+        ef_unimplemented();
       }
     } else if (intr->unmangled_name() == "asint" || intr->unmangled_name() == "asfloat" ||
                intr->unmangled_name() == "asuint") {
@@ -1342,7 +1342,7 @@ SASL_SPECIFIC_VISIT_DEF(process_intrinsics, program) {
 
       service()->emit_return(lit_packed, service()->param_abi(false));
     } else {
-      EFLIB_ASSERT(!"Unprocessed intrinsic.", std::string{intr->unmangled_name()}.c_str());
+      ef_unreachable("The intrinsic {} cannot be accessed.", intr->unmangled_name());
     }
     service()->clean_empty_blocks();
 

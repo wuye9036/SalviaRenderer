@@ -695,7 +695,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
     return color_rgba32f(color);
   }
 
-  EFLIB_ASSERT(false, "Mip filters is error.");
+  EF_ASSERT(false, "Mip filters is error.");
   return desc_.border_color;
 }
 #pragma optimize("", on)
@@ -760,7 +760,7 @@ color_rgba32f sampler::sample_cube(float coordx, float coordy, float coordz, flo
     }
   }
 
-  EFLIB_ASSERT(tex_->get_texture_type() != texture_type_cube, "texture is not a cube texture.");
+  EF_ASSERT(tex_->get_texture_type() != texture_type_cube, "texture is not a cube texture.");
 
   return sample_impl<true>(major_dir, s, t, 0, miplevel, nullptr);
 }
@@ -810,7 +810,6 @@ color_rgba32f sampler::sample_2d_grad(eflib::vec2 const &proj_coord, eflib::vec2
 void sampler::calc_anisotropic_info(eflib::uint4 const &size, eflib::vec4 const &ddx,
                                     eflib::vec4 const &ddy, float bias,
                                     anisotropic_info &out_af_info) const {
-  static int i = 0;
   vec4 size_vec4(static_cast<float>(size[0]), static_cast<float>(size[1]),
                  static_cast<float>(size[2]), 0);
 

@@ -51,8 +51,8 @@ pixel_shader_unit::pixel_shader_unit() : code(nullptr) {}
 void pixel_shader_unit::reset_pointers() {
   aligned_vector *streams[] = {&stream_data, &stream_odata};
 
-  for (size_t i_stream = 0; i_stream < 2; ++i_stream) {
-    aligned_vector &data_stream(*streams[i_stream]);
+  for (auto & stream : streams) {
+    aligned_vector &data_stream(*stream);
 
     void **pointer_start = reinterpret_cast<void **>(&(data_stream[0]));
     size_t pointers_size = PACKAGE_ELEMENT_COUNT * sizeof(void *);
@@ -74,6 +74,10 @@ pixel_shader_unit::pixel_shader_unit(pixel_shader_unit const &rhs)
 }
 
 pixel_shader_unit &pixel_shader_unit::operator=(pixel_shader_unit const &rhs) {
+  if (this == &rhs) {
+    return *this;
+  }
+
   code = rhs.code;
   stream_data = rhs.stream_data;
   buffer_data = rhs.buffer_data;
@@ -91,11 +95,7 @@ void pixel_shader_unit::set_variable(std::string const &name, void const *data) 
 }
 
 shared_ptr<pixel_shader_unit> pixel_shader_unit::clone() const {
-  if (this) {
-    return make_shared<pixel_shader_unit>(*this);
-  } else {
-    return shared_ptr<pixel_shader_unit>();
-  }
+  return make_shared<pixel_shader_unit>(*this);
 }
 
 void pixel_shader_unit::update(vs_output *inputs, shader_reflection const *vs_abi) {

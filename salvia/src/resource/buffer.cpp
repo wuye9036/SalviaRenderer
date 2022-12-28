@@ -18,6 +18,9 @@ result buffer::map(internal_mapped_resource &mapped, map_mode mm) {
   case map_write:
     mapped.data = data_.data();
     break;
+  default:
+    ef_unreachable("Unknown map mode.");
+    return result::failed;
   }
 
   mapped.depth_pitch = mapped.row_pitch = static_cast<uint32_t>(size());
@@ -34,9 +37,8 @@ void buffer::transfer(size_t offset, void const *psrcdata, size_t sz, size_t cou
   EFLIB_ASSERT_AND_IF(offset + sz * count <= size(), "Out of boundary of buffer.") { return; }
 
   uint8_t *dest = raw_data(offset);
-  uint8_t *src = (uint8_t *)psrcdata;
 
-  memcpy(dest, src, sz * count);
+  memcpy(dest, psrcdata, sz * count);
 }
 
 void buffer::transfer(size_t offset, void const *psrcdata, size_t stride_dest, size_t stride_src,
@@ -45,8 +47,8 @@ void buffer::transfer(size_t offset, void const *psrcdata, size_t stride_dest, s
     return;
   }
 
-  uint8_t *dest = raw_data(offset);
-  uint8_t *src = (uint8_t *)psrcdata;
+  auto dest = raw_data(offset);
+  auto src = reinterpret_cast<uint8_t const*>(psrcdata);
 
   if (stride_dest == stride_src && stride_src == sz) {
     // Optimized for continuous memory layout.

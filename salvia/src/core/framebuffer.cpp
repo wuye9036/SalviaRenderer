@@ -152,9 +152,6 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc &desc) : desc_
     case compare_function_always:
       depth_test_ = compare_always<float>;
       break;
-    default:
-      EFLIB_ASSERT(false, "");
-      break;
     }
   } else {
     depth_test_ = compare_always<float>;
@@ -192,9 +189,6 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc &desc) : desc_
       case compare_function_always:
         stencil_test_[i] = compare_always<uint32_t>;
         break;
-      default:
-        EFLIB_ASSERT(false, "");
-        break;
       }
     }
 
@@ -229,19 +223,16 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc &desc) : desc_
       case stencil_op_decr_wrap:
         stencil_op_[i] = sop_decr_wrap;
         break;
-      default:
-        EFLIB_ASSERT(false, "");
-        break;
       }
     }
   } else {
     mask_stencil_ = mask_stencil_0;
-    for (int i = 0; i < 2; ++i) {
-      stencil_test_[i] = compare_always<uint32_t>;
+    for (auto & test_fn : stencil_test_) {
+      test_fn = compare_always<uint32_t>;
     }
 
-    for (int i = 0; i < 6; ++i) {
-      stencil_op_[i] = sop_keep;
+    for (auto & op : stencil_op_) {
+      op = sop_keep;
     }
   }
 }
@@ -438,7 +429,7 @@ framebuffer::~framebuffer() {}
 
 void framebuffer::render_sample(cpp_blend_shader *cpp_bs, size_t x, size_t y, size_t i_sample,
                                 const ps_output &ps, float depth, bool front_face) {
-  EFLIB_ASSERT(cpp_bs, "Blend shader is null or invalid.");
+  EF_ASSERT(cpp_bs, "Blend shader is null or invalid.");
   if (!cpp_bs)
     return;
 
@@ -470,7 +461,7 @@ void framebuffer::render_sample(cpp_blend_shader *cpp_bs, size_t x, size_t y, si
 void framebuffer::render_sample_quad(cpp_blend_shader *cpp_bs, size_t x, size_t y,
                                      uint64_t sample_mask, ps_output const *quad,
                                      float const *depth, bool front_face, float const *aa_offset) {
-  EFLIB_ASSERT(cpp_bs, "Blend shader is null or invalid.");
+  EF_ASSERT(cpp_bs, "Blend shader is null or invalid.");
   if (!cpp_bs)
     return;
 
@@ -613,12 +604,12 @@ void framebuffer::clear_depth_stencil(surface *tar, uint32_t flag, float depth, 
       clear_op = write_depth_0_stencil_1<pixel_format_color_rg32f>;
       break;
     default:
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
     break;
   }
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   for (size_t y = 0; y < tar->height(); ++y) {

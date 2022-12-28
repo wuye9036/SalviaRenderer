@@ -16,8 +16,8 @@ const size_t TILE_MASK = TILE_SIZE - 1;
 #endif
 
 surface::surface(size_t w, size_t h, size_t samp_count, pixel_format fmt)
-    : format_(fmt), size_(static_cast<int>(w), static_cast<int>(h), 1, 0),
-      sample_count_(samp_count), elem_size_(color_infos[fmt].size) {
+    : elem_size_(color_infos[fmt].size), sample_count_(samp_count),
+      size_(static_cast<int>(w), static_cast<int>(h), 1, 0), format_(fmt) {
 #if SALVIA_TILED_SURFACE
   tile_size_[0] = (width + TILE_SIZE - 1) >> TILE_BITS;
   tile_size_[1] = (height + TILE_SIZE - 1) >> TILE_BITS;
@@ -83,6 +83,9 @@ surface_ptr surface::make_mip_surface(filter_type filter) {
       }
     }
     break;
+
+  default:
+    ef_unreachable("filter mode is invalid for make mipmap.");
   }
 
   return ret;
@@ -104,6 +107,9 @@ result surface::map(internal_mapped_resource &mapped, map_mode mm) {
   case map_write:
     mapped.data = datas_.data();
     break;
+  default:
+    ef_unreachable("Unrecognized map mode.");
+    break;
   }
 
   mapped.row_pitch = static_cast<uint32_t>(pitch());
@@ -119,7 +125,7 @@ result surface::unmap(internal_mapped_resource & /*mapped*/, map_mode /*mm*/) {
 }
 
 void surface::resolve(surface &target) {
-  EFLIB_ASSERT(1 == target.sample_count(), "Resolve's target can't be a multi-sample surface");
+  EF_ASSERT(1 == target.sample_count(), "Resolve's target can't be a multi-sample surface");
 
   color_rgba32f clr;
   color_rgba32f tmp;

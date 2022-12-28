@@ -44,7 +44,7 @@ class type_item {
 public:
   typedef int type_item::*id_ptr_t;
 
-  type_item() : u_qual(-1), a_qual(-1), ty_sem(nullptr) {}
+  type_item() : ty_sem(nullptr), u_qual(-1), a_qual(-1) {}
 
   tynode_ptr stored;
   node_semantic *ty_sem;
@@ -77,10 +77,10 @@ public:
     register_enum_name(bt_name_inserter);
   }
 
-  void root_symbol(symbol *sym) { root_symbol_ = sym; }
+  void root_symbol(symbol *sym) override { root_symbol_ = sym; }
 
   // From builtin code to tid.
-  tid_t get(builtin_types const &btc) {
+  tid_t get(builtin_types const &btc) override {
     // If it is existed, return it.
     auto it = bt_dict_.find(btc);
     if (it != bt_dict_.end()) {
@@ -94,8 +94,8 @@ public:
 
     return btc_tid;
   }
-  tid_t get(tynode *v, symbol *scope) { return get_impl(v, scope, true); }
-  tid_t get_array(tid_t elem_type, size_t dimension) {
+  tid_t get(tynode *v, symbol *scope) override { return get_impl(v, scope, true); }
+  tid_t get_array(tid_t elem_type, size_t dimension) override {
     tid_t ret_tid = elem_type;
     for (size_t i = 1; i < dimension; ++i) {
       if (ret_tid == -1)
@@ -104,7 +104,7 @@ public:
     }
     return ret_tid;
   }
-  tid_t get_function_type(vector<tid_t> const &fn_tids) {
+  tid_t get_function_type(vector<tid_t> const &fn_tids) override {
     auto iter = fn_dict_.find(fn_tids);
     if (iter != fn_dict_.end()) {
       return iter->second;
@@ -127,9 +127,9 @@ public:
     return ret;
   }
   // Get prototype or node semantic from tid or builtin_type
-  tynode *get_proto(tid_t id) { return id < 0 ? nullptr : type_items_[id].stored.get(); }
-  tynode *get_proto_by_builtin(builtin_types bt) { return get_proto(get(bt)); }
-  void get2(tid_t tid, tynode **out_tyn, node_semantic **out_sem) {
+  tynode *get_proto(tid_t id) override { return id < 0 ? nullptr : type_items_[id].stored.get(); }
+  tynode *get_proto_by_builtin(builtin_types bt) override { return get_proto(get(bt)); }
+  void get2(tid_t tid, tynode **out_tyn, node_semantic **out_sem) override {
     if (out_tyn) {
       *out_tyn = type_items_[tid].stored.get();
     }
@@ -137,16 +137,15 @@ public:
       *out_sem = type_items_[tid].ty_sem;
     }
   }
-  void get2(builtin_types btc, tynode **out_tyn, node_semantic **out_sem) {
+  void get2(builtin_types btc, tynode **out_tyn, node_semantic **out_sem) override {
     tid_t btc_tid = get(btc);
     get2(btc_tid, out_tyn, out_sem);
   }
 
-  string mangle(string_view name, tid_t tid) {
+  string mangle(string_view name, tid_t tid) override {
     init_builtin_short_name();
 
     // start char
-    string_view ret;
     string mangled_name;
     mangled_name.reserve(64);
     mangled_name = "M";
@@ -160,7 +159,7 @@ public:
     return mangled_name;
   }
 
-  string_view operator_name(operators const &op) {
+  string_view operator_name(operators const &op) override {
     auto it = opname_cache_.find(op);
     if (it != opname_cache_.end()) {
       return it->second;
@@ -171,13 +170,13 @@ public:
     return inserted.first->second;
   }
 
-  ~pety_impl() {}
+  ~pety_impl() override = default;
 
 private:
   void register_proto_tynode(tynode_ptr const &proto_node, node_semantic **out_sem,
                              tid_t *out_tid) {
     // add to pool and allocate an id
-    tid_t proto_tid = static_cast<tid_t>(type_items_.size());
+    auto proto_tid = static_cast<tid_t>(type_items_.size());
 
     type_item proto_item;
     proto_item.stored = proto_node;
@@ -259,15 +258,15 @@ private:
   unordered_map<tid_t, vector<tid_t>> param_tids_cache_;
   unordered_map<operators, std::string> opname_cache_;
 
-  symbol *root_symbol_;
-  module_semantic *owner_;
+  symbol *root_symbol_{};
+  module_semantic *owner_{};
 
   unordered_map<builtin_types, char const *> bt_names_;
   unordered_map<operators, char const *> op_names_;
 };
 
 shared_ptr<pety_t> pety_t::create(module_semantic *owner) {
-  pety_impl *ret = new pety_impl();
+  auto *ret = new pety_impl();
   ret->owner_ = owner;
   return shared_ptr<pety_t>(ret);
 }
@@ -283,7 +282,7 @@ tid_t get_node_tid(unordered_map<tynode *, tid_t> const &dict, tynode *nd) {
   if (!nd) {
     return -1;
   }
-  unordered_map<tynode *, tid_t>::const_iterator it = dict.find(nd);
+  auto it = dict.find(nd);
   if (it == dict.end()) {
     return -1;
   }
@@ -376,17 +375,17 @@ name_of_unqualified_type(module_semantic * /*sem*/, tynode *typespec,
   } else if (node_cls == node_ids::builtin_type) {
     return builtin_type_name(typespec->tycode, scalar_type_names);
   } else if (node_cls == node_ids::function_full_def) {
-    assert(!"Function full def is not supported.");
-    return string_view();
+    EF_ASSERT(false, "Function full def is not supported.");
+    return {};
     // return mangle( sem, polymorphic_cast<function_full_def*>(typespec) );
   } else if (node_cls == node_ids::struct_type) {
     return polymorphic_cast<struct_type *>(typespec)->name.lit();
   } else if (node_cls == node_ids::function_type) {
-    return string_view();
+    return {};
   }
 
-  assert(!"Type type code is unrecognized!");
-  return string_view();
+  EF_ASSERT(false, "Type type code is unrecognized!");
+  return {};
 }
 
 tid_t pety_impl::get_impl(tynode *v, symbol *scope, bool attach_tid_to_input) {
@@ -424,14 +423,14 @@ tid_t pety_impl::get_impl(tynode *v, symbol *scope, bool attach_tid_to_input) {
     } else {
       node_ids node_cls = v->node_class();
       if (node_cls == node_ids::function_type) {
-        function_type *fnty = polymorphic_cast<function_type *>(v);
+        auto *fnty = polymorphic_cast<function_type *>(v);
         vector<tid_t> tids;
         tid_t tid = -1;
         tid = tynode_dict_.at(fnty->result_type.get());
         assert(tid != -1);
         tids.push_back(tid);
-        for (size_t i = 0; i < fnty->param_types.size(); ++i) {
-          tid = tynode_dict_.at(fnty->param_types[i].get());
+        for (auto & param_type : fnty->param_types) {
+          tid = tynode_dict_.at(param_type.get());
           assert(tid != -1);
           tids.push_back(tid);
         }
@@ -531,7 +530,7 @@ void append_mangling(std::string &str, tynode *typespec) {
   } else if (typespec->node_class() == node_ids::array_type) {
     append_mangling(str, polymorphic_cast<array_type *>(typespec));
   } else {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 }
 

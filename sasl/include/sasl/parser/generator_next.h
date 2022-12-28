@@ -112,7 +112,7 @@ constexpr result_state to_better(result_state lhs, result_state rhs) noexcept {
 
 constexpr bool is_worse(result_state lhs, result_state rhs) noexcept { return lhs > rhs; }
 
-constexpr bool is_better(result_state lhs, result_state rhs) noexcept { return lhs < lhs; }
+constexpr bool is_better(result_state lhs, result_state rhs) noexcept { return lhs < rhs; }
 
 constexpr bool is_expected_failed_or_recovered(result_state rs) noexcept {
   using enum result_state;
@@ -126,28 +126,28 @@ constexpr bool is_continuable(result_state rs) noexcept {
 using token_range = ranges::subrange<std::vector<token>::iterator>;
 
 template <attribute Attr> struct parsing_result {
-  result_state state;
+  result_state state {result_state::failed};
   token_range rng;
   Attr attr;
 };
 
-struct paser_base {
+struct parser_base {
   bool is_expected = false;
 };
 
 struct terminal_p {
-  parsing_result<attributes::any_attribute> parse(token_range rng, sasl::common::diag_chat &diags) {
+  parsing_result<attributes::any_attribute> parse(token_range rng, sasl::common::diag_chat &diags) const {
     if (rng.empty()) {
       return {result_state::failed, rng, {nil_attribute{}}};
     }
 
     if (rng.front().id() == token_id) {
-      return {result_state::succeed, rng.next(), terminal_attribute{{0, rng.front(), rng.front()}}};
+      return {result_state::succeed, rng.next(), {terminal_attribute{{0, rng.front(), rng.front()}}}};
     }
 
     diags.report(unmatched_token, rng.front().file_name(), rng.front().span(),
                  fmt::arg("syntax_error", rng.front().lit()));
-    return {result_state::failed, rng, nil_attribute{}};
+    return {result_state::failed, rng, {nil_attribute{}}};
   }
 
   size_t token_id;

@@ -101,9 +101,9 @@ public:
 
   constexpr bool operator==(system_values rhs) const { return sv == rhs && index == 0; }
 
-  template <typename T> bool operator!=(T const &v) const { return !(*this == v); }
+  template <typename T> bool operator!=(T const &v) const { return *this != v; }
 
-  semantic_value advance_index(size_t i) const {
+  [[nodiscard]] semantic_value advance_index(size_t i) const {
     semantic_value ret;
     ret.name = name;
     ret.sv = sv;
@@ -111,16 +111,16 @@ public:
     return ret;
   }
 
-  bool valid() const { return sv != sv_none || !name.empty(); }
+  [[nodiscard]] bool valid() const { return sv != sv_none || !name.empty(); }
 
-  float default_wcomp_value() const { return sv == sv_position ? 1.0f : 0.0f; }
+  [[nodiscard]] float default_w() const { return sv == sv_position ? 1.0f : 0.0f; }
 
 private:
   std::string name;
   system_values sv;
   uint32_t index;
 
-  constexpr bool is_same_sv(semantic_value const &rhs) const noexcept {
+  [[nodiscard]] constexpr bool is_same_sv(semantic_value const &rhs) const noexcept {
     if (sv != rhs.sv)
       return false;
     if (sv == sv_customized)

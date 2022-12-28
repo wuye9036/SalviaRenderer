@@ -26,7 +26,7 @@ void tex2Dbias_ps(vec4 *results, uint32_t mask, sampler *samp, vec4 *coords, vec
   EFLIB_UNREF_DECLARATOR(ddxs);
   EFLIB_UNREF_DECLARATOR(ddys);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 void tex2Dlod_ps(vec4 *results, uint32_t mask, sampler *samp, vec4 *coords) {
@@ -35,7 +35,7 @@ void tex2Dlod_ps(vec4 *results, uint32_t mask, sampler *samp, vec4 *coords) {
   EFLIB_UNREF_DECLARATOR(samp);
   EFLIB_UNREF_DECLARATOR(coords);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 void tex2Dproj_ps(vec4 *results, uint32_t mask, sampler *samp, vec4 *coords, vec4 const *ddxs,
@@ -47,7 +47,7 @@ void tex2Dproj_ps(vec4 *results, uint32_t mask, sampler *samp, vec4 *coords, vec
   EFLIB_UNREF_DECLARATOR(ddxs);
   EFLIB_UNREF_DECLARATOR(ddys);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 void tex2Dlod(vec4 &result, sampler *samp, vec4 &coord) {
@@ -59,7 +59,7 @@ void texCUBElod(vec4 &result, sampler *samp, vec4 &coord) {
   EFLIB_UNREF_DECLARATOR(samp);
   EFLIB_UNREF_DECLARATOR(coord);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 } // namespace salviar

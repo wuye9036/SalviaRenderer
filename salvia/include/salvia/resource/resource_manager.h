@@ -7,6 +7,7 @@
 
 #include <eflib/memory/allocator.h>
 
+#include <memory>
 #include <vector>
 
 namespace salvia::resource {
@@ -16,18 +17,19 @@ struct mapped_resource;
 class resource_manager {
 public:
   resource_manager(std::function<void()> sync)
-      : renderer_sync_(sync), map_mode_(map_mode_none),
-        mapped_resource_([this](size_t sz) -> void * { return this->reallocate_buffer(sz); }) {}
+      : renderer_sync_(sync),
+        mapped_resource_([this](size_t sz) -> void * { return this->reallocate_buffer(sz); }),
+        map_mode_(map_mode_none) {}
 
   buffer_ptr create_buffer(size_t size) { return std::make_shared<buffer>(size); }
 
   texture_ptr create_texture_2d(size_t width, size_t height, size_t num_samples, pixel_format fmt) {
-    return texture_ptr(new texture_2d(width, height, num_samples, fmt));
+    return std::make_shared<texture_2d>(width, height, num_samples, fmt);
   }
 
   texture_ptr create_texture_cube(size_t width, size_t height, size_t num_samples,
                                   pixel_format fmt) {
-    return texture_ptr(new texture_cube(width, height, num_samples, fmt));
+    return std::make_shared<texture_cube>(width, height, num_samples, fmt);
   }
 
   result map(mapped_resource &, buffer_ptr const &buf, map_mode mm);

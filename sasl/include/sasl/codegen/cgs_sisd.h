@@ -9,9 +9,7 @@
 #include <boost/preprocessor/for.hpp>
 #include <boost/preprocessor/seq.hpp>
 
-// #include <eflib/utility/util.h>
 #include <eflib/diagnostics/assert.h>
-#include <eflib/utility/enable_if.h>
 
 #include <any>
 #include <functional>
@@ -103,14 +101,10 @@ public:
 
   /// @name Emit values
   /// @{
-  template <typename T>
-  multi_value create_constant_vector(T const *vals, size_t length, abis abi,
-                                     EFLIB_ENABLE_IF_PRED1(is_integral, T));
-  multi_value create_vector(std::vector<multi_value> const &scalars, abis abi) override;
+  multi_value create_constant_vector(std::integral auto const *vals, size_t length, abis abi);
+  multi_value create_constant_matrix(std::integral auto const *vals, size_t length, abis abi);
 
-  template <typename T>
-  multi_value create_constant_matrix(T const *vals, size_t length, abis abi,
-                                     EFLIB_ENABLE_IF_PRED1(is_integral, T));
+  multi_value create_vector(std::vector<multi_value> const &scalars, abis abi) override;
   /// @}
 
   // virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
@@ -128,8 +122,7 @@ public:
   /// @{
   llvm::Value *select_(llvm::Value *cond, llvm::Value *yes, llvm::Value *no);
   llvm::Value *phi_(llvm::BasicBlock *b0, llvm::Value *v0, llvm::BasicBlock *b1, llvm::Value *v1);
-  template <typename T>
-  llvm::Value *c_vector_(T const *vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T));
+  llvm::Value *c_vector_(std::integral auto const *vals, size_t length);
   /// @}
 
   /// @name State

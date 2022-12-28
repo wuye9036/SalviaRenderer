@@ -53,20 +53,20 @@ llvm::Type *cg_type::ty(abis abi) const { return tys[static_cast<int>(abi)]; }
 void cg_type::vm_type(abis abi, Type *t) { tys[static_cast<int>(abi)] = t; }
 
 multi_value::multi_value(size_t num_value)
-    : ty_(nullptr), val_(num_value, nullptr), cg_(nullptr), kind_(value_kinds::unknown),
-      builtin_ty_(builtin_types::none), abi_(abis::unknown) {}
+    : val_(num_value, nullptr), ty_(nullptr), builtin_ty_(builtin_types::none), kind_(value_kinds::unknown),
+      abi_(abis::unknown), cg_(nullptr) {}
 
 multi_value::multi_value(cg_type *ty, value_array const &val, value_kinds k, abis abi,
                          cg_service *cg)
-    : ty_(ty), val_(val), cg_(cg), kind_(k), builtin_ty_(builtin_types::none), abi_(abi) {}
+    : val_(val), ty_(ty), builtin_ty_(builtin_types::none), kind_(k), abi_(abi), cg_(cg) {}
 
 multi_value::multi_value(builtin_types hint, value_array const &val, value_kinds k, abis abi,
                          cg_service *cg)
-    : ty_(nullptr), val_(val), builtin_ty_(hint), abi_(abi), kind_(k), cg_(cg) {}
+    : val_(val), ty_(nullptr), builtin_ty_(hint), kind_(k), abi_(abi), cg_(cg) {}
 
 multi_value::multi_value(multi_value const &rhs)
-    : ty_(rhs.ty_), builtin_ty_(rhs.builtin_ty_), abi_(rhs.abi_), val_(rhs.val_), kind_(rhs.kind_),
-      elem_indexes_(rhs.elem_indexes_), cg_(rhs.cg_) {
+    : elem_indexes_(rhs.elem_indexes_), val_(rhs.val_), ty_(rhs.ty_), builtin_ty_(rhs.builtin_ty_), kind_(rhs.kind_),
+      abi_(rhs.abi_), cg_(rhs.cg_) {
   parent(rhs.parent_.get());
   index(rhs.index_.get());
 }
@@ -75,17 +75,17 @@ abis multi_value::abi() const { return abi_; }
 
 multi_value multi_value::swizzle(elem_indexes const & /*swz_code*/) const {
   assert(is_vector(hint()));
-  EFLIB_ASSERT_UNIMPLEMENTED();
-  return multi_value();
+  ef_unimplemented();
+  return {};
 }
 
 value_array multi_value::raw() const { return val_; }
 
 multi_value multi_value::to_rvalue() const {
   if (ty_) {
-    return multi_value(ty_, load(abi_), value_kinds::value, abi_, cg_);
+    return {ty_, load(abi_), value_kinds::value, abi_, cg_};
   } else {
-    return multi_value(builtin_ty_, load(abi_), value_kinds::value, abi_, cg_);
+    return {builtin_ty_, load(abi_), value_kinds::value, abi_, cg_};
   }
 }
 
@@ -107,7 +107,7 @@ bool multi_value::storable() const {
   case value_kinds::elements:
     return parent()->storable();
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return false;
   }
 }
@@ -120,7 +120,7 @@ bool multi_value::load_only() const {
   case value_kinds::value:
     return true;
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return false;
   }
 }
@@ -142,6 +142,9 @@ value_array multi_value::load_ref() const { return cg_->load_ref(*this); }
 bool multi_value::is_mono() const { return val_.size() == 1; }
 
 multi_value &multi_value::operator=(multi_value const &rhs) {
+  if (this == &rhs) { return *this;
+  }
+
   kind_ = rhs.kind_;
   val_ = rhs.val_;
   ty_ = rhs.ty_;
@@ -334,7 +337,7 @@ multi_value cg_function::arg(size_t index) const {
 
 multi_value cg_function::execution_mask() const {
   if (!partial_execution) {
-    return multi_value();
+    return {};
   }
   auto it = fn->arg_begin();
   if (return_via_arg()) {
@@ -345,7 +348,7 @@ multi_value cg_function::execution_mask() const {
 }
 
 cg_function::cg_function()
-    : fn(nullptr), fn_def(nullptr), ret_void(true), partial_execution(false), c_compatible(false),
+    : fn_def(nullptr), fn(nullptr), c_compatible(false), partial_execution(false), ret_void(true),
       cg(nullptr) {}
 
 bool cg_function::value_arg_as_ref(size_t logical_index) const {
@@ -371,13 +374,13 @@ value_array cg_function::return_address() const {
       return cg->extension()->split_array(
           cg->builder().CreateLoad(addr_value->getType(), addr_value));
     } else {
-      return value_array(1, addr_value);
+      return {1, addr_value};
     }
   }
-  return value_array(cg->parallel_factor(), nullptr);
+  return {cg->parallel_factor(), nullptr};
 }
 
-void cg_function::return_name(std::string const &s) {
+void cg_function::return_name(std::string const &s) const {
   if (return_via_arg()) {
     fn->arg_begin()->setName(s);
   }
@@ -393,25 +396,8 @@ insert_point_t::insert_point_t() : block(nullptr) {}
 
 insert_point_t cg_function::allocation_block() const { return alloc_block; }
 
-bool valid_any(value_array const &arr) {
-  if (arr.size() == 0)
-    return false;
-  for (value_array::const_iterator it = arr.begin(); it != arr.end(); ++it) {
-    if (*it != nullptr) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool valid_all(value_array const &arr) {
-  if (arr.size() == 0)
-    return false;
-  for (value_array::const_iterator it = arr.begin(); it != arr.end(); ++it) {
-    if (*it == nullptr)
-      return false;
-  }
-  return true;
+  return !arr.empty() && std::all_of(arr.begin(), arr.end(), [](auto &v) { return v != nullptr; });
 }
 
 } // namespace sasl::codegen

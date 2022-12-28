@@ -99,7 +99,7 @@ void compiler_impl::set_parameter(int argc, char **argv) {
   po::basic_command_line_parser<char> parser =
       po::command_line_parser(argc, argv).options(desc).allow_unregistered();
   if (!parse(parser)) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 }
 
@@ -114,7 +114,7 @@ void compiler_impl::set_parameter(std::string const &cmd) {
       po::command_line_parser(cmds).options(desc).allow_unregistered();
 
   if (!parse(parser)) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 }
 

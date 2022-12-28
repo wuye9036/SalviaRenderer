@@ -156,8 +156,8 @@ public:
   void update(render_state const *state);
 
   // constructor
-  rasterizer();
-  ~rasterizer();
+  rasterizer() = default;
+  ~rasterizer() = default;
 
   // drawer
   void rasterize_line(rasterize_prim_context const *);

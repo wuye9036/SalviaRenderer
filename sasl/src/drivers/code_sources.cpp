@@ -95,7 +95,7 @@ void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess
     break;
   default:
     is_failed = true;
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     break;
   }
 

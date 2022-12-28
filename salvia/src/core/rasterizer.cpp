@@ -1,6 +1,5 @@
 #include <salvia/core/rasterizer.h>
 
-#include <salvia/core/clipper.h>
 #include <salvia/core/framebuffer.h>
 #include <salvia/core/host.h>
 #include <salvia/core/render_stages.h>
@@ -14,34 +13,26 @@
 #include <salvia/shader/shader_regs_op.h>
 
 #include <eflib/concurrency/thread_context.h>
-#include <eflib/diagnostics/log.h>
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/platform/intrin.h>
-#include <eflib/utility/unref_declarator.h>
-
-#include <boost/format.hpp>
 
 #include <algorithm>
-
-#if defined(EFLIB_MSVC)
-#include <ppl.h>
-#endif
+#include <execution>
 
 using namespace salvia::shader;
 using namespace eflib;
 
 using std::atomic;
+using std::max;
+using std::min;
+using std::vector;
 
 namespace salvia::core {
 
-using namespace std;
-using namespace eflib;
-using namespace boost;
-
-int const TILE_SIZE = 64;
-int const DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
-int const VP_PROJ_TRANSFORM_PAKCAGE_SIZE = 8;
-int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
+constexpr int TILE_SIZE = 64;
+constexpr int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
+constexpr int VP_PROJ_TRANSFORM_PACKAGE_SIZE = 8;
+constexpr int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 
 #define DEBUG_QUAD 0
 #if DEBUG_QUAD
@@ -81,8 +72,8 @@ struct drawing_triangle_context {
  **************************************************/
 void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
   // Extract to local variables
-  cpp_pixel_shader *cpp_ps = ctx->shaders.cpp_ps;
-  pixel_shader_unit *psu = ctx->shaders.ps_unit;
+  // cpp_pixel_shader *cpp_ps = ctx->shaders.cpp_ps;
+  // pixel_shader_unit *psu = ctx->shaders.ps_unit;
   viewport const &vp = *ctx->tile_vp;
   vs_output const &v0 = *clipped_verts_[ctx->prim_id * 2 + 0];
   vs_output const &v1 = *clipped_verts_[ctx->prim_id * 2 + 1];
@@ -98,7 +89,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
   vso_ops_->mul(ddx, diff, (diff.position().x() / (diff.position().xy().length_sqr())));
   vso_ops_->mul(ddy, diff, (diff.position().y() / (diff.position().xy().length_sqr())));
 
-  int vpleft = fast_floori(max(0.0f, vp.x));
+  int vp_left = fast_floori(max(0.0f, vp.x));
   int vptop = fast_floori(max(0.0f, vp.y));
   int vpright = fast_floori(min(vp.x + vp.w, target_vp_->w));
   int vpbottom = fast_floori(min(vp.y + vp.h, target_vp_->h));
@@ -118,7 +109,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       end = &v1;
     }
 
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
 
     float fsx = fast_floor(start->position().x() + 0.5f);
 
@@ -126,14 +117,14 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
     int ex = fast_floori(end->position().x() - 0.5f);
 
     // Clamp to visible screen.
-    sx = eflib::clamp<int>(sx, vpleft, int(vpright - 1));
-    ex = eflib::clamp<int>(ex, vpleft, int(vpright));
+    sx = eflib::clamp<int>(sx, vp_left, int(vpright - 1));
+    ex = eflib::clamp<int>(ex, vp_left, int(vpright));
 
     // Set attributes of start point.
     vs_output px_start, px_end;
     vso_ops_->copy(px_start, *start);
     vso_ops_->copy(px_end, *end);
-    float step = sx + 0.5f - start->position().x();
+    float step = static_cast<float>(sx) + 0.5f - start->position().x();
     vs_output px_in;
     vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 
@@ -141,7 +132,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
     vs_output unprojed;
     for (int iPixel = sx; iPixel < ex; ++iPixel) {
       // Ingore pixels which are outside of viewport.
-      if (px_in.position().y() >= vpbottom) {
+      if (px_in.position().y() >= static_cast<float>(vpbottom)) {
         if (dir.y() > 0)
           break;
         continue;
@@ -156,10 +147,10 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       vso_ops_->unproject(unprojed, px_in);
 
 #if 0
-			if(cpp_ps->execute(unprojed, px_out))
-			{
-				frame_buffer_->render_sample(cpp_bs_, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
-			}
+      if(cpp_ps->execute(unprojed, px_out))
+      {
+        frame_buffer_->render_sample(cpp_bs_, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
+      }
 #endif
       // Increment ddx
       ++step;
@@ -177,7 +168,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       end = &v1;
     }
 
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
 
     float fsy = fast_floor(start->position().y() + 0.5f);
 
@@ -190,13 +181,13 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
     vs_output px_start, px_end;
     vso_ops_->copy(px_start, *start);
     vso_ops_->copy(px_end, *end);
-    float step = sy + 0.5f - start->position().y();
+    float step = static_cast<float>(sy) + 0.5f - start->position().y();
     vs_output px_in;
     vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 
     vs_output unprojed;
     for (int iPixel = sy; iPixel < ey; ++iPixel) {
-      if (px_in.position().x() >= vpright) {
+      if (px_in.position().x() >= static_cast<float>(vpright)) {
         if (dir.x() > 0)
           break;
         continue;
@@ -210,10 +201,10 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       vso_ops_->unproject(unprojed, px_in);
 
 #if 0
-			if(cpp_ps->execute(unprojed, px_out))
-			{
-				frame_buffer_->render_sample(cpp_bs_, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
-			}
+      if(cpp_ps->execute(unprojed, px_out))
+      {
+        frame_buffer_->render_sample(cpp_bs_, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
+      }
 #endif
       ++step;
       vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
@@ -304,13 +295,14 @@ void rasterizer::draw_full_tile(int tile_left, int tile_top, int tile_right, int
 void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_factors,
                                    drawing_shader_context const *shaders,
                                    drawing_triangle_context const *triangle_ctx) {
-  auto &v0 = *triangle_ctx->tri_info->v0;
+  // auto &v0 = *triangle_ctx->tri_info->v0;
+  // const uint32_t full_mask = (1UL << target_sample_count_) - 1;
 
-  const uint32_t full_mask = (1UL << target_sample_count_) - 1;
-
+  auto left_f = static_cast<float>(left);
+  auto top_f = static_cast<float>(top);
 #ifndef EFLIB_NO_SIMD
-  const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
-  const __m128 mty = _mm_set_ps(1, 1, 0, 0);
+  // const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
+  // const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
   __m128 medge0 = _mm_load_ps(&edge_factors[0].x());
   __m128 medge1 = _mm_load_ps(&edge_factors[1].x());
@@ -322,8 +314,8 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
   mtmp = _mm_unpackhi_ps(medge0, medge1);
   __m128 medgez = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 2, 1, 0));
 
-  __m128 mleft = _mm_set1_ps(left);
-  __m128 mtop = _mm_set1_ps(top);
+  __m128 mleft = _mm_set1_ps(left_f);
+  __m128 mtop = _mm_set1_ps(top_f);
   __m128 mevalue3 =
       _mm_sub_ps(medgez, _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
 #endif
@@ -347,7 +339,7 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
     __m128 mspy = _mm_set1_ps(sp.y());
 
     for (int iy = 0; iy < 4; ++iy) {
-      __m128 my = _mm_add_ps(mspy, _mm_set1_ps(iy));
+      __m128 my = _mm_add_ps(mspy, _mm_set1_ps(static_cast<float>(iy)));
       __m128 mx = _mm_add_ps(mspx, _mm_set_ps(3, 2, 1, 0));
 
       __m128 mask_rej = _mm_setzero_ps();
@@ -379,7 +371,7 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
         mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
       }
 
-      __m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
+      __m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1 << i_sample));
       sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
 
       __m128 stored_mask = _mm_load_ps(reinterpret_cast<float *>(pixel_mask + iy * 4));
@@ -421,15 +413,12 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
     int const quad_y = (quad & 2);
 
     int const quad_start = quad_x | (quad_y << 2);
-
-    uint64_t quad_mask = ((pixel_mask[quad_start + 0] & static_cast<uint64_t>(SAMPLE_MASK))
-                          << (MAX_SAMPLE_COUNT * 0)) |
-                         ((pixel_mask[quad_start + 1] & static_cast<uint64_t>(SAMPLE_MASK))
-                          << (MAX_SAMPLE_COUNT * 1)) |
-                         ((pixel_mask[quad_start + 4] & static_cast<uint64_t>(SAMPLE_MASK))
-                          << (MAX_SAMPLE_COUNT * 2)) |
-                         ((pixel_mask[quad_start + 5] & static_cast<uint64_t>(SAMPLE_MASK))
-                          << (MAX_SAMPLE_COUNT * 3));
+    constexpr auto SAMPLE_MASK_U64 = static_cast<uint64_t>(SAMPLE_MASK);
+    uint64_t quad_mask =
+        ((pixel_mask[quad_start + 0] & SAMPLE_MASK_U64) << (MAX_SAMPLE_COUNT * 0)) |
+        ((pixel_mask[quad_start + 1] & SAMPLE_MASK_U64) << (MAX_SAMPLE_COUNT * 1)) |
+        ((pixel_mask[quad_start + 4] & SAMPLE_MASK_U64) << (MAX_SAMPLE_COUNT * 2)) |
+        ((pixel_mask[quad_start + 5] & SAMPLE_MASK_U64) << (MAX_SAMPLE_COUNT * 3));
 
     // No sample need to render.
     if (quad_mask == 0) {
@@ -458,6 +447,10 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &
     int maski;
     float maskf;
   } MASK = {0x80000000};
+
+  auto left_f = static_cast<float>(left);
+  auto top_f = static_cast<float>(top);
+
   static const __m128 SIGN_MASK = _mm_set1_ps(MASK.maskf);
 
   __m128 medge0 = _mm_load_ps(&edge_factors[0].x());
@@ -473,18 +466,18 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &
   __m128 mstepy3 = _mm_load_ps(step_y);
   __m128 mrej2acc3 = _mm_load_ps(rej_to_acc);
 
-  __m128 mleft = _mm_set1_ps(left);
-  __m128 mtop = _mm_set1_ps(top);
+  __m128 mleft = _mm_set1_ps(left_f);
+  __m128 mtop = _mm_set1_ps(top_f);
   __m128 mevalue3 = _mm_sub_ps(_mm_load_ps(evalue),
                                _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
 
   for (int iy = 0; iy < 4; ++iy) {
-    __m128 my = _mm_mul_ps(mstepy3, _mm_set1_ps(iy));
+    __m128 my = _mm_mul_ps(mstepy3, _mm_set1_ps(static_cast<float>(iy)));
 
     __m128 mask_rej = _mm_setzero_ps();
     __m128 mask_acc = _mm_setzero_ps();
 
-    // Trival rejection & acception
+    // Trivial rejection & acceptance
     {
       __m128 mstepx = _mm_mul_ps(_mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(0, 0, 0, 0)),
                                  _mm_set_ps(3, 2, 1, 0));
@@ -595,28 +588,29 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &
 }
 
 /*************************************************
- *   Steps of triangle rasterization��
- *			1 Generate scan line and compute derivation of scanlines
- *			2 Rasterize scan line by rasterizer_scanline_impl
- *			3 Generate vs_output/ps_input for pixels.
- *			4 Execute pixel shader
- *			5 Render pixel to frame buffer.
+ *  Steps of triangle rasterization:
+ *    1 Generate scan line and compute derivation of scanlines
+ *    2 Rasterize scan line by rasterizer_scanline_impl
+ *    3 Generate vs_output/ps_input for pixels.
+ *    4 Execute pixel shader
+ *    5 Render pixel to frame buffer.
  *
- *   Note:
- *			1 All of position pixel is in window coordinate system.
- *			2 x, y, z components of wpos have been devided by 'clip w'.
- *			3 positon.w() == 1.0f / 'clip w'
+ *  Note:
+ *    1 All of position pixel is in window coordinate system.
+ *    2 x, y, z components of window-pos have been divided by 'clip w'.
+ *    3 position.w() == 1.0f / 'clip w'
  **************************************************/
 void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   // Extract to local variables
   cpp_pixel_shader *cpp_ps = ctx->shaders.cpp_ps;
-  pixel_shader_unit *psu = ctx->shaders.ps_unit;
+  // pixel_shader_unit *psu = ctx->shaders.ps_unit;
   viewport const &vp = *ctx->tile_vp;
   uint32_t prim_id = ctx->prim_id >> 1;
   uint32_t full = ctx->prim_id & 1;
-  vs_output const &v0 = *clipped_verts_[prim_id * 3 + 0];
-  vs_output const &v1 = *clipped_verts_[prim_id * 3 + 1];
-  vs_output const &v2 = *clipped_verts_[prim_id * 3 + 2];
+
+  // vs_output const &v0 = *clipped_verts_[prim_id * 3 + 0];
+  // vs_output const &v1 = *clipped_verts_[prim_id * 3 + 1];
+  // vs_output const &v2 = *clipped_verts_[prim_id * 3 + 2];
 
   triangle_info const *tri_info = tri_infos_.data() + prim_id;
   eflib::vec4 const *edge_factors = tri_info->edge_factors;
@@ -644,9 +638,10 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   int dst_stage = src_stage == 0 ? 1 : 0;
 
   const int vpleft0 = fast_floori(vp.x);
-  const int vpright0 = fast_floori(vp.x + vp.w);
   const int vptop0 = fast_floori(vp.y);
-  const int vpbottom0 = fast_floori(vp.y + vp.h);
+
+  // const int vpright0 = fast_floori(vp.x + vp.w);
+  // const int vpbottom0 = fast_floori(vp.y + vp.h);
 
   uint32_t subtile_w = fast_floori(vp.w);
   uint32_t subtile_h = fast_floori(vp.h);
@@ -654,15 +649,15 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   EFLIB_ALIGN(16) float step_x[4];
   EFLIB_ALIGN(16) float step_y[4];
   EFLIB_ALIGN(16) float rej_to_acc[4];
-  EFLIB_ALIGN(16) float evalue[4];
-  float part_evalue[4];
+  EFLIB_ALIGN(16) float e_value[4];
+  float part_e_value[4];
   for (int e = 0; e < 3; ++e) {
     step_x[e] = TILE_SIZE * edge_factors[e].x();
     step_y[e] = TILE_SIZE * edge_factors[e].y();
     rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
-    part_evalue[e] =
+    part_e_value[e] =
         mark_x[e] * TILE_SIZE * edge_factors[e].x() + mark_y[e] * TILE_SIZE * edge_factors[e].y();
-    evalue[e] = edge_factors[e].z() - part_evalue[e];
+    e_value[e] = edge_factors[e].z() - part_e_value[e];
   }
   step_x[3] = step_y[3] = 0;
 
@@ -677,10 +672,8 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
     aa_z_offset[0] = 0.0f;
   }
 
-  drawing_triangle_context tri_ctx;
-  tri_ctx.aa_z_offset = aa_z_offset;
-  tri_ctx.pixel_stat = ctx->pixel_stat;
-  tri_ctx.tri_info = tri_info;
+  drawing_triangle_context tri_ctx{aa_z_offset, tri_info, ctx->pixel_stat};
+
   if (cpp_ps != nullptr) {
     cpp_ps->update_front_face(tri_info->front_face);
   }
@@ -698,8 +691,8 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
       step_x[e] *= 0.25f;
       step_y[e] *= 0.25f;
       rej_to_acc[e] *= 0.25f;
-      part_evalue[e] *= 0.25f;
-      evalue[e] = edge_factors[e].z() - part_evalue[e];
+      part_e_value[e] *= 0.25f;
+      e_value[e] = edge_factors[e].z() - part_e_value[e];
     }
 
     for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ivp) {
@@ -744,7 +737,7 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
         // Only a part of the triangle is inside the tile. So subdivide the tile into small ones.
         this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, test_regions[dst_stage],
                              test_region_size[dst_stage], x_min, x_max, y_min, y_max, rej_to_acc,
-                             evalue, step_x, step_y);
+                             e_value, step_x, step_y);
         break;
       }
     }
@@ -754,10 +747,6 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   }
 }
 
-rasterizer::rasterizer() {}
-
-rasterizer::~rasterizer() {}
-
 void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
   vector<vector<uint32_t>> &tiled_prims = threaded_tiled_prims_[thread_ctx->thread_id];
   for (auto &prims : tiled_prims) {
@@ -766,9 +755,9 @@ void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
 
   thread_context::package_cursor current_package = thread_ctx->next_package();
   while (current_package.valid()) {
-    auto prim_range = current_package.item_range();
+    auto prim_range = current_package.index_range();
 
-    for (int32_t i = prim_range.first; i < prim_range.second; ++i) {
+    for (size_t i = prim_range.first; i < prim_range.second; ++i) {
       if (3 == prim_size_) {
         compute_triangle_info(i);
       }
@@ -817,19 +806,20 @@ void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
           for (int y = sy; y < ey; ++y) {
             for (int x = sx; x < ex; ++x) {
               int rejection = 0;
-              int acception = 1;
+              int acceptance = 1;
 
-              // Trival rejection & acception
+              // Trivial rejection & acceptance
               for (int e = 0; e < 3; ++e) {
-                float evalue =
-                    edge_factors[e].z() - ((x + mark_x[e]) * TILE_SIZE * edge_factors[e].x() +
-                                           (y + mark_y[e]) * TILE_SIZE * edge_factors[e].y());
-                rejection |= (0 < evalue);
-                acception &= (rej_to_acc[e] >= evalue);
+                float e_value =
+                    edge_factors[e].z() -
+                    (static_cast<float>(x + mark_x[e]) * TILE_SIZE * edge_factors[e].x() +
+                     static_cast<float>(y + mark_y[e]) * TILE_SIZE * edge_factors[e].y());
+                rejection |= (0 < e_value);
+                acceptance &= (rej_to_acc[e] >= e_value);
               }
 
               if (!rejection) {
-                tiled_prims[y * tile_x_count_ + x].push_back((i << 1) | acception);
+                tiled_prims[y * tile_x_count_ + x].push_back((i << 1) | acceptance);
               }
             }
           }
@@ -931,38 +921,35 @@ void rasterizer::compute_triangle_info(uint32_t i) {
 }
 
 void rasterizer::threaded_rasterize_multi_prim(thread_context const *thread_ctx) {
-  viewport tile_vp;
-  tile_vp.w = TILE_SIZE;
-  tile_vp.h = TILE_SIZE;
-  tile_vp.minz = vp_->minz;
-  tile_vp.maxz = vp_->maxz;
+  viewport tile_vp{
+      0.0f,      0.0f,     static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
+      vp_->minz, vp_->maxz};
 
   std::vector<uint32_t> prims;
   pixel_statistic pixel_stat;
   pixel_stat.ps_invocations = 0;
   pixel_stat.backend_input_pixels = 0;
 
-  rasterize_multi_prim_context rast_ctxt;
-  rast_ctxt.shaders.cpp_ps = threaded_cpp_ps_[thread_ctx->thread_id];
-  rast_ctxt.shaders.ps_unit = threaded_psu_[thread_ctx->thread_id];
-  rast_ctxt.shaders.cpp_bs = cpp_bs_;
-  rast_ctxt.tile_vp = &tile_vp;
-  rast_ctxt.sorted_prims = &prims;
-  rast_ctxt.pixel_stat = &pixel_stat;
+  rasterize_multi_prim_context rast_ctxt{
+      .sorted_prims = &prims,
+      .tile_vp = &tile_vp,
+      .pixel_stat = &pixel_stat,
+      .shaders = {.cpp_ps = threaded_cpp_ps_[thread_ctx->thread_id],
+                  .ps_unit = threaded_psu_[thread_ctx->thread_id],
+                  .cpp_bs = cpp_bs_}};
 
   thread_context::package_cursor current_package = thread_ctx->next_package();
   while (current_package.valid()) {
-    auto tile_range = current_package.item_range();
-    for (int32_t i = tile_range.first; i < tile_range.second; ++i) {
+    auto tile_range = current_package.index_range();
+    for (size_t tile_id = tile_range.first; tile_id < tile_range.second; ++tile_id) {
       prims.clear();
-      for (size_t j = 0; j < threaded_tiled_prims_.size(); ++j) {
-        prims.insert(prims.end(), threaded_tiled_prims_[j][i].begin(),
-                     threaded_tiled_prims_[j][i].end());
+      for (auto const &thread_prims : threaded_tiled_prims_) {
+        prims.insert(prims.end(), thread_prims[tile_id].begin(), thread_prims[tile_id].end());
       }
       std::sort(prims.begin(), prims.end());
 
-      int y = i / tile_x_count_;
-      int x = i - y * tile_x_count_;
+      auto y = tile_id / tile_x_count_;
+      auto x = tile_id - y * tile_x_count_;
 
       tile_vp.x = static_cast<float>(x * TILE_SIZE);
       tile_vp.y = static_cast<float>(y * TILE_SIZE);
@@ -1004,8 +991,6 @@ void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const *ct
 
 void rasterizer::update_prim_info(render_state const *state) {
   bool is_tri = false;
-  bool is_line = false;
-  bool is_point = false;
 
   bool is_wireframe = false;
   bool is_solid = false;
@@ -1019,21 +1004,22 @@ void rasterizer::update_prim_info(render_state const *state) {
   case fill_wireframe:
     is_wireframe = true;
     break;
+  default:
+    break;
   }
 
   switch (state->prim_topo) {
   case primitive_point_list:
   case primitive_point_sprite:
-    is_point = false;
-    break;
   case primitive_line_list:
   case primitive_line_strip:
-    is_line = false;
     break;
   case primitive_triangle_list:
   case primitive_triangle_fan:
   case primitive_triangle_strip:
     is_tri = true;
+    break;
+  default:
     break;
   }
 
@@ -1043,7 +1029,7 @@ void rasterizer::update_prim_info(render_state const *state) {
     prim_ = pt_wireframe_tri;
   } else {
     prim_ = pt_none;
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   switch (prim_) {
@@ -1055,7 +1041,7 @@ void rasterizer::update_prim_info(render_state const *state) {
     prim_size_ = 3;
     break;
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 }
 
@@ -1134,8 +1120,8 @@ void rasterizer::draw() {
   acc_clipping_(pipeline_prof_, gse_.compact_start_time() - clipping_start_time);
   acc_compact_clip_(pipeline_prof_, fetch_time_stamp_() - gse_.compact_start_time());
 
-  clipped_verts_ = gse_.verts();
-  clipped_verts_count_ = gse_.verts_count();
+  clipped_verts_ = gse_.vertexes();
+  clipped_verts_count_ = gse_.vertex_count();
   clipped_prims_count_ = clipped_verts_count_ / prim_size_;
 
   acc_ia_primitives_(pipeline_stat_, prim_count_);
@@ -1171,7 +1157,7 @@ void rasterizer::draw() {
     rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_triangle);
     break;
   default:
-    EFLIB_ASSERT(false, "Primitive type is not correct.");
+    EF_ASSERT(false, "Primitive type is not correct.");
   }
 
   std::vector<cpp_pixel_shader_ptr> ppps(num_threads);
@@ -1210,41 +1196,35 @@ void threaded_viewport_and_project_transform(vs_output_functions::project proj_f
                                              thread_context const *thread_ctx) {
   thread_context::package_cursor current_package = thread_ctx->next_package();
   while (current_package.valid()) {
-    auto prim_range = current_package.item_range();
+    auto prim_range = current_package.range(verts);
 
-    for (int32_t i = prim_range.first; i < prim_range.second; ++i) {
-      vs_output *vso = verts[i];
+    for (vs_output *vso : prim_range) {
       viewport_transform(vso->position(), *vp);
       proj_fn(*vso, *vso);
     }
+
     current_package = thread_ctx->next_package();
   }
 }
 
 void rasterizer::viewport_and_project_transform(vs_output **vertexes, size_t num_verts) {
-  vs_output_functions::project proj_fn = vso_ops_->project;
-
   // Gathering vs_output need to be processed.
   vector<vs_output *> sorted;
   sorted.insert(sorted.end(), vertexes, vertexes + num_verts);
 
-#if defined(EFLIB_MSVC)
-  concurrency::parallel_sort(sorted.data(), sorted.data() + sorted.size());
-#else
-  std::sort(sorted.begin(), sorted.end());
-#endif
+  std::sort(std::execution::par, sorted.begin(), sorted.end());
 
   sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
 
-  vs_output **trans_proj_verts = sorted.data();
+  vs_output **in_out_vertexes = sorted.data();
 
   execute_threads(
       global_thread_pool(),
-      [this, trans_proj_verts](thread_context const *thread_ctx) {
-        threaded_viewport_and_project_transform(this->vso_ops_->project, trans_proj_verts,
-                                                this->vp_, thread_ctx);
+      [this, in_out_vertexes](thread_context const *thread_ctx) {
+        threaded_viewport_and_project_transform(this->vso_ops_->project, in_out_vertexes, this->vp_,
+                                                thread_ctx);
       },
-      static_cast<int>(sorted.size()), VP_PROJ_TRANSFORM_PAKCAGE_SIZE);
+      static_cast<int>(sorted.size()), VP_PROJ_TRANSFORM_PACKAGE_SIZE);
 }
 
 void rasterizer::draw_full_quad(uint32_t left, uint32_t top, drawing_shader_context const *shaders,

@@ -49,7 +49,7 @@ result renderer_impl::set_index_buffer(buffer_ptr const &hbuf, format index_fmt)
   case format_r32_uint:
     break;
   default:
-    EFLIB_ASSERT(false, "The value of index type is invalid.");
+    EF_ASSERT(false, "The value of index type is invalid.");
     return result::failed;
   }
 
@@ -64,20 +64,17 @@ buffer_ptr renderer_impl::get_index_buffer() const { return state_->index_buffer
 format renderer_impl::get_index_format() const { return state_->index_format; }
 
 //
-result renderer_impl::set_primitive_topology(primitive_topology primtopo) {
-  switch (primtopo) {
+result renderer_impl::set_primitive_topology(primitive_topology topology) {
+  switch (topology) {
   case primitive_line_list:
   case primitive_line_strip:
   case primitive_triangle_list:
   case primitive_triangle_strip:
-    break;
+    state_->prim_topo = topology;
+    return result::ok;
   default:
-    assert(!"Invalid primitive topology.");
     return result::failed;
   }
-
-  state_->prim_topo = primtopo;
-  return result::ok;
 }
 
 primitive_topology renderer_impl::get_primitive_topology() const { return state_->prim_topo; }
@@ -135,7 +132,7 @@ cpp_blend_shader_ptr renderer_impl::get_blend_shader() const { return state_->cp
 
 result renderer_impl::set_viewport(const viewport &vp) {
   if (vp.x < 0 || vp.y < 0 || vp.w >= MAX_RENDER_TARGET_WIDTH || vp.h >= MAX_RENDER_TARGET_HEIGHT) {
-    EFLIB_ASSERT(false, "Viewport size is invalid.");
+    EF_ASSERT(false, "Viewport size is invalid.");
     return result::failed;
   }
   state_->vp = vp;
@@ -252,9 +249,9 @@ async_object_ptr renderer_impl::create_query(async_object_ids id) {
     return async_object_ptr(new async_internal_statistics());
   case async_object_ids::pipeline_profiles:
     return async_object_ptr(new async_pipeline_profiles());
+  default:
+    return async_object_ptr{};
   }
-
-  return async_object_ptr();
 }
 
 renderer_impl::renderer_impl() {

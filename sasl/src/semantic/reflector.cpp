@@ -56,7 +56,7 @@ bool verify_semantic_type(builtin_types btc, salvia::shader::semantic_value cons
   case salvia::shader::sv_depth:
     return (btc == builtin_types::_float);
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   return false;
@@ -70,38 +70,41 @@ sv_usage vsinput_semantic_usage(salvia::shader::semantic_value const &sem) {
   case salvia::shader::sv_blend_indices:
   case salvia::shader::sv_blend_weights:
     return su_stream_in;
+  default:
+    ef_unimplemented();
+    return su_none;
   }
-  EFLIB_ASSERT_UNIMPLEMENTED();
-  return su_none;
 }
 
 sv_usage vsoutput_semantic_usage(salvia::shader::semantic_value const &sem) {
   switch (sem.get_system_value()) {
   case salvia::shader::sv_position:
-    return su_buffer_out;
   case salvia::shader::sv_texcoord:
     return su_buffer_out;
+  default:
+    ef_unimplemented();
+    return su_none;
   }
-  EFLIB_ASSERT_UNIMPLEMENTED();
-  return su_none;
 }
 
 sv_usage psinput_semantic_usage(salvia::shader::semantic_value const &sem) {
   switch (sem.get_system_value()) {
   case salvia::shader::sv_texcoord:
     return su_stream_in;
+  default:
+    ef_unimplemented();
+    return su_none;
   }
-  EFLIB_ASSERT_UNIMPLEMENTED();
-  return su_none;
 }
 
 sv_usage psoutput_semantic_usage(salvia::shader::semantic_value const &sem) {
   switch (sem.get_system_value()) {
   case salvia::shader::sv_target:
     return su_stream_out;
+  default:
+    ef_unimplemented();
+    return su_none;
   }
-  EFLIB_ASSERT_UNIMPLEMENTED();
-  return su_none;
 }
 
 sv_usage semantic_usage(salvia::shader::languages lang, bool is_output,
@@ -119,25 +122,26 @@ sv_usage semantic_usage(salvia::shader::languages lang, bool is_output,
     } else {
       return psinput_semantic_usage(sem);
     }
+  default:
+    ef_unreachable("Invalid shader language type.");
+    return su_none;
   }
-
-  return su_none;
 }
 
 class reflector {
 public:
   reflector(module_semantic *sem, std::string_view entry_name, diag_chat *diags)
-      : sem_(sem), current_entry_(nullptr), reflection_(nullptr), entry_name_(entry_name),
-        diags_(diags) {}
+      : diags_(diags), sem_(sem), entry_name_(entry_name), current_entry_(nullptr),
+        reflection_(nullptr) {}
 
   reflector(module_semantic *sem, diag_chat *diags)
-      : sem_(sem), current_entry_(nullptr), reflection_(nullptr), diags_(diags) {}
+      : diags_(diags), sem_(sem), current_entry_(nullptr), reflection_(nullptr) {}
 
   reflection_impl_ptr reflect() {
     if (!entry_name_.empty()) {
       vector<symbol *> overloads = sem_->root_symbol()->find_overloads(entry_name_);
       if (overloads.size() != 1) {
-        return reflection_impl_ptr();
+        return {};
       }
       current_entry_ = overloads[0];
       return do_reflect();
@@ -151,7 +155,7 @@ public:
         if (candidate_reflection) {
           if (candidate) {
             // TODO: More than one matched. conflict error.
-            return reflection_impl_ptr();
+            return {};
           }
           candidate = fn_sym;
         }
@@ -163,7 +167,7 @@ public:
 private:
   reflection_impl_ptr do_reflect() {
     if (!(sem_ && current_entry_)) {
-      return reflection_impl_ptr();
+      return {};
     }
 
     salvia::shader::languages lang = sem_->get_language();
@@ -182,14 +186,14 @@ private:
           current_entry_->associated_node()->as_handle<function_def>();
       assert(entry_fn);
 
-      if (!add_semantic(entry_fn, false, false, false, lang, true)) {
+      if (!add_semantic(entry_fn, false, false, lang, true)) {
         assert(false);
         ret.reset();
         return ret;
       }
 
       for (shared_ptr<parameter> const &param : entry_fn->params) {
-        if (!add_semantic(param, false, false, false, lang, false)) {
+        if (!add_semantic(param, false, false, lang, false)) {
           ret.reset();
           return ret;
         }
@@ -201,7 +205,7 @@ private:
         assert(gvar);
 
         // And global variable only be treated as input.
-        if (!add_semantic(gvar, true, false, false, lang, false)) {
+        if (!add_semantic(gvar, true, false, lang, false)) {
           // If it is not attached to an valid semantic, it should be uniform variable.
 
           // Check the data type of global. Now global variables only support built-in types.
@@ -220,8 +224,8 @@ private:
     return ret;
   }
 
-  bool add_semantic(node_ptr const &v, bool is_global, bool is_member, bool enable_nested,
-                    languages lang, bool is_output_semantic) {
+  bool add_semantic(node_ptr const &v, bool is_global, bool is_member, languages lang,
+                    bool is_output_semantic) {
     assert(reflection_);
     node_semantic *pssi = sem_->get_semantic(v.get());
     assert(pssi); // TODO: Here are semantic analysis error.
@@ -243,16 +247,18 @@ private:
           return reflection_->add_output_semantic(node_sem, btc, true);
         case su_buffer_out:
           return reflection_->add_output_semantic(node_sem, btc, false);
+        default:
+          ef_unreachable("invalid semantic usage");
+          break;
         }
 
-        assert(false);
         return false;
       } else if (is_member) {
         diags_->report(not_support_auto_semantic, "", code_span{});
         return false;
       }
     } else if (ptspec->node_class() == node_ids::struct_type) {
-      if ((is_member || is_global) && !enable_nested) {
+      if (is_member || is_global) {
         return false;
       }
 
@@ -263,7 +269,7 @@ private:
         if (decl->node_class() == node_ids::variable_declaration) {
           shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
           for (shared_ptr<declarator> const &dclr : vardecl->declarators) {
-            if (!add_semantic(dclr, is_global, true, enable_nested, lang, is_output_semantic)) {
+            if (!add_semantic(dclr, is_global, true, lang, is_output_semantic)) {
               return false;
             }
           }

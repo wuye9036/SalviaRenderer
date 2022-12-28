@@ -1,6 +1,7 @@
-#pragma
+#pragma once
 
 #include <eflib/platform/config.h>
+
 #include <memory>
 #include <string>
 
@@ -19,11 +20,11 @@ public:
     return false;
   }
 
-  virtual bool available() const = 0;
-  virtual ~dynamic_lib() {}
+  [[nodiscard]] virtual bool available() const = 0;
+  virtual ~dynamic_lib() = default;
 
 private:
-  virtual void *get_function(std::string const &name) const = 0;
+  [[nodiscard]] virtual void *get_function(std::string const &name) const = 0;
 };
 } // namespace eflib
 

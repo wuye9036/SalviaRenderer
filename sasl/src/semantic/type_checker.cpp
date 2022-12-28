@@ -1,7 +1,8 @@
-#include <cassert>
 #include <sasl/semantic/symbol.h>
 #include <sasl/semantic/type_checker.h>
 #include <sasl/syntax_tree/declaration.h>
+
+#include <eflib/diagnostics/assert.h>
 
 namespace sasl::semantic {
 using ::sasl::syntax_tree::builtin_type;
@@ -19,12 +20,12 @@ bool type_equal(shared_ptr<builtin_type> lhs, shared_ptr<builtin_type> rhs) {
 bool type_equal(shared_ptr<tynode> lhs, shared_ptr<tynode> rhs) {
   // if lhs or rhs is an alias of type, get its actual type for comparison.
   if (lhs->node_class() == node_ids::alias_type) {
-    assert(!"need to be implemented!");
+    ef_unimplemented();
     return false;
     // return type_equal( actual_type(lhs), rhs );
   }
   if (rhs->node_class() == node_ids::alias_type) {
-    assert(!"need to be implemented!");
+    ef_unimplemented();
     return false;
     // return type_equal( lhs, actual_type( rhs ) );
   }
@@ -35,7 +36,7 @@ bool type_equal(shared_ptr<tynode> lhs, shared_ptr<tynode> rhs) {
     return type_equal(dynamic_pointer_cast<builtin_type>(lhs),
                       dynamic_pointer_cast<builtin_type>(rhs));
   }
-  assert(!"need to be implemented!");
+  ef_unimplemented();
   return false;
 }
 

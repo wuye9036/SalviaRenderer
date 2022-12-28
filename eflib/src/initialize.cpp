@@ -7,7 +7,7 @@ void do_init() {
 
 // initialize debug helper
 #ifndef EFLIB_WINDOWS
-  eflib::detail::ProcPreAssert = &eflib::detail::ProcPreAssert_Defalut;
+  eflib::detail::ProcPreAssert = &eflib::detail::default_pre_assert;
 #else
   eflib::detail::ProcPreAssert = &eflib::detail::ProcPreAssert_MsgBox;
 #endif

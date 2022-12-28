@@ -7,10 +7,9 @@
 #include <eflib/platform/win32.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
-namespace eflib {
-namespace detail {
+namespace eflib::detail {
 bool (*ProcPreAssert)(bool exp, const char *expstr, const char *desc, int line, const char *file,
                       const char *func, bool *ignore) = &ProcPreAssert_Init;
 
@@ -20,7 +19,7 @@ bool ProcPreAssert_Init(bool exp, const char *expstr, const char *desc, int line
   return (*ProcPreAssert)(exp, expstr, desc, line, file, func, ignore);
 }
 
-bool ProcPreAssert_Defalut(bool exp, const char * /*expstr*/, const char * /* desc */,
+bool default_pre_assert(bool exp, const char * /*expstr*/, const char * /* desc */,
                            int /* line */, const char * /* file */, const char * /* func */,
                            bool * /* ignore */) {
   if (exp)
@@ -52,5 +51,4 @@ bool ProcPreAssert_MsgBox(bool exp, const char *expstr, const char *desc, int li
   }
 }
 #endif
-} // namespace detail
 } // namespace eflib

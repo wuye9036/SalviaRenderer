@@ -52,7 +52,7 @@ public:
 #elif defined(EFLIB_LINUX)
 class linux_dl : public dynamic_lib {
 public:
-  linux_dl(std::string const &name) {
+  explicit linux_dl(std::string const &name) {
     mod = ::dlopen(name.c_str(), RTLD_NOW);
     void (*loaded_hook)() = nullptr;
     dynamic_lib::get_function(loaded_hook, "_eflib_dynlib_loaded");
@@ -61,7 +61,7 @@ public:
     }
   }
 
-  ~linux_dl() {
+  ~linux_dl() override {
     void (*unloading_hook)() = nullptr;
     dynamic_lib::get_function(unloading_hook, "_eflib_dynlib_unloading");
     if (unloading_hook) {
@@ -72,13 +72,13 @@ public:
     mod = nullptr;
   }
 
-  virtual void *get_function(std::string const &name) const {
+  [[nodiscard]] void *get_function(std::string const &name) const override {
     if (!mod)
       return nullptr;
     return (void *)(dlsym(mod, name.c_str()));
   }
 
-  virtual bool available() const { return mod != nullptr; }
+  [[nodiscard]] bool available() const override { return mod != nullptr; }
 
   void *mod;
 };
@@ -88,7 +88,7 @@ shared_ptr<dynamic_lib> dynamic_lib::load(std::string const &name) {
 #if defined(EFLIB_WINDOWS)
   win_dl *dynlib = new win_dl(name);
 #elif defined(EFLIB_LINUX)
-  linux_dl *dynlib = new linux_dl(name);
+  auto *dynlib = new linux_dl(name);
 #else
 #error "Platform is not supported."
 #endif

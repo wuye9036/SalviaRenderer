@@ -44,7 +44,7 @@ namespace sasl::codegen {
 
 cg_extension::cg_extension(DefaultIRBuilder *builder, LLVMContext &context, Module *module,
                            size_t parallel_factor)
-    : builder_(builder), context_(context), module_(module), alloc_point_(nullptr) {
+    : builder_(builder), module_(module), context_(context), alloc_point_(nullptr) {
   initialize_external_intrinsics(parallel_factor);
 }
 
@@ -97,7 +97,7 @@ Value *cg_extension::call_binary_intrin_mono(Type *ret_ty, Value *lhs, Value *rh
     return ret;
   }
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return nullptr;
 }
 
@@ -237,7 +237,7 @@ Value *cg_extension::abs_sv(Value *v) {
       elem_int_ty = Type::getInt32Ty(context_);
       mask = (1ULL << 63) - 1ULL;
     } else {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
 
     Type *int_ty = ty->isVectorTy() ? VectorType::get(elem_int_ty, elem_size, false) : elem_int_ty;
@@ -255,7 +255,7 @@ Value *cg_extension::sqrt_sv(Value *v) {
   Type *ty = v->getType();
 
   if (!ty->isFPOrFPVectorTy()) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return nullptr;
   }
 
@@ -405,7 +405,7 @@ Value *cg_extension::select(Value *flag, Value *v0, Value *v1) {
     return ret;
   }
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return nullptr;
 }
 
@@ -447,7 +447,7 @@ Type *cg_extension::extract_scalar_type(Type *ty) {
       assert(ty->getStructNumElements() > 0);
       return extract_scalar_type(ty->getStructElementType(0));
     } else {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
 
@@ -484,7 +484,7 @@ Value *cg_extension::get_constant_by_scalar(Type *ty, Value *scalar) {
     }
     return get_struct(ty, ArrayRef<Value *>(elem_values));
   } else {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return nullptr;
   }
 }
@@ -601,7 +601,7 @@ Value *cg_extension::promote_to_binary_sv_impl(Value *lhs, Value *rhs, binary_in
     return ret;
   }
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return nullptr;
 }
 
@@ -663,7 +663,7 @@ Value *cg_extension::promote_to_unary_sv_impl(Value *v, unary_intrin_functor sfn
     return ret;
   }
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return nullptr;
 }
 

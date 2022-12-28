@@ -40,13 +40,13 @@ public:
 
   void execute(geom_setup_context const *, uint64_t (*fetch_time_stamp)());
 
-  size_t verts_count() const {
-    return static_cast<size_t>(clipped_package_compacted_addresses_[clipping_package_count_]);
+  [[nodiscard]] size_t vertex_count() const {
+    return clipped_package_compacted_addresses_[clipping_package_count_];
   }
 
-  shader::vs_output **verts() const { return compacted_verts_.get(); }
+  [[nodiscard]] shader::vs_output **vertexes() const { return compacted_vertexes_.get(); }
 
-  uint64_t compact_start_time() const { return compact_start_time_; }
+  [[nodiscard]] uint64_t compact_start_time() const { return compact_start_time_; }
 
 private:
   typedef eflib::pool::reserved_pool<shader::vs_output> vs_output_pool;
@@ -65,16 +65,16 @@ private:
   std::shared_ptr<uint32_t[]> clipped_package_verts_count_;
   size_t clipped_package_verts_count_cap_;
 
-  std::shared_ptr<shader::vs_output *[]> compacted_verts_;
-  size_t compacted_verts_cap_;
+  std::shared_ptr<shader::vs_output *[]> compacted_vertexes_;
+  size_t compacted_vertex_cap_;
 
   std::shared_ptr<uint32_t[]> clipped_package_compacted_addresses_;
   size_t clipped_package_compacted_addresses_cap_;
 
-  int32_t clipping_package_count_;
+  size_t clipping_package_count_;
 
   size_t thread_count_;
-  uint64_t compact_start_time_;
+  uint64_t compact_start_time_{};
 
   geom_setup_context const *ctxt_;
 };
