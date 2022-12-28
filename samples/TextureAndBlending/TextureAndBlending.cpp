@@ -6,10 +6,10 @@
 #include <salviar/include/rasterizer.h>
 #include <salvia/common/colors.h>
 
-#include <salvia/ext/swap_chain/swap_chain.h>
-#include <salvia/ext/resource/mesh/sa/mesh_io.h>
-#include <salvia/ext/resource/mesh/sa/mesh_io_obj.h>
+#include "salvia/ext/resource/mesh/mesh_io.h"
+#include "salvia/ext/resource/mesh/mesh_io_obj.h"
 #include <salvia/ext/resource/texture/tex_io.h>
+#include <salvia/ext/swap_chain/swap_chain.h>
 
 #include <salviau/include/common/sample_app.h>
 #include <salviau/include/common/path.h>

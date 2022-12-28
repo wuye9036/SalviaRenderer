@@ -10,11 +10,11 @@
 #include <salvia/common/colors.h>
 #include <salvia/resource/texture.h>
 
-#include <salvia/ext/swap_chain/swap_chain.h>
-#include <salvia/ext/resource/mesh/sa/material.h>
-#include <salvia/ext/resource/mesh/sa/mesh_io.h>
-#include <salvia/ext/resource/mesh/sa/mesh_io_collada.h>
+#include "salvia/ext/resource/mesh/material.h"
+#include "salvia/ext/resource/mesh/mesh_io.h"
+#include "salvia/ext/resource/mesh/mesh_io_collada.h"
 #include <salvia/ext/resource/texture/tex_io.h>
+#include <salvia/ext/swap_chain/swap_chain.h>
 
 #include <eflib/platform/main.h>
 
