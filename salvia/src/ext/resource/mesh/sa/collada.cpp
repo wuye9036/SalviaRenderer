@@ -107,7 +107,7 @@ bool dae_source::parse(ptree &root) {
     } else if (child.first == "technique_common") {
       tech = load_child<dae_tech>(child.second);
     } else {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
 

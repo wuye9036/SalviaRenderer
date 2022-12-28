@@ -158,6 +158,7 @@ struct matrix_<ScalarT, 4, 4, 4> : matrix_operators<ScalarT, 4, 4, 4, true>,
   matrix_() = default;
 
   matrix_(matrix_ const &v) = default;
+  matrix_& operator = (matrix_ const &v) = default;
 
   matrix_(ScalarT _11, ScalarT _12, ScalarT _13, ScalarT _14, ScalarT _21, ScalarT _22, ScalarT _23,
           ScalarT _24, ScalarT _31, ScalarT _32, ScalarT _33, ScalarT _34, ScalarT _41, ScalarT _42,

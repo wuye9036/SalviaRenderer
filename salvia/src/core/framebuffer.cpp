@@ -613,12 +613,12 @@ void framebuffer::clear_depth_stencil(surface *tar, uint32_t flag, float depth, 
       clear_op = write_depth_0_stencil_1<pixel_format_color_rg32f>;
       break;
     default:
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
     break;
   }
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   for (size_t y = 0; y < tar->height(); ++y) {

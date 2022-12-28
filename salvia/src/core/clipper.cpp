@@ -34,7 +34,7 @@ void clipper::set_context(clip_context const *ctxt) {
     clip_impl_ = &clipper::clip_solid_triangle;
     break;
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 }
 

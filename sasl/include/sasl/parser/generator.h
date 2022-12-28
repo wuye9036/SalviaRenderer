@@ -31,10 +31,10 @@ class expectation_failure : public std::exception {
 public:
   expectation_failure(token_iterator iter, parser const *p);
   parser const *get_parser();
-  virtual const char *what() const throw();
+  [[nodiscard]] const char *what() const noexcept override;
 
 #if defined(EFLIB_MINGW) || defined(EFLIB_GCC)
-  virtual ~expectation_failure() _GLIBCXX_USE_NOEXCEPT {}
+  ~expectation_failure() _GLIBCXX_USE_NOEXCEPT override = default;
 #endif
 
 private:
@@ -50,17 +50,17 @@ public:
   attribute();
   virtual ~attribute();
 
-  std::shared_ptr<attribute> child(size_t idx) const { return child(static_cast<int>(idx)); }
+  [[nodiscard]] std::shared_ptr<attribute> child(size_t idx) const { return child(static_cast<int>(idx)); }
 
   virtual std::shared_ptr<attribute> child(int idx) const = 0;
 
-  virtual size_t child_size() const = 0;
+  [[nodiscard]] virtual size_t child_size() const = 0;
 
-  virtual intptr_t rule_id() const;
+  [[nodiscard]] virtual intptr_t rule_id() const;
   virtual void rule_id(intptr_t id);
 
-  virtual token token_beg() const;
-  virtual token token_end() const;
+  [[nodiscard]] virtual token token_beg() const;
+  [[nodiscard]] virtual token token_end() const;
 
   virtual void token_range(token, token = token::uninitialized());
 
@@ -73,8 +73,8 @@ protected:
 // Terminal
 class terminal_attribute : public attribute {
 public:
-  virtual std::shared_ptr<attribute> child(int idx) const;
-  virtual size_t child_size() const;
+  [[nodiscard]] std::shared_ptr<attribute> child(int idx) const override;
+  [[nodiscard]] size_t child_size() const override;
   token tok = token::uninitialized();
 };
 
@@ -83,8 +83,8 @@ public:
 // -rule
 class sequence_attribute : public attribute {
 public:
-  virtual std::shared_ptr<attribute> child(int idx) const;
-  virtual size_t child_size() const;
+  [[nodiscard]] std::shared_ptr<attribute> child(int idx) const override;
+  [[nodiscard]] size_t child_size() const override;
   std::vector<std::shared_ptr<attribute>> attrs;
 };
 
@@ -93,8 +93,8 @@ class selector_attribute : public attribute {
 public:
   selector_attribute();
 
-  virtual std::shared_ptr<attribute> child(int idx) const;
-  virtual size_t child_size() const;
+  [[nodiscard]] std::shared_ptr<attribute> child(int idx) const override;
+  [[nodiscard]] size_t child_size() const override;
   std::shared_ptr<attribute> attr;
   int selected_idx;
 };
@@ -103,8 +103,8 @@ public:
 // rule0 > rule1
 class queuer_attribute : public attribute {
 public:
-  virtual std::shared_ptr<attribute> child(int idx) const;
-  virtual size_t child_size() const;
+  [[nodiscard]] std::shared_ptr<attribute> child(int idx) const override;
+  [[nodiscard]] size_t child_size() const override;
   std::vector<std::shared_ptr<attribute>> attrs;
 };
 
@@ -126,17 +126,17 @@ public:
   static parse_results worse(parse_results const &l, parse_results const &r);
   static parse_results better(parse_results const &l, parse_results const &r);
 
-  bool worse_than(parse_results const &v) const;
-  bool better_than(parse_results const &v) const;
+  [[nodiscard]] bool worse_than(parse_results const &v) const;
+  [[nodiscard]] bool better_than(parse_results const &v) const;
 
-  bool is_succeed() const;
-  bool is_failed() const;
-  bool is_recovered() const;
-  bool is_expected_failed() const;
-  bool is_recovered_expected_failed() const;
+  [[nodiscard]] bool is_succeed() const;
+  [[nodiscard]] bool is_failed() const;
+  [[nodiscard]] bool is_recovered() const;
+  [[nodiscard]] bool is_expected_failed() const;
+  [[nodiscard]] bool is_recovered_expected_failed() const;
 
-  bool is_expected_failed_or_recovered() const;
-  bool is_continuable() const;
+  [[nodiscard]] bool is_expected_failed_or_recovered() const;
+  [[nodiscard]] bool is_continuable() const;
 
 private:
   int tag;
@@ -154,11 +154,11 @@ public:
   virtual parse_results parse(token_iterator &iter, token_iterator end,
                               std::shared_ptr<attribute> &attr,
                               sasl::common::diag_chat *diags) const = 0;
-  bool is_expected() const;
+  [[nodiscard]] bool is_expected() const;
   void is_expected(bool v);
   // error_catcher operator[](error_handler on_err);
-  virtual std::shared_ptr<parser> clone() const = 0;
-  virtual ~parser() {}
+  [[nodiscard]] virtual std::shared_ptr<parser> clone() const = 0;
+  virtual ~parser() = default;
 
 private:
   bool expected;
@@ -169,9 +169,9 @@ public:
   terminal(size_t tok_id, std::string const &desc);
   terminal(terminal const &rhs);
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
-  std::string const &get_desc() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
+  [[nodiscard]] std::string const &get_desc() const;
 
 private:
   terminal &operator=(terminal const &);
@@ -187,8 +187,8 @@ public:
   repeater(size_t lower_bound, size_t upper_bound, std::shared_ptr<parser> expr);
   repeater(repeater const &rhs);
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
 
 private:
   size_t lower_bound;
@@ -203,11 +203,11 @@ public:
   selector(selector const &rhs);
 
   selector &add_branch(std::shared_ptr<parser> p);
-  std::vector<std::shared_ptr<parser>> const &branches() const;
+  [[nodiscard]] std::vector<std::shared_ptr<parser>> const &branches() const;
 
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
 
 private:
   std::vector<std::shared_ptr<parser>> slc_branches;
@@ -219,11 +219,11 @@ public:
   queuer(queuer const &rhs);
 
   queuer &append(std::shared_ptr<parser> p, bool is_expected = false);
-  std::vector<std::shared_ptr<parser>> const &exprs() const;
+  [[nodiscard]] std::vector<std::shared_ptr<parser>> const &exprs() const;
 
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
 
 private:
   std::vector<std::shared_ptr<parser>> exprlst;
@@ -231,12 +231,12 @@ private:
 
 class negnativer : public parser {
 public:
-  negnativer(std::shared_ptr<parser>);
+  explicit negnativer(std::shared_ptr<parser>);
   negnativer(negnativer const &rhs);
 
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
 
 private:
   std::shared_ptr<parser> expr;
@@ -245,20 +245,20 @@ private:
 class rule : public parser {
 public:
   rule();
-  rule(intptr_t id);
-  rule(std::shared_ptr<parser> expr, intptr_t id = -1);
+  explicit rule(intptr_t id);
+  explicit rule(std::shared_ptr<parser> expr, intptr_t id = -1);
   rule(rule const &rhs);
-  rule(parser const &rhs);
+  explicit rule(parser const &rhs);
   rule &operator=(parser const &rhs);
   rule &operator=(rule const &rhs);
 
-  intptr_t id() const;
-  std::string const &name() const;
+  [[nodiscard]] intptr_t id() const;
+  [[nodiscard]] std::string const &name() const;
   void name(std::string const &v);
-  parser const *get_parser() const;
+  [[nodiscard]] parser const *get_parser() const;
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
 
 private:
   intptr_t preset_id;
@@ -269,12 +269,12 @@ private:
 class rule_wrapper : public parser {
 public:
   rule_wrapper(rule_wrapper const &rhs);
-  rule_wrapper(rule const &rhs);
+  explicit rule_wrapper(rule const &rhs);
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
-  std::string const &name() const;
-  rule const *get_rule() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
+  [[nodiscard]] std::string const &name() const;
+  [[nodiscard]] rule const *get_rule() const;
 
 private:
   rule_wrapper &operator=(rule_wrapper const &);
@@ -286,17 +286,17 @@ public:
   endholder();
   endholder(endholder const &);
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
-  std::shared_ptr<parser> clone() const;
+                      sasl::common::diag_chat *diags) const override;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
 };
 
 class error_catcher : public parser {
 public:
   error_catcher(std::shared_ptr<parser> const &p, error_handler err_handler);
   error_catcher(error_catcher const &);
-  std::shared_ptr<parser> clone() const;
+  [[nodiscard]] std::shared_ptr<parser> clone() const override;
   parse_results parse(token_iterator &iter, token_iterator end, std::shared_ptr<attribute> &attr,
-                      sasl::common::diag_chat *diags) const;
+                      sasl::common::diag_chat *diags) const override;
 
 private:
   std::shared_ptr<parser> expr;

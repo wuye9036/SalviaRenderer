@@ -35,7 +35,7 @@ salviar::buffer_ptr mesh_impl::get_vertex_buffer(size_t buffer_index) {
   }
 }
 
-void mesh_impl::gen_adjancency() { EFLIB_ASSERT_UNIMPLEMENTED(); }
+void mesh_impl::gen_adjancency() { ef_unimplemented(); }
 
 void mesh_impl::render() {
   assert(device_);

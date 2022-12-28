@@ -196,7 +196,7 @@ public:
 #if defined(EFLIB_DEBUG)
     if ((id2 > used_verts_.size()) || (-1 == used_verts_[id0]) || (-1 == used_verts_[id1]) ||
         (-1 == used_verts_[id2])) {
-      assert(!"The vertex could not be transformed. Maybe errors occurred on index statistics or "
+      EF_ASSERT(false, "The vertex could not be transformed. Maybe errors occurred on index statistics or "
               "vertex tranformation.");
       // return null_obj;
     }

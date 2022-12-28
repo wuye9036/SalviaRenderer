@@ -286,7 +286,7 @@ cg_type *cg_service::member_tyinfo(cg_type const *agg, size_t index) const {
 
     ef_unreachable("Out of struct bound.");
   } else {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   return nullptr;
@@ -517,9 +517,9 @@ value_array cg_service::load_as_llvm_c(multi_value const &v, abis abi) {
     // NOTE: We assume that, if tyinfo is null and hint is none, it is only the
     // entry of vs/ps. Otherwise, tyinfo must be not nullptr.
     if (!v.ty() && hint == builtin_types::none) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     } else {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
 
@@ -648,13 +648,13 @@ multi_value cg_service::emit_mul_intrin(multi_value const &lhs, multi_value cons
     if (is_scalar(rhint)) {
       return emit_mul_comp(lhs, rhs);
     } else if (is_vector(rhint)) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     } else if (is_matrix(rhint)) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   } else if (is_vector(lhint)) {
     if (is_scalar(rhint)) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     } else if (is_vector(rhint)) {
       return emit_dot_vv(lhs, rhs);
     } else if (is_matrix(rhint)) {
@@ -662,7 +662,7 @@ multi_value cg_service::emit_mul_intrin(multi_value const &lhs, multi_value cons
     }
   } else if (is_matrix(lhint)) {
     if (is_scalar(rhint)) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     } else if (is_vector(rhint)) {
       return emit_mul_mv(lhs, rhs);
     } else if (is_matrix(rhint)) {
@@ -670,7 +670,7 @@ multi_value cg_service::emit_mul_intrin(multi_value const &lhs, multi_value cons
     }
   }
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -745,7 +745,7 @@ multi_value cg_service::emit_extract_ref(multi_value const &lhs, size_t idx) {
   if (is_vector(agg_hint)) {
     return multi_value::slice(lhs, elem_indexes(static_cast<char>(idx)));
   } else if (is_matrix(agg_hint)) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return multi_value();
   } else if (agg_hint == builtin_types::none) {
     value_array agg_address = lhs.load_ref();
@@ -763,7 +763,7 @@ multi_value cg_service::emit_extract_ref(multi_value const &lhs, size_t idx) {
     }
     return create_value(tyinfo, elem_address, value_kinds::reference, lhs.abi());
   }
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -807,7 +807,7 @@ multi_value cg_service::emit_extract_ref(multi_value const &lhs, multi_value con
 
     // Support one-dimension array only.
     if (array_tyn->array_lens.size() > 1) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
 
     switch (promoted_abi) {
@@ -890,7 +890,7 @@ multi_value cg_service::emit_extract_val(multi_value const &lhs, multi_value con
 
     // Support one-dimension array only.
     if (array_tyn->array_lens.size() > 1) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
 
     switch (abi) {
@@ -920,7 +920,7 @@ multi_value cg_service::emit_extract_val(multi_value const &lhs, multi_value con
     }
     elem_hint = scalar_of(agg_hint);
   } else if (is_matrix(agg_hint)) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     // assert( promote_abi(lhs.abi(), abis::llvm) == abis::llvm );
     // elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
     // abi = lhs.abi();
@@ -949,7 +949,7 @@ multi_value cg_service::emit_extract_elem_mask(multi_value const &vec,
   if (is_vector(vec.hint())) {
     swz_hint = vector_of(scalar_of(vec.hint()), idx_len);
   } else if (is_matrix(vec.hint())) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   } else {
     assert(false);
   }
@@ -962,7 +962,7 @@ multi_value cg_service::emit_extract_elem_mask(multi_value const &vec,
     return swz_proxy;
   } else {
     if (is_scalar(vec.hint())) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     } else if (is_vector(vec.hint())) {
       value_array vec_v = vec.load(promote_abi(abis::llvm, vec.abi()));
       switch (vec.abi()) {
@@ -977,7 +977,7 @@ multi_value cg_service::emit_extract_elem_mask(multi_value const &vec,
         assert(false);
       }
     } else if (is_matrix(vec.hint())) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
 
@@ -1119,7 +1119,7 @@ multi_value cg_service::emit_sqrt(multi_value const &arg_value) {
                                                 std::bind(&cg_extension::sqrt_sv, ext_.get(), _1));
     return create_value(arg_value.ty(), arg_value.hint(), ret_v, value_kinds::value, arg_abi);
   } else {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return multi_value();
   }
 }
@@ -1342,7 +1342,7 @@ multi_value cg_service::create_value_by_scalar(multi_value const &scalar, cg_typ
     scalars.insert(scalars.end(), vsize, scalar);
     return create_vector(scalars, scalar.abi());
   } else {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   return multi_value();
@@ -1362,7 +1362,7 @@ multi_value cg_service::emit_any(multi_value const &v) {
     }
     return ret;
   } else if (is_matrix(hint)) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   } else {
     assert(false);
   }
@@ -1383,7 +1383,7 @@ multi_value cg_service::emit_all(multi_value const &v) {
     }
     return ret;
   } else if (is_matrix(hint)) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   } else {
     assert(false);
   }
@@ -1702,7 +1702,7 @@ multi_value cg_service::emit_tex_grad_impl(multi_value const &samp, multi_value 
 multi_value cg_service::emit_tex_bias_impl(multi_value const & /*samp*/,
                                            multi_value const & /*coord*/,
                                            externals::id /*ps_intrin*/) {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 

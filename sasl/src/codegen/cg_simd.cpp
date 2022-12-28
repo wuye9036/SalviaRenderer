@@ -459,7 +459,7 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
     node_ctxt(gsym->associated_node(), true)->node_value = layout_to_value(psi);
 
     // if (v.init){
-    //	EFLIB_ASSERT_UNIMPLEMENTED();
+    //	ef_unimplemented();
     // }
   }
 }
@@ -506,7 +506,7 @@ SASL_SPECIFIC_VISIT_DEF(visit_return, jump_statement) {
 SASL_SPECIFIC_VISIT_DEF(visit_continue, jump_statement) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 SASL_SPECIFIC_VISIT_DEF(visit_break, jump_statement) {
   EFLIB_UNREF_DECLARATOR(data);
@@ -517,7 +517,7 @@ SASL_SPECIFIC_VISIT_DEF(visit_break, jump_statement) {
 SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 multi_value cg_simd::layout_to_value(sv_layout *svl) {
   builtin_types bt = sasl::enums::to_builtin_types(svl->value_type);

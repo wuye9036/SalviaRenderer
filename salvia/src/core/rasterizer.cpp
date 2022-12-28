@@ -109,7 +109,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       end = &v1;
     }
 
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
 
     float fsx = fast_floor(start->position().x() + 0.5f);
 
@@ -168,7 +168,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       end = &v1;
     }
 
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
 
     float fsy = fast_floor(start->position().y() + 0.5f);
 
@@ -1029,7 +1029,7 @@ void rasterizer::update_prim_info(render_state const *state) {
     prim_ = pt_wireframe_tri;
   } else {
     prim_ = pt_none;
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   switch (prim_) {
@@ -1041,7 +1041,7 @@ void rasterizer::update_prim_info(render_state const *state) {
     prim_size_ = 3;
     break;
   default:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 }
 
@@ -1120,8 +1120,8 @@ void rasterizer::draw() {
   acc_clipping_(pipeline_prof_, gse_.compact_start_time() - clipping_start_time);
   acc_compact_clip_(pipeline_prof_, fetch_time_stamp_() - gse_.compact_start_time());
 
-  clipped_verts_ = gse_.verts();
-  clipped_verts_count_ = gse_.verts_count();
+  clipped_verts_ = gse_.vertexes();
+  clipped_verts_count_ = gse_.vertex_count();
   clipped_prims_count_ = clipped_verts_count_ / prim_size_;
 
   acc_ia_primitives_(pipeline_stat_, prim_count_);

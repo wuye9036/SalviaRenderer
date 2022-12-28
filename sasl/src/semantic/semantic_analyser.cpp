@@ -203,7 +203,7 @@ SASL_VISIT_DEF(unary_expression) {
       v.op == operators::prefix_decr || v.op == operators::postfix_decr) {
     if (!is_integer(inner_sem->ty_proto()->tycode)) {
       // REPORT ERROR
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
       return;
     }
   }
@@ -240,7 +240,7 @@ SASL_VISIT_DEF(cast_expression) {
   if (src_tsi->tid() != casted_tsi->tid()) {
     if (caster->try_cast(casted_tsi->tid(), src_tsi->tid()) == caster_t::nocast) {
       // Here is code error. Compiler should report it.
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
       return;
     }
   }
@@ -308,7 +308,7 @@ SASL_VISIT_DEF(binary_expression) {
   parameter_lrvs &operator_lrvs(operator_parameter_lrvs_[v.op]);
   if ((operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) == 0) {
     // TODO: Try to report error.
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   // rvalue we consider that it is always mactched suceeded.
@@ -321,7 +321,7 @@ SASL_VISIT_DEF(binary_expression) {
       }
     } else {
       // TODO: Try to report error.
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
 
@@ -476,7 +476,7 @@ SASL_VISIT_DEF(call_expression) {
   }
 
   if (expr_sem->is_function_pointer()) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     // Maybe pointer of function.
   } else {
     // Overload
@@ -562,7 +562,6 @@ SASL_VISIT_DEF(member_expression) {
   tid_t mem_typeid = -1;
 
   elem_indexes swizzle_code;
-  int32_t member_index = -1;
 
   if (agg_type->is_struct()) {
     // Aggregated is struct
@@ -577,7 +576,6 @@ SASL_VISIT_DEF(member_expression) {
       assert(mem_declr);
       node_semantic *mem_si = get_node_semantic(mem_declr);
       mem_typeid = mem_si->tid();
-      member_index = mem_si->member_index();
       assert(mem_typeid != -1);
     }
   } else if (agg_type->is_builtin() &&
@@ -855,19 +853,19 @@ SASL_VISIT_DEF(alias_type) {
 SASL_VISIT_DEF(function_type) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 SASL_VISIT_DEF(parameter) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 SASL_VISIT_DEF(function_def) {
   EFLIB_UNREF_DECLARATOR(data);
   EFLIB_UNREF_DECLARATOR(v);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 SASL_VISIT_DEF(parameter_full) {
@@ -1122,7 +1120,7 @@ SASL_VISIT_DEF(case_label) {
 SASL_VISIT_DEF(ident_label) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(data);
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 SASL_VISIT_DEF(switch_statement) {
@@ -2068,7 +2066,7 @@ void semantic_analyser::register_constructor2(string_view name,
 void semantic_analyser::register_builtin_types() {
   for (builtin_types const &btc : list_of_builtin_types()) {
     if (module_semantic_->pety()->get(btc) == -1) {
-      assert(!"Register builtin type failed!");
+      EF_ASSERT(false, "Register builtin type failed!");
     }
   }
 }
@@ -2157,10 +2155,10 @@ void semantic_analyser::mark_modified(expression *expr) {
       return;
     }
 
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return;
   }
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 }
 
 semantic_analyser::parameter_lrvs::parameter_lrvs(lvalue_or_rvalue::id ret_lrv,

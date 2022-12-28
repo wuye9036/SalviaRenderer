@@ -98,7 +98,6 @@ protected:
 };
 
 typedef std::vector<llvm::Value *> value_array;
-bool valid_any(value_array const &arr);
 bool valid_all(value_array const &arr);
 
 class cg_service;
@@ -271,7 +270,7 @@ struct cg_function {
   /// Need mask
   bool need_mask() const;
   /// Return name
-  void return_name(std::string const &s);
+  void return_name(std::string const &s) const;
   /// Set Inline hint
   void inline_hint();
   void allocation_block(insert_point_t const &ip);
@@ -284,7 +283,7 @@ struct cg_function {
   sasl::syntax_tree::function_def *fn_def;
   llvm::Function *fn;
   bool c_compatible;
-  bool external;
+  bool external{};
   bool partial_execution;
   bool ret_void;
   cg_service *cg;

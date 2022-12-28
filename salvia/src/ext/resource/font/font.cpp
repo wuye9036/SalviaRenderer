@@ -88,12 +88,12 @@ public:
       return;
     }
     if (err == FT_Err_Cannot_Open_Resource) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     } else if (err == FT_Err_Unknown_File_Format) {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
 
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   ~font_impl() {
@@ -124,7 +124,7 @@ public:
       FT_Set_Char_Size(face_.get(), sz_uint << 6, sz_uint << 6, dpi, dpi);
       break;
     default:
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
 

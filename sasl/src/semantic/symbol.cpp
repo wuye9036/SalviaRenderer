@@ -58,11 +58,11 @@ symbol *symbol::create(module_semantic *owner, symbol *parent, node *assoc_node)
 }
 
 symbol::symbol(module_semantic *owner, symbol *parent, node *assoc_node, string_view mangled)
-    : owner_(owner), parent_(parent), associated_node_(assoc_node), unmangled_name_(mangled),
-      mangled_name_(mangled) {}
+    : owner_(owner), associated_node_(assoc_node), parent_(parent), mangled_name_(mangled),
+      unmangled_name_(mangled) {}
 
 symbol *symbol::find_this(string_view mangled) const {
-  named_children_dict::const_iterator iter = named_children_.find(mangled);
+  auto iter = named_children_.find(mangled);
   return iter == named_children_.end() ? nullptr : iter->second;
 }
 
@@ -78,7 +78,7 @@ symbol *symbol::find(string_view mangled) const {
 }
 
 symbol::symbol_array symbol::find_overloads(string_view unmangled) const {
-  overload_dict::const_iterator it = overloads_.find(unmangled);
+  auto it = overloads_.find(unmangled);
   if (it != overloads_.end()) {
     return it->second.first;
   }
@@ -112,7 +112,7 @@ symbol::symbol_array symbol::find_assign_overloads(string_view unmangled, caster
 }
 
 symbol *symbol::add_named_child(string_view mangled, node *child_node) {
-  named_children_dict::iterator iter = named_children_.find(mangled);
+  auto iter = named_children_.find(mangled);
   if (iter != named_children_.end()) {
     return nullptr;
   }
@@ -128,23 +128,17 @@ symbol *symbol::add_function_begin(function_def *child_fn) {
   if (!child_fn) {
     return nullptr;
   }
-  symbol *ret = new (owner_->alloc_symbol()) symbol(owner_, this, child_fn, nullptr);
+  auto *ret = new (owner_->alloc_symbol()) symbol(owner_, this, child_fn, string_view{});
   ret->unmangled_name_ = child_fn->name.lit();
   return ret;
 }
 
 bool symbol::add_function_end(symbol *sym, tid_t fn_tid) {
-  EFLIB_ASSERT_AND_IF(sym, "Input symbol is nullptr.") { return false; }
-
+  ef_verify(sym != nullptr);
   node *sym_node = sym->associated_node();
+  ef_verify(sym_node != nullptr);
 
-  EFLIB_ASSERT_AND_IF(
-      sym_node,
-      "Node of input symbol is nullptr. Maybe the symbol is not created by add_function_begin().") {
-    return false;
-  }
-
-  overload_dict::iterator iter = overloads_.find(sym->unmangled_name_);
+  auto iter = overloads_.find(sym->unmangled_name_);
   if (iter == overloads_.end()) {
     iter =
         overloads_
@@ -153,10 +147,10 @@ bool symbol::add_function_end(symbol *sym, tid_t fn_tid) {
   }
 
   // Check function had same signature yet. It is not overloading, it's error.
-  vector<tid_t>::iterator tid_iter =
+  auto tid_iter =
       std::find(iter->second.second.begin(), iter->second.second.end(), fn_tid);
   if (tid_iter != iter->second.second.end()) {
-    EFLIB_ASSERT_UNIMPLEMENTED0("Overloadings are same signature.");
+    EFLIB_ASSERT_UNIMPLEMENTED0("Overloads are same signature.");
     return false;
   }
 
@@ -177,7 +171,7 @@ void symbol::cancel_function(symbol * /*sym*/) {
   // Do nothing while function is cancelled.
 }
 
-void symbol::remove_child(symbol * /*sym*/) { EFLIB_ASSERT_UNIMPLEMENTED(); }
+void symbol::remove_child(symbol * /*sym*/) { ef_unimplemented(); }
 
 void symbol::remove() {
   if (parent_) {
@@ -208,7 +202,7 @@ string_view symbol::mangled_name() const {
 string_view symbol::unmangled_name() const { return unmangled_name_; }
 
 symbol *symbol::add_child(node *child_node) {
-  children_dict::iterator iter = children_.find(child_node);
+  auto iter = children_.find(child_node);
   if (iter != children_.end()) {
     return nullptr;
   }
@@ -274,8 +268,6 @@ void is_same_or_equiva(module_semantic *msem, node *nd0, node *nd1, bool &same, 
   builtin_types nd0_bt = nd0_sem->ty_proto()->tycode;
   builtin_types nd1_bt = nd1_sem->ty_proto()->tycode;
   equiva = is_equiva(nd0_bt, nd1_bt);
-
-  return;
 }
 
 void symbol::collapse_vector1_overloads(symbol_array &candidates) const {
@@ -317,7 +309,7 @@ void symbol::collapse_vector1_overloads(symbol_array &candidates) const {
 
 bool get_deprecated_and_next(symbol *const &sym, symbol *const *begin_addr,
                              vector<bool> const &deprecated) {
-  intptr_t i = (intptr_t)std::distance(begin_addr, boost::addressof(sym));
+  auto i = (intptr_t)std::distance(begin_addr, boost::addressof(sym));
   return !deprecated[i];
 }
 
@@ -344,18 +336,16 @@ symbol::symbol_array symbol::find_overloads_impl(string_view unmangled, caster_t
   // Find candidates.
   // Following steps could impl function overloading :
   //
-  //	for each candidate in overloads_
-  //		if candidate is a valid overload
-  //		add to candidates
-  //	now the candidates is result.
+  //  for each candidate in overloads_
+  //    if candidate is a valid overload
+  //    add to candidates
+  //  now the candidates is result.
   //
   // better & worse judgment is as same as C#.
   symbol_array candidates;
-  for (size_t i_func = 0; i_func < overloads.size(); ++i_func) {
-    shared_ptr<function_def> matching_func =
-        overloads[i_func]->associated_node()->as_handle<function_def>();
-
-    // could not matched.
+  for (auto & overload : overloads) {
+    auto matching_func = overload->associated_node()->as_handle<function_def>();
+    // not a match.
     if (matching_func->params.size() != args.size()) {
       continue;
     }
@@ -376,14 +366,14 @@ symbol::symbol_array symbol::find_overloads_impl(string_view unmangled, caster_t
       }
     }
     if (all_parameter_success) {
-      candidates.push_back(overloads[i_func]);
+      candidates.push_back(overload);
     }
   }
 
   //  for each candidate in candidates
-  //		for each evaluated in candidate successors.
-  //			if candidate is better than evaluated, deprecate evaluated.
-  //			if candidate is worse than evaluated, deprecated candidate.
+  //    for each evaluated in candidate successors.
+  //      if candidate is better than evaluated, deprecate evaluated.
+  //      if candidate is worse than evaluated, deprecated candidate.
   vector<bool> deprecated(candidates.size(), false);
   for (size_t i_cand = 0; i_cand < candidates.size(); ++i_cand) {
     if (deprecated[i_cand]) {
@@ -443,7 +433,7 @@ symbol::symbol_array symbol::find_overloads_impl(string_view unmangled, caster_t
 }
 
 symbol::overload_position symbol::get_overload_position(std::string_view name) {
-  overload_dict::iterator iter = overloads_.find(name);
+  auto iter = overloads_.find(name);
   if (iter != overloads_.end()) {
     return &(iter->second);
   } else {

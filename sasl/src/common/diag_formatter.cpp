@@ -14,6 +14,9 @@ std::string str(diag_item const *item, compiler_compatibility cc) {
   std::string error_level;
 
   switch (item->level()) {
+  case diag_levels::debug:
+    error_level = "debug";
+    break;
   case diag_levels::info:
     error_level = "info";
     break;
@@ -42,12 +45,12 @@ std::string str(diag_item const *item, compiler_compatibility cc) {
 
     break;
   case cc_gcc:
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return std::string{item->str()};
     break;
   }
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return std::string{item->str()};
 }
 

@@ -88,7 +88,7 @@ parse_results parse_results::better(parse_results const &l, parse_results const 
   return l.tag < r.tag ? l : r;
 }
 
-bool parse_results::worse_than(parse_results const &v) const { return tag > v.tag; }
+[[maybe_unused]] bool parse_results::worse_than(parse_results const &v) const { return tag > v.tag; }
 
 bool parse_results::better_than(parse_results const &v) const { return tag < v.tag; }
 
@@ -137,8 +137,8 @@ token attribute::token_beg() const { return tok_beg; }
 token attribute::token_end() const { return tok_end.is_uninitialized() ? tok_beg : tok_end; }
 
 shared_ptr<attribute> terminal_attribute::child(int /*idx*/) const {
-  assert(!"Terminate attribute has no child.");
-  return shared_ptr<attribute>();
+  EF_ASSERT(false, "Terminate attribute has no child.");
+  return {};
 }
 
 size_t terminal_attribute::child_size() const { return 0; }

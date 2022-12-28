@@ -30,7 +30,7 @@ void default_vso2reg(vec4 *out_registers, void const *in_data,
       memcpy(current_register, attr_data, sizeof(float));
       continue;
     default:
-      assert(!"unsupported lvt");
+      ef_unreachable("unsupported LVT.");
     }
   }
 }

@@ -116,13 +116,13 @@ vec4 &gen_plane(vec4 &out, const vec4 &v0, const vec4 &v1, const vec4 &v2) {
 
 vec4 &hermite(vec4 &out, const vec4 & /*v0*/, const vec4 & /*v1*/, const vec4 & /*v2*/,
               const vec4 & /*v3*/) {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return out;
 }
 
 vec4 &cutmull_rom(vec4 &out, const vec4 & /*v0*/, const vec4 & /*v1*/, const vec4 & /*v2*/,
                   const vec4 & /*v3*/) {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return out;
 }
 

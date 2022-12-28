@@ -258,7 +258,7 @@ vs_output &step_2d_unproj_pos_quad(vs_output *out, const vs_output &in, float st
   pos10_m128 = _mm_add_ps(pos00_m128, d1_m128);
   pos11_m128 = _mm_add_ps(pos01_m128, d1_m128);
 #else
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
 #endif
 
   return *out;

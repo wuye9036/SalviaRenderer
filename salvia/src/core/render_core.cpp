@@ -38,8 +38,6 @@ result render_core::execute() {
     return async_start();
   case command_id::async_end:
     return async_stop();
-  default:
-    EF_ASSERT(false, "Unused command id.");
   }
 
   ++batch_id_;

@@ -102,7 +102,7 @@ string type_repr::str() {
       }
       str_cache += ");";
     } else {
-      EFLIB_ASSERT_UNIMPLEMENTED();
+      ef_unimplemented();
     }
   }
   return str_cache;
@@ -145,7 +145,7 @@ source_position_repr::source_position_repr(shared_ptr<token> const &beg,
     : beg(beg), end(end), cc(cc) {}
 
 std::string source_position_repr::str() {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return std::string();
 }
 

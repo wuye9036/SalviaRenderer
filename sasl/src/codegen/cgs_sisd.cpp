@@ -175,7 +175,7 @@ multi_value cgs_sisd::cast_f2f(multi_value const &v, cg_type *dest_tyi) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(dest_tyi);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
@@ -223,12 +223,12 @@ multi_value cgs_sisd::emit_swizzle(multi_value const &lhs, uint32_t mask) {
   EFLIB_UNREF_DECLARATOR(lhs);
   EFLIB_UNREF_DECLARATOR(mask);
 
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return multi_value();
 }
 
 multi_value cgs_sisd::emit_write_mask(multi_value const &vec, uint32_t mask) {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   EFLIB_UNREF_DECLARATOR(vec);
   EFLIB_UNREF_DECLARATOR(mask);
 
@@ -260,13 +260,13 @@ multi_value cgs_sisd::cast_f2b(multi_value const &v) {
 
 multi_value cgs_sisd::emit_ddx(multi_value const &v) {
   // It is not available in SISD mode.
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return v;
 }
 
 multi_value cgs_sisd::emit_ddy(multi_value const &v) {
   // It is not available in SISD mode.
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return v;
 }
 

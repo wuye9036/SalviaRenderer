@@ -212,8 +212,8 @@ vector<shared_ptr<declaration>> syntax_tree_builder::build_basic_decl(shared_ptr
     ret.push_back(build_struct(typed_decl_attr->attr));
     return ret;
   }
-  SASL_CASE_RULE(typedef_decl) { EFLIB_ASSERT_UNIMPLEMENTED(); }
-  SASL_DEFAULT() { assert(!"Unknown declaration!"); }
+  SASL_CASE_RULE(typedef_decl) { ef_unimplemented(); }
+  SASL_DEFAULT() { EF_ASSERT(false, "Unknown declaration."); }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -329,7 +329,7 @@ void syntax_tree_builder::build_struct_body(shared_ptr<attribute> attr,
 
 shared_ptr<expression> syntax_tree_builder::build_expr(shared_ptr<attribute> attr) {
   if (!attr) {
-    return shared_ptr<expression>();
+    return {};
   }
 
   shared_ptr<expression_list> ret = build_exprlst(attr);
@@ -487,7 +487,7 @@ shared_ptr<expression> syntax_tree_builder::dispatch_lcomb_expr(shared_ptr<attri
   SASL_CASE_RULE(addexpr) { return build_lcomb_expr(attr); }
   SASL_CASE_RULE(mulexpr) { return build_lcomb_expr(attr); }
   SASL_CASE_RULE(castexpr) { return build_castexpr(attr); }
-  SASL_DEFAULT() { assert(!"Wrong rule was invoked!"); }
+  SASL_DEFAULT() { EF_ASSERT(false, "Wrong rule was invoked!"); }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -498,10 +498,10 @@ shared_ptr<expression> syntax_tree_builder::build_rhsexpr(shared_ptr<attribute> 
   SASL_SWITCH_RULE(typed_attr->attr)
   SASL_CASE_RULE(condexpr) { return build_condexpr(typed_attr->attr); }
   SASL_CASE_RULE(lorexpr) { return build_lcomb_expr(typed_attr->attr); }
-  SASL_DEFAULT() { assert(!"Error was happened!"); }
+  SASL_DEFAULT() { EF_ASSERT(false, "The rule is unrecognized."); }
   SASL_END_SWITCH_RULE();
 
-  return shared_ptr<expression>();
+  return {};
 }
 
 shared_ptr<expression> syntax_tree_builder::build_condexpr(shared_ptr<attribute> attr) {
@@ -529,10 +529,10 @@ shared_ptr<expression> syntax_tree_builder::build_castexpr(shared_ptr<attribute>
   SASL_SWITCH_RULE(typed_attr->attr)
   SASL_CASE_RULE(unaryexpr) { return build_unaryexpr(typed_attr->attr); }
   SASL_CASE_RULE(typecastedexpr) { return build_typecastedexpr(typed_attr->attr); }
-  SASL_DEFAULT() { assert(!"Error was happened!"); }
+  SASL_DEFAULT() { EF_ASSERT(false, "Error was happened!"); }
   SASL_END_SWITCH_RULE();
 
-  return shared_ptr<expression>();
+  return {};
 }
 
 shared_ptr<expression> syntax_tree_builder::build_unaryexpr(shared_ptr<attribute> attr) {
@@ -540,10 +540,10 @@ shared_ptr<expression> syntax_tree_builder::build_unaryexpr(shared_ptr<attribute
   SASL_SWITCH_RULE(typed_attr->attr)
   SASL_CASE_RULE(unariedexpr) { return build_unariedexpr(typed_attr->attr); }
   SASL_CASE_RULE(postexpr) { return build_postexpr(typed_attr->attr); }
-  SASL_DEFAULT() { assert(!"Error was happened!"); }
+  SASL_DEFAULT() { EF_ASSERT(false, "Error was happened!"); }
   SASL_END_SWITCH_RULE();
 
-  return shared_ptr<expression>();
+  return {};
 }
 
 shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr(shared_ptr<attribute> attr) {
@@ -573,7 +573,7 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr(shared_ptr<attribute>
   shared_ptr<expression> ret = build_pmexpr(attr->child(0));
 
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, postfix_attrs, attr->child(1));
-  for (shared_ptr<attribute> postfix_attr : postfix_attrs->attrs) {
+  for (auto const& postfix_attr : postfix_attrs->attrs) {
     shared_ptr<attribute> expr_attr = postfix_attr->child(0);
     SASL_SWITCH_RULE(expr_attr)
     SASL_CASE_RULE(idxexpr) { ret = build_indexexpr(expr_attr->child(1), ret); }
@@ -716,10 +716,10 @@ shared_ptr<tynode> syntax_tree_builder::build_unqualedtype(shared_ptr<attribute>
     return type_ident;
   }
   SASL_CASE_RULE(struct_decl) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
     return ret;
   }
-  SASL_DEFAULT() { EFLIB_ASSERT_UNIMPLEMENTED(); }
+  SASL_DEFAULT() { ef_unimplemented(); }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -760,7 +760,7 @@ shared_ptr<initializer> syntax_tree_builder::build_init(shared_ptr<attribute> at
     expr_init->init_expr = build_assignexpr(init_body_attr);
     ret = expr_init;
   }
-  SASL_CASE_RULE(nullable_initlist) { EFLIB_ASSERT_UNIMPLEMENTED(); }
+  SASL_CASE_RULE(nullable_initlist) { ef_unimplemented(); }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -993,13 +993,13 @@ shared_ptr<compound_statement> syntax_tree_builder::wrap_to_compound(shared_ptr<
 
 shared_ptr<tynode> syntax_tree_builder::bind_typequal(shared_ptr<tynode> unqual,
                                                       shared_ptr<attribute> qual) {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return unqual;
 }
 
 shared_ptr<tynode> syntax_tree_builder::bind_typequal(shared_ptr<attribute> qual,
                                                       shared_ptr<tynode> unqual) {
-  EFLIB_ASSERT_UNIMPLEMENTED();
+  ef_unimplemented();
   return unqual;
 }
 
@@ -1045,7 +1045,7 @@ void syntax_tree_builder::build_initdecl(shared_ptr<attribute> attr, shared_ptr<
 
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, optional_anno_attr, typed_attr->attrs[3]);
   if (!optional_anno_attr->attrs.empty()) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, optional_init_attr, typed_attr->attrs[4]);

@@ -250,7 +250,7 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
 
       // Add values and types of all used semantics to cache.
       if (param_type->node_class() == node_ids::struct_type) {
-        struct_type *param_struct = static_cast<struct_type *>(param_type);
+        auto *param_struct = static_cast<struct_type *>(param_type);
         for (shared_ptr<declaration> const &decl : param_struct->decls) {
           shared_ptr<variable_declaration> var_decl = decl->as_handle<variable_declaration>();
           if (!var_decl) {
@@ -258,15 +258,13 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
           }
           for (shared_ptr<declarator> const &dclr : var_decl->declarators) {
             node_semantic *dclr_sem = sem_->get_semantic(dclr);
-            dclr_sem->semantic_value_ref();
-
             salvia::shader::semantic_value const &sem_value = dclr_sem->semantic_value_ref();
             sv_layout *psvl = abii->input_sv_layout(sem_value);
             layout_to_node_context(nullptr, psvl, false, is_param_modified);
           }
         }
       } else {
-        EFLIB_ASSERT_UNIMPLEMENTED();
+        ef_unimplemented();
       }
     }
   }
@@ -288,7 +286,7 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
                            sem_->is_modified(gsym));
 
     // if (v.init){
-    //	EFLIB_ASSERT_UNIMPLEMENTED();
+    //	ef_unimplemented();
     // }
   }
 }
@@ -346,7 +344,7 @@ module_vmcode_impl *cg_vs::mod_ptr() { return vmcode_.get(); }
 
 multi_value cg_vs::layout_to_value(sv_layout *svl, bool copy_from_input) {
   if (copy_from_input) {
-    EFLIB_ASSERT_UNIMPLEMENTED();
+    ef_unimplemented();
   }
 
   multi_value ret;
@@ -377,7 +375,7 @@ bool cg_vs::layout_to_node_context(node_context *psc, salvia::shader::sv_layout 
 
   // Find cached node context prototype.
   if (could_cached) {
-    input_copies_dict::iterator it = input_copies_.find(svl->sv);
+    auto it = input_copies_.find(svl->sv);
 
     if (it != input_copies_.end()) {
       // Fetch from cache.
@@ -445,6 +443,6 @@ bool cg_vs::layout_to_node_context(node_context *psc, salvia::shader::sv_layout 
   return false;
 }
 
-cg_vs::~cg_vs() {}
+cg_vs::~cg_vs() = default;
 
 } // namespace sasl::codegen
