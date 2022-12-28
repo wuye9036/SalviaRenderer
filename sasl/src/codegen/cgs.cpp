@@ -284,7 +284,7 @@ cg_type *cg_service::member_tyinfo(cg_type const *agg, size_t index) const {
       }
     }
 
-    assert(!"Out of struct bound.");
+    ef_unreachable("Out of struct bound.");
   } else {
     EFLIB_ASSERT_UNIMPLEMENTED();
   }
@@ -858,7 +858,7 @@ multi_value cg_service::emit_extract_val(multi_value const &lhs, size_t idx) {
       }
     } break;
     default:
-      assert(!"Unknown ABI");
+      ef_unreachable("Unknown ABI");
       break;
     }
     abi = promote_abi(abis::llvm, lhs.abi());
@@ -915,7 +915,7 @@ multi_value cg_service::emit_extract_val(multi_value const &lhs, multi_value con
       elem_val = ext_->extract_element(lhs.load(abis::llvm), idx.load());
       break;
     default:
-      assert(!"Unknown ABI");
+      assert(false);
       break;
     }
     elem_hint = scalar_of(agg_hint);

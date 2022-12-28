@@ -16,7 +16,7 @@ void index_fetcher::update(render_state const *state) {
   if (format_r16_uint == index_format_) {
     stride_ = 2;
   } else {
-    EFLIB_ASSERT(format_r32_uint == index_format_, "Index type is wrong.");
+    EF_ASSERT(format_r32_uint == index_format_, "Index type is wrong.");
     stride_ = 4;
   }
   start_addr_ = state->start_index * stride_;
@@ -113,7 +113,7 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
           out_indexes[i] = biased_index + base_vert_;
         }
       } else {
-        EFLIB_ASSERT(format_r32_uint == index_format_, "Index type is wrong.");
+        EF_ASSERT(format_r32_uint == index_format_, "Index type is wrong.");
 
         uint32_t *pidx = reinterpret_cast<uint32_t *>(index_buffer_address);
         for (uint32_t i = 0; i < prim_vert_count; ++i) {

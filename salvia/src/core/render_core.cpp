@@ -2,12 +2,10 @@
 
 #include <salvia/core/async_object.h>
 #include <salvia/core/binary_modules.h>
-#include <salvia/core/clipper.h>
 #include <salvia/core/framebuffer.h>
 #include <salvia/core/host.h>
 #include <salvia/core/rasterizer.h>
 #include <salvia/core/render_stages.h>
-#include <salvia/core/renderer.h>
 #include <salvia/core/shader_unit.h>
 #include <salvia/core/stream_assembler.h>
 #include <salvia/core/vertex_cache.h>
@@ -41,7 +39,7 @@ result render_core::execute() {
   case command_id::async_end:
     return async_stop();
   default:
-    EFLIB_ASSERT(false, "Unused command id.");
+    EF_ASSERT(false, "Unused command id.");
   }
 
   ++batch_id_;

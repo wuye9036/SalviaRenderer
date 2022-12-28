@@ -45,6 +45,10 @@ result resource_manager::map_impl(mapped_resource &mapped, T const &res, map_mod
     case map_write:
     case map_write_discard:
       renderer_sync_();
+      break;
+    default:
+      // Do nothing.
+      break;
     }
   }
 

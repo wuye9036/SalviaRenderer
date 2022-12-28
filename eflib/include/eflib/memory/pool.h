@@ -91,7 +91,7 @@ private:
 
 template <typename T> class reserved_pool {
 public:
-  reserved_pool() : data_mem(nullptr), sz(0), cap(0), align(0), stride(0) {}
+  reserved_pool() : align(0), stride(0), sz(0), cap(0), data_mem{nullptr} {}
 
   ~reserved_pool() {
     if (align == 1) {

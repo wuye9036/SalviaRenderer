@@ -6,8 +6,8 @@
 #include <salvia/shader/shader_regs_op.h>
 
 #include <salvia/core/render_state.h>
-#include <salvia/core/stream_state.h>
 #include <salvia/core/shader.h>
+#include <salvia/core/stream_state.h>
 
 using namespace eflib;
 using namespace salvia::shader;
@@ -65,7 +65,6 @@ void stream_assembler::update_register_map(
   reg_ied_extra_.clear();
   reg_ied_extra_.reserve(reg_map.size());
 
-  typedef pair<semantic_value, size_t> pair_t;
   for (auto const &sv_reg_pair : reg_map) {
     input_element_desc const *elem_desc = layout_->find_desc(sv_reg_pair.first);
 
@@ -76,13 +75,12 @@ void stream_assembler::update_register_map(
 
     reg_ied_extra_.push_back(reg_ied_extra_t{
         sv_reg_pair.second, elem_desc,
-        semantic_value(elem_desc->semantic_name, elem_desc->semantic_index).default_wcomp_value()});
+        semantic_value(elem_desc->semantic_name, elem_desc->semantic_index).default_w()});
   }
 }
 
 /// Only used by Cpp Vertex Shader
 void stream_assembler::fetch_vertex(vs_input &rv, size_t vert_index) const {
-  typedef tuple<size_t, input_element_desc const *, size_t> tuple_t;
   for (auto const &reg_ied_extra : reg_ied_extra_) {
     auto reg_index = reg_ied_extra.reg_id;
     auto desc = reg_ied_extra.desc;

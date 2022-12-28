@@ -284,7 +284,7 @@ void copy_from_any(shared_ptr<NodeT> &lhs, const any &rhs) {
 
 #define SASL_CLONE_NODE_FUNCTION_DEF(clone_mode, node_type, member_seq)                            \
   SASL_VISIT_DCL(node_type) {                                                                      \
-    EFLIB_ASSERT(data, "Data parameter must not be nullptr, it is used to feedback cloned node."); \
+    EF_ASSERT(data, "Data parameter must not be nullptr, it is used to feedback cloned node."); \
     SASL_##clone_mode##_CLONE_NODE(data, v, node_type, member_seq);                                \
   }
 

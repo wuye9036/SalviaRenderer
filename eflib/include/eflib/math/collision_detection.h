@@ -1,8 +1,11 @@
-#ifndef EFLIB_COLLISION_DETECTION_H
-#define EFLIB_COLLISION_DETECTION_H
+#pragma once
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/math/vector.h>
+
+#include <range/v3/algorithm/fold_left.hpp>
+
+#include <algorithm>
 
 namespace eflib {
 
@@ -12,11 +15,10 @@ template <class T> struct rect {
   rect() : x(T(0)), y(T(0)), w(T(0)), h(T(0)) {}
 
   rect(T x, T y, T w, T h) : x(x), y(y), w(w), h(h) {
-    // EFLIB_ASSERT(w > 0 && h > 0, "");
   }
 
   template <class U>
-  rect(const rect<U> &rhs) : x(T(rhs.x)), y((T)(rhs.y)), w((T)(rhs.w)), h((T)(rhs.h)) {}
+  explicit rect(const rect<U> &rhs) : x(T(rhs.x)), y((T)(rhs.y)), w((T)(rhs.w)), h((T)(rhs.h)) {}
 
   template <class U> rect<T> &operator=(const rect<U> &rhs) {
     x = (T)(rhs.x);
@@ -32,7 +34,7 @@ template <class T> struct rect {
   }
 
   void set_max(eflib::vec4 &max) {
-    EFLIB_ASSERT(max.x > x && max.y > y, "");
+    EF_ASSERT(max.x() > x && max.y() > y, "");
     w = (T)(max.x()) - x;
     h = (T)(max.y()) - y;
   }
@@ -54,36 +56,33 @@ template <class T> struct rect {
   }
 };
 
-template <int demension> class AABB {
+template <size_t Dimension> class AABB {
 public:
   vec4 min_vert;
   vec4 max_vert;
 
-  AABB() {}
+  AABB() = default;
 
-  AABB(const vec4 *pverts, int n) { set_boundary(pverts, n); }
+  AABB(const vec4 *vertexes, int n) { set_boundary(vertexes, n); }
 
-  void set_boundary(const vec4 *pverts, int n) {
-    max_vert = min_vert = pverts[0];
-    append_vertex(pverts + 1, n - 1);
+  void set_boundary(const vec4 *vertexes, int n) {
+    max_vert = min_vert = vertexes[0];
+    append_vertex(vertexes + 1, n - 1);
   }
 
-  void append_vertex(const vec4 *pverts, int n) {
-    for (int ivert = 0; ivert < n; ++ivert) {
-      for (int ielem = 0; ielem < demension; ++ielem) {
-        if (pverts[ivert][ielem] < min_vert[ielem]) {
-          min_vert[ielem] = pverts[ivert][ielem];
-        } else {
-          if (pverts[ivert][ielem] > max_vert[ielem]) {
-            max_vert[ielem] = pverts[ivert][ielem];
-          }
-        }
+  void append_vertex(const vec4 *vertexes, int n) {
+    std::for_each(vertexes, vertexes + n, [this](vec4& vec){
+      for (size_t i_dim = 0; i_dim < Dimension; ++i_dim) {
+        float& box_min = min_vert[i_dim];
+        float& box_max = max_vert[i_dim];
+        box_min = std::min(box_min, vec[i_dim]);
+        box_max = std::max(box_max, vec[i_dim]);
       }
-    }
+    });
   }
 
-  bool is_intersect(const AABB<demension> &rhs) const {
-    for (int i = 0; i < demension; ++i) {
+  bool is_intersect(AABB const& rhs) const {
+    for (int i = 0; i < Dimension; ++i) {
       if (min_vert[i] > rhs.max_vert[i])
         return false;
       if (max_vert[i] < rhs.min_vert[i])
@@ -92,9 +91,9 @@ public:
     return true;
   }
 
-  vec4 get_center() const { return (min_vert + max_vert) / 2.0f; }
+  [[nodiscard]] vec4 get_center() const { return (min_vert + max_vert) / 2.0f; }
 
-  vec4 get_half_size() const { return (max_vert - min_vert) / 2.0f; }
+  [[nodiscard]] vec4 get_half_size() const { return (max_vert - min_vert) / 2.0f; }
 
   void get_center_size(vec4 &c, vec4 &hs) const {
     c = get_center();
@@ -106,4 +105,3 @@ typedef AABB<3> AABB_3D;
 
 bool is_tri_cube_overlap(const AABB_3D &box, const vec4 &v0, const vec4 &v1, const vec4 &v2);
 } // namespace eflib
-#endif

@@ -23,7 +23,7 @@ template <typename ScalarT, int ColumnSize, int RowSize> struct det_ {};
 
 template <typename ScalarT> struct det_<ScalarT, 4, 4> {
   ScalarT det() const {
-    matrix_<ScalarT, 4, 4> const *derived_this = static_cast<matrix_<ScalarT, 4, 4> const *>(this);
+    auto const *derived_this = static_cast<matrix_<ScalarT, 4, 4> const *>(this);
 
     ScalarT _3142_3241(derived_this->data_[2][0] * derived_this->data_[3][1] -
                        derived_this->data_[2][1] * derived_this->data_[3][0]);
@@ -128,7 +128,7 @@ struct matrix_operators<ScalarT, ColumnSize, RowSize, ColumnStride, true>
   }
 
   static matrix_type identity() {
-    constexpr ScalarT s = static_cast<ScalarT>(1);
+    constexpr auto s = static_cast<ScalarT>(1);
     return diag({s, s, s, s});
   }
 };
@@ -141,9 +141,9 @@ struct matrix_
   template <int ColumnStride2>
   using assignable_type = matrix_<ScalarT, ColumnSize, RowSize, ColumnStride2>;
 
-  matrix_() {}
+  matrix_() = default;
 
-  template <int ColumnStride2> matrix_(assignable_type<ColumnStride2> const &v) {
+  template <int ColumnStride2> explicit matrix_(assignable_type<ColumnStride2> const &v) {
     for (size_t i = 0; i < RowSize; ++i) {
       for (size_t j = 0; j < ColumnSize; ++j) {
         this->data_[i][j] = v.data_[i][j];
@@ -155,7 +155,7 @@ struct matrix_
 template <typename ScalarT>
 struct matrix_<ScalarT, 4, 4, 4> : matrix_operators<ScalarT, 4, 4, 4, true>,
                                    matrix_data<ScalarT, 4, 4, 4> {
-  matrix_() {}
+  matrix_() = default;
 
   matrix_(matrix_ const &v) = default;
 

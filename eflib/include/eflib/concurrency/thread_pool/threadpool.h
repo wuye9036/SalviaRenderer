@@ -14,7 +14,7 @@ namespace eflib {
 class thread_pool {
 public:
   explicit thread_pool(uint32_t thread_count)
-      : worker_count_{thread_count}, terminate_{false}, pending_count_{0} {
+      : terminate_{false}, worker_count_{thread_count}, pending_count_{0} {
     initialize();
   }
 

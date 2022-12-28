@@ -1,6 +1,5 @@
 #include <salvia/core/async_renderer.h>
 
-#include <eflib/diagnostics/assert.h>
 #include <eflib/memory/bounded_buffer.h>
 #include <salvia/core/render_core.h>
 #include <salvia/core/renderer_impl.h>
@@ -27,9 +26,9 @@ public:
     }
   }
 
-  ~async_renderer() { release(); }
+  ~async_renderer() override { release(); }
 
-  virtual result flush() {
+  result flush() override {
     while (object_count_in_pool() != MAX_COMMAND_QUEUE) {
       std::this_thread::yield();
     }
@@ -65,7 +64,7 @@ private:
     return state_pool_.size();
   }
 
-  virtual result commit_state_and_command() {
+  result commit_state_and_command() override {
     auto dest_state = alloc_render_state();
     copy_using_state(dest_state.get(), state_.get());
     state_queue_.push_front(dest_state);

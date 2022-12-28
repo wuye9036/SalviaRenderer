@@ -49,7 +49,7 @@ result renderer_impl::set_index_buffer(buffer_ptr const &hbuf, format index_fmt)
   case format_r32_uint:
     break;
   default:
-    EFLIB_ASSERT(false, "The value of index type is invalid.");
+    EF_ASSERT(false, "The value of index type is invalid.");
     return result::failed;
   }
 
@@ -132,7 +132,7 @@ cpp_blend_shader_ptr renderer_impl::get_blend_shader() const { return state_->cp
 
 result renderer_impl::set_viewport(const viewport &vp) {
   if (vp.x < 0 || vp.y < 0 || vp.w >= MAX_RENDER_TARGET_WIDTH || vp.h >= MAX_RENDER_TARGET_HEIGHT) {
-    EFLIB_ASSERT(false, "Viewport size is invalid.");
+    EF_ASSERT(false, "Viewport size is invalid.");
     return result::failed;
   }
   state_->vp = vp;

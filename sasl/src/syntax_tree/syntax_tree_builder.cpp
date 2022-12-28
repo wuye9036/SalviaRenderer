@@ -41,7 +41,7 @@ namespace sasl::syntax_tree {
   {                                                                                                \
     intptr_t rule_attr_id = (attr)->rule_id();                                                     \
     if (rule_attr_id < -1) {                                                                       \
-      EFLIB_ASSERT(rule_attr_id >= -1, "Rule ID must be in [-1, 2^31-1]");                         \
+      EF_ASSERT(rule_attr_id >= -1, "Rule ID must be in [-1, 2^31-1]");                         \
     }
 
 #define SASL_CASE_RULE(rule) else if (rule_attr_id == g.rule.id())

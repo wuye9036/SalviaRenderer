@@ -606,7 +606,7 @@
 // 			rf_name = ty->is_uniform() ? rfile_name::params() : rfile_name::varyings();
 // 			break;
 // 		default:
-// 			EFLIB_ASSERT(false, "Invalid input type.");
+// 			EF_ASSERT(false, "Invalid input type.");
 // 			break;
 // 		}
 

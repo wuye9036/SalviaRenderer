@@ -22,8 +22,8 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(render_state);
 
 class sync_renderer : public renderer_impl {
 public:
-  virtual result flush();
-  virtual result commit_state_and_command();
+  result flush() override;
+  result commit_state_and_command() override;
   sync_renderer();
 };
 

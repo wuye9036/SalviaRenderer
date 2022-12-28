@@ -7,8 +7,8 @@
 
 #include <eflib/memory/allocator.h>
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace salvia::resource {
 
@@ -17,8 +17,9 @@ struct mapped_resource;
 class resource_manager {
 public:
   resource_manager(std::function<void()> sync)
-      : renderer_sync_(sync), map_mode_(map_mode_none),
-        mapped_resource_([this](size_t sz) -> void * { return this->reallocate_buffer(sz); }) {}
+      : renderer_sync_(sync),
+        mapped_resource_([this](size_t sz) -> void * { return this->reallocate_buffer(sz); }),
+        map_mode_(map_mode_none) {}
 
   buffer_ptr create_buffer(size_t size) { return std::make_shared<buffer>(size); }
 

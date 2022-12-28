@@ -6,6 +6,7 @@
 
 #include <range/v3/algorithm/for_each.hpp>
 #include <range/v3/range/concepts.hpp>
+#include <range/v3/view/subrange.hpp>
 
 #include <atomic>
 
@@ -27,10 +28,15 @@ struct thread_context {
     package_cursor &operator=(package_cursor const &rhs) = default;
 
     [[nodiscard]] size_t package_index() const noexcept { return cur; }
-    [[nodiscard]] auto item_range() const noexcept {
+    [[nodiscard]] auto index_range() const noexcept {
       size_t beg = cur * owner->package_size;
       size_t end = std::min(beg + owner->package_size, owner->item_count);
       return std::make_pair(beg, end);
+    }
+    template <std::input_iterator Iter>
+    [[nodiscard]] auto range(Iter base_iter) const noexcept {
+      auto [beg, end] = index_range();
+      return ranges::subrange(base_iter + beg, base_iter + end);
     }
 
     [[nodiscard]] bool valid() const noexcept { return cur < owner->package_count; }

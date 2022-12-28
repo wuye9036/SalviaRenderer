@@ -35,8 +35,6 @@ namespace salvia::core {
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
 
-size_t const invalid_id = 0xffffffff;
-
 #define USE_INDEX_RANGE 0
 
 class vertex_cache_impl : public vertex_cache {
@@ -47,12 +45,12 @@ public:
         acc_ia_vertices_(nullptr), acc_vs_invocations_(nullptr), acc_gather_vtx_(nullptr),
         acc_vtx_proc_(nullptr), thread_count_(num_available_threads()) {}
 
-  void initialize(render_stages const *stages) {
+  void initialize(render_stages const *stages) override{
     assembler_ = stages->assembler.get();
     host_ = stages->host.get();
   }
 
-  void update(render_state const *state) {
+  void update(render_state const *state) override{
     // transformed_verts_.reset();
     index_fetcher_.update(state);
     cpp_vs_ = state->cpp_vs.get();
@@ -68,6 +66,9 @@ public:
     case primitive_triangle_list:
     case primitive_triangle_strip:
       prim_size_ = 3;
+      break;
+
+    default:
       break;
     }
 
@@ -123,7 +124,7 @@ class precomputed_vertex_cache : public vertex_cache_impl {
 public:
   precomputed_vertex_cache() : transformed_verts_capacity_(0) {}
 
-  void prepare_vertices() {
+  void prepare_vertices() override {
     uint64_t gather_vtx_start_time = fetch_time_stamp_();
 
     indices_.resize(prim_count_ * prim_size_);
@@ -165,8 +166,8 @@ public:
 #endif
 
     // Accumulate query counters.
-    acc_ia_vertices_(pipeline_stat_, static_cast<uint64_t>(prim_count_ * prim_size_));
-    acc_vs_invocations_(pipeline_stat_, static_cast<uint64_t>(verts_count));
+    acc_ia_vertices_(pipeline_stat_, prim_count_ * prim_size_);
+    acc_vs_invocations_(pipeline_stat_, verts_count);
     acc_gather_vtx_(pipeline_prof_, fetch_time_stamp_() - gather_vtx_start_time);
 
     // Transform vertexes
@@ -185,7 +186,7 @@ public:
     acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
   }
 
-  void fetch3(vs_output **v, cache_entry_index prim, uint32_t /*thread_id*/) {
+  void fetch3(vs_output **v, cache_entry_index prim, uint32_t /*thread_id*/) override{
     static vs_output null_obj;
     uint32_t id0 = indices_[prim * 3 + 0];
     uint32_t id1 = indices_[prim * 3 + 1];
@@ -209,7 +210,7 @@ public:
 #endif
   }
 
-  void update_statistic() {
+  void update_statistic() override{
     // do nothing
   }
 
@@ -221,7 +222,7 @@ private:
 
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
-      auto prim_range = current_package.item_range();
+      auto prim_range = current_package.index_range();
       uint32_t pkg_min_index, pkg_max_index;
       index_fetcher_.fetch_indexes(&indices_[prim_range.first * prim_size_], &pkg_min_index,
                                    &pkg_max_index, prim_range.first, prim_range.second);
@@ -250,7 +251,7 @@ private:
   void transform_vertex_cppvs(thread_context const *thread_ctx) {
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
-      auto vert_range = current_package.item_range();
+      auto vert_range = current_package.index_range();
       for (auto i = vert_range.first; i < vert_range.second; ++i) {
         uint32_t id = unique_indices_[i];
         used_verts_[id] = static_cast<int32_t>(i);
@@ -267,7 +268,7 @@ private:
 
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
-      auto vert_range = current_package.item_range();
+      auto vert_range = current_package.index_range();
       for (auto i = vert_range.first; i < vert_range.second; ++i) {
         uint32_t vert_index = unique_indices_[i];
         used_verts_[vert_index] = static_cast<int32_t>(i);
@@ -320,7 +321,7 @@ class tls_vertex_cache : public vertex_cache_impl {
 public:
   tls_vertex_cache() : caches_(num_available_threads()) {}
 
-  void prepare_vertices() {
+  void prepare_vertices() override {
     for (uint32_t i = 0; i < num_available_threads(); ++i) {
       auto &cache = caches_[i];
       cache.vso_pool.clear();
@@ -336,7 +337,7 @@ public:
     }
   }
 
-  void fetch3(vs_output **v, cache_entry_index prim, uint32_t thread_id) {
+  void fetch3(vs_output **v, cache_entry_index prim, uint32_t thread_id) override {
     // uint64_t vs_start_time = fetch_time_stamp_();
 
     uint32_t indexes[3];
@@ -421,7 +422,7 @@ public:
     std::cout << "L2 Missing: " << l2_missing_ << std::endl;
     std::cout << "L2 Hitting: " << l2_hitting_ << std::endl;
   }
-  void prepare_vertices() {
+  void prepare_vertices() override {
     memset(shared_items_, INVALID_SHARED_ENTRY, sizeof(shared_items_));
 
     for (uint32_t i = 0; i < num_available_threads(); ++i) {
@@ -465,7 +466,7 @@ public:
     item.first = index;
   }
 
-  void fetch3(vs_output **v, cache_entry_index prim, uint32_t thread_id) {
+  void fetch3(vs_output **v, cache_entry_index prim, uint32_t thread_id) override {
     // uint64_t vs_start_time = fetch_time_stamp_();
 
     uint32_t indexes[3];

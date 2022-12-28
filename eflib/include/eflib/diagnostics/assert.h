@@ -2,8 +2,11 @@
 
 #include <eflib/platform/config.h>
 
+#include <fmt/format.h>
+
 #include <cstdlib>
 #include <iostream>
+#include <source_location>
 
 #ifdef _DEBUG
 
@@ -13,7 +16,7 @@
 #define EFLIB_ABORT() ::abort();
 #endif
 
-#define EFLIB_ASSERT(exp, desc)                                                                    \
+#define EF_ASSERT(exp, desc)                                                                       \
   {                                                                                                \
     static bool isIgnoreAlways = false;                                                            \
     if (!isIgnoreAlways) {                                                                         \
@@ -34,11 +37,11 @@
 //			return 0;
 //		}
 #define EFLIB_ASSERT_AND_IF(expr, desc)                                                            \
-  EFLIB_ASSERT(expr, desc);                                                                        \
+  EF_ASSERT(expr, desc);                                                                           \
   if (!(expr)) /* jump statement */
 
 #else
-#define EFLIB_ASSERT(exp, desc)
+#define EF_ASSERT(exp, desc) (void)(exp);
 #define EFLIB_ASSERT_AND_IF(expr, desc) if (!(expr)) /* jump statement */
 #endif
 namespace eflib {
@@ -47,12 +50,12 @@ const bool Unimplemented = false;
 const bool Unexpected = false;
 } // namespace eflib
 
-#define EFLIB_ASSERT_UNIMPLEMENTED0(desc) EFLIB_ASSERT(eflib::Unimplemented, desc);
+#define EFLIB_ASSERT_UNIMPLEMENTED0(desc) EF_ASSERT(eflib::Unimplemented, desc);
 #define EFLIB_ASSERT_UNIMPLEMENTED()                                                               \
   EFLIB_ASSERT_UNIMPLEMENTED0(" An unimplemented code block was invoked! ");
 #define EFLIB_ASSERT_UNEXPECTED()                                                                  \
-  EFLIB_ASSERT(eflib::Unexpected, "Here is not expected to be executed.");
-#define EFLIB_INTERRUPT(desc) EFLIB_ASSERT(eflib::Interrupted, desc)
+  EF_ASSERT(eflib::Unexpected, "Here is not expected to be executed.");
+#define EFLIB_INTERRUPT(desc) EF_ASSERT(eflib::Interrupted, desc)
 
 namespace eflib {
 namespace detail {
@@ -72,4 +75,12 @@ template <class T> void print_vector(std::ostream &os, const T &v) {
     os << *cit << " ";
   }
 }
+
+template <typename... T, typename... Args>
+void unreachable(std::source_location source_loc, fmt::format_string<T...> fmt, Args &&...args) {
+  fmt::print(stderr, fmt, std::forward<Args>(args)...);
+  fmt::print(stderr,"@ {:s}:{:d}\n", source_loc.file_name(), source_loc.line());
+}
 } // namespace eflib
+
+#define ef_unreachable(...) eflib::unreachable(std::source_location::current(), __VA_ARGS__)

@@ -167,7 +167,7 @@ SASL_VISIT_DEF(binary_expression) {
       args.push_back(v.right_expr.get());
 
       symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
-      EFLIB_ASSERT(overloads.size() == 1, "No or more an one overloads.");
+      EF_ASSERT(overloads.size() == 1, "No or more an one overloads.");
 
       function_def *op_proto = dynamic_cast<function_def *>(overloads[0]->associated_node());
 
@@ -713,7 +713,7 @@ SASL_SPECIFIC_VISIT_DEF(bin_assign, binary_expression) {
   args.push_back(v.right_expr.get());
 
   symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
-  EFLIB_ASSERT(overloads.size() == 1, "No or more an one overloads.");
+  EF_ASSERT(overloads.size() == 1, "No or more an one overloads.");
 
   function_def *op_proto = polymorphic_cast<function_def *>(overloads[0]->associated_node());
 
@@ -1342,7 +1342,7 @@ SASL_SPECIFIC_VISIT_DEF(process_intrinsics, program) {
 
       service()->emit_return(lit_packed, service()->param_abi(false));
     } else {
-      EFLIB_ASSERT(!"Unprocessed intrinsic.", std::string{intr->unmangled_name()}.c_str());
+      EF_ASSERT(!"Unprocessed intrinsic.", std::string{intr->unmangled_name()}.c_str());
     }
     service()->clean_empty_blocks();
 

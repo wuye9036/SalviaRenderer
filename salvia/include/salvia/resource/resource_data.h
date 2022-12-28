@@ -3,6 +3,7 @@
 #include <salvia/common/constants.h>
 
 #include <eflib/concurrency/atomic.h>
+#include <eflib/diagnostics/assert.h>
 #include <eflib/utility/unref_declarator.h>
 
 #include <boost/shared_array.hpp>
@@ -17,9 +18,9 @@ public:
 
   void reallocate();
 
-  void *data() const;
-  size_t size() const;
-  size_t alignment() const;
+  [[nodiscard]] void *data() const;
+  [[nodiscard]] size_t size() const;
+  [[nodiscard]] size_t alignment() const;
 
 private:
   boost::shared_array<char> data_;
@@ -32,7 +33,7 @@ class sync_renderer;
 
 class resource_data {
 private:
-  sync_renderer *renderer_;
+  [[maybe_unused]] sync_renderer *renderer_;
   resource_usage usage_;
   aligned_array data_;
   bool client_mapped_;
@@ -44,7 +45,7 @@ public:
     memcpy(data_.data(), init_data, sz);
   }
 
-  size_t size() const { return data_.size(); }
+  [[nodiscard]] size_t size() const { return data_.size(); }
 
   bool check_mappable(map_mode mm, bool called_by_device) {
     if (client_mapped_) {
@@ -68,9 +69,10 @@ public:
     case map_write_discard:
     case map_write:
       return (usage_ & resource_write) != 0;
+    default:
+      ef_unreachable("Unknown map mode.");
+      return false;
     }
-
-    return false;
   }
 
   map_result map(void **out_data, map_mode mm, bool do_not_wait, bool force_sync) {

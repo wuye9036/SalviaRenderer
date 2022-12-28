@@ -1,9 +1,10 @@
 #include <sasl/codegen/generate_entry.h>
 
-#include <salvia/shader/reflection.h>
 #include <sasl/codegen/cgs.h>
 #include <sasl/enums/traits.h>
 #include <sasl/semantic/reflection_impl.h>
+
+#include <salvia/shader/reflection.h>
 
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -54,11 +55,11 @@ void sort_struct_members(vector<sv_layout *> &sorted_layouts, vector<Type *> &so
   vector<pair<sv_layout *, Type *>> layout_ty_pairs;
   layout_ty_pairs.reserve(layouts_count);
 
-  vector<sv_layout *>::const_iterator layout_it = layouts.begin();
+  auto layout_it = layouts.begin();
   for (Type *ty : tys) {
     size_t sz = (size_t)dataLayout->getTypeStoreSize(ty);
     (*layout_it)->size = sz;
-    layout_ty_pairs.push_back(make_pair(*layout_it, ty));
+    layout_ty_pairs.emplace_back(*layout_it, ty);
     ++layout_it;
   }
 
@@ -116,6 +117,9 @@ Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_servi
   case su_buffer_out:
     param_struct_name = ".s.bufo";
     break;
+  default:
+    ef_unreachable("Unrecognized SV usage.");
+    break;
   }
   assert(param_struct_name);
 
@@ -127,7 +131,7 @@ Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_servi
     param_struct = StructType::create(sem_tys, param_struct_name);
   }
 
-  // Update Layout physical informations.
+  // Update Layout physical information.
   StructLayout const *struct_layout = dataLayout.getStructLayout(param_struct);
 
   size_t next_offset = 0;
@@ -163,7 +167,7 @@ vector<Type *> generate_vs_entry_param_type(reflection_impl const *abii, cg_serv
     ret[i] = PointerType::getUnqual(ret[i]);
   }
 
-  return vector<Type *>(ret.begin() + 1, ret.end());
+  return {ret.begin() + 1, ret.end()};
 }
 
 vector<Type *> generate_ps_entry_param_type(reflection_impl const *abii, cg_service *cg) {
@@ -176,7 +180,7 @@ vector<Type *> generate_ps_entry_param_type(reflection_impl const *abii, cg_serv
   ret[su_stream_out] = generate_parameter_type(abii, su_stream_out, cg);
 
   for (size_t i = 1; i < sv_usage_count; ++i) {
-    sv_usage usage = static_cast<sv_usage>(i);
+    auto usage = static_cast<sv_usage>(i);
     // Only one copy of data in buffer even if it is wrapped mode.
     if (usage == su_buffer_in || usage == su_buffer_out) {
       ret[i] = PointerType::getUnqual(ret[i]);
@@ -187,7 +191,7 @@ vector<Type *> generate_ps_entry_param_type(reflection_impl const *abii, cg_serv
     }
   }
 
-  return vector<Type *>(ret.begin() + 1, ret.end());
+  return {ret.begin() + 1, ret.end()};
 }
 
 } // namespace sasl::codegen

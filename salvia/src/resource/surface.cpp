@@ -119,7 +119,7 @@ result surface::unmap(internal_mapped_resource & /*mapped*/, map_mode /*mm*/) {
 }
 
 void surface::resolve(surface &target) {
-  EFLIB_ASSERT(1 == target.sample_count(), "Resolve's target can't be a multi-sample surface");
+  EF_ASSERT(1 == target.sample_count(), "Resolve's target can't be a multi-sample surface");
 
   color_rgba32f clr;
   color_rgba32f tmp;

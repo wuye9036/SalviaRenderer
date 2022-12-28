@@ -695,7 +695,7 @@ color_rgba32f sampler::sample_impl(int face, float coordx, float coordy, size_t 
     return color_rgba32f(color);
   }
 
-  EFLIB_ASSERT(false, "Mip filters is error.");
+  EF_ASSERT(false, "Mip filters is error.");
   return desc_.border_color;
 }
 #pragma optimize("", on)
@@ -760,7 +760,7 @@ color_rgba32f sampler::sample_cube(float coordx, float coordy, float coordz, flo
     }
   }
 
-  EFLIB_ASSERT(tex_->get_texture_type() != texture_type_cube, "texture is not a cube texture.");
+  EF_ASSERT(tex_->get_texture_type() != texture_type_cube, "texture is not a cube texture.");
 
   return sample_impl<true>(major_dir, s, t, 0, miplevel, nullptr);
 }

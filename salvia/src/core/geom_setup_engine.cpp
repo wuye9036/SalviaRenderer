@@ -89,7 +89,7 @@ void geom_setup_engine::threaded_clip_geometries(thread_context const *thread_ct
 
   thread_context::package_cursor cur = thread_ctx->next_package();
   while (cur.valid()) {
-    std::pair<int32_t, int32_t> prim_range = cur.item_range();
+    std::pair<int32_t, int32_t> prim_range = cur.index_range();
 
     clip_rslt.clipped_verts = clipped_verts_.get() + prim_range.first * 9;
     uint32_t &clipped_verts_count = clipped_package_verts_count_[cur.package_index()];
@@ -148,7 +148,7 @@ void geom_setup_engine::threaded_compact_geometries(thread_context const *thread
   thread_context::package_cursor current_package = thread_ctx->next_package();
 
   while (current_package.valid()) {
-    std::pair<int32_t, int32_t> compact_range = current_package.item_range();
+    std::pair<int32_t, int32_t> compact_range = current_package.index_range();
 
     for (int32_t i = compact_range.first; i < compact_range.second; ++i) {
       vs_output **compacted_addr = compacted_verts_.get() + clipped_package_compacted_addresses_[i];
