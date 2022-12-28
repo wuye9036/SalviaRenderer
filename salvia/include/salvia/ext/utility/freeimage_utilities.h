@@ -1,19 +1,17 @@
-#ifndef SALVIAX_FREEIMAGE_UTILITIES_H
-#define SALVIAX_FREEIMAGE_UTILITIES_H
+#pragma once
 
-#include <salviax/include/utility/utility_forward.h>
+#include <salvia/common/colors.h>
+#include <salvia/common/colors_convertors.h>
 
 #include <eflib/math/collision_detection.h>
-#include <eflib/string/string.h>
-#include <salvia/resource/colors.h>
 
 #include <FreeImage.h>
 
 #include <algorithm>
 
-BEGIN_NS_SALVIAX_UTILITY()
+namespace salvia::ext::utility{
 
-FIBITMAP *load_image(const std::_tstring &fname, int flag FI_DEFAULT(0));
+FIBITMAP *load_image(const std::string &fname, int flag FI_DEFAULT(0));
 
 // Return true if image type is supported for loading.
 bool check_image_type_support(FIBITMAP *image);
@@ -45,7 +43,7 @@ template <> struct FREE_IMAGE_UNIFORM_COLOR<RGBTRIPLE> {
   const CompT &r;
   const CompT &g;
   const CompT &b;
-  const CompT &a;
+  const CompT a;
   FREE_IMAGE_UNIFORM_COLOR(const CompT *c, CompT alpha)
       : r(c[FI_RGBA_RED]), g(c[FI_RGBA_GREEN]), b(c[FI_RGBA_BLUE]), a(alpha) {}
 
@@ -59,7 +57,7 @@ template <> struct FREE_IMAGE_UNIFORM_COLOR<FIRGBF> {
   const CompT &r;
   const CompT &g;
   const CompT &b;
-  const CompT &a;
+  const CompT a;
   FREE_IMAGE_UNIFORM_COLOR(const CompT *c, CompT alpha) : r(c[0]), g(c[1]), b(c[2]), a(alpha) {}
 
 private:
@@ -86,31 +84,29 @@ private:
 // which is compatible with internal color format in FreeImage
 // but components order of it is RGBA.
 template <typename FIColorT> struct salvia_rgba_color_type {
-  typedef salviar::color_max type;
-  static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
+  typedef salvia::color_max type;
+  static const salvia::pixel_format fmt = salvia::pixel_type_to_fmt<type>::fmt;
 };
 template <> struct salvia_rgba_color_type<RGBQUAD> {
-  typedef salviar::color_rgba8 type;
-  static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
+  typedef salvia::color_rgba8 type;
+  static const salvia::pixel_format fmt = salvia::pixel_type_to_fmt<type>::fmt;
 };
 
 template <> struct salvia_rgba_color_type<RGBTRIPLE> {
-  typedef salviar::color_rgba8 type;
-  static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
+  typedef salvia::color_rgba8 type;
+  static const salvia::pixel_format fmt = salvia::pixel_type_to_fmt<type>::fmt;
 };
 
 template <> struct salvia_rgba_color_type<FIRGBF> {
-  typedef salviar::color_rgba32f type;
-  static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
+  typedef salvia::color_rgba32f type;
+  static const salvia::pixel_format fmt = salvia::pixel_type_to_fmt<type>::fmt;
 };
 
 template <> struct salvia_rgba_color_type<FIRGBAF> {
-  typedef salviar::color_rgba32f type;
-  static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
+  typedef salvia::color_rgba32f type;
+  static const salvia::pixel_format fmt = salvia::pixel_type_to_fmt<type>::fmt;
 };
 
 static salvia_rgba_color_type<FIRGBAF> color_type_instance;
 
-END_NS_SALVIAX_UTILITY();
-
-#endif
+}

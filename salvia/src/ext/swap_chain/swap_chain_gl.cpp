@@ -1,6 +1,6 @@
 #if defined(SALVIAX_GL_ENABLED)
 
-#include <salviax/include/swap_chain/swap_chain_impl.h>
+#include <salvia/ext/swap_chain/swap_chain_impl.h>
 
 #include <salvia/core/renderer.h>
 #include <salvia/resource/mapped_resource.h>
@@ -16,9 +16,9 @@
 
 #include <GL/gl.h>
 
-using namespace salviar;
+using namespace salvia::core;
 
-BEGIN_NS_SALVIAX();
+namespace salvia::ext{
 
 class gl_swap_chain : public swap_chain_impl {
 public:
@@ -146,6 +146,6 @@ swap_chain_ptr create_gl_swap_chain(renderer_ptr const &renderer,
   return std::make_shared<gl_swap_chain>(renderer, *params);
 }
 
-END_NS_SALVIAX();
+}
 
 #endif

@@ -1,6 +1,6 @@
 #if defined(SALVIAX_D3D11_ENABLED)
 
-#include <salviax/include/swap_chain/swap_chain_impl.h>
+#include <salvia/ext/swap_chain/swap_chain_impl.h>
 
 #include <salvia/core/renderer.h>
 #include <salvia/resource/mapped_resource.h>
@@ -37,13 +37,13 @@
 #endif
 
 using namespace eflib;
-using namespace salviar;
+using namespace salvia::core;
 
 struct quad_vertex {
   float x, y;
 };
 
-BEGIN_NS_SALVIAX();
+namespace salvia::ext{
 
 HINSTANCE get_dll_instance() {
   MEMORY_BASIC_INFORMATION mbi;
@@ -399,6 +399,6 @@ swap_chain_ptr create_d3d11_swap_chain(renderer_ptr const &renderer,
   return std::make_shared<d3d11_swap_chain>(renderer, *params);
 }
 
-END_NS_SALVIAX();
+}
 
 #endif

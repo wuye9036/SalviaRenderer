@@ -3,7 +3,7 @@
 #include <sasl/codegen/cg_api.h>
 #include <sasl/semantic/reflection_impl.h>
 
-using namespace salviar;
+using namespace salvia::core;
 using namespace sasl::semantic;
 using namespace sasl::codegen;
 

@@ -1,13 +1,15 @@
-#include <eflib/platform/dl_loader.h>
+#include <salvia/ext/swap_chain/swap_chain_impl.h>
+
+#include <salvia/core/async_renderer.h>
 #include <salvia/core/renderer.h>
+#include <salvia/core/sync_renderer.h>
 #include <salvia/resource/texture.h>
-#include <salviar/include/async_renderer.h>
-#include <salviar/include/sync_renderer.h>
-#include <salviax/include/swap_chain/swap_chain_impl.h>
 
-using namespace salviar;
+#include <eflib/platform/dl_loader.h>
 
-BEGIN_NS_SALVIAX();
+using namespace salvia::core;
+
+namespace salvia::ext {
 
 swap_chain_impl::swap_chain_impl(renderer_ptr const &renderer,
                                  renderer_parameters const &render_params) {
@@ -42,21 +44,21 @@ void swap_chain_impl::present() {
   present_impl();
 }
 
-END_NS_SALVIAX();
+}
 
 extern "C" {
-void salviax_create_swap_chain_and_renderer(salviax::swap_chain_ptr &out_swap_chain,
-                                            salviar::renderer_ptr &out_renderer,
-                                            salviar::renderer_parameters const *render_params,
+void salviax_create_swap_chain_and_renderer(salvia::ext::swap_chain_ptr &out_swap_chain,
+                                            salvia::core::renderer_ptr &out_renderer,
+                                            salvia::core::renderer_parameters const *render_params,
                                             uint32_t renderer_type, uint32_t swap_chain_type) {
   out_renderer.reset();
   out_swap_chain.reset();
 
-  if (renderer_type == salviax::renderer_sync) {
+  if (renderer_type == salvia::ext::renderer_sync) {
     out_renderer = create_sync_renderer();
   }
 
-  if (renderer_type == salviax::renderer_async) {
+  if (renderer_type == salvia::ext::renderer_async) {
     out_renderer = create_async_renderer();
   }
 
@@ -64,24 +66,24 @@ void salviax_create_swap_chain_and_renderer(salviax::swap_chain_ptr &out_swap_ch
     return;
   }
 
-  if (swap_chain_type == salviax::swap_chain_default) {
+  if (swap_chain_type == salvia::ext::swap_chain_default) {
 #if defined(SALVIAX_D3D11_ENABLED)
-    swap_chain_type = salviax::swap_chain_d3d11;
+    swap_chain_type = salvia::ext::swap_chain_d3d11;
 #elif defined(SALVIAX_GL_ENABLED)
-    swap_chain_type = salviax::swap_chain_gl;
+    swap_chain_type = salvia::ext::swap_chain_gl;
 #else
     out_renderer.reset();
     return;
 #endif
   }
 
-  if (swap_chain_type == salviax::swap_chain_gl) {
+  if (swap_chain_type == salvia::ext::swap_chain_gl) {
 #if defined(SALVIAX_GL_ENABLED)
-    out_swap_chain = salviax::create_gl_swap_chain(out_renderer, render_params);
+    out_swap_chain = salvia::ext::create_gl_swap_chain(out_renderer, render_params);
 #endif
-  } else if (swap_chain_type == salviax::swap_chain_d3d11) {
+  } else if (swap_chain_type == salvia::ext::swap_chain_d3d11) {
 #if defined(SALVIAX_D3D11_ENABLED)
-    out_swap_chain = salviax::create_d3d11_swap_chain(out_renderer, render_params);
+    out_swap_chain = salvia::ext::create_d3d11_swap_chain(out_renderer, render_params);
 #endif
   }
 }

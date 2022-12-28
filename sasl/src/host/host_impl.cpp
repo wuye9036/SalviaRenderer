@@ -18,7 +18,7 @@
 #include <salvia/shader/shader_cbuffer.h>
 #include <salviar/include/render_stages.h>
 #include <salviar/include/render_state.h>
-#include <salviar/include/stream_assembler.h>
+#include <salvia/core/stream_assembler.h>
 
 #include <eflib/memory/atomic.h>
 
@@ -38,7 +38,7 @@ using std::tuple;
 
 using eflib::fixed_string;
 
-using namespace salviar;
+using namespace salvia::core;
 using namespace sasl::codegen;
 using namespace sasl::common;
 using namespace sasl::syntax_tree;
@@ -186,7 +186,7 @@ bool host_impl::vx_update_sampler(string_view name, sampler_ptr const &samp) {
 } // namespace sasl::host()
 
 using namespace sasl::host;
-using namespace salviar;
+using namespace salvia::core;
 
 void salvia_create_host(host_ptr &out) { out.reset(new host_impl()); }
 

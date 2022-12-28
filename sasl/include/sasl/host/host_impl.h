@@ -73,8 +73,8 @@ public:
   void initialize(salviar::render_stages const *stages);
 
   void update(salviar::render_state const *state);
-  void update_target_params(salviar::renderer_parameters const &rp,
-                            salviar::buffer_ptr const &target);
+  void update_target_params(salvia::core::renderer_parameters const &rp,
+                            salvia::resource::buffer_ptr const &target);
 
   salviar::vx_shader_unit_ptr get_vx_shader_unit() const;
   salviar::px_shader_unit_ptr get_px_shader_unit() const;

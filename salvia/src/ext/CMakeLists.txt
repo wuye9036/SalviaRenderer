@@ -1,84 +1,36 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
-
-INCLUDE_DIRECTORIES(
-	${SALVIA_HOME_DIR}
-	${Boost_INCLUDE_DIRS}
-	${FreeType_INCLUDE_DIRS}
-	${FreeImage_INCLUDE_DIRS}
-)
-
-set (HEADER_FILES
-	include/resource/mesh/sa/material.h
-	include/resource/mesh/sa/mesh.h
-	include/resource/mesh/sa/mesh_impl.h
-	include/resource/mesh/sa/skin_mesh_impl.h
-	include/resource/mesh/sa/collada.h
-	
-	include/resource/mesh/sa/mesh_io.h
-	include/resource/mesh/sa/mesh_io_obj.h
-	include/resource/mesh/sa/mesh_io_collada.h
-	
-	include/resource/resource_forward.h
-	include/resource/texture/tex_io.h
-	include/resource/font/font.h
-	
-	include/resource/terrain/gen_terrain.h
-	
-	include/utility/freeimage_utilities.h
-	include/utility/utility_forward.h
-	
-	include/swap_chain/swap_chain.h
-	include/swap_chain/swap_chain_impl.h
-)
-
-set (SOURCE_FILES
-	src/resource/mesh/sa/material.cpp
-	src/resource/mesh/sa/mesh_impl.cpp
-	src/resource/mesh/sa/skin_mesh_impl.cpp
-	src/resource/mesh/sa/mesh_io.cpp
-	src/resource/mesh/sa/mesh_io_obj.cpp
-	src/resource/mesh/sa/mesh_io_collada.cpp
-	src/resource/mesh/sa/collada.cpp
-	
-	src/resource/texture/tex_io.cpp
-	src/resource/font/font.cpp
-	src/resource/terrain/gen_terrain.cpp
-	
-	src/utility/freeimage_utility.cpp
-	
-	src/swap_chain/swap_chain_impl.cpp
-	src/swap_chain/swap_chain_gl.cpp
-)
+file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS "../../include/salvia/ext" "*.h")
+file(GLOB_RECURSE SOURCE_LIST CONFIGURE_DEPENDS "." "*.cpp")
 
 # Platform-specified files
 if(UNIX)
-	MESSAGE(STATUS "GL is disabled on Linux. It will be supported later.")
+  message(STATUS "GL is disabled on Linux. It will be supported later.")
 else(UNIX)
-	ADD_DEFINITIONS(-DSALVIAX_GL_ENABLED)
+  add_definitions(-DSALVIA_EXT_GL_ENABLED)
 endif(UNIX)
 
 if( WIN32 )
-	set (HEADER_FILES
-		${HEADER_FILES}
-		include/utility/inc_windows.h
-	)
+  set (HEADER_FILES
+    ${HEADER_FILES}
+    include/utility/inc_windows.h
+  )
 endif()
 
 if( SALVIA_BUILD_WITH_DIRECTX )
-	ADD_DEFINITIONS(-DSALVIAX_D3D11_ENABLED)
-	
-	if(MSVC)
-		if(MSVC_VERSION LESS 1700)
-			INCLUDE_DIRECTORIES($ENV{DXSDK_DIR}/Include)
-		endif(MSVC_VERSION LESS 1700)
-	endif(MSVC)
-	
-	set (SOURCE_FILES
-		${SOURCE_FILES}
-		src/swap_chain/swap_chain_d3d11.cpp
-	)
+  add_definitions(-DSALVIA_EXT_D3D11_ENABLED)
+  
+  if(MSVC)
+    if(MSVC_VERSION LESS 1700)
+      include_directories($ENV{DXSDK_DIR}/Include)
+    endif(MSVC_VERSION LESS 1700)
+  endif(MSVC)
+  
+  set (SOURCE_FILES
+    ${SOURCE_FILES}
+    src/swap_chain/swap_chain_d3d11.cpp
+  )
 endif()
 
-add_library( salviax STATIC	${HEADER_FILES}	${SOURCE_FILES} )
-target_link_libraries(salviax EFLIB	salviar freeimage::FreeImage freeimage::FreeImagePlus freetype)
-set_target_properties(salviax PROPERTIES FOLDER "SALVIA Renderer")
+add_library(salvia_ext STATIC ${HEADER_LIST} ${SOURCE_LIST})
+target_include_directories(salvia_ext PUBLIC "../../include")
+target_link_libraries(salvia_ext PRIVATE eflib salvia_resource freeimage::FreeImage freeimage::FreeImagePlus Freetype::Freetype)
+set_target_properties(salvia_ext PROPERTIES FOLDER "Salvia")

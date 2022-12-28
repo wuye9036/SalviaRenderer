@@ -1,17 +1,17 @@
 ﻿#include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_object.h>
-#include <salviar/include/sync_renderer.h>
+#include <salvia/core/sync_renderer.h>
 #include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
-#include <salvia/resource/colors.h>
+#include <salvia/common/colors.h>
 #include <salvia/resource/texture.h>
 
-#include <salviax/include/swap_chain/swap_chain.h>
-#include <salviax/include/resource/font/font.h>
-#include <salviax/include/resource/mesh/sa/mesh_io.h>
-#include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
-#include <salviax/include/resource/texture/tex_io.h>
+#include "font/font.h"
+#include "salvia/ext/resource/mesh/mesh_io.h"
+#include "salvia/ext/resource/mesh/mesh_io_obj.h"
+#include <salvia/ext/resource/texture/tex_io.h>
+#include <salvia/ext/swap_chain/swap_chain.h>
 
 #include <salviau/include/common/sample_app.h>
 #include <salviau/include/common/path.h>
@@ -21,9 +21,9 @@
 #include <vector>
 
 using namespace eflib;
-using namespace salviar;
+using namespace salvia::core;
 using namespace salviax;
-using namespace salviax::resource;
+using namespace salvia::ext::resource;
 using namespace salviau;
 
 using std::shared_ptr;

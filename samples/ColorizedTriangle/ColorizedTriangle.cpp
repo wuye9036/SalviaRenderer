@@ -1,12 +1,12 @@
-#include <salviax/include/resource/mesh/sa/mesh_io.h>
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/swap_chain/swap_chain.h>
+#include "salvia/ext/resource/mesh/mesh_impl.h"
+#include "salvia/ext/resource/mesh/mesh_io.h"
+#include <salvia/ext/swap_chain/swap_chain.h>
 
 #include <salviau/include/common/sample_app.h>
 
 #include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
-#include <salviar/include/sync_renderer.h>
+#include <salvia/core/sync_renderer.h>
 #include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
@@ -22,9 +22,9 @@
 
 using namespace eflib;
 using namespace std;
-using namespace salviar;
+using namespace salvia::core;
 using namespace salviax;
-using namespace salviax::resource;
+using namespace salvia::ext::resource;
 using namespace salviau;
 
 char const* vs_code = 

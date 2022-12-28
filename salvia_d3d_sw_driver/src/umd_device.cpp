@@ -9,7 +9,7 @@
 
 #include <salvia/resource/texture.h>
 
-using namespace salviar;
+using namespace salvia::core;
 
 umd_device::umd_device(umd_adapter* adapter, const D3D10DDIARG_CREATEDEVICE* args)
 	: adapter_(adapter), 

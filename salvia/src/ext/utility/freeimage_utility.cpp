@@ -1,20 +1,17 @@
-#include <salviax/include/utility/freeimage_utilities.h>
+#include <salvia/ext/utility/freeimage_utilities.h>
 
 using namespace std;
 using namespace eflib;
-using namespace salviar;
 
-BEGIN_NS_SALVIAX_UTILITY();
+namespace salvia::ext::utility {
 
-FIBITMAP *load_image(const std::_tstring &filename, int flag) {
-  string ansi_filename = to_ansi_string(filename);
-
-  FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(ansi_filename.c_str(), 0);
+FIBITMAP *load_image(const std::string &filename, int flag) {
+  FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(filename.c_str(), 0);
   if (fif == FIF_UNKNOWN) {
-    fif = FreeImage_GetFIFFromFilename(ansi_filename.c_str());
+    fif = FreeImage_GetFIFFromFilename(filename.c_str());
   }
   if (fif != FIF_UNKNOWN && FreeImage_FIFSupportsReading(fif)) {
-    return FreeImage_Load(fif, ansi_filename.c_str(), flag);
+    return FreeImage_Load(fif, filename.c_str(), flag);
   }
 
   return nullptr;
@@ -94,4 +91,4 @@ FIBITMAP *make_bitmap_copy(rect<size_t> &out_region, size_t dest_width, size_t d
   return scaled_image;
 }
 
-END_NS_SALVIAX_UTILITY();
+}

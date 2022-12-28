@@ -4,8 +4,8 @@
 
 #include <salviau/include/common/timer.h>
 
-#include <salviax/include/resource/texture/tex_io.h>
-#include <salviax/include/swap_chain/swap_chain.h>
+#include <salvia/ext/resource/texture/tex_io.h>
+#include <salvia/ext/swap_chain/swap_chain.h>
 
 #include <eflib/diagnostics/profiler.h>
 #include <salvia/core/renderer.h>
@@ -56,14 +56,14 @@ public:
   salviar::viewport screen_vp;
 
   std::optional<bool> is_sync_renderer;
-  salviax::swap_chain_types sc_type;
+  salvia::ext::swap_chain_types sc_type;
 
   salviau::gui *gui;
-  salviar::renderer_ptr renderer;
-  salviax::swap_chain_ptr swap_chain;
-  salviar::surface_ptr color_target;
-  salviar::surface_ptr resolved_color_target;
-  salviar::surface_ptr ds_target;
+  salvia::core::renderer_ptr renderer;
+  salvia::ext::swap_chain_ptr swap_chain;
+  salvia::resource::surface_ptr color_target;
+  salvia::resource::surface_ptr resolved_color_target;
+  salvia::resource::surface_ptr ds_target;
 
   double total_elapsed_sec;
   double elapsed_sec;
@@ -98,7 +98,7 @@ protected:
   virtual void profiling(std::string const &stage_name, std::function<void()> const &fn);
 
   void create_devices_and_targets(size_t width, size_t height, size_t sample_count,
-                                  salviar::pixel_format color_fmt, salviar::pixel_format ds_format);
+                                  salvia::pixel_format color_fmt, salvia::pixel_format ds_format);
 
   void quit_at_frame(uint32_t frame_cnt);
   void quit_if_time_out(uint32_t milli_sec);
@@ -116,7 +116,7 @@ private:
   void init_params(int argc, std::_tchar const **argv);
   void draw_frame();
 
-  virtual void save_frame(salviar::surface_ptr const &surf);
+  virtual void save_frame(salvia::resource::surface_ptr const &surf);
   virtual void save_profiling_result();
 
   void on_gui_idle();

@@ -4,11 +4,11 @@
 #include <salviau/include/win/win_gui.h>
 #endif
 #include <salviau/include/common/window.h>
-#include <salviax/include/resource/texture/tex_io.h>
+#include <salvia/ext/resource/texture/tex_io.h>
 
 #include <salvia/resource/texture.h>
-#include <salviar/include/async_renderer.h>
-#include <salviar/include/sync_renderer.h>
+#include <salvia/core/async_renderer.h>
+#include <salvia/core/sync_renderer.h>
 
 #include <boost/predef.h>
 #include <boost/program_options.hpp>
@@ -24,7 +24,7 @@
 namespace po = boost::program_options;
 using namespace std;
 using namespace eflib;
-using namespace salviar;
+using namespace salvia::core;
 using namespace salviax;
 using namespace boost::property_tree;
 
@@ -166,8 +166,8 @@ void sample_app::init_params(int argc, std::_tchar const **argv) {
 }
 
 void sample_app::create_devices_and_targets(size_t width, size_t height, size_t sample_count,
-                                            salviar::pixel_format color_fmt,
-                                            salviar::pixel_format ds_format) {
+                                            salvia::pixel_format color_fmt,
+                                            salvia::pixel_format ds_format) {
   if (data_->mode == app_modes::unknown) {
     return;
   }
@@ -202,20 +202,20 @@ void sample_app::create_devices_and_targets(size_t width, size_t height, size_t 
 
   renderer_parameters rparams = {width, height, sample_count, color_fmt, wnd_handle};
 
-  renderer_types rtype = salviax::renderer_none;
-  swap_chain_types sc_type = data_->gui ? salviax::swap_chain_default : salviax::swap_chain_none;
+  renderer_types rtype = salvia::ext::renderer_none;
+  swap_chain_types sc_type = data_->gui ? salvia::ext::swap_chain_default : salvia::ext::swap_chain_none;
 
   if (data_->is_sync_renderer.has_value()) {
-    rtype = data_->is_sync_renderer.value() ? salviax::renderer_sync : salviax::renderer_async;
+    rtype = data_->is_sync_renderer.value() ? salvia::ext::renderer_sync : salvia::ext::renderer_async;
   } else {
     switch (data_->mode) {
     case app_modes::interactive:
     case app_modes::replay:
     case app_modes::test:
-      rtype = salviax::renderer_async;
+      rtype = salvia::ext::renderer_async;
       break;
     case app_modes::benchmark:
-      rtype = salviax::renderer_sync;
+      rtype = salvia::ext::renderer_sync;
       break;
     }
   }
@@ -395,10 +395,10 @@ void sample_app::profiling(std::string const &stage_name, std::function<void()> 
   }
 }
 
-void sample_app::save_frame(salviar::surface_ptr const &surf) {
+void sample_app::save_frame(salvia::resource::surface_ptr const &surf) {
   stringstream ss;
   ss << data_->benchmark_name << "_" << data_->frame_count - 1 << ".png";
-  salviax::resource::save_surface(data_->renderer.get(), surf, eflib::to_tstring(ss.str()),
+  salvia::ext::resource::save_surface(data_->renderer.get(), surf, eflib::to_tstring(ss.str()),
                                   pixel_format_color_bgra8);
 }
 

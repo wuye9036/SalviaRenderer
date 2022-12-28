@@ -1,21 +1,21 @@
-#include <salviax/include/resource/texture/tex_io.h>
+#include <salvia/ext/resource/texture/tex_io.h>
 
 #include <FreeImage.h>
 #include <salvia/core/renderer.h>
 #include <salvia/resource/mapped_resource.h>
 #include <salvia/resource/surface.h>
 #include <salvia/resource/texture.h>
-#include <salviax/include/utility/freeimage_utilities.h>
+#include <salvia/ext/utility/freeimage_utilities.h>
 
 #include <algorithm>
 #include <memory>
 
 using namespace eflib;
 using namespace std;
-using namespace salviar;
-using namespace salviax::utility;
+using namespace salvia::core;
+using namespace salvia::ext::utility;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 // Copy pixels FIBITMAP to surface as following steps
 //	*> Get color component informations from FIBITMAP
@@ -74,7 +74,7 @@ bool copy_image_to_surface(surface_ptr const &surf, FIBITMAP *img) {
 }
 
 // Load image file to new texture
-texture_ptr load_texture(renderer *rend, const std::_tstring &filename, pixel_format tex_format) {
+texture_ptr load_texture(renderer *rend, const std::string &filename, pixel_format tex_format) {
   FIBITMAP *img = load_image(filename);
   texture_ptr ret;
 
@@ -95,7 +95,7 @@ texture_ptr load_texture(renderer *rend, const std::_tstring &filename, pixel_fo
 // Create cube texture by six images.
 // Size of first texture is the size of cube face.
 // If other textures are not same size as first, just stretch it.
-texture_ptr load_cube(renderer *rend, const vector<_tstring> &filenames, pixel_format tex_format) {
+texture_ptr load_cube(renderer *rend, const vector<string> &filenames, pixel_format tex_format) {
   texture_ptr ret;
 
   auto image_deleter = [](FIBITMAP *bmp) { FreeImage_Unload(bmp); };
@@ -135,7 +135,7 @@ texture_ptr load_cube(renderer *rend, const vector<_tstring> &filenames, pixel_f
 }
 
 // Save surface as PNG or HRD formatted file.
-void save_surface(renderer *rend, surface_ptr const &surf, _tstring const &filename,
+void save_surface(renderer *rend, surface_ptr const &surf, string const &filename,
                   pixel_format image_format) {
   FREE_IMAGE_TYPE fit = FIT_UNKNOWN;
   FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
@@ -157,7 +157,7 @@ void save_surface(renderer *rend, surface_ptr const &surf, _tstring const &filen
     image = FreeImage_AllocateT(fit, surface_width, surface_height, 96);
     break;
   default:
-    EFLIB_ASSERT(false, "Unsupport format was used.");
+    ef_unimplemented();
     return;
   }
 
@@ -179,11 +179,11 @@ void save_surface(renderer *rend, surface_ptr const &surf, _tstring const &filen
 
   rend->unmap();
 
-  FreeImage_Save(fif, image, to_ansi_string(filename).c_str());
+  FreeImage_Save(fif, image, filename.c_str());
   FreeImage_Unload(image);
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource
 
 /*
 Copyright (C) 2007-2012 Minmin Gong, Ye Wu

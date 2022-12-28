@@ -1,24 +1,29 @@
 #pragma once
 
 #include <eflib/math/math.h>
-#include <eflib/string/string.h>
-#include <salvia/resource/colors.h>
-#include <salviar/include/decl.h>
-#include <salviax/include/resource/resource_forward.h>
+
+#include <salvia/common/colors.h>
+#include <salvia/common/colors_convertors.h>
+
+#include <salvia/core/decl.h>
 
 #include <vector>
 
 struct FIBITMAP;
 
-namespace salviax::resource {
+namespace salvia::resource{
+using surface_ptr = std::shared_ptr<class surface>;
+}
 
-salviar::texture_ptr load_texture(salviar::renderer *rend, const std::_tstring &filename,
-                                  salviar::pixel_format tex_format);
+namespace salvia::ext::resource {
 
-salviar::texture_ptr load_cube(salviar::renderer *rend, const std::vector<std::_tstring> &filenames,
-                               salviar::pixel_format tex_format);
+salvia::resource::texture_ptr load_texture(salvia::core::renderer *rend, const std::string &filename,
+                                  salvia::pixel_format tex_format);
 
-void save_surface(salviar::renderer *rend, salviar::surface_ptr const &surf,
-                  std::_tstring const &filename, salviar::pixel_format image_format);
+salvia::resource::texture_ptr load_cube(salvia::core::renderer *rend, const std::vector<std::string> &filenames,
+                               salvia::pixel_format tex_format);
 
-} // namespace salviax::resource
+void save_surface(salvia::core::renderer *rend, salvia::resource::surface_ptr const &surf,
+                  std::string const &filename, salvia::pixel_format image_format);
+
+} // namespace salvia::ext::resource

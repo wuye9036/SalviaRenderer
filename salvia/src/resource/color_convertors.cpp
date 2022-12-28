@@ -2,7 +2,7 @@
 
 #include <memory.h>
 
-namespace salvia::resource {
+namespace salvia {
 
 static pixel_format_convertor pfc_instance;
 

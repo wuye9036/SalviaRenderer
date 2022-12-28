@@ -3,7 +3,7 @@
 #include <salvia/resource/input_layout.h>
 #include <salvia/shader/reflection.h>
 #include <salvia/shader/shader.h>
-#include <salviar/include/stream_assembler.h>
+#include <salvia/core/stream_assembler.h>
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/hash.h>
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-using namespace salviar;
+using namespace salvia::core;
 using std::make_pair;
 using std::vector;
 

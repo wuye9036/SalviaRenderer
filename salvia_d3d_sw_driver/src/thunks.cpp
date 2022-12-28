@@ -9,7 +9,7 @@
 
 #include <salvia/resource/texture.h>
 
-using namespace salviar;
+using namespace salvia::core;
 
 boost::mutex g_km_mutex;
 std::list<kmd_adapter*> g_kmd_adapters;

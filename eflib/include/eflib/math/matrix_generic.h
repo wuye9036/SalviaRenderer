@@ -1,9 +1,11 @@
-#ifndef EFLIB_MATH_MATRIX_GENERIC_H
-#define EFLIB_MATH_MATRIX_GENERIC_H
+#pragma once
 
 #include <eflib/platform/config.h>
 
+#include <eflib/platform/typedefs.h>
+
 #include <type_traits>
+
 
 namespace eflib {
 template <typename ScalarT, int ColumnSize, int RowSize, int ColumnStride = 4> struct matrix_;
@@ -319,5 +321,3 @@ inline MatrixType operator-(MatrixType const &lhs, float s) {
   return ret;
 }
 } // namespace eflib
-
-#endif
