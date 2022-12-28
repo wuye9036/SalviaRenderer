@@ -1,4 +1,4 @@
-#include <salviax/include/resource/mesh/sa/skin_mesh_impl.h>
+#include <salvia/ext/resource/mesh/sa/skin_mesh_impl.h>
 
 #include <eflib/math/math.h>
 
@@ -6,7 +6,7 @@ using eflib::mat44;
 using std::string;
 using std::vector;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 scene_node::scene_node(scene_node *parent, string const &name)
     : parent(parent), name(name), original_matrix(mat44::identity()),
@@ -88,4 +88,4 @@ float skin_mesh_impl::animation_length() const {
   return max_length;
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource

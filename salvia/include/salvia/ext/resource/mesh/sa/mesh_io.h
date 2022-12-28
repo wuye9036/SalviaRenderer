@@ -28,24 +28,24 @@ Modify Log:
 #define SALVIAX_MESH_IO_H
 
 #include <eflib/math/vector.h>
-#include <salviax/include/resource/mesh/sa/mesh.h>
+#include <salvia/ext/resource/mesh/sa/mesh.h>
 #include <vector>
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
-mesh_ptr create_box(salviar::renderer *psr);
-mesh_ptr create_cylinder(salviar::renderer *psr);
-mesh_ptr create_planar(salviar::renderer *rend, const eflib::vec3 &start_pos,
+mesh_ptr create_box(salvia::core::renderer *psr);
+mesh_ptr create_cylinder(salvia::core::renderer *psr);
+mesh_ptr create_planar(salvia::core::renderer *rend, const eflib::vec3 &start_pos,
                        const eflib::vec3 &x_dir, const eflib::vec3 &y_dir, size_t repeat_x,
                        size_t repeat_y, bool positive_normal);
-mesh_ptr create_planar(salviar::renderer *rend, eflib::vec3 const &norm,
+mesh_ptr create_planar(salvia::core::renderer *rend, eflib::vec3 const &norm,
                        eflib::vec3 const &start_pos, eflib::vec3 const &major_dir,
                        eflib::vec2 const &length, size_t repeat_x, size_t repeat_y,
                        bool positive_normal);
 
-mesh_ptr create_cone(salviar::renderer *psr, eflib::vec3 const &bottom_center, float radius,
+mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_center, float radius,
                      eflib::vec3 const &up_dir, int segments);
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource
 
 #endif // SALVIAX_MESH_IO_H

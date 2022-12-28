@@ -326,8 +326,8 @@ public:
       auto &cache = caches_[i];
       cache.vso_pool.clear();
       cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
-      for (int j = 0; j < ENTRY_SIZE; ++j) {
-        cache.items[j] = std::make_pair(std::numeric_limits<uint32_t>::max(), nullptr);
+      for (auto & item : cache.items) {
+        item = std::make_pair(std::numeric_limits<uint32_t>::max(), nullptr);
       }
       if (host_)
         cache.vsu = host_->get_vx_shader_unit();
@@ -394,15 +394,15 @@ private:
   static const int ENTRY_SIZE = 128;
 
   struct EFLIB_ALIGN(64) thread_cache {
-    thread_cache() {}
-    thread_cache(thread_cache const &) {}
+    thread_cache() = default;
+    thread_cache(thread_cache const &);
     thread_cache &operator=(thread_cache const &) { return *this; }
 
     eflib::pool::reserved_pool<vs_output> vso_pool;
     vx_shader_unit_ptr vsu;
-    uint64_t vs_invocations;
-    uint64_t ia_vertices;
-    uint64_t vs_during;
+    uint64_t vs_invocations{};
+    uint64_t ia_vertices{};
+    uint64_t vs_during{};
 
     std::pair<uint32_t, vs_output *> items[ENTRY_SIZE];
   };
@@ -551,9 +551,9 @@ private:
   static uint32_t const INVALID_SHARED_ENTRY = 0xFFFFFFFFU;
 
   struct EFLIB_ALIGN(64) thread_cache {
-    thread_cache() {}
-    thread_cache(thread_cache const &) {}
-    thread_cache &operator=(thread_cache const &) { return *this; }
+    thread_cache() = default;
+    thread_cache(thread_cache const &) = delete;
+    thread_cache &operator=(thread_cache const &) = delete;
 
     uint32_t conflict_count;
     uint32_t l2_hitting;

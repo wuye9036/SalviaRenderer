@@ -1,11 +1,9 @@
-#ifndef SALVIAX_SKIN_MESH_IMPL_H
-#define SALVIAX_SKIN_MESH_IMPL_H
+#pragma once
 
-#include <salviax/include/resource/resource_forward.h>
+#include <salvia/ext/resource/mesh/sa/mesh.h>
 
 #include <eflib/math/matrix.h>
 #include <eflib/utility/shared_declaration.h>
-#include <salviax/include/resource/mesh/sa/mesh.h>
 
 #include <string>
 #include <vector>
@@ -13,7 +11,7 @@
 #include <functional>
 #include <memory>
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(animation_player);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(animation_info);
@@ -38,6 +36,7 @@ public:
   virtual void update_play_time(float elapsed) = 0;
   virtual animation_info_ptr anim_info() = 0;
   virtual float anim_length() const = 0;
+  virtual ~animation_player() = default;
 };
 
 template <typename T> class animation_player_impl : public animation_player {
@@ -143,6 +142,4 @@ public:
   std::vector<scene_node_ptr> roots;
 };
 
-} // namespace salviax::resource
-
-#endif
+} // namespace salvia::ext::resource

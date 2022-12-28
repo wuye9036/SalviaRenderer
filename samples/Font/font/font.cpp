@@ -1,0 +1,229 @@
+#include "font.h"
+
+#include "eflib/math/collision_detection.h"
+#include "salvia/resource/surface.h"
+#include <freetype/freetype.h>
+#include <freetype/ftglyph.h>
+#include <ft2build.h>
+
+#include <filesystem>
+
+#if defined(EFLIB_WINDOWS)
+#include <salvia/ext/utility/inc_windows.h>
+#endif
+
+namespace salvia::ext::resource {
+
+class font_library {
+public:
+  static font_library &instance() {
+    static font_library inst;
+    FT_Init_FreeType(&inst.ftlib_);
+    return inst;
+  }
+
+  FT_Library &freetype_library() { return ftlib_; }
+
+private:
+  font_library();
+  FT_Library ftlib_;
+};
+
+template <typename T> class optional_value {
+public:
+  typedef optional_value<T> this_type;
+
+  optional_value<T>() : value_(), enabled_(false) {}
+
+  this_type &operator=(this_type const &v) {
+    value_ = v.value_;
+    enabled_ = v.enabled_;
+    return *this;
+  }
+
+  this_type &operator=(T const &v) {
+    value_ = v;
+    enabled_ = true;
+    return *this;
+  }
+
+  T &get() { return value_; }
+  T const &get() const { return value_; }
+
+  T *get_ptr() { return &value_; }
+
+  T const *get_ptr() const { return &value_; }
+
+  bool enabled() { return enabled_; }
+
+  void make_enable() { enabled_ = true; }
+
+  void make_disable() { enabled_ = false; }
+
+private:
+  T value_;
+  bool enabled_;
+};
+
+class font_impl : public font {
+public:
+  font_impl(std::string const &file_name, size_t face_index) {
+    size_ = 0;
+    unit_ = pixels;
+
+    FT_Error err = 0;
+    err = FT_Init_FreeType(library_.get_ptr());
+    if (err) {
+      return;
+    }
+    library_.make_enable();
+
+    err = FT_New_Face(library_.get(), file_name.c_str(), static_cast<FT_Long>(face_index),
+                      face_.get_ptr());
+    if (!err) {
+      face_.make_enable();
+      return;
+    }
+    if (err == FT_Err_Cannot_Open_Resource) {
+      ef_unimplemented();
+    } else if (err == FT_Err_Unknown_File_Format) {
+      ef_unimplemented();
+    }
+
+    ef_unimplemented();
+  }
+
+  ~font_impl() {
+    if (face_.enabled()) {
+      FT_Done_Face(face_.get());
+    }
+    if (library_.enabled()) {
+      FT_Done_FreeType(library_.get());
+    }
+  }
+
+  virtual size_t size() const { return size_; }
+
+  virtual units unit() const { return unit_; }
+
+  virtual void size_and_unit(size_t sz, units un) {
+    size_ = sz;
+    unit_ = un;
+
+    static int const dpi = 96;
+    auto sz_uint = static_cast<FT_UInt>(sz);
+
+    switch (un) {
+    case pixels:
+      FT_Set_Pixel_Sizes(face_.get(), sz_uint, sz_uint);
+      return;
+    case points:
+      FT_Set_Char_Size(face_.get(), sz_uint << 6, sz_uint << 6, dpi, dpi);
+      break;
+    }
+  }
+
+  // virtual size_t kerning() const
+  //{
+  // }
+
+  // virtual void kerning( size_t sz )
+  //{
+  // }
+
+  bool update_glyph(wchar_t wch) {
+    glyph_slot_.make_disable();
+    FT_UInt glyph_index = FT_Get_Char_Index(face_.get(), wch);
+    FT_Error err = FT_Load_Glyph(face_.get(), glyph_index, FT_LOAD_DEFAULT);
+    if (err) {
+      return false;
+    }
+    glyph_slot_ = face_.get()->glyph;
+    return true;
+  }
+
+  void draw(std::string const &text, salvia::resource::surface *target, eflib::rect<int32_t> const &rc,
+            salvia::color_rgba32f const &foreground_color,
+            salvia::color_rgba32f const &background_color, font::render_hints /*hint*/) {
+    std::wstring wtext;
+    ::setlocale(LC_ALL, ".65001");
+    eflib::to_wide_string(wtext, text);
+    if (wtext.empty()) {
+      return;
+    }
+
+    int32_t target_pen_x = rc.x;
+    int32_t target_pen_y = rc.y + rc.h;
+
+    for (size_t i_ch = 0; i_ch < wtext.length(); ++i_ch) {
+      FT_Glyph ch_glyph;
+      update_glyph(wtext[i_ch]);
+
+      FT_Get_Glyph(glyph_slot_.get(), &ch_glyph);
+
+      FT_Glyph_To_Bitmap(&ch_glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
+      FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)ch_glyph;
+      FT_Bitmap &bitmap = bitmap_glyph->bitmap;
+
+      int32_t target_region_left = target_pen_x + bitmap_glyph->left;
+      int32_t target_region_top =
+          target_pen_y - (face_.get()->size->metrics.y_ppem - bitmap_glyph->top);
+      int32_t target_region_bottom =
+          std::max(static_cast<int>(target_region_top - bitmap.rows), rc.y);
+      int32_t target_region_right =
+          std::min(static_cast<int>(bitmap.width + target_region_left), rc.x + rc.w);
+
+      int32_t target_region_width = target_region_right - target_region_left;
+      int32_t target_region_height = target_region_top - target_region_bottom;
+
+      for (int i = 0; i < target_region_height; ++i) {
+        for (int j = 0; j < target_region_width; ++j) {
+          float gray = bitmap.buffer[bitmap.width * i + j] / 255.0f;
+          target->set_texel(target_region_left + j, target_region_top - i - 1, 0,
+                            lerp(background_color, foreground_color, gray));
+        }
+      }
+
+      target_pen_x += (glyph_slot_.get()->advance.x >> 6);
+
+      FT_Done_Glyph(ch_glyph);
+    }
+  }
+
+private:
+  optional_value<FT_Library> library_;
+  optional_value<FT_Face> face_;
+  optional_value<FT_GlyphSlot> glyph_slot_;
+
+  size_t size_;
+  units unit_;
+};
+
+font_ptr font::create(std::string const &font_file_path, size_t face_index, size_t size,
+                      font::units unit) {
+  if (!std::filesystem::exists(font_file_path)) {
+    return font_ptr();
+  }
+
+  std::shared_ptr<font_impl> ret = std::make_shared<font_impl>(font_file_path, face_index);
+  ret->size_and_unit(size, unit);
+  return ret;
+}
+
+font_ptr font::create_in_system_path(std::string const &font_file_name, size_t face_index,
+                                     size_t size, font::units unit) {
+  char system_directory[1024];
+#if defined(EFLIB_WINDOWS)
+  GetWindowsDirectoryA(system_directory, 1024);
+  std::filesystem::path font_path(system_directory);
+  font_path /= "Fonts";
+#else
+  std::filesystem::path font_path("usr/share/fonts/truetype");
+#endif
+
+  font_path /= font_file_name;
+
+  return create(font_path.string(), face_index, size, unit);
+}
+
+} // namespace salvia::ext::resource

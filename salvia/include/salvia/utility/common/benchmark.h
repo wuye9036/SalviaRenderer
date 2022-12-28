@@ -6,7 +6,7 @@
 #include <salvia/core/renderer.h>
 #include <salvia/resource/surface.h>
 #include <salviar/include/async_object.h>
-#include <salviax/include/resource/texture/tex_io.h>
+#include <salvia/ext/resource/texture/tex_io.h>
 
 #include <string>
 #include <vector>
@@ -43,7 +43,7 @@ public:
 protected:
   /** Properties @{ */
   std::string benchmark_name_;
-  salviar::renderer_ptr renderer_;
+  salvia::core::renderer_ptr renderer_;
   eflib::profiler prof_;
 
   salviar::async_object_ptr pipeline_stat_obj_;

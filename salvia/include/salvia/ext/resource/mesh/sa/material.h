@@ -1,13 +1,14 @@
-#ifndef SALVIAX_MATERIAL_H
-#define SALVIAX_MATERIAL_H
+#pragma once
 
-#include <salviax/include/resource/resource_forward.h>
+#include <salvia/ext/resource/mesh/sa/mesh.h>
+
+#include <salvia/resource/texture.h>
 
 #include <eflib/platform/typedefs.h>
-#include <salviax/include/resource/mesh/sa/mesh.h>
+
 #include <string>
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 class obj_material : public attached_data {
 public:
@@ -25,10 +26,8 @@ public:
   bool is_specular;
 
   std::string tex_name;
-  salviar::texture_ptr tex;
+  salvia::resource::texture_ptr tex;
   ~obj_material() {}
 };
 
-} // namespace salviax::resource
-
-#endif
+} // namespace salvia::ext::resource

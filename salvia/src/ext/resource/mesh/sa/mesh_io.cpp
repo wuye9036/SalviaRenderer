@@ -16,34 +16,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#include <salvia/core/sync_renderer.h>
+#include <salvia/ext/resource/mesh/sa/mesh_impl.h>
+#include <salvia/ext/resource/mesh/sa/mesh_io.h>
 #include <salvia/resource/input_layout.h>
 #include <salvia/resource/resource_manager.h>
-#include <salviar/include/sync_renderer.h>
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/mesh/sa/mesh_io.h>
 
 #include <eflib/math/math.h>
 #include <eflib/math/quaternion.h>
 
 using namespace std;
 using namespace eflib;
-using namespace salviar;
+using namespace salvia::core;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 // 0, 0, 0 - 1, 1, 1
-mesh_ptr create_box(salviar::renderer *psr) {
+mesh_ptr create_box(salvia::core::renderer *psr) {
   mesh_impl *pmesh = new mesh_impl(psr);
 
   size_t const geometry_slot = 0;
   size_t const normal_slot = 1;
   size_t const uv_slot = 2;
 
-  salviar::buffer_ptr indices = pmesh->create_buffer(sizeof(uint16_t) * 36);
+  salvia::resource::buffer_ptr indices = pmesh->create_buffer(sizeof(uint16_t) * 36);
 
-  salviar::buffer_ptr verts = pmesh->create_buffer(sizeof(vec4) * 24);
-  salviar::buffer_ptr normals = pmesh->create_buffer(sizeof(vec4) * 24);
-  salviar::buffer_ptr uvs = pmesh->create_buffer(sizeof(vec4) * 24);
+  salvia::resource::buffer_ptr verts = pmesh->create_buffer(sizeof(vec4) * 24);
+  salvia::resource::buffer_ptr normals = pmesh->create_buffer(sizeof(vec4) * 24);
+  salvia::resource::buffer_ptr uvs = pmesh->create_buffer(sizeof(vec4) * 24);
 
   // Generate data
   uint16_t *pidxs = reinterpret_cast<uint16_t *>(indices->raw_data(0));
@@ -179,7 +179,7 @@ mesh_ptr create_box(salviar::renderer *psr) {
   return mesh_ptr(pmesh);
 }
 
-mesh_ptr create_planar(salviar::renderer *rend, const eflib::vec3 &start_pos,
+mesh_ptr create_planar(salvia::core::renderer *rend, const eflib::vec3 &start_pos,
                        const eflib::vec3 &x_dir, const eflib::vec3 &y_dir, size_t repeat_x,
                        size_t repeat_y, bool positive_normal) {
   mesh_impl *pmesh = new mesh_impl(rend);
@@ -190,11 +190,12 @@ mesh_ptr create_planar(salviar::renderer *rend, const eflib::vec3 &start_pos,
   size_t const normal_slot = 1;
   size_t const uv_slot = 2;
 
-  salviar::buffer_ptr indices = pmesh->create_buffer(repeat_x * repeat_y * 6 * sizeof(uint16_t));
+  salvia::resource::buffer_ptr indices =
+      pmesh->create_buffer(repeat_x * repeat_y * 6 * sizeof(uint16_t));
 
-  salviar::buffer_ptr verts = pmesh->create_buffer(nverts * sizeof(vec4));
-  salviar::buffer_ptr normals = pmesh->create_buffer(nverts * sizeof(vec4));
-  salviar::buffer_ptr uvs = pmesh->create_buffer(nverts * sizeof(vec4));
+  salvia::resource::buffer_ptr verts = pmesh->create_buffer(nverts * sizeof(vec4));
+  salvia::resource::buffer_ptr normals = pmesh->create_buffer(nverts * sizeof(vec4));
+  salvia::resource::buffer_ptr uvs = pmesh->create_buffer(nverts * sizeof(vec4));
 
   // Generate data
   vec4 normal(normalize3(cross_prod3(x_dir, y_dir)), 0.0f);
@@ -259,7 +260,7 @@ mesh_ptr create_planar(salviar::renderer *rend, const eflib::vec3 &start_pos,
   return mesh_ptr(pmesh);
 }
 
-mesh_ptr create_planar(salviar::renderer *rend, eflib::vec3 const &norm,
+mesh_ptr create_planar(salvia::core::renderer *rend, eflib::vec3 const &norm,
                        eflib::vec3 const &start_pos, eflib::vec3 const &major_dir,
                        eflib::vec2 const &length, size_t repeat_x, size_t repeat_y,
                        bool positive_normal) {
@@ -289,7 +290,7 @@ mesh_ptr create_planar(salviar::renderer *rend, eflib::vec3 const &norm,
   return create_planar(rend, start_pos, binorm, tangent, repeat_x, repeat_y, positive_normal);
 }
 
-mesh_ptr create_cone(salviar::renderer *psr, eflib::vec3 const &bottom_center, float radius,
+mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_center, float radius,
                      eflib::vec3 const &up_dir, int circle_segments) {
   if (circle_segments < 3) {
     circle_segments = 3;
@@ -423,4 +424,4 @@ mesh_ptr create_cone(salviar::renderer *psr, eflib::vec3 const &bottom_center, f
   return mesh_ptr(pmesh);
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource

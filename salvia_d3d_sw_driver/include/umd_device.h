@@ -20,7 +20,7 @@ public:
 	{
 		return dc_from_mem_;
 	}
-	const salviar::surface_ptr& resolved_surf() const
+	const salvia::resource::surface_ptr& resolved_surf() const
 	{
 		return resolved_surf_;
 	}
@@ -358,6 +358,6 @@ private:
 
 	D3DKMT_CREATEDCFROMMEMORY dc_from_mem_;
 
-	salviar::renderer_ptr sa_renderer_;
-	salviar::surface_ptr resolved_surf_;
+	salvia::core::renderer_ptr sa_renderer_;
+	salvia::resource::surface_ptr resolved_surf_;
 };

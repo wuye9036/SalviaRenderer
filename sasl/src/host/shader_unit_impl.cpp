@@ -2,11 +2,11 @@
 
 #include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
-#include <salviar/include/stream_assembler.h>
+#include <salvia/core/stream_assembler.h>
 
 #include <eflib/diagnostics/assert.h>
 
-using namespace salviar;
+using namespace salvia::core;
 using namespace sasl::shims;
 
 namespace sasl::host() {

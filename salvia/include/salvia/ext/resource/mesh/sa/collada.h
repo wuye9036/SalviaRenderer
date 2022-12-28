@@ -1,23 +1,18 @@
-#ifndef SALVIAX_COLLADA_H
-#define SALVIAX_COLLADA_H
+#pragma once
 
-#include <salviax/include/resource/resource_forward.h>
+#include <salvia/shader/reflection.h>
 
 #include <eflib/math/matrix.h>
 #include <eflib/utility/shared_declaration.h>
-#include <salvia/shader/reflection.h>
 
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_source);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_verts);
@@ -184,7 +179,7 @@ struct dae_param : public dae_node {
 
   enum special_types { st_none, st_name };
 
-  salviar::language_value_types vtype;
+  salvia::shader::language_value_types vtype;
   special_types stype;
 };
 
@@ -262,6 +257,4 @@ struct dae_matrix : public dae_node {
   eflib::mat44 mat;
 };
 
-} // namespace salviax::resource
-
-#endif
+} // namespace salvia::ext::resource

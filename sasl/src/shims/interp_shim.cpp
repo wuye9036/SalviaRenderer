@@ -3,7 +3,7 @@
 #include <salvia/shader/reflection.h>
 #include <salviar/include/shader_impl.h>
 
-using namespace salviar;
+using namespace salvia::core;
 
 using eflib::vec4;
 using std::vector;

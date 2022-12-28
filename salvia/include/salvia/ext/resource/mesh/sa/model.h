@@ -3,7 +3,7 @@
 
 #include <slaviax/include/resource/resource_forward.h>
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 class model {
 public:

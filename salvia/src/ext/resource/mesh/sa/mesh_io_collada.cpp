@@ -1,8 +1,8 @@
-#include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
+#include <salvia/ext/resource/mesh/sa/mesh_io_collada.h>
 
-#include <salviax/include/resource/mesh/sa/collada.h>
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/mesh/sa/skin_mesh_impl.h>
+#include <salvia/ext/resource/mesh/sa/collada.h>
+#include <salvia/ext/resource/mesh/sa/mesh_impl.h>
+#include <salvia/ext/resource/mesh/sa/skin_mesh_impl.h>
 
 #include <salvia/core/renderer.h>
 #include <salvia/resource/buffer.h>
@@ -10,8 +10,6 @@
 #include <salvia/shader/reflection.h>
 
 #include <boost/property_tree/xml_parser.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <fstream>
 #include <memory>
@@ -19,14 +17,15 @@
 #include <set>
 #include <sstream>
 
-typedef salviar::format color_formats;
+using namespace salvia;
+using namespace salvia::shader;
 
-using salvia::shader::semantic_value;
-using salviar::buffer_ptr;
-using salviar::input_element_desc;
-using salviar::input_per_vertex;
-using salviar::language_value_types;
-using salviar::renderer;
+typedef salvia::format color_formats;
+
+using salvia::core::input_element_desc;
+using salvia::core::input_per_vertex;
+using salvia::core::renderer;
+using salvia::resource::buffer_ptr;
 
 using eflib::int4;
 using eflib::mat44;
@@ -48,7 +47,7 @@ using std::set;
 using std::string;
 using std::vector;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 struct indexes_of_vertex_attributes {
   indexes_of_vertex_attributes() {}
@@ -62,17 +61,15 @@ bool operator==(indexes_of_vertex_attributes const &lhs, indexes_of_vertex_attri
          std::equal(lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin());
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource
 
-namespace std {
-template <> struct hash<salviax::resource::indexes_of_vertex_attributes> {
-  size_t operator()(salviax::resource::indexes_of_vertex_attributes const &v) const noexcept {
-    return std::hash<decltype(v.indexes)>{}(v.indexes);
+template <> struct std::hash<salvia::ext::resource::indexes_of_vertex_attributes> {
+  size_t operator()(salvia::ext::resource::indexes_of_vertex_attributes const &v) const noexcept {
+    return eflib::hash_range{}(v.indexes);
   }
 };
-} // namespace std
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh_impl);
 
@@ -115,8 +112,8 @@ bool repack_data(void *dst, size_t dst_stride, void const *src, size_t stride, s
   return true;
 }
 
-vector<char> repack_source(salviar::format &fmt, size_t &stride_in_bytes, dae_source *s) {
-  fmt = salviar::format_unknown;
+vector<char> repack_source(salvia::format &fmt, size_t &stride_in_bytes, dae_source *s) {
+  fmt = salvia::format_unknown;
   dae_accessor_ptr accessor = s->tech->accessor;
 
   size_t count = accessor->count;
@@ -144,16 +141,19 @@ vector<char> repack_source(salviar::format &fmt, size_t &stride_in_bytes, dae_so
                        pattern);
     switch (dst_stride) {
     case 1:
-      fmt = salviar::format_r32_float;
+      fmt = salvia::format_r32_float;
       break;
     case 2:
-      fmt = salviar::format_r32g32_float;
+      fmt = salvia::format_r32g32_float;
       break;
     case 3:
-      fmt = salviar::format_r32g32b32_float;
+      fmt = salvia::format_r32g32b32_float;
       break;
     case 4:
-      fmt = salviar::format_r32g32b32a32_float;
+      fmt = salvia::format_r32g32b32a32_float;
+      break;
+    default:
+      ef_unreachable("Stride is too big. Expects 1-4, actual {}", dst_stride);
       break;
     }
     break;
@@ -162,18 +162,24 @@ vector<char> repack_source(salviar::format &fmt, size_t &stride_in_bytes, dae_so
                        pattern);
     switch (dst_stride) {
     case 1:
-      fmt = salviar::format_r32_sint;
+      fmt = salvia::format_r32_sint;
       break;
     case 2:
-      fmt = salviar::format_r32g32_sint;
+      fmt = salvia::format_r32g32_sint;
       break;
     case 3:
-      fmt = salviar::format_r32g32b32_sint;
+      fmt = salvia::format_r32g32b32_sint;
       break;
     case 4:
-      fmt = salviar::format_r32g32b32a32_sint;
+      fmt = salvia::format_r32g32b32a32_sint;
+      break;
+    default:
+      ef_unreachable("Stride is too big. Expects 1-4, actual {}", dst_stride);
       break;
     }
+    break;
+  default:
+    ef_unimplemented();
     break;
   }
 
@@ -221,11 +227,11 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
 
   // Repack data source, adjust scalar orders, discard unused data.
   unordered_map<dae_source *, vector<char>> repacked_sources;
-  unordered_map<dae_source *, salviar::format> fmts;
+  unordered_map<dae_source *, salvia::format> fmts;
   unordered_map<dae_source *, size_t> strides;
 
   for (dae_source *src : used_sources_set) {
-    salviar::format fmt = salviar::format_unknown;
+    salvia::format fmt = salvia::format_unknown;
     size_t stride = 0;
 
     repacked_sources[src] = repack_source(fmt, stride, src);
@@ -363,7 +369,7 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
       input_descs.push_back(input_element_desc());
       input_descs.back().semantic_name = "BLEND_INDICES";
       input_descs.back().semantic_index = 0;
-      input_descs.back().data_format = salviar::format_r32g32b32a32_sint;
+      input_descs.back().data_format = salvia::format_r32g32b32a32_sint;
       input_descs.back().input_slot = static_cast<uint32_t>(buffers.size());
       input_descs.back().slot_class = input_per_vertex;
       input_descs.back().aligned_byte_offset = 0;
@@ -380,7 +386,7 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
       input_descs.push_back(input_element_desc());
       input_descs.back().semantic_name = "BLEND_WEIGHTS";
       input_descs.back().semantic_index = 0;
-      input_descs.back().data_format = salviar::format_r32g32b32a32_float;
+      input_descs.back().data_format = salvia::format_r32g32b32a32_float;
       input_descs.back().input_slot = static_cast<uint32_t>(buffers.size());
       input_descs.back().slot_class = input_per_vertex;
       input_descs.back().aligned_byte_offset = 0;
@@ -408,7 +414,7 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
                         index_buffer_size, 1);
 
     pmesh->set_index_buffer(index_buf);
-    pmesh->set_index_type(salviar::format_r32_uint);
+    pmesh->set_index_type(salvia::format_r32_uint);
     pmesh->set_primitive_count(index_size / 3);
 
     ret.push_back(mesh_ptr(pmesh));
@@ -438,7 +444,7 @@ skin_info_ptr build_skin_info(dae_skin_ptr skin) {
       assert(inv_bind_matrix_source->arr->array_type == dae_array::float_array);
 
       dae_accessor_ptr accessor = inv_bind_matrix_source->tech->accessor;
-      assert(accessor->params[0]->vtype == salviar::lvt_f32m44);
+      assert(accessor->params[0]->vtype == lvt_f32m44);
 
       for (size_t i = 0; i < accessor->count; ++i) {
         size_t start_addr = i * accessor->stride;
@@ -758,7 +764,7 @@ mesh_ptr merge_mesh_for_morphing(mesh_ptr lm, mesh_ptr rm) {
   return ret;
 }
 
-mesh_ptr create_morph_mesh_from_collada(salviar::renderer *render, std::string const &src,
+mesh_ptr create_morph_mesh_from_collada(salvia::core::renderer *render, std::string const &src,
                                         std::string const &dst) {
   vector<mesh_ptr> src_meshes = build_mesh_from_file(render, src);
   vector<mesh_ptr> dst_meshes = build_mesh_from_file(render, dst);
@@ -778,4 +784,4 @@ mesh_ptr create_morph_mesh_from_collada(salviar::renderer *render, std::string c
   return mesh_ptr();
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource

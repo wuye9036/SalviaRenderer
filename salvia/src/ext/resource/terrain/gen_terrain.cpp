@@ -1,13 +1,9 @@
 /* All Algorithms Copyright (C) Jason Shankel, 2000. */
-#include <salviax/include/resource/terrain/gen_terrain.h>
+#include <salvia/ext/resource/terrain/gen_terrain.h>
 
 #include <salvia/core/renderer.h>
 #include <salvia/resource/mapped_resource.h>
 #include <salvia/resource/texture.h>
-
-#include <boost/utility/addressof.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <algorithm>
 #include <vector>
@@ -16,12 +12,13 @@
 #include <memory.h>
 #include <stdlib.h>
 
-EFLIB_USING_SHARED_PTR(salviar, texture);
-using salviar::renderer;
+using namespace salvia;
+using namespace salvia::core;
+using namespace salvia::resource;
 
 using std::vector;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 void normalize_terrain(vector<float> &field);
 void filter_terrain_band(float *band, int stride, int count, float filter);
@@ -225,11 +222,11 @@ void make_terrain_fault(vector<float> &field, int size, int iterations, int max_
 
 texture_ptr make_terrain_texture(renderer *rend, std::vector<float> &normalized_field,
                                  size_t size) {
-  texture_ptr ret = rend->create_tex2d(size, size, 1, salviar::pixel_format_color_r32f);
+  texture_ptr ret = rend->create_tex2d(size, size, 1, pixel_format_color_r32f);
 
-  salviar::mapped_resource mapped;
+  salvia::resource::mapped_resource mapped;
 
-  rend->map(mapped, ret->subresource(0), salviar::map_write);
+  rend->map(mapped, ret->subresource(0), map_write);
   for (size_t y = 0; y < size; ++y) {
     uint8_t *dst_line = reinterpret_cast<uint8_t *>(mapped.data) + y * mapped.row_pitch;
     float *src_line = normalized_field.data() + y * size;
@@ -240,4 +237,4 @@ texture_ptr make_terrain_texture(renderer *rend, std::vector<float> &normalized_
   return ret;
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource

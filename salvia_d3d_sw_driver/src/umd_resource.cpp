@@ -11,7 +11,7 @@
 #include <salvia/resource/texture.h>
 #include <salvia/resource/internal_mapped_resource.h>
 
-using namespace salviar;
+using namespace salvia::core;
 
 umd_resource::umd_resource(umd_device* dev, const D3D11DDIARG_CREATERESOURCE* create_resource,
 		D3D10DDI_HRTRESOURCE rt_resource)

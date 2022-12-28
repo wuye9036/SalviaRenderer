@@ -2,7 +2,7 @@
 
 #include "colors.h"
 
-namespace salvia::resource {
+namespace salvia {
 
 struct color_max {};
 
@@ -45,7 +45,7 @@ decl_type_fmt_pair(color_max, 7);
 int const pixel_format_color_ub = pixel_format_color_max - 1;
 int const pixel_format_invalid = -1;
 
-// Pixel format informations
+// Pixel format information
 
 const pixel_information color_infos[pixel_type_to_fmt<color_max>::fmt] = {
     decl_color_info(color_rgba32f), decl_color_info(color_rgb32f), decl_color_info(color_bgra8),

@@ -12,7 +12,7 @@
 
 #include <fstream>
 
-using namespace salviar;
+using namespace salvia::core;
 
 void (*compiler_loader::create_compiler)(shared_ptr<compiler> &);
 

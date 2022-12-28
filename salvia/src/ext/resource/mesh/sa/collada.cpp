@@ -1,11 +1,12 @@
-#include <salviax/include/resource/mesh/sa/collada.h>
+#include <salvia/ext/resource/mesh/sa/collada.h>
 
 #include <boost/algorithm/string.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <memory>
 #include <sstream>
+
+using namespace salvia;
+using namespace salvia::shader;
 
 using eflib::mat44;
 
@@ -18,7 +19,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 template <typename T> void parse_array(vector<T> &arr, std::string const &content) {
   stringstream ss(content);
@@ -148,13 +149,13 @@ bool dae_param::parse(ptree &root) {
   stype = st_none;
 
   /**/ if (type_str == "float") {
-    vtype = salviar::lvt_float;
+    vtype = lvt_float;
   } else if (type_str == "int") {
-    vtype = salviar::lvt_sint32;
+    vtype = lvt_sint32;
   } else if (type_str == "float4x4") {
-    vtype = salviar::lvt_f32m44;
+    vtype = lvt_f32m44;
   } else if (type_str == "name") {
-    vtype = salviar::lvt_none;
+    vtype = lvt_none;
     stype = st_name;
   } else {
     assert(false);
@@ -241,6 +242,9 @@ void dae_array::parse_content(std::string const &tag_name) {
         count = float_arr.size();
       }
     } break;
+    default:
+      ef_unimplemented();
+      break;
     }
   }
 }
@@ -394,4 +398,4 @@ dae_node_ptr dae_dom::node_by_path(string const &path) {
   return ret_node;
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource

@@ -1,16 +1,16 @@
 #include <salvia/resource/resource_manager.h>
-#include <salviar/include/sync_renderer.h>
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
+#include <salvia/core/sync_renderer.h>
+#include <salvia/ext/resource/mesh/sa/mesh_impl.h>
 
 #include <eflib/diagnostics/assert.h>
 
 using namespace std;
 using namespace eflib;
-using namespace salviar;
+using namespace salvia::core;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
-mesh_impl::mesh_impl(salviar::renderer *psr) {
+mesh_impl::mesh_impl(salvia::core::renderer *psr) {
   assert(psr);
 
   device_ = psr;
@@ -25,9 +25,9 @@ size_t mesh_impl::get_buffer_count() { return vertex_buffers_.size(); }
 
 size_t mesh_impl::get_face_count() { return primcount_; }
 
-salviar::buffer_ptr mesh_impl::get_index_buffer() { return index_buffer_; }
+salvia::resource::buffer_ptr mesh_impl::get_index_buffer() { return index_buffer_; }
 
-salviar::buffer_ptr mesh_impl::get_vertex_buffer(size_t buffer_index) {
+salvia::resource::buffer_ptr mesh_impl::get_vertex_buffer(size_t buffer_index) {
   if (buffer_index < vertex_buffers_.size()) {
     return vertex_buffers_[buffer_index];
   } else {
@@ -69,11 +69,11 @@ void mesh_impl::render() {
 /*
 mesh
 */
-salviar::buffer_ptr mesh_impl::create_buffer(size_t size) { return device_->create_buffer(size); }
+salvia::resource::buffer_ptr mesh_impl::create_buffer(size_t size) { return device_->create_buffer(size); }
 
 void mesh_impl::set_primitive_count(size_t primcount) { primcount_ = primcount; }
 
-void mesh_impl::set_index_buffer(salviar::buffer_ptr const &v) { index_buffer_ = v; }
+void mesh_impl::set_index_buffer(salvia::resource::buffer_ptr const &v) { index_buffer_ = v; }
 
 void mesh_impl::set_index_type(format fmt) {
   switch (fmt) {
@@ -86,7 +86,7 @@ void mesh_impl::set_index_type(format fmt) {
   }
 }
 
-void mesh_impl::add_vertex_buffer(size_t slot, salviar::buffer_ptr const &buf, size_t stride,
+void mesh_impl::add_vertex_buffer(size_t slot, salvia::resource::buffer_ptr const &buf, size_t stride,
                                   size_t offset) {
   assert(buf);
   vertex_buffers_.push_back(buf);
@@ -99,11 +99,11 @@ void mesh_impl::set_input_element_descs(const vector<input_element_desc> &descs)
   elem_descs_ = descs;
 }
 
-salviax::resource::attached_data_ptr mesh_impl::get_attached() { return attached_; }
+salvia::ext::resource::attached_data_ptr mesh_impl::get_attached() { return attached_; }
 
 void mesh_impl::set_attached_data(attached_data_ptr const &attached) { attached_ = attached; }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource
 
 /*
 Copyright (C) 2007-2012 Ye Wu, Minmin Gong

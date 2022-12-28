@@ -1,17 +1,17 @@
-#include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
+#include <salvia/ext/resource/mesh/sa/mesh_io_obj.h>
 
-#include <eflib/math/math.h>
+#include <salvia/ext/resource/mesh/sa/material.h>
+#include <salvia/ext/resource/mesh/sa/mesh_impl.h>
+#include <salvia/ext/resource/texture/tex_io.h>
+
 #include <salvia/core/renderer.h>
 #include <salvia/resource/buffer.h>
 #include <salvia/resource/input_layout.h>
 #include <salvia/resource/texture.h>
-#include <salviax/include/resource/mesh/sa/material.h>
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/texture/tex_io.h>
+
+#include <eflib/math/math.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <cstring>
 #include <filesystem>
@@ -32,11 +32,11 @@ using std::vector;
 
 using eflib::vec4;
 
-using namespace salviar;
+using namespace salvia::core;
 
 using smooth_id_t = tuple<uint32_t, uint32_t, uint32_t>;
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 struct obj_mesh_vertex {
   vec4 pos;
@@ -122,8 +122,8 @@ bool load_material(renderer *rend, vector<obj_material> &mtls, string const &mtl
     } else if (cmd == "map_Kd") {
       mtlf >> pmtl->tex_name;
       boost::algorithm::replace_all(pmtl->tex_name, "\\", "/");
-      std::_tstring tex_fullpath = eflib::to_tstring((base_path / pmtl->tex_name).generic_string());
-      pmtl->tex = load_texture(rend, tex_fullpath, salviar::pixel_format_color_rgba8);
+      std::string tex_fullpath = (base_path / pmtl->tex_name).generic_string();
+      pmtl->tex = load_texture(rend, tex_fullpath, pixel_format_color_rgba8);
       if (pmtl->tex) {
         pmtl->tex->gen_mipmap(filter_linear, true);
       }
@@ -161,7 +161,7 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
 
   uint32_t subset = 0;
 
-  unordered_map<smooth_id_t, uint32_t> smooth_id_to_vertex_index;
+  unordered_map<smooth_id_t, uint32_t, eflib::hash_tuple> smooth_id_to_vertex_index;
 
   for (;;) {
     fscanf(objf, "%s", obj_cmd);
@@ -282,7 +282,7 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
 
   uint32_t subset = 0;
 
-  unordered_map<smooth_id_t, uint32_t> smooth_id_to_vertex_index;
+  unordered_map<smooth_id_t, uint32_t, eflib::hash_tuple> smooth_id_to_vertex_index;
 
   for (;;) {
     objf >> obj_cmd;
@@ -379,7 +379,7 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
   return true;
 }
 
-void construct_meshes(std::vector<mesh_ptr> &meshes, salviar::renderer *render,
+void construct_meshes(std::vector<mesh_ptr> &meshes, salvia::core::renderer *render,
                       vector<obj_mesh_vertex> const &verts, vector<uint32_t> const &indices,
                       vector<uint32_t> const &attrs, vector<obj_material> const &mtls) {
   buffer_ptr vert_buf = render->create_buffer(sizeof(obj_mesh_vertex) * verts.size());
@@ -425,7 +425,7 @@ void construct_meshes(std::vector<mesh_ptr> &meshes, salviar::renderer *render,
   }
 }
 
-vector<mesh_ptr> create_mesh_from_obj(salviar::renderer *render, std::string const &file_name,
+vector<mesh_ptr> create_mesh_from_obj(salvia::core::renderer *render, std::string const &file_name,
                                       bool flip_tex_v) {
   vector<obj_mesh_vertex> verts;
   vector<uint32_t> indices;
@@ -443,4 +443,4 @@ vector<mesh_ptr> create_mesh_from_obj(salviar::renderer *render, std::string con
   return meshes;
 }
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource

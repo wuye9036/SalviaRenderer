@@ -5,6 +5,7 @@
 #include <ranges>
 #include <type_traits>
 #include <vector>
+#include <tuple>
 
 namespace eflib {
 template <class T> inline constexpr void hash_combine(std::size_t &seed, const T &v) {
@@ -50,14 +51,14 @@ struct hash_tuple {
 
   template <typename... ArgsT>
   constexpr size_t operator()(std::tuple<ArgsT...> const &t) const noexcept {
-    return operator()(t, std::make_index_sequence<std::tuple_size_v<decltype(t)>>{});
+    return operator()(t, std::make_index_sequence<sizeof...(ArgsT)>{});
   }
 
   template <typename... ArgsT, size_t... ArgInts>
   constexpr size_t operator()(std::tuple<ArgsT...> const &t,
                               std::index_sequence<ArgInts...>) const noexcept {
     size_t seed = 0;
-    (hash_combine(seed, t.template get<ArgInts>()), ...);
+    (hash_combine(seed, std::get<ArgInts>(t)), ...);
     return seed;
   }
 };

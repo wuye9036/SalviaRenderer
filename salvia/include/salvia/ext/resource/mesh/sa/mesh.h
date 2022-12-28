@@ -1,14 +1,15 @@
 #pragma once
 
 #include <salvia/resource/input_layout.h>
-#include <salviar/include/decl.h>
-#include <salviar/include/stream_assembler.h>
-#include <salviax/include/resource/resource_forward.h>
+#include <salvia/core/decl.h>
+#include <salvia/core/stream_assembler.h>
+
+#include <eflib/math/matrix.h>
 
 #include <memory>
 #include <vector>
 
-namespace salviax::resource {
+namespace salvia::ext::resource {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(attached_data);
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
@@ -24,8 +25,8 @@ public:
   virtual size_t get_buffer_count() = 0;
   virtual size_t get_face_count() = 0;
 
-  virtual salviar::buffer_ptr get_index_buffer() = 0;
-  virtual salviar::buffer_ptr get_vertex_buffer(size_t buffer_index) = 0;
+  virtual salvia::resource::buffer_ptr get_index_buffer() = 0;
+  virtual salvia::resource::buffer_ptr get_vertex_buffer(size_t buffer_index) = 0;
 
   virtual attached_data_ptr get_attached() = 0;
 
@@ -49,7 +50,7 @@ public:
   virtual ~skin_mesh() {}
 };
 
-} // namespace salviax::resource
+} // namespace salvia::ext::resource
 
 /********************************************************************
 Copyright (C) 2007-2012 Ye Wu

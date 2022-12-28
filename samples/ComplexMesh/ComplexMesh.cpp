@@ -1,14 +1,14 @@
-#include <salviax/include/resource/mesh/sa/mesh_io.h>
-#include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/texture/tex_io.h>
-#include <salviax/include/swap_chain/swap_chain.h>
+#include <salvia/ext/resource/mesh/sa/mesh_io.h>
+#include <salvia/ext/resource/mesh/sa/mesh_impl.h>
+#include <salvia/ext/resource/texture/tex_io.h>
+#include <salvia/ext/swap_chain/swap_chain.h>
 
 #include <salviau/include/common/sample_app.h>
 #include <salviau/include/common/path.h>
 
 #include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
-#include <salviar/include/sync_renderer.h>
+#include <salvia/core/sync_renderer.h>
 #include <salvia/resource/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
@@ -23,9 +23,9 @@
 
 using namespace eflib;
 using namespace std;
-using namespace salviar;
+using namespace salvia::core;
 using namespace salviax;
-using namespace salviax::resource;
+using namespace salvia::ext::resource;
 using namespace salviau;
 
 struct vert
@@ -55,7 +55,7 @@ void ReadShortString(std::istream& file, std::string& str)
 	file.read(reinterpret_cast<char*>(&str[0]), len * sizeof(str[0]));
 }
 
-mesh_ptr LoadModel(salviar::renderer_ptr hsr, std::string const & mesh_name)
+mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const & mesh_name)
 {
 	std::vector<Material> mtls;
 	std::vector<std::string> mesh_names;
@@ -151,8 +151,8 @@ mesh_ptr LoadModel(salviar::renderer_ptr hsr, std::string const & mesh_name)
 		uint32_t max_num_blend;
 		file.read(reinterpret_cast<char*>(&max_num_blend), sizeof(max_num_blend));
 
-		salviar::buffer_ptr verts		= pmesh->create_buffer( sizeof(vec3) * num_vertices );
-		salviar::buffer_ptr normals	= pmesh->create_buffer( sizeof(vec3) * num_vertices );
+		salvia::resource::buffer_ptr verts		= pmesh->create_buffer( sizeof(vec3) * num_vertices );
+		salvia::resource::buffer_ptr normals	= pmesh->create_buffer( sizeof(vec3) * num_vertices );
 		vec3* verts_data   = reinterpret_cast<vec3*>(verts->raw_data(0));
 		vec3* normals_data = reinterpret_cast<vec3*>(normals->raw_data(0));
 		file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
@@ -164,7 +164,7 @@ mesh_ptr LoadModel(salviar::renderer_ptr hsr, std::string const & mesh_name)
 		uint32_t num_triangles;
 		file.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
 
-		salviar::buffer_ptr indices = pmesh->create_buffer( sizeof(uint16_t) * num_triangles * 3);
+		salvia::resource::buffer_ptr indices = pmesh->create_buffer( sizeof(uint16_t) * num_triangles * 3);
 		uint16_t* indices_data = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
 		char is_index_16_bit;
