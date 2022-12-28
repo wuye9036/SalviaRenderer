@@ -9,8 +9,8 @@ using std::vector;
 namespace salvia::ext::resource {
 
 scene_node::scene_node(scene_node *parent, string const &name)
-    : parent(parent), name(name), original_matrix(mat44::identity()),
-      local_matrix(mat44::identity()), world_matrix(mat44::identity()) {}
+    : parent(parent), name(name), local_matrix(mat44::identity()),
+      original_matrix(mat44::identity()), world_matrix(mat44::identity()) {}
 
 void scene_node::update_world_matrix() {
   if (parent == nullptr) {
@@ -44,8 +44,8 @@ void skin_mesh_impl::render(uint32_t submesh_id) { submeshes[submesh_id]->render
 vector<mat44> skin_mesh_impl::joint_matrices() {
   if (joint_mats.size() != joints.size()) {
     joint_mats.clear();
-    for (size_t i_joint = 0; i_joint < joints.size(); ++i_joint) {
-      joint_mats.push_back(&(joint_nodes[joints[i_joint]]->world_matrix));
+    for (const auto & joint : joints) {
+      joint_mats.push_back(&(joint_nodes[joint]->world_matrix));
     }
   }
 

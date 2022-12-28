@@ -6,8 +6,8 @@ namespace salvia::ext{
 
 class swap_chain_impl : public swap_chain {
 public:
-  virtual salvia::resource::surface_ptr get_surface();
-  virtual void present();
+  salvia::resource::surface_ptr get_surface() override;
+  void present() override;
 
 protected:
   swap_chain_impl(salvia::core::renderer_ptr const &renderer,

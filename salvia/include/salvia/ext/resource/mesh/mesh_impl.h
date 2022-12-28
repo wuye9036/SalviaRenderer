@@ -24,16 +24,16 @@ public:
   salvia::resource::input_layout_ptr cached_layout_;
 
   // Constructor
-  mesh_impl(salvia::core::renderer *psr);
+  explicit mesh_impl(salvia::core::renderer *psr);
 
   // Implements mesh
-  virtual size_t get_buffer_count();
-  virtual size_t get_face_count();
-  virtual salvia::resource::buffer_ptr get_index_buffer();
-  virtual salvia::resource::buffer_ptr get_vertex_buffer(size_t buffer_index);
-  virtual attached_data_ptr get_attached();
-  virtual void gen_adjancency();
-  virtual void render();
+  size_t get_buffer_count() override;
+  size_t get_face_count() override;
+  salvia::resource::buffer_ptr get_index_buffer() override;
+  salvia::resource::buffer_ptr get_vertex_buffer(size_t buffer_index) override;
+  attached_data_ptr get_attached() override;
+  void gen_adjancency() override;
+  void render() override;
 
   // mesh_impl implements
   virtual salvia::resource::buffer_ptr create_buffer(size_t size);

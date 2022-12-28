@@ -18,6 +18,7 @@ class swap_chain {
 public:
   virtual salvia::resource::surface_ptr get_surface() = 0;
   virtual void present() = 0;
+  virtual ~swap_chain() = default;
 };
 
 enum swap_chain_types {

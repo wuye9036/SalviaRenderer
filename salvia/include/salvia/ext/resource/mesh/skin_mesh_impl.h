@@ -35,25 +35,25 @@ public:
   virtual void set_play_time(float t) = 0;
   virtual void update_play_time(float elapsed) = 0;
   virtual animation_info_ptr anim_info() = 0;
-  virtual float anim_length() const = 0;
+  [[nodiscard]] virtual float anim_length() const = 0;
   virtual ~animation_player() = default;
 };
 
 template <typename T> class animation_player_impl : public animation_player {
 public:
-  animation_player_impl() : current_time(0), aninfo(std::make_shared<animation_info_impl<T>>()) {}
+  animation_player_impl() : aninfo(std::make_shared<animation_info_impl<T>>()), current_time(0) {}
 
-  virtual void set_play_time(float t) override {
+  void set_play_time(float t) override {
     current_time = t;
     aninfo->applier(resolve(current_time));
   }
 
-  virtual void update_play_time(float elapsed) override {
+  void update_play_time(float elapsed) override {
     current_time += elapsed;
     aninfo->applier(resolve(current_time));
   }
 
-  virtual float anim_length() const override {
+  [[nodiscard]] float anim_length() const override {
     if (aninfo->X.empty()) {
       return 0.0f;
     }
@@ -61,13 +61,13 @@ public:
     return aninfo->X.back();
   }
 
-  animation_info_ptr anim_info() { return aninfo; }
+  animation_info_ptr anim_info() override { return aninfo; }
   std::shared_ptr<animation_info_impl<T>> anim_info2() { return aninfo; }
 
 private:
   T resolve(float time) {
     // Find segment
-    std::vector<float>::iterator it = lower_bound(aninfo->X.begin(), aninfo->X.end(), time);
+    auto it = lower_bound(aninfo->X.begin(), aninfo->X.end(), time);
     size_t i_segment = distance(aninfo->X.begin(), it) - 1;
 
     if (it == aninfo->X.begin()) {
@@ -121,13 +121,13 @@ public:
 
 class skin_mesh_impl : public skin_mesh {
 public:
-  virtual size_t submesh_count() const override;
-  virtual void render(uint32_t submesh_id) override;
-  virtual float animation_length() const override;
-  virtual void update_time(float t) override;
-  virtual void set_time(float t) override;
-  virtual std::vector<eflib::mat44> joint_matrices() override;
-  virtual std::vector<eflib::mat44> bind_inv_matrices() const override;
+  size_t submesh_count() const override;
+  void render(uint32_t submesh_id) override;
+  float animation_length() const override;
+  void update_time(float t) override;
+  void set_time(float t) override;
+  std::vector<eflib::mat44> joint_matrices() override;
+  std::vector<eflib::mat44> bind_inv_matrices() const override;
 
 public:
   std::unordered_map<std::string, scene_node *> joint_nodes;
