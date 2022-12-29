@@ -1,7 +1,7 @@
 #pragma once
 
 #include <eflib/platform/cpuinfo.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/extension.h>
 
 #include <range/v3/algorithm/for_each.hpp>

@@ -97,7 +97,7 @@ void render_core::apply_shader_cbuffer() {
 }
 
 result render_core::clear_color() {
-  state_->clear_color_target->fill_texels(state_->clear_color);
+  state_->clear_color_target->fill(state_->clear_color);
   return result::ok;
 }
 
@@ -105,7 +105,7 @@ result render_core::clear_depth_stencil() {
   if (state_->clear_f == (clear_depth | clear_stencil)) {
     auto ds_color = color_rgba32f(state_->clear_z,
                                   *reinterpret_cast<float *>(&state_->clear_stencil), 0.0f, 0.0f);
-    state_->clear_ds_target->fill_texels(ds_color);
+    state_->clear_ds_target->fill(ds_color);
   } else {
     framebuffer::clear_depth_stencil(state_->clear_ds_target.get(), state_->clear_f,
                                      state_->clear_z, state_->clear_stencil);

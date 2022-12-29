@@ -29,7 +29,6 @@ private:
   vs_input &operator=(const vs_input &rhs);
 };
 
-#include <eflib/platform/disable_warnings.h>
 class EFLIB_ALIGN(16) vs_output {
 public:
   /*
@@ -85,7 +84,6 @@ private:
   vs_output(const vs_output &rhs);
   vs_output &operator=(const vs_output &rhs);
 };
-#include <eflib/platform/enable_warnings.h>
 
 #if defined(EFLIB_MSVC)
 #pragma warning(push)

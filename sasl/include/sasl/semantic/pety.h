@@ -6,7 +6,7 @@
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <memory>

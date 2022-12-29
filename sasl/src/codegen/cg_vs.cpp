@@ -16,8 +16,6 @@
 #include <sasl/syntax_tree/program.h>
 #include <sasl/syntax_tree/statement.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>

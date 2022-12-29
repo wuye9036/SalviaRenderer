@@ -59,33 +59,19 @@
 
 #else
 #define EF_ASSERT(exp, desc, ...) (void)(exp);
-#define EF_ASSERT_MSG(exp, msg, __VA_ARGS__) (void)(exp);
 #define EFLIB_ASSERT_AND_IF(expr, desc) if (!(expr)) /* jump statement */
 #endif
 
 namespace eflib {
-const bool Interrupted = false;
-const bool Unimplemented = false;
-const bool Unexpected = false;
+const bool unimplemented = false;
+const bool unexpected = false;
 } // namespace eflib
 
-#define EFLIB_ASSERT_UNIMPLEMENTED0(desc) EF_ASSERT(eflib::Unimplemented, desc);
+#define EFLIB_ASSERT_UNIMPLEMENTED0(desc) EF_ASSERT(eflib::unimplemented, desc);
 #define EFLIB_ASSERT_UNEXPECTED()                                                                  \
-  EF_ASSERT(eflib::Unexpected, "Here is not expected to be executed.");
-#define EFLIB_INTERRUPT(desc) EF_ASSERT(eflib::Interrupted, desc)
+  EF_ASSERT(eflib::unexpected, "Here is not expected to be executed.");
 
 namespace eflib {
-namespace detail {
-extern bool (*ProcPreAssert)(bool exp, const char *expstr, const char *desc, int line,
-                             const char *file, const char *func, bool *ignore);
-
-bool ProcPreAssert_Init(bool exp, const char *expstr, const char *desc, int line, const char *file,
-                        const char *func, bool *ignore);
-bool default_pre_assert(bool exp, const char *expstr, const char *desc, int line, const char *file,
-                        const char *func, bool *ignore);
-bool ProcPreAssert_MsgBox(bool exp, const char *expstr, const char *desc, int line,
-                          const char *file, const char *func, bool *ignore);
-} // namespace detail
 
 template <class T> void print_vector(std::ostream &os, const T &v) {
   for (typename T::const_iterator cit = v.begin(); cit != v.end(); ++cit) {

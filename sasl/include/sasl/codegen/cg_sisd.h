@@ -5,7 +5,7 @@
 #include <sasl/codegen/cgs.h>
 #include <sasl/enums/operators.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <any>
 #include <functional>

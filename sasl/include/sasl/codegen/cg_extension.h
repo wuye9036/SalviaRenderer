@@ -5,8 +5,6 @@
 #include <sasl/codegen/cg_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/IR/Constants.h>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/polymorphic_cast.h>
 #include <eflib/utility/shared_declaration.h>
 

@@ -3,7 +3,7 @@
 
 #include <sasl/semantic/semantic_forward.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/shared_declaration.h>
 #include <salvia/shader/constants.h>
 #include <salvia/shader/reflection.h>

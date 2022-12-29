@@ -1,7 +1,7 @@
 #define INITGUID
 #include <salvia_d3d_sw_driver/include/common.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <salvia_d3d_sw_driver/include/kmd_adapter.h>
 #include <salvia_d3d_sw_driver/include/kmd_device.h>

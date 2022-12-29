@@ -1,7 +1,7 @@
 #include <eflib/platform/config.h>
 #include <eflib/platform/cpuinfo.h>
 #include <eflib/platform/intrin.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #ifdef EFLIB_WINDOWS
 #ifndef NOMINMAX

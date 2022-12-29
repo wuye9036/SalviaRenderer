@@ -5,7 +5,7 @@
 #include "salvia/common/format.h"
 #include <salvia/common/constants.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 namespace salvia::core {
 

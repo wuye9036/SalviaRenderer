@@ -6,8 +6,6 @@
 #include <sasl/semantic/reflector.h>
 #include <sasl/syntax_tree/visitor.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
