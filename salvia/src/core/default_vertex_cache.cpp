@@ -22,6 +22,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <execution>
 
 using namespace salvia::shader;
 using namespace eflib;
@@ -142,11 +143,7 @@ public:
 #if !USE_INDEX_RANGE
     // Unique indices
     unique_indices_ = indices_;
-#if defined(EFLIB_MSVC)
-    concurrency::parallel_radixsort(unique_indices_.begin(), unique_indices_.end());
-#else
-    std::sort(unique_indices_.begin(), unique_indices_.end());
-#endif
+    std::sort(std::execution::par, unique_indices_.begin(), unique_indices_.end());
     unique_indices_.erase(std::unique(unique_indices_.begin(), unique_indices_.end()),
                           unique_indices_.end());
 

@@ -1,8 +1,8 @@
-file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS "../../include/salvia/utility" "*.h")
-file(GLOB_RECURSE SOURCE_LIST CONFIGURE_DEPENDS "." "*.cpp")
+file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS "../../include/salvia/utility/*.h")
+file(GLOB_RECURSE SOURCE_LIST CONFIGURE_DEPENDS "*.cpp" "*.h")
 
-#source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/../../include/salvia/utility" PREFIX "Header Files" FILES ${HEADER_LIST})
-#source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" PREFIX "Source Files" FILES ${SOURCE_LIST})
+source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/../../include/salvia/utility" PREFIX "Header Files" FILES ${HEADER_LIST})
+source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" PREFIX "Source Files" FILES ${SOURCE_LIST})
 
 add_library(salvia_utility SHARED ${HEADER_LIST} ${SOURCE_LIST})
 
@@ -11,7 +11,7 @@ target_link_libraries(salvia_utility
         salvia_ext salvia_core salvia_resource salvia_shader
         eflib fmt::fmt Boost::program_options
         )
-set_target_properties(salvia_utility PROPERTIES FOLDER "Samples")
+set_target_properties(salvia_utility PROPERTIES FOLDER "Salvia")
 
 #install(TARGETS salviau)
 #install(

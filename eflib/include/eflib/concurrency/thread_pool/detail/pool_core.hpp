@@ -63,7 +63,7 @@ public:                                               // Type definitions
   // static_assert(function_traits<task_type()>::arity == 0);
 
   // The task function's result type is required to be void.
-  static_assert(is_void<typename result_of<task_type()>::type>::value);
+  static_assert(is_void<typename invoke_result<task_type()>::type>::value);
 
 private: // Friends
   friend class worker_thread<pool_type>;
