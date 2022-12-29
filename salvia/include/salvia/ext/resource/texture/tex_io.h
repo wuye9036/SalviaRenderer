@@ -9,13 +9,15 @@
 
 #include <vector>
 
-struct FIBITMAP;
-
 namespace salvia::resource{
 using surface_ptr = std::shared_ptr<class surface>;
 }
 
 namespace salvia::ext::resource {
+
+// Call for initialize third party libraries.
+void initialize();
+void finalize();
 
 salvia::resource::texture_ptr load_texture(salvia::core::renderer *rend, const std::string &filename,
                                   salvia::pixel_format tex_format);

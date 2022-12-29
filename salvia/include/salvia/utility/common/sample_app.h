@@ -49,6 +49,7 @@ struct frame_data {
 struct sample_app_data {
 public:
   std::string benchmark_name;
+  std::string resource_files_root;
 
   app_modes mode;
   uint32_t screen_width;

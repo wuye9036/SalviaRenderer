@@ -177,9 +177,10 @@ void save_surface(renderer *rend, surface_ptr const &surf, string const &filenam
     img_data += FreeImage_GetPitch(image);
   }
 
-  rend->unmap();
+   rend->unmap();
 
-  FreeImage_Save(fif, image, filename.c_str());
+  auto result = FreeImage_Save(fif, image, filename.c_str());
+  ef_verify(result == 1);
   FreeImage_Unload(image);
 }
 

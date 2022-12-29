@@ -55,10 +55,14 @@ void ReadShortString(std::istream &file, std::string &str) {
 }
 
 mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name) {
+  if (mesh_name.empty()) {
+    return {};
+  }
+
   std::vector<Material> mtls;
   std::vector<std::string> mesh_names;
 
-  mesh_impl *pmesh = new mesh_impl(hsr.get());
+  auto *pmesh = new mesh_impl(hsr.get());
 
   size_t const geometry_slot = 0;
   size_t const normal_slot = 1;
@@ -106,7 +110,8 @@ mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name)
       std::string type, name;
       ReadShortString(file, type);
       ReadShortString(file, name);
-      mtl.texture_slots.push_back(std::make_pair(type, name));
+      mtl.texture_slots.emplace_back(type, name);\
+      std::cout << tex_index << std::endl;
     }
   }
 
@@ -134,10 +139,8 @@ mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name)
       file.read(reinterpret_cast<char *>(&ve), sizeof(ve));
     }
 
-    elem_descs.push_back(
-        input_element_desc("POSITION", 0, format_r32g32b32_float, 0, 0, input_per_vertex, 0));
-    elem_descs.push_back(
-        input_element_desc("NORMAL", 0, format_r32g32b32_float, 1, 0, input_per_vertex, 0));
+    elem_descs.emplace_back("POSITION", 0, format_r32g32b32_float, 0, 0, input_per_vertex, 0);
+    elem_descs.emplace_back("NORMAL", 0, format_r32g32b32_float, 1, 0, input_per_vertex, 0);
 
     // Read vertex buffers
     uint32_t num_vertices;
@@ -274,7 +277,10 @@ public:
 
     // Loading mesh
     cout << "Loading mesh ... " << endl;
-    mesh_ = LoadModel(data_->renderer, find_path("complex_mesh/M134 Predator.MESHML.model_bin"));
+    mesh_ = LoadModel(data_->renderer, find_path("complex_mesh/M134 Predator.MESHML.model_bin",
+                                                 data_->resource_files_root.empty()
+                                                     ? default_search_paths()
+                                                     : vector<string>{data_->resource_files_root}));
     cout << "Loading pixel and blend shader... " << endl;
 
     // Initialize shader
@@ -338,6 +344,8 @@ protected:
 };
 
 EFLIB_MAIN(argc, argv) {
+  scoped_initializer salvia_utility_initializer;
+
   complex_mesh loader;
   loader.init(argc, argv);
   loader.run();

@@ -11,6 +11,10 @@ using std::filesystem::path;
 
 namespace salvia::utility {
 
+std::vector<std::string> default_search_paths() {
+  return {"./resources", "../resources", "../../resources", "../../../resources"};
+}
+
 template <typename StringT>
 StringT find_path_impl(StringT const &relative_path, vector<StringT> const &candidates) {
   for (auto const &parent_folder : candidates) {
@@ -23,14 +27,11 @@ StringT find_path_impl(StringT const &relative_path, vector<StringT> const &cand
 }
 
 string find_path(string const &relative_path) {
-  vector<string> candidate_folders{"./resources", "../resources", "../../resources",
-                                   "../../../resources"};
-
-  return find_path_impl(relative_path, candidate_folders);
+  return find_path_impl(relative_path, default_search_paths());
 }
 
 string find_path(string const &relative_path, vector<string> const &candidates) {
   return find_path_impl(relative_path, candidates);
 }
 
-}
+} // namespace salvia::utility

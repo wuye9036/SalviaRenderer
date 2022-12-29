@@ -96,7 +96,9 @@ void sample_app::init_params(int argc, char *argv[]) {
       "width,w", po::value<int>()->default_value(512),
       "width of screen or back buffer. should be in 1 - 8192")(
       "height,h", po::value<int>()->default_value(512),
-      "height of screen or back buffer. should be in 1 - 8192");
+      "height of screen or back buffer. should be in 1 - 8192")(
+      "res-dir,r", po::value<string>()->default_value(".")
+      );
 
   auto parsed = po::parse_command_line(argc, argv, opdesc);
 
@@ -134,6 +136,9 @@ void sample_app::init_params(int argc, char *argv[]) {
     data_->runnable = false;
     break;
   }
+
+  data_->resource_files_root = var_map["res-dir"].as<string>();
+  cout << "The root of resource files: " << data_->resource_files_root << endl;
 
   cout << "Execution mode is " << mode_str << endl;
 
