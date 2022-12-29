@@ -12,8 +12,10 @@
 #define ef_debug_break() __debugbreak()
 #endif
 
-#if !defined(ef_debug_break) && defined(__clang__) && __has_builtin(__builtin_debugtrap)
+#if !defined(ef_debug_break) && defined(__clang__)
+#if __has_builtin(__builtin_debugtrap)
 #define ef_debug_break() __builtin_debugtrap()
+#endif
 #endif
 
 #if !defined(ef_debug_break) && defined(__GNUC__)

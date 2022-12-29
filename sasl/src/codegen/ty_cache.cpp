@@ -6,12 +6,17 @@
 
 #include <fmt/format.h>
 
+#if __has_include(<boost/unordered/unordered_flat_map.hpp>)
 #include <boost/unordered/unordered_flat_map.hpp>
+#define fast_unordered_map boost::unordered::unordered_flat_map
+#else
+#include <unordered_map>
+#define fast_unordered_map std::unordered_map
+#endif
 
 #include <vector>
 
 using namespace sasl::enums;
-using boost::unordered::unordered_flat_map;
 using std::vector;
 
 namespace sasl::codegen {
@@ -27,9 +32,9 @@ private:
   Type *create_ty(LLVMContext &ctxt, builtin_types bt, abis abi);
   Type *create_abi_ty(LLVMContext &ctxt, builtin_types bt, abis abi);
 
-  unordered_flat_map<LLVMContext *, unordered_flat_map<builtin_types, Type *>>
+  fast_unordered_map<LLVMContext *, fast_unordered_map<builtin_types, Type *>>
       cache[e2i(abis::count)];
-  unordered_flat_map<builtin_types, std::string> ty_name[e2i(abis::count)];
+  fast_unordered_map<builtin_types, std::string> ty_name[e2i(abis::count)];
 };
 
 Type *ty_cache_t::type(LLVMContext &ctxt, builtin_types bt, abis abi) {
@@ -37,8 +42,8 @@ Type *ty_cache_t::type(LLVMContext &ctxt, builtin_types bt, abis abi) {
     return nullptr;
   }
 
-  unordered_flat_map<builtin_types, Type *> &ty_table = cache[static_cast<int>(abi)][&ctxt];
-  unordered_flat_map<builtin_types, Type *>::iterator ty_table_it = ty_table.find(bt);
+  auto &ty_table = cache[static_cast<int>(abi)][&ctxt];
+  auto ty_table_it = ty_table.find(bt);
 
   if (ty_table_it != ty_table.end()) {
     return ty_table_it->second;
