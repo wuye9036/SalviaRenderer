@@ -49,8 +49,6 @@ static void load_function() {
   host_lib->get_function(compile_func, "salvia_compile_shader");
   host_lib->get_function(compile_from_file_func, "salvia_compile_shader_file");
   host_lib->get_function(create_host_func, "salvia_create_host");
-  assert(compile_func);
-  assert(create_host_func);
 }
 
 void host::compile(shader_object_ptr &obj, shader_log_ptr &log, string const &code,
@@ -71,7 +69,6 @@ void host::compile_from_file(shader_object_ptr &obj, shader_log_ptr &log, string
   if (!compile_from_file_func) {
     load_function();
   }
-  assert(compile_from_file_func);
 
   if (!compile_from_file_func)
     return;
@@ -84,7 +81,6 @@ host_ptr host::create_host() {
   if (!create_host_func) {
     load_function();
   }
-  assert(create_host_func);
 
   if (create_host_func) {
     create_host_func(ret);

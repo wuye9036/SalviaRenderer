@@ -36,6 +36,7 @@ struct renderer_parameters {
   size_t backbuffer_num_samples;
   pixel_format backbuffer_format;
   void *native_window;
+  bool shader_enabled{true};
 };
 
 class renderer {

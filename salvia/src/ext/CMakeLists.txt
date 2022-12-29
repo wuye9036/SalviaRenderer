@@ -32,5 +32,5 @@ endif()
 
 add_library(salvia_ext STATIC ${HEADER_LIST} ${SOURCE_LIST})
 target_include_directories(salvia_ext PUBLIC "../../include")
-target_link_libraries(salvia_ext PRIVATE eflib salvia_resource freeimage::FreeImage freeimage::FreeImagePlus Freetype::Freetype)
+target_link_libraries(salvia_ext PRIVATE eflib salvia_resource freeimage::FreeImage freeimage::FreeImagePlus)
 set_target_properties(salvia_ext PROPERTIES FOLDER "Salvia")

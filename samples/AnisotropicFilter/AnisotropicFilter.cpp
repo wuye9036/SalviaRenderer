@@ -1,7 +1,7 @@
-#include <salviau/include/common/sample_app.h>
-#include <salviau/include/common/path.h>
-#include <salviau/include/common/gui.h>
-#include <salviau/include/common/window.h>
+#include <salvia/utility/common/sample_app.h>
+#include <salvia/utility/common/path.h>
+#include <salvia/utility/common/gui.h>
+#include <salvia/utility/common/window.h>
 
 #include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
@@ -24,7 +24,7 @@
 
 using namespace eflib;
 using namespace salvia::core;
-using namespace salviax;
+using namespace salvia::ext;
 using namespace salvia::ext::resource;
 using namespace salviau;
 
@@ -306,10 +306,10 @@ protected:
 	{
 		switch(data_->mode)
 		{
-		case salviau::app_modes::benchmark:
+		case salvia::utility::app_modes::benchmark:
 			data_->quiting = (data_->frame_count == BENCHMARK_TOTAL_FRAME_COUNT);
 			break;
-		case salviau::app_modes::test:
+		case salvia::utility::app_modes::test:
 			data_->quiting = (data_->frame_count == filter_params.size());
 			break;
 		}
@@ -337,13 +337,13 @@ protected:
 
 		switch(data_->mode)
 		{
-		case salviau::app_modes::benchmark:
-		case salviau::app_modes::test:
+		case salvia::utility::app_modes::benchmark:
+		case salvia::utility::app_modes::test:
 			i_param = data_->frame_count % filter_params.size();
 			break;
-		case salviau::app_modes::interactive:
+		case salvia::utility::app_modes::interactive:
 			break;
-		case salviau::app_modes::replay:
+		case salvia::utility::app_modes::replay:
 			i_param = static_cast<size_t>(data_->total_elapsed_sec / 3.0) % filter_params.size();
 			break;
 		}

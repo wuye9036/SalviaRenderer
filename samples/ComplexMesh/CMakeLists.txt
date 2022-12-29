@@ -1,3 +1,1 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
-SET( SOURCE_FILES ComplexMesh.cpp )
-SALVIA_CONFIG_SAMPLE_PROJECT(ComplexMesh)
+configure_sample_project(ComplexMesh "ComplexMesh.cpp" "")

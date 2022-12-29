@@ -24,7 +24,7 @@ result:
   total: 12851
   file bytes(KB): 347.2
   bytes per line: 27.67
-statistic directory: ../../salviax
+statistic directory: ../../salvia::ext
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 36

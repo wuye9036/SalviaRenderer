@@ -1,16 +1,15 @@
 #pragma once
 
-#include <eflib/string/string.h>
-#include <salviau/include/salviau_forward.h>
+#include <salvia/utility/api_symbols.h>
+
+#include <string>
 #include <vector>
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
-std::string SALVIAU_API find_path(std::string const &relative_path);
-std::string SALVIAU_API find_path(std::string const &relative_path,
-                                  std::vector<std::string> const &candidates);
-std::wstring SALVIAU_API find_path(std::wstring const &relative_path);
-std::wstring SALVIAU_API find_path(std::wstring const &relative_path,
-                                   std::vector<std::wstring> const &candidates);
+std::string SALVIA_UTILITY_API find_path(std::string const &relative_path);
+std::string SALVIA_UTILITY_API find_path(std::string const &relative_path,
+                                         std::vector<std::string> const &candidates);
+std::vector<std::string> SALVIA_UTILITY_API default_search_paths();
 
-END_NS_SALVIAU();
+} // namespace salvia::utility

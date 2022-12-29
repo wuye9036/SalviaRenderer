@@ -52,7 +52,9 @@ result render_core::draw() {
   stages_.assembler->update(state_.get());
   stages_.ras->update(state_.get());
   stages_.vert_cache->update(state_.get());
-  stages_.host->update(state_.get());
+  if (stages_.host) {
+    stages_.host->update(state_.get());
+  }
   stages_.backend->update(state_.get());
   apply_shader_cbuffer();
 
@@ -70,7 +72,9 @@ render_core::render_core() {
   stages_.backend.reset(new framebuffer());
 
   stages_.vert_cache->initialize(&stages_);
-  stages_.host->initialize(&stages_);
+  if (stages_.host){
+    stages_.host->initialize(&stages_);
+  }
   stages_.ras->initialize(&stages_);
   stages_.backend->initialize(&stages_);
 

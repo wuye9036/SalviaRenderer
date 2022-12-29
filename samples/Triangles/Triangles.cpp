@@ -10,14 +10,14 @@
 #include "salvia/ext/resource/mesh/mesh_io_obj.h"
 #include <salvia/ext/swap_chain/swap_chain.h>
 
-#include <salviau/include/common/sample_app.h>
+#include <salvia/utility/common/sample_app.h>
 #include <eflib/platform/main.h>
 
 #include <vector>
 
 using namespace eflib;
 using namespace salvia::core;
-using namespace salviax;
+using namespace salvia::ext;
 using namespace salvia::ext::resource;
 using namespace salviau;
 

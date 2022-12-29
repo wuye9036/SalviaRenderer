@@ -1,7 +1,7 @@
 #include <eflib/platform/typedefs.h>
-#include <salviau/include/common/timer.h>
+#include <salvia/utility/common/timer.h>
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
 timer::timer() { restart(); }
 
@@ -12,17 +12,17 @@ double timer::elapsed() const {
   return sec.count();
 }
 
-timer::time_point timer::current_time() const { return clock_type::now(); }
+timer::time_point timer::current_time() { return clock_type::now(); }
 
 fps_counter::fps_counter(float interval)
-    : interval_(interval), fps_(0), elapsed_seconds_(0), elapsed_frame_(0) {}
+    : elapsed_frame_(0), elapsed_seconds_(0), interval_(interval) {}
 
 bool fps_counter::on_frame(float &fps) {
   elapsed_seconds_ += static_cast<float>(timer_.elapsed());
   ++elapsed_frame_;
   timer_.restart();
   if (elapsed_seconds_ >= interval_) {
-    fps = elapsed_frame_ / elapsed_seconds_;
+    fps = static_cast<float>(elapsed_frame_) / elapsed_seconds_;
     elapsed_seconds_ = 0;
     elapsed_frame_ = 0;
     return true;
@@ -31,4 +31,4 @@ bool fps_counter::on_frame(float &fps) {
   return false;
 }
 
-END_NS_SALVIAU();
+}

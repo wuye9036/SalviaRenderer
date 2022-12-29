@@ -62,6 +62,10 @@ public:
   }
 
   ~linux_dl() override {
+    if (mod == nullptr) {
+      return;
+    }
+
     void (*unloading_hook)() = nullptr;
     dynamic_lib::get_function(unloading_hook, "_eflib_dynlib_unloading");
     if (unloading_hook) {
