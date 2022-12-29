@@ -1,16 +1,13 @@
-#ifndef SALVIAU_COMMON_WINDOW_H
-#define SALVIAU_COMMON_WINDOW_H
+#pragma once
 
-#include <salviau/include/salviau_forward.h>
+#include <salvia/utility/api_symbols.h>
 
 #include <boost/signals2.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <any>
 #include <functional>
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
 typedef std::function<void()> idle_handler_t;
 typedef std::function<void()> draw_handler_t;
@@ -34,8 +31,8 @@ public:
   /** @} */
 
   virtual void refresh() = 0;
+
+  virtual ~window() = default;
 };
 
-END_NS_SALVIAU();
-
-#endif
+}

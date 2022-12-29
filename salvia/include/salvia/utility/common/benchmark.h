@@ -1,17 +1,17 @@
 #pragma once
 
-#include <salviau/include/salviau_forward.h>
+#include <salvia/utility/api_symbols.h>
 
 #include <eflib/diagnostics/profiler.h>
 #include <salvia/core/renderer.h>
 #include <salvia/resource/surface.h>
-#include <salviar/include/async_object.h>
+#include <salvia/core/async_object.h>
 #include <salvia/ext/resource/texture/tex_io.h>
 
 #include <string>
 #include <vector>
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
 struct frame_data {
   salviar::pipeline_statistics pipeline_stat;
@@ -19,7 +19,7 @@ struct frame_data {
   salviar::pipeline_profiles pipeline_prof;
 };
 
-class SALVIAU_API benchmark {
+class SALVIA_UTILITY_API benchmark {
 public:
   benchmark(std::string const &benchmark_name);
   virtual ~benchmark();
@@ -53,4 +53,4 @@ protected:
   std::vector<frame_data> frame_profs_;
 };
 
-END_NS_SALVIAU();
+}

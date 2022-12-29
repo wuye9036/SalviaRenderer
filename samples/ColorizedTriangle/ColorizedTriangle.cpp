@@ -2,7 +2,7 @@
 #include "salvia/ext/resource/mesh/mesh_io.h"
 #include <salvia/ext/swap_chain/swap_chain.h>
 
-#include <salviau/include/common/sample_app.h>
+#include <salvia/utility/common/sample_app.h>
 
 #include <salvia/shader/shader.h>
 #include <salvia/shader/shader_regs.h>
@@ -23,7 +23,7 @@
 using namespace eflib;
 using namespace std;
 using namespace salvia::core;
-using namespace salviax;
+using namespace salvia::ext;
 using namespace salvia::ext::resource;
 using namespace salviau;
 
@@ -160,10 +160,10 @@ public:
 	{
 		switch(data_->mode)
 		{
-		case salviau::app_modes::benchmark:
+		case salvia::utility::app_modes::benchmark:
 			data_->quiting = (data_->frame_count == BENCHMARK_TOTAL_FRAME_COUNT);
 			break;
-		case salviau::app_modes::test:
+		case salvia::utility::app_modes::test:
 			data_->quiting = (data_->frame_count == TEST_TOTAL_FRAME_COUNT);
 			break;
 		}
@@ -181,15 +181,15 @@ public:
 
 		switch(data_->mode)
 		{
-		case salviau::app_modes::benchmark:
+		case salvia::utility::app_modes::benchmark:
 			camera_angle -= 0.01f;
 			break;
-		case salviau::app_modes::test:
+		case salvia::utility::app_modes::test:
 			camera_angle -= 0.55f;
 			break;
-		case salviau::app_modes::interactive:
+		case salvia::utility::app_modes::interactive:
 			break;
-		case salviau::app_modes::replay:
+		case salvia::utility::app_modes::replay:
 			camera_angle -= static_cast<float>(data_->elapsed_sec * 60.0f * TWO_PI / 360.0f * 0.15f);
 			break;
 		}

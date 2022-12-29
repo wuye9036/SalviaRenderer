@@ -1,6 +1,4 @@
-#include <salviau/include/common/path.h>
-
-#include <eflib/string/string.h>
+#include <salvia/utility/common/path.h>
 
 #include <filesystem>
 
@@ -11,7 +9,7 @@ using std::wstring;
 
 using std::filesystem::path;
 
-BEGIN_NS_SALVIAU()
+namespace salvia::utility {
 
 template <typename StringT>
 StringT find_path_impl(StringT const &relative_path, vector<StringT> const &candidates) {
@@ -31,19 +29,8 @@ string find_path(string const &relative_path) {
   return find_path_impl(relative_path, candidate_folders);
 }
 
-wstring find_path(wstring const &relative_path) {
-  vector<wstring> candidate_folders{L"./resources", L"../resources", L"../../resources",
-                                    L"../../../resources"};
-
-  return find_path_impl(relative_path, candidate_folders);
-}
-
 string find_path(string const &relative_path, vector<string> const &candidates) {
   return find_path_impl(relative_path, candidates);
 }
 
-wstring find_path(wstring const &relative_path, vector<wstring> const &candidates) {
-  return find_path_impl(relative_path, candidates);
 }
-
-END_NS_SALVIAU();

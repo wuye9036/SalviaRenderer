@@ -72,9 +72,4 @@ struct vs_output_op {
   interpolation_modifier_array attribute_modifiers;
 };
 
-vs_input_op &get_vs_input_op(uint32_t n);
-vs_output_op &get_vs_output_op(uint32_t n);
-float compute_area(const vs_output &v0, const vs_output &v1, const vs_output &v2);
-void viewport_transform(eflib::vec4 &position, core::viewport const &vp);
-
 } // namespace salvia::shader

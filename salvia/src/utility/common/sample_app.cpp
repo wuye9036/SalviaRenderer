@@ -1,21 +1,23 @@
-#include <salviau/include/common/sample_app.h>
+#include <salvia/utility/common/sample_app.h>
 
 #if defined(EFLIB_WINDOWS)
-#include <salviau/include/win/win_gui.h>
+#include <salvia/utility/win/win_gui.h>
 #endif
-#include <salviau/include/common/window.h>
+#include <salvia/utility/common/window.h>
+#include <salvia/utility/common/gui.h>
+
 #include <salvia/ext/resource/texture/tex_io.h>
 
 #include <salvia/resource/texture.h>
 #include <salvia/core/async_renderer.h>
 #include <salvia/core/sync_renderer.h>
 
+#include <fmt/format.h>
+
 #include <boost/predef.h>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #if defined(EFLIB_WINDOWS)
 #include <Windows.h>
@@ -25,19 +27,19 @@ namespace po = boost::program_options;
 using namespace std;
 using namespace eflib;
 using namespace salvia::core;
-using namespace salviax;
+using namespace salvia::ext;
 using namespace boost::property_tree;
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
 std::string compiler_name() {
   std::stringstream s;
 #if defined(BOOST_COMP_MSVC)
   s << "msvc_" << BOOST_COMP_MSVC;
-#elif defined(BOOST_COMP_GUNC)
-  s << "gcc_" << BOOST_COMP_MSVC;
 #elif defined(BOOST_COMP_CLANG)
   s << "clang_" << BOOST_COMP_MSVC;
+#elif defined(BOOST_COMP_GUNC)
+  s << "gcc_" << BOOST_COMP_MSVC;
 #elif defined(BOOST_COMP_INTEL)
   s << "intel_" << BOOST_COMP_MSVC;
 #else
@@ -67,7 +69,7 @@ sample_app::~sample_app() {
   }
 }
 
-void sample_app::init(int argc, std::_tchar const **argv) {
+void sample_app::init(int argc, char *argv[]) {
   init_params(argc, argv);
 
   if (data_->runnable) {
@@ -84,7 +86,7 @@ void sample_app::init(int argc, std::_tchar const **argv) {
   }
 }
 
-void sample_app::init_params(int argc, std::_tchar const **argv) {
+void sample_app::init_params(int argc, char *argv[]) {
   cout << "Initialize with parameters ..." << endl;
 
   po::options_description opdesc("Sample parameters");
@@ -180,8 +182,17 @@ void sample_app::create_devices_and_targets(size_t width, size_t height, size_t 
     data_->gui = create_win_gui();
     break;
 #else
+    // GUI mode in non-Windows OS is not supported.
+    ef_unimplemented();
     return;
 #endif
+  case app_modes::test:
+  case app_modes::benchmark:
+    // no gui node.
+    break;
+  default:
+    ef_unreachable("incorrect app mode.");
+    return;
   };
 
   void *wnd_handle = nullptr;
@@ -217,6 +228,9 @@ void sample_app::create_devices_and_targets(size_t width, size_t height, size_t 
     case app_modes::benchmark:
       rtype = salvia::ext::renderer_sync;
       break;
+    default:
+      ef_unreachable("incorrect app mode.");
+      return;
     }
   }
 
@@ -276,6 +290,8 @@ void sample_app::draw_frame() {
       quit();
     }
     break;
+  default:
+    ef_unreachable("incorrect quit condition.");
   }
 
   if (data_->quiting) {
@@ -336,6 +352,9 @@ void sample_app::draw_frame() {
       data_->color_target->resolve(*data_->resolved_color_target);
     }
     save_frame(data_->resolved_color_target);
+    break;
+  default:
+    // do nothing.
     break;
   }
 }
@@ -398,7 +417,7 @@ void sample_app::profiling(std::string const &stage_name, std::function<void()> 
 void sample_app::save_frame(salvia::resource::surface_ptr const &surf) {
   stringstream ss;
   ss << data_->benchmark_name << "_" << data_->frame_count - 1 << ".png";
-  salvia::ext::resource::save_surface(data_->renderer.get(), surf, eflib::to_tstring(ss.str()),
+  salvia::ext::resource::save_surface(data_->renderer.get(), surf, ss.str(),
                                   pixel_format_color_bgra8);
 }
 
@@ -447,10 +466,6 @@ void reduce_and_output(IterT beg, IterT end, TransformT trans, ptree &parent,
 static int const OUTPUT_PROFILER_LEVEL = 3;
 void sample_app::save_profiling_result() {
   data_->prof.merge_items();
-
-  stringstream ss;
-  ss << data_->benchmark_name << "_"
-     << "Profiling.json";
 
   auto root = make_ptree(&data_->prof, OUTPUT_PROFILER_LEVEL);
 
@@ -518,7 +533,7 @@ void sample_app::save_profiling_result() {
       data_->frame_profs.begin(), data_->frame_profs.end(),
       [](frame_data const &v) { return v.pipeline_prof.ras; }, root, "async.pipeline_prof.ras");
 
-  write_json(ss.str(), root);
+  write_json(fmt::format("{}_Profiling.json", data_->benchmark_name), root);
 }
 
-END_NS_SALVIAU();
+}

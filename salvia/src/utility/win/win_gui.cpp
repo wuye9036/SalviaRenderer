@@ -1,24 +1,23 @@
-#include <salviau/include/win/win_gui.h>
+#include <salvia/utility/win/win_gui.h>
 
-#include <salviau/include/common/window.h>
-#include <salviau/src/win/resource.h>
+#include "resource.h"
+
+#include <salvia/utility/common/window.h>
 
 #include <eflib/platform/constant.h>
-#include <eflib/string/string.h>
 
 #include <boost/signals2.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <sstream>
 #include <string>
 
+#if defined(EFLIB_WINDOWS)
 #include <Windows.h>
 
 using boost::signals2::signal;
 using std::string;
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
 class win_gui;
 static win_gui *g_gui = nullptr;
@@ -190,22 +189,34 @@ LRESULT CALLBACK win_window::win_proc(HWND hwnd, UINT message, WPARAM wparam, LP
   return wnd->process_message(message, wparam, lparam);
 }
 
+}
+#endif
+
+namespace salvia::utility {
 gui *create_win_gui() {
+#if defined(EFLIB_WINDOWS)
   if (g_gui) {
     assert(false);
     exit(1);
   }
   g_gui = new win_gui();
   return g_gui;
+#else
+  return nullptr;
+#endif
 }
 
 void delete_win_gui(gui *app) {
-  if (!dynamic_cast<win_gui *>(app)) {
-    assert(false);
-    exit(1);
+#if defined(EFLIB_WINDOWS)
+  if (app == nullptr) {
+    return;
   }
 
-  delete app;
-}
+  ef_verify(dynamic_cast<win_gui *>(app) != nullptr);
 
-END_NS_SALVIAU();
+  delete app;
+#endif
+  // Do nothing.
+  (void)app;
+}
+}

@@ -1,26 +1,27 @@
 #pragma once
 
-#include <salviau/include/salviau_forward.h>
+#include <salvia/utility/api_symbols.h>
 
-#include <salviau/include/common/timer.h>
+#include <salvia/utility/common/timer.h>
 
 #include <salvia/ext/resource/texture/tex_io.h>
 #include <salvia/ext/swap_chain/swap_chain.h>
 
-#include <eflib/diagnostics/profiler.h>
+#include <salvia/core/async_object.h>
 #include <salvia/core/renderer.h>
 #include <salvia/resource/surface.h>
-#include <salviar/include/async_object.h>
+
+#include <eflib/diagnostics/profiler.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace salviar {
+namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 }
 
-BEGIN_NS_SALVIAU()
+namespace salvia::utility {
 
 class gui;
 
@@ -40,9 +41,9 @@ enum class quit_conditions {
 };
 
 struct frame_data {
-  salviar::pipeline_statistics pipeline_stat;
-  salviar::internal_statistics internal_stat;
-  salviar::pipeline_profiles pipeline_prof;
+  salvia::core::pipeline_statistics pipeline_stat;
+  salvia::core::internal_statistics internal_stat;
+  salvia::core::pipeline_profiles pipeline_prof;
 };
 
 struct sample_app_data {
@@ -53,12 +54,12 @@ public:
   uint32_t screen_width;
   uint32_t screen_height;
   float screen_aspect_ratio;
-  salviar::viewport screen_vp;
+  salvia::core::viewport screen_vp;
 
   std::optional<bool> is_sync_renderer;
   salvia::ext::swap_chain_types sc_type;
 
-  salviau::gui *gui;
+  salvia::utility::gui *gui;
   salvia::core::renderer_ptr renderer;
   salvia::ext::swap_chain_ptr swap_chain;
   salvia::resource::surface_ptr color_target;
@@ -71,9 +72,9 @@ public:
 
   eflib::profiler prof;
 
-  salviar::async_object_ptr pipeline_stat_obj;
-  salviar::async_object_ptr internal_stat_obj;
-  salviar::async_object_ptr pipeline_prof_obj;
+  salvia::core::async_object_ptr pipeline_stat_obj;
+  salvia::core::async_object_ptr internal_stat_obj;
+  salvia::core::async_object_ptr pipeline_prof_obj;
 
   std::vector<frame_data> frame_profs;
   quit_conditions quit_cond;
@@ -85,14 +86,14 @@ public:
   int frames_in_second;
 };
 
-class SALVIAU_API sample_app {
+class SALVIA_UTILITY_API sample_app {
 public:
-  sample_app(std::string const &app_name);
+  explicit sample_app(std::string const &app_name);
   virtual ~sample_app();
 
   // Called by client
   void run();
-  void init(int argc, std::_tchar const **argv);
+  void init(int argc, char *argv[]);
 
 protected:
   virtual void profiling(std::string const &stage_name, std::function<void()> const &fn);
@@ -113,7 +114,7 @@ protected:
   std::unique_ptr<sample_app_data> data_;
 
 private:
-  void init_params(int argc, std::_tchar const **argv);
+  void init_params(int argc, char *argv[]);
   void draw_frame();
 
   virtual void save_frame(salvia::resource::surface_ptr const &surf);
@@ -123,4 +124,4 @@ private:
   void on_gui_draw();
 };
 
-END_NS_SALVIAU()
+}

@@ -111,6 +111,6 @@ void verify(std::source_location source_loc, bool flag, std::string_view fmt, Ar
 
 #define ef_unreachable(...) eflib::report_and_break(std::source_location::current(), __VA_ARGS__)
 
-void ef_unimplemented(std::source_location loc = std::source_location::current()) {
+inline void ef_unimplemented(std::source_location loc = std::source_location::current()) {
   eflib::report_and_break(loc, "The code block is unimplemented.");
 }

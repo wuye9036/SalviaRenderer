@@ -1,15 +1,12 @@
 #pragma once
 
-#ifndef SALVIAU_COMMON_TIMER_H
-#define SALVIAU_COMMON_TIMER_H
-
-#include <salviau/include/salviau_forward.h>
+#include <salvia/utility/api_symbols.h>
 
 #include <chrono>
 
-BEGIN_NS_SALVIAU();
+namespace salvia::utility {
 
-class SALVIAU_API timer {
+class SALVIA_UTILITY_API timer {
 public:
   typedef std::chrono::duration<double> seconds;
   typedef std::chrono::high_resolution_clock clock_type;
@@ -17,26 +14,23 @@ public:
 
   timer();
   void restart();
-  double elapsed() const;
-  time_point current_time() const;
+  [[nodiscard]] double elapsed() const;
+  static time_point current_time() ;
 
 private:
   clock_type::time_point start_time_;
 };
 
-class SALVIAU_API fps_counter {
+class SALVIA_UTILITY_API fps_counter {
 public:
-  fps_counter(float interval);
+  explicit fps_counter(float interval);
   bool on_frame(float &fps);
 
 private:
   timer timer_;
   uint32_t elapsed_frame_;
   float elapsed_seconds_;
-  float fps_;
   float interval_;
 };
 
-END_NS_SALVIAU();
-
-#endif // _TIMER_H
+}

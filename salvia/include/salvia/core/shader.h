@@ -22,7 +22,7 @@
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 struct pixel_accessor;
-}
+} // namespace salvia::resource
 
 namespace salvia::shader {
 
@@ -40,6 +40,8 @@ class vs_input;
 class vs_output;
 struct ps_output;
 struct triangle_info;
+struct vs_input_op;
+struct vs_output_op;
 
 } // namespace salvia::shader
 
@@ -51,6 +53,13 @@ struct scanline_info;
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_shader);
 
 namespace detail = salvia::shader_constant::detail;
+
+shader::vs_input_op &get_vs_input_op(uint32_t n);
+shader::vs_output_op &get_vs_output_op(uint32_t n);
+
+float compute_area(const shader::vs_output &v0, const shader::vs_output &v1,
+                   const shader::vs_output &v2);
+void viewport_transform(eflib::vec4 &position, core::viewport const &vp);
 
 class cpp_shader {
 public:
@@ -69,7 +78,7 @@ public:
   }
 
   virtual cpp_shader_ptr clone() = 0;
-  virtual ~cpp_shader() {}
+  virtual ~cpp_shader() = default;
 };
 
 class cpp_shader_impl : public cpp_shader {
@@ -84,7 +93,7 @@ public:
   }
 
   result set_constant(const std::string &varname, shader_constant::const_voidptr pval) override {
-    variable_map::iterator var_it = varmap_.find(varname);
+    auto var_it = varmap_.find(varname);
     if (var_it == varmap_.end()) {
       return result::failed;
     }
@@ -96,7 +105,7 @@ public:
 
   result set_constant(const std::string &varname, shader_constant::const_voidptr pval,
                       size_t index) override {
-    container_variable_map::iterator cont_it = contmap_.find(varname);
+    auto cont_it = contmap_.find(varname);
     if (cont_it == contmap_.end()) {
       return result::failed;
     }
@@ -191,7 +200,8 @@ public:
 class cpp_blend_shader : public cpp_shader_impl {
 public:
   void execute(size_t sample, resource::pixel_accessor &inout, const shader::ps_output &in);
-  virtual bool shader_prog(size_t sample, resource::pixel_accessor &inout, const shader::ps_output &in) = 0;
+  virtual bool shader_prog(size_t sample, resource::pixel_accessor &inout,
+                           const shader::ps_output &in) = 0;
 };
 
 } // namespace salvia::core
