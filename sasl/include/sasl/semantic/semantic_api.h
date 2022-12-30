@@ -5,7 +5,7 @@
 
 #include <eflib/utility/shared_declaration.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 namespace sasl {
 namespace syntax_tree {

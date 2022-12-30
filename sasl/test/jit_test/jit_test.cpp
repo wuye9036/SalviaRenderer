@@ -8,15 +8,12 @@
 #include <sasl/semantic/symbol.h>
 
 #include <boost/test/unit_test.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <fstream>
 
 using sasl::codegen::module_vmcode;
 using std::fstream;
 
-#include <eflib/platform/disable_warnings.h>
 void invoke(void *callee, void *psi, void *pbi, void *pso, void *pbo) {
   reinterpret_cast<void (*)(void *, void *, void *, void *)>(callee)(psi, pbi, pso, pbo);
 }
@@ -29,8 +26,6 @@ bool print_diagnostic(diag_chat *, diag_item *item) {
   BOOST_TEST_MESSAGE(sasl::common::str(item));
   return true;
 }
-
-#include <eflib/platform/enable_warnings.h>
 
 void jit_fixture::init_g(string const &file_name) { init(file_name, "--lang=g"); }
 

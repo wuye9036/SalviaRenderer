@@ -6,7 +6,7 @@
 #include <sasl/semantic/semantics.h>
 #include <sasl/syntax_tree/visitor.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <any>

@@ -3,11 +3,9 @@
 #include <eflib/memory/allocator.h>
 #include <eflib/memory/pointer_calc.h>
 #include <eflib/memory/vls.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <boost/mpl/if.hpp>
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 
 #include <array>
 #include <cassert>

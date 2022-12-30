@@ -1,5 +1,5 @@
-#ifndef SALVIAX_RESOURCE_MODEL_H
-#define SALVIAX_RESOURCE_MODEL_H
+#ifndef SALVIA_EXT_RESOURCE_MODEL_H
+#define SALVIA_EXT_RESOURCE_MODEL_H
 
 #include <slaviax/include/resource/resource_forward.h>
 

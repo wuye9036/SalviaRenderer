@@ -1,7 +1,7 @@
 #pragma once
 
 #include <eflib/math/math.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <array>
 #include <tuple>

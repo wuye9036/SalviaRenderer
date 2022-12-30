@@ -4,7 +4,7 @@
 
 #include <sasl/codegen/cgs_sisd.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <eflib/diagnostics/assert.h>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <eflib/platform/config.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #if !defined(EFLIB_CPU_X86) && !defined(EFLIB_CPU_X64)
 #error "Unsupported platform!"

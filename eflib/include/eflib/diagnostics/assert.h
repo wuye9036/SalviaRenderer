@@ -31,62 +31,7 @@
 #define ef_debug_break() ::abort()
 #endif
 
-#if defined(EFLIB_DEBUG)
-
-#define EF_ASSERT(exp, desc)                                                                       \
-  {                                                                                                \
-    static bool isIgnoreAlways = false;                                                            \
-    if (!isIgnoreAlways) {                                                                         \
-      if ((*eflib::detail::ProcPreAssert)(exp ? true : false, #exp, desc, __LINE__, __FILE__,      \
-                                          __FUNCTION__, &isIgnoreAlways)) {                        \
-        ef_debug_break();                                                                          \
-      }                                                                                            \
-    }                                                                                              \
-  }
-
-//  e.g.
-//    EFLIB_ASSERT_AND_IF( expr, "Assert!" ){
-//      return 0;
-//    }
-//  means
-//    assert( expr && !"Assert!" );
-//    if( !expr ){
-//      return 0;
-//    }
-#define EFLIB_ASSERT_AND_IF(expr, desc)                                                            \
-  EF_ASSERT(expr, desc);                                                                           \
-  if (!(expr)) /* jump statement */
-
-#else
-#define EF_ASSERT(exp, desc, ...) (void)(exp);
-#define EF_ASSERT_MSG(exp, msg, __VA_ARGS__) (void)(exp);
-#define EFLIB_ASSERT_AND_IF(expr, desc) if (!(expr)) /* jump statement */
-#endif
-
 namespace eflib {
-const bool Interrupted = false;
-const bool Unimplemented = false;
-const bool Unexpected = false;
-} // namespace eflib
-
-#define EFLIB_ASSERT_UNIMPLEMENTED0(desc) EF_ASSERT(eflib::Unimplemented, desc);
-#define EFLIB_ASSERT_UNEXPECTED()                                                                  \
-  EF_ASSERT(eflib::Unexpected, "Here is not expected to be executed.");
-#define EFLIB_INTERRUPT(desc) EF_ASSERT(eflib::Interrupted, desc)
-
-namespace eflib {
-namespace detail {
-extern bool (*ProcPreAssert)(bool exp, const char *expstr, const char *desc, int line,
-                             const char *file, const char *func, bool *ignore);
-
-bool ProcPreAssert_Init(bool exp, const char *expstr, const char *desc, int line, const char *file,
-                        const char *func, bool *ignore);
-bool default_pre_assert(bool exp, const char *expstr, const char *desc, int line, const char *file,
-                        const char *func, bool *ignore);
-bool ProcPreAssert_MsgBox(bool exp, const char *expstr, const char *desc, int line,
-                          const char *file, const char *func, bool *ignore);
-} // namespace detail
-
 template <class T> void print_vector(std::ostream &os, const T &v) {
   for (typename T::const_iterator cit = v.begin(); cit != v.end(); ++cit) {
     os << *cit << " ";
@@ -106,7 +51,6 @@ void verify(std::source_location source_loc, bool flag, std::string_view fmt, Ar
     report_and_break(source_loc, fmt, std::forward<Args>(args)...);
   }
 }
-
 } // namespace eflib
 
 #define ef_verify(expr) eflib::verify(std::source_location::current(), (expr), #expr);
@@ -115,3 +59,42 @@ void verify(std::source_location source_loc, bool flag, std::string_view fmt, Ar
 
 #define ef_unimplemented()                                                                         \
   eflib::report_and_break(std::source_location::current(), "The code block is unimplemented.");
+
+#if defined(EFLIB_DEBUG)
+
+#define EF_ASSERT(expr, desc)                                                                      \
+  {                                                                                                \
+    if (!(expr)) {                                                                                    \
+      eflib::report_and_break(std::source_location::current(), "Assertion failed: {}. {}", #expr,  \
+                              desc);                                                               \
+    }                                                                                              \
+  }
+
+//  e.g.
+//    EFLIB_ASSERT_AND_IF( expr, "Assert!" ){
+//      return 0;
+//    }
+//  means
+//    assert( expr && !"Assert!" );
+//    if( !expr ){
+//      return 0;
+//    }
+#define EFLIB_ASSERT_AND_IF(expr, desc)                                                            \
+  EF_ASSERT(expr, desc);                                                                           \
+  if (!(expr)) /* jump statement */
+
+#else
+
+#define EF_ASSERT(exp, desc, ...) (void)(exp);
+#define EFLIB_ASSERT_AND_IF(expr, desc) if (!(expr)) /* jump statement */
+
+#endif
+
+namespace eflib {
+const bool unimplemented = false;
+const bool unexpected = false;
+} // namespace eflib
+
+#define EFLIB_ASSERT_UNIMPLEMENTED0(desc) EF_ASSERT(eflib::unimplemented, desc);
+#define EFLIB_ASSERT_UNEXPECTED()                                                                  \
+  EF_ASSERT(eflib::unexpected, "Here is not expected to be executed.");

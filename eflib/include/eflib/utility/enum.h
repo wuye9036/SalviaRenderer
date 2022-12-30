@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <type_traits>
 #include <utility>

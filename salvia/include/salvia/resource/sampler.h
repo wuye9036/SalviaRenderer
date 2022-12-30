@@ -3,7 +3,7 @@
 #include "salvia/common/colors.h"
 #include <salvia/common/constants.h>
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/shared_declaration.h>
 
 namespace salvia::resource {

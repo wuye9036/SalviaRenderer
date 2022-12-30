@@ -1,7 +1,7 @@
 #ifndef EFLIB_PLATFORM_CPUINFO_H
 #define EFLIB_PLATFORM_CPUINFO_H
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 namespace eflib {
 enum cpu_features {

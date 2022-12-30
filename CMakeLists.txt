@@ -10,13 +10,13 @@ find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(freeimage CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
-# find_package(magic_enum CONFIG REQUIRED)
+# find_package(magic_enum CONFIG REQUIRED)  
 
 include (cmake/IncludeBoost.cmake)
 include (cmake/IncludeLLVM.cmake)
 include (cmake/ConfigCompiler.cmake)
 
-add_subdirectory(cmake)
+add_subdirectory(cmake) 
 
 # Add projects
 add_subdirectory(eflib)

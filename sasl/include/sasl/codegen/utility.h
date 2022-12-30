@@ -2,8 +2,6 @@
 
 #include <sasl/codegen/forward.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/ADT/APInt.h>
 
 #include <type_traits>

@@ -12,8 +12,6 @@
 #include <eflib/math/math.h>
 #include <eflib/utility/unref_declarator.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/CFG.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>

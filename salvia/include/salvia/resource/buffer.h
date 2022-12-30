@@ -5,7 +5,7 @@
 
 #include <eflib/diagnostics/assert.h>
 #include <eflib/memory/allocator.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <memory>
 #include <vector>

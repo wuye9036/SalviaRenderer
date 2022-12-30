@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <salvia/utility/api_symbols.h>
 
 namespace salvia::utility {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <boost/property_tree/ptree.hpp>
 

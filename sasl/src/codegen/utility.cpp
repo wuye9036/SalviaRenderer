@@ -2,8 +2,6 @@
 
 #include <sasl/codegen/utility.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/Function.h>
 
 using llvm::Function;

@@ -7,8 +7,6 @@
 #include <sasl/semantic/semantics.h>
 #include <sasl/syntax_tree/declaration.h>
 
-#include <eflib/platform/disable_warnings.h>
-#include <eflib/platform/enable_warnings.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 

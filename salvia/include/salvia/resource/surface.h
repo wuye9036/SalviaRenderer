@@ -32,7 +32,7 @@ public:
   void resolve(surface &target);
   surface_ptr make_mip_surface(filter_type filter);
 
-  void transfer(pixel_format srcfmt, const eflib::rect<size_t> &dest_rect, void *pdata);
+  void transfer(pixel_format source_format, const eflib::rect<size_t> &dest_rect, void *pdata);
   void transfer(const eflib::rect<size_t> &dest_rect, size_t src_start_x, size_t src_start_y,
                 surface &src_surf);
 
@@ -59,15 +59,15 @@ public:
   void set_texel(size_t x, size_t y, size_t sample, const color_rgba32f &color);
   void set_texel(size_t x, size_t y, size_t sample, const void *color);
 
-  void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f &color);
-  void fill_texels(color_rgba32f const &color);
+  void fill(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f &color);
+  void fill(color_rgba32f const &color);
 
 private:
   size_t elem_size_;
   size_t sample_count_;
   eflib::uint4 size_;
   pixel_format format_;
-  std::vector<uint8_t, eflib::aligned_allocator<uint8_t, 16>> datas_;
+  std::vector<uint8_t, eflib::aligned_allocator<uint8_t, 16>> data_;
 
 #if SALVIA_TILED_SURFACE
   size_t tile_width_;

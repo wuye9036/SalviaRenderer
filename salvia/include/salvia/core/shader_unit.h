@@ -12,7 +12,7 @@
 #include <salvia/shader/reflection.h>
 
 #include <eflib/memory/allocator.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <string>

@@ -4,7 +4,7 @@
 
 #include "salvia/resource/texture.h"
 
-#include "eflib/platform/typedefs.h"
+#include "eflib/platform/stdint.h"
 
 #include <string>
 

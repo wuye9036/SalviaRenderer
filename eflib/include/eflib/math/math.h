@@ -5,7 +5,7 @@
 #include <eflib/math/vector.h>
 #include <eflib/platform/constant.h>
 #include <eflib/platform/intrin.h>
-#include <eflib/platform/typedefs.h>
+#include <eflib/platform/stdint.h>
 
 #include <algorithm>
 #include <cassert>
