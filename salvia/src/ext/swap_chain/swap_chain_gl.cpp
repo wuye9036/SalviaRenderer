@@ -1,4 +1,4 @@
-#if defined(SALVIAX_GL_ENABLED)
+#if defined(SALVIA_EXT_GL_ENABLED)
 
 #include <salvia/ext/swap_chain/swap_chain_impl.h>
 

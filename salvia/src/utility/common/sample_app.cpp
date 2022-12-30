@@ -296,7 +296,9 @@ void sample_app::draw_frame() {
     }
     break;
   default:
-    ef_unreachable("incorrect quit condition.");
+    EF_ASSERT(data_->quit_cond == quit_conditions::user_defined, "");
+    // keep running.
+    break;
   }
 
   if (data_->quiting) {

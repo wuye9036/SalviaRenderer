@@ -17,4 +17,11 @@ std::u16string u8tou16(std::u8string_view s) {
                            reinterpret_cast<char const *>(s.data() + s.size()));
 }
 
+std::wstring mb2wide(std::string s) {
+  std::wstring_convert<deletable_facet<std::codecvt<wchar_t, char, std::mbstate_t>>, wchar_t>
+      conv16;
+  return conv16.from_bytes(reinterpret_cast<char const *>(s.data()),
+                           reinterpret_cast<char const *>(s.data() + s.size()));
+}
+
 } // namespace eflib

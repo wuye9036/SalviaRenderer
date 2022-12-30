@@ -23,8 +23,8 @@ purpose:
 Modify Log:
 
 *********************************************************************/
-#ifndef SALVIAX_INC_WINDOWS_H
-#define SALVIAX_INC_WINDOWS_H
+#ifndef SALVIA_EXT_INC_WINDOWS_H
+#define SALVIA_EXT_INC_WINDOWS_H
 
 #ifndef EFLIB_USE_STD_MINMAX
 #include <algorithm>
@@ -35,4 +35,4 @@ using ::std::min;
 #endif
 #include <windows.h>
 
-#endif // SALVIAX_INC_WINDOWS_H
+#endif // SALVIA_EXT_INC_WINDOWS_H

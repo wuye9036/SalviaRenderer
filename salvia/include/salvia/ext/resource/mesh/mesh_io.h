@@ -24,8 +24,8 @@ Modify Log:
 
 *********************************************************************/
 
-#ifndef SALVIAX_MESH_IO_H
-#define SALVIAX_MESH_IO_H
+#ifndef SALVIA_EXT_MESH_IO_H
+#define SALVIA_EXT_MESH_IO_H
 
 #include "eflib/math/vector.h"
 #include "mesh.h"
@@ -48,4 +48,4 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
 
 } // namespace salvia::ext::resource
 
-#endif // SALVIAX_MESH_IO_H
+#endif // SALVIA_EXT_MESH_IO_H

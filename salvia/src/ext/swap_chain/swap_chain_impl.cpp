@@ -67,22 +67,21 @@ void salviax_create_swap_chain_and_renderer(salvia::ext::swap_chain_ptr &out_swa
   }
 
   if (swap_chain_type == salvia::ext::swap_chain_default) {
-#if defined(SALVIAX_D3D11_ENABLED)
+#if defined(SALVIA_EXT_D3D11_ENABLED)
     swap_chain_type = salvia::ext::swap_chain_d3d11;
-#elif defined(SALVIAX_GL_ENABLED)
+#elif defined(SALVIA_EXT_GL_ENABLED)
     swap_chain_type = salvia::ext::swap_chain_gl;
 #else
-    out_renderer.reset();
     return;
 #endif
   }
 
   if (swap_chain_type == salvia::ext::swap_chain_gl) {
-#if defined(SALVIAX_GL_ENABLED)
+#if defined(SALVIA_EXT_GL_ENABLED)
     out_swap_chain = salvia::ext::create_gl_swap_chain(out_renderer, render_params);
 #endif
   } else if (swap_chain_type == salvia::ext::swap_chain_d3d11) {
-#if defined(SALVIAX_D3D11_ENABLED)
+#if defined(SALVIA_EXT_D3D11_ENABLED)
     out_swap_chain = salvia::ext::create_d3d11_swap_chain(out_renderer, render_params);
 #endif
   }

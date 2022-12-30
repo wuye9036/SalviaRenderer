@@ -343,7 +343,7 @@ protected:
   raster_state_ptr rs_back;
 };
 
-EFLIB_MAIN(argc, argv) {
+int main(int argc, char *argv[]) {
   scoped_initializer salvia_utility_initializer;
 
   complex_mesh loader;

@@ -93,6 +93,8 @@ private:
       float t = (time - aninfo->X[i_segment]) / diff;
       return (aninfo->Y[i_segment + 1] - aninfo->Y[i_segment]) * t + aninfo->Y[i_segment];
     }
+
+    return {};
   }
 
   std::shared_ptr<animation_info_impl<T>> aninfo;

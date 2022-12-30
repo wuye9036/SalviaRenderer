@@ -1,4 +1,4 @@
-#if defined(SALVIAX_D3D11_ENABLED)
+#if defined(SALVIA_EXT_D3D11_ENABLED)
 
 #include <salvia/ext/swap_chain/swap_chain_impl.h>
 

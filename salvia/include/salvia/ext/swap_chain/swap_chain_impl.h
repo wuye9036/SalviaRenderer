@@ -21,12 +21,12 @@ protected:
   salvia::resource::surface_ptr resolved_surface_;
 };
 
-#if defined(SALVIAX_GL_ENABLED)
+#if defined(SALVIA_EXT_GL_ENABLED)
 swap_chain_ptr create_gl_swap_chain(salvia::core::renderer_ptr const &renderer,
                                     salvia::core::renderer_parameters const *);
 #endif
 
-#if defined(SALVIAX_D3D11_ENABLED)
+#if defined(SALVIA_EXT_D3D11_ENABLED)
 swap_chain_ptr create_d3d11_swap_chain(salvia::core::renderer_ptr const &renderer,
                                        salvia::core::renderer_parameters const *);
 #endif

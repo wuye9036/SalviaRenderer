@@ -5,6 +5,8 @@
 #include <salvia/utility/common/window.h>
 
 #include <eflib/platform/constant.h>
+#include <eflib/diagnostics/assert.h>
+#include <eflib/utility/string_conv.h>
 
 #include <boost/signals2.hpp>
 
@@ -38,7 +40,9 @@ public:
 
   void set_create_handler(create_handler_t const &handler) { on_create.connect(handler); }
 
-  void set_title(string const &title) { SetWindowText(hwnd_, eflib::to_tstring(title).c_str()); }
+  void set_title(string const &title) {
+    SetWindowText(hwnd_, eflib::mb2wide(title).c_str());
+  }
 
   void *view_handle_as_void() override { return reinterpret_cast<void *>(hwnd_); }
 
@@ -95,13 +99,12 @@ private:
 
   static LRESULT CALLBACK win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
   static ATOM wnd_class_;
-  static std::_tchar const *wnd_class_name_;
+  static constexpr auto wnd_class_name_ = L"SalviaSampleApp";
   HWND hwnd_;
   win_gui *app_;
 };
 
 ATOM win_window::wnd_class_ = 0;
-std::_tchar const *win_window::wnd_class_name_ = _EFLIB_T("SalviaApp");
 
 class win_gui : public gui {
 public:
@@ -119,7 +122,7 @@ public:
 
   int create_window(uint32_t width, uint32_t height) override {
     if (!main_wnd_->create(width, height)) {
-      OutputDebugString(_EFLIB_T("Main window creation failed!\n"));
+      OutputDebugString(L"Main window creation failed!\n");
       return 0;
     }
     return 1;
@@ -158,7 +161,7 @@ bool win_window::create(uint32_t width, uint32_t height) {
   DWORD style = WS_OVERLAPPEDWINDOW;
   RECT rc = {0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
   AdjustWindowRect(&rc, style, false);
-  hwnd_ = CreateWindow(wnd_class_name_, _EFLIB_T(""), style, CW_USEDEFAULT, 0, rc.right - rc.left,
+  hwnd_ = CreateWindow(wnd_class_name_, L"", style, CW_USEDEFAULT, 0, rc.right - rc.left,
                        rc.bottom - rc.top, nullptr, nullptr, app_->instance(), nullptr);
   if (!hwnd_) {
     auto err = GetLastError();
@@ -171,8 +174,8 @@ bool win_window::create(uint32_t width, uint32_t height) {
     // Display the error message and exit the process
     std::wstringstream ss;
     ss << L"Window created failed. Error: " << std::hex
-       << eflib::to_wide_string(std::_tstring(lpMsgBuf)) << ".";
-    OutputDebugStringW(ss.str().c_str());
+       << lpMsgBuf << ".";
+    OutputDebugString(ss.str().c_str());
     LocalFree(lpMsgBuf);
     return false;
   }
