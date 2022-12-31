@@ -1,19 +1,18 @@
 #pragma once
-
+#include <mutex>
 #include <atomic>
 #include <eflib/platform/config.h>
 
 namespace eflib {
-class spinlock {
+class atomic_mutex {
 private:
-  enum class LockState : intptr_t { Locked, Unlocked };
-  std::atomic<LockState> state_;
+  std::atomic<bool> state_ {false};
 
 public:
-  spinlock() : state_(LockState::Unlocked) {}
+  atomic_mutex() = default;
 
   bool try_lock() {
-    return state_.exchange(LockState::Locked, std::memory_order_acquire) == LockState::Unlocked;
+    return state_.exchange(true, std::memory_order_acquire) == false;
   }
 
   void lock() {
@@ -22,17 +21,7 @@ public:
     }
   }
 
-  void unlock() { state_.store(LockState::Unlocked, std::memory_order_release); }
+  void unlock() { state_.store(false, std::memory_order_release); }
 };
 
-class scoped_spin_locker {
-public:
-  scoped_spin_locker(spinlock &lock) : lock_(lock) { lock_.lock(); }
-  ~scoped_spin_locker() { lock_.unlock(); }
-
-private:
-  scoped_spin_locker(scoped_spin_locker const &) = delete;
-  scoped_spin_locker &operator=(scoped_spin_locker const &) = delete;
-  spinlock &lock_;
-};
 } // namespace eflib

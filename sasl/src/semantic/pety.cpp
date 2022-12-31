@@ -17,16 +17,16 @@
 #include <eflib/utility/polymorphic_cast.h>
 
 #include <fmt/format.h>
+
 #include <string>
 #include <unordered_map>
+#include <mutex>
 
 using namespace sasl::syntax_tree;
 using namespace sasl::enums;
 using namespace eflib::enum_operators;
 
 using eflib::polymorphic_cast;
-using eflib::scoped_spin_locker;
-using eflib::spinlock;
 using std::dynamic_pointer_cast;
 using std::make_pair;
 using std::make_shared;
@@ -35,6 +35,7 @@ using std::string;
 using std::string_view;
 using std::unordered_map;
 using std::vector;
+using std::scoped_lock;
 
 namespace sasl::semantic {
 
@@ -461,10 +462,10 @@ tid_t pety_impl::get_impl(tynode *v, symbol *scope, bool attach_tid_to_input) {
 // lookup table for translating enumerations to string.
 string mangling_tag("M");
 unordered_map<builtin_types, string> btc_decorators;
-spinlock builtin_shorten_mutex;
+eflib::atomic_mutex builtin_shorten_mutex;
 bool builtin_shorten_initialized(false);
 void init_builtin_short_name() {
-  scoped_spin_locker lck(builtin_shorten_mutex);
+  std::scoped_lock<eflib::atomic_mutex> lck(builtin_shorten_mutex);
 
   if (builtin_shorten_initialized) {
     return;
