@@ -44,11 +44,11 @@ public:
   shared_ptr<lex_context> ctxt;
 };
 
-class attr_processor {
+class attribute_processor {
 public:
-  attr_processor() { data = make_shared<shared_data>(); }
-
-  attr_processor(attr_processor const &rhs) : data(rhs.data) {}
+  attribute_processor(): data{make_shared<shared_data>()} {}
+  attribute_processor(attribute_processor const &rhs) : data(rhs.data) {}
+  attribute_processor &operator=(attribute_processor const &) = delete;
 
   void output(std::vector<token> &seq) { data->attrs = &seq; }
 
@@ -68,9 +68,9 @@ public:
 
   void add_state_translation_rule(size_t tok_def_id, std::string const &on_state,
                                   std::string const &jump_to) {
-    std::pair<size_t, std::string> key_pair = make_pair(tok_def_id, on_state);
-    assert(data->state_translations.count(key_pair) == 0);
-    data->state_translations.insert(make_pair(key_pair, jump_to));
+    auto key_pair = make_pair(tok_def_id, on_state);
+    ef_verify(data->state_translations.count(key_pair) == 0);
+    data->state_translations.emplace(key_pair, jump_to);
   }
 
   template <typename IteratorT, typename PassFlagT, typename IdT, typename ContextT>
@@ -89,13 +89,14 @@ public:
     }
 
     // change state
-    if (data->state_translations.count(make_pair(id, splexer_state)) > 0) {
-      splexer_ctxt.set_state_name(data->state_translations[make_pair(id, splexer_state)].c_str());
+    auto state_translate_key = make_pair(id, splexer_state);
+    if (data->state_translations.contains(state_translate_key) > 0) {
+      auto next_state = data->state_translations[state_translate_key];
+      splexer_ctxt.set_state_name(next_state.c_str());
     }
   }
 
 private:
-  attr_processor &operator=(attr_processor const &);
   shared_ptr<shared_data> data;
 };
 
@@ -104,97 +105,53 @@ typedef splex::lexertl::token<char const *, token_types> splex_token;
 typedef splex::lexertl::actor_lexer<splex_token> base_lexer_t;
 
 struct lexer_impl : public splex::lexer<base_lexer_t> {
-  lexer_impl(shared_ptr<attr_processor> proc);
-
   unordered_map<std::string, splex::token_def<std::string>> defs;
   unordered_map<size_t, std::string> ids;
-  shared_ptr<attr_processor> proc;
+  attribute_processor proc;
 };
 
-lexer_impl::lexer_impl(shared_ptr<attr_processor> proc) : proc(proc) {}
-
-//////////////////////////////////////////////////////////////////////////
-// adders
-lexer::token_definer::token_definer(lexer &owner) : owner(owner) {}
-
-lexer::token_definer::token_definer(token_definer const &rhs) : owner(rhs.owner) {}
-
-lexer::token_definer const &lexer::token_definer::operator()(std::string const &name,
-                                                             std::string const &patterndef) const {
-  owner.get_impl()->defs[name] = patterndef;
-  return *this;
-}
-
-lexer::pattern_adder::pattern_adder(lexer &owner) : owner(owner) {}
-
-lexer::pattern_adder::pattern_adder(pattern_adder const &rhs) : owner(rhs.owner) {}
-
-lexer::pattern_adder const &lexer::pattern_adder::operator()(std::string const &name,
-                                                             std::string const &patterndef) const {
-  owner.get_impl()->self.add_pattern(name, patterndef);
-  return *this;
-}
-
-lexer::token_adder::token_adder(lexer &owner, char const *state) : owner(owner), state(state) {}
-
-lexer::token_adder::token_adder(token_adder const &rhs) : owner(rhs.owner), state(rhs.state) {}
-
-lexer::token_adder const &lexer::token_adder::operator()(std::string const &name) const {
-  shared_ptr<lexer_impl> impl = owner.get_impl();
-  splex::token_def<std::string> &def = impl->defs[name];
-  impl->self(state).define(def[*(impl->proc)]);
-  impl->ids.insert(make_pair(def.id(), name));
-  return *this;
-}
-
-lexer::token_adder const &lexer::token_adder::operator()(std::string const &name,
-                                                         std::string const &jump_to) const {
-  (*this)(name);
-  shared_ptr<lexer_impl> impl = owner.get_impl();
-  impl->proc->add_state_translation_rule(impl->defs[name].id(), state, jump_to);
-  return *this;
-}
-
-lexer::skippers_adder::skippers_adder(lexer &owner) : owner(owner) {}
-
-lexer::skippers_adder::skippers_adder(skippers_adder const &rhs) : owner(rhs.owner) {}
-
-lexer::skippers_adder const &lexer::skippers_adder::operator()(std::string const &name) const {
-  owner.get_impl()->proc->add_skipper(name);
-  return *this;
-}
-
-lexer::init_states_adder::init_states_adder(lexer &owner) : owner(owner) {}
-
-lexer::init_states_adder::init_states_adder(init_states_adder const &rhs) : owner(rhs.owner) {}
-
-lexer::init_states_adder const &
-lexer::init_states_adder::operator()(std::string const &name) const {
-  owner.get_impl()->proc->add_init_states(name);
-  return *this;
-}
 
 //////////////////////////////////////////////////////////////////////////
 // lexer members
 lexer::lexer() {
-  shared_ptr<attr_processor> proc(new attr_processor());
-  impl = std::make_shared<lexer_impl>(proc);
+  impl = std::make_shared<lexer_impl>();
 }
 
-lexer::token_definer lexer::define_tokens(std::string const &name, std::string const &patterndef) {
-  return token_definer(*this)(name, patterndef);
+void lexer::add_patterns(std::initializer_list<definition> patterns) {
+  for (auto [name, def]: patterns) {
+    impl->self.add_pattern(std::string{name}, std::string{def});
+  }
 }
 
-lexer::pattern_adder lexer::add_pattern(std::string const &name, std::string const &patterndef) {
-  return pattern_adder(*this)(name, patterndef);
+void lexer::define_tokens(std::initializer_list<definition> patterns) {
+  for (auto [name, def]: patterns) {
+    impl->defs[std::string{name}] = std::string{def};
+  }
 }
 
-lexer::token_adder lexer::add_token(const char *state) { return token_adder(*this, state); }
+void lexer::enable_tokens(char const* state, std::initializer_list<token_description> tokens) {
+  for (auto [name, new_state]: tokens) {
+    std::string name_s{name};
+    auto& def = impl->defs[name_s];
+    if (new_state.empty()) {
+      impl->self(state).define(def[impl->proc]);
+      impl->ids.emplace(def.id(), name_s);
+    } else {
+      impl->proc.add_state_translation_rule(def.id(), state, std::string{new_state});
+    }
+  }
+}
 
-lexer::skippers_adder lexer::skippers(std::string const &s) { return skippers_adder(*this)(s); }
+void lexer::set_skippers(std::initializer_list<std::string_view> skippers) {
+  for (auto skipper : skippers) {
+    impl->proc.add_skipper(std::string{skipper});
+  }
+}
 
-lexer::init_states_adder lexer::init_states(std::string const &s) {
-  return init_states_adder(*this)(s);
+void lexer::set_init_states(std::initializer_list<std::string_view> state_list) {
+  for(auto state: state_list) {
+    impl->proc.add_init_states(std::string{state});
+  }
 }
 
 std::string const &lexer::get_name(size_t id) { return impl->ids[id]; }
@@ -203,21 +160,21 @@ size_t lexer::get_id(std::string const &name) { return impl->defs[name].id(); }
 
 bool lexer::tokenize(/*INPUTS*/ std::string const &code, shared_ptr<lex_context> ctxt,
                      /*OUTPUT*/ std::vector<token> &seq) {
-  impl->proc->output(seq);
-  impl->proc->context(ctxt);
+  impl->proc.output(seq);
+  impl->proc.context(ctxt);
 
   const char *lex_first = &code[0];
   const char *lex_last = &code[0] + code.size();
 
   // Try to use all lex state for tokenize character sequence.
-  std::vector<std::string> tok_states = impl->proc->get_init_states();
+  std::vector<std::string> tok_states = impl->proc.get_init_states();
   EFLIB_ASSERT_AND_IF(!tok_states.empty(), "Initial state set should not be empty.") {
     return false;
   }
 
   size_t tok_states_count = tok_states.size();
 
-  int toked_state = 0; // 0 is no result, 1 is succeed, 2 is failed.
+  int toked_state = 0; // 0 is no result, 1 is succeeded, 2 is failed.
   int i_state = 0;
   size_t failed_count = 0;
   while (lex_first != lex_last && toked_state == 0) {

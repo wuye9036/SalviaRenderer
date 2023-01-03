@@ -21,69 +21,21 @@ private:
 public:
   lexer();
 
-  class token_definer {
-  public:
-    token_definer(lexer &owner);
-    token_definer(token_definer const &rhs);
-    token_definer const &operator()(std::string const &name, std::string const &patterndef) const;
-
-  private:
-    token_definer &operator=(token_definer const &rhs);
-    lexer &owner;
+  struct definition {
+    std::string_view name;
+    std::string_view def;
   };
 
-  class pattern_adder {
-  public:
-    pattern_adder(lexer &owner);
-    pattern_adder(pattern_adder const &rhs);
-    pattern_adder const &operator()(std::string const &name, std::string const &patterndef) const;
-
-  private:
-    pattern_adder &operator=(pattern_adder const &rhs);
-    lexer &owner;
+  struct token_description {
+    std::string_view name;
+    std::string_view new_state = "";
   };
 
-  class token_adder {
-  public:
-    token_adder(lexer &owner, char const *state);
-    token_adder(token_adder const &rhs);
-    token_adder const &operator()(std::string const &name) const;
-    token_adder const &operator()(std::string const &name, std::string const &jump_to) const;
-
-  private:
-    token_adder &operator=(token_adder const &rhs);
-    lexer &owner;
-    char const *state;
-  };
-
-  class skippers_adder {
-  public:
-    skippers_adder(lexer &owner);
-    skippers_adder(skippers_adder const &rhs);
-    skippers_adder const &operator()(std::string const &name) const;
-
-  private:
-    skippers_adder &operator=(skippers_adder const &rhs);
-    lexer &owner;
-  };
-
-  class init_states_adder {
-  public:
-    init_states_adder(lexer &owner);
-    init_states_adder(init_states_adder const &rhs);
-    init_states_adder const &operator()(std::string const &name) const;
-
-  private:
-    init_states_adder &operator=(init_states_adder const &rhs);
-    lexer &owner;
-  };
-
-  token_definer define_tokens(std::string const &name, std::string const &patterndef);
-  pattern_adder add_pattern(std::string const &name, std::string const &patterndef);
-  token_adder add_token(const char *state);
-
-  skippers_adder skippers(std::string const &s);
-  init_states_adder init_states(std::string const &s);
+  void add_patterns(std::initializer_list<definition> patterns);
+  void define_tokens(std::initializer_list<definition> patterns);
+  void enable_tokens(char const* state, std::initializer_list<token_description> tokens);
+  void set_skippers(std::initializer_list<std::string_view> skippers);
+  void set_init_states(std::initializer_list<std::string_view> state_list);
 
   std::string const &get_name(size_t id);
   size_t get_id(std::string const &name);
