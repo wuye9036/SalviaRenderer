@@ -125,11 +125,11 @@ struct sv_layout {
   semantic_value sv;
 };
 
-int const PACKAGE_ELEMENT_COUNT = 4;
-int const PACKAGE_LINE_ELEMENT_COUNT = 2;
-int const SIMD_ELEMENT_COUNT = 4;
+inline constexpr int PACKAGE_ELEMENT_COUNT = 4;
+inline constexpr int PACKAGE_LINE_ELEMENT_COUNT = 2;
+inline constexpr int SIMD_ELEMENT_COUNT = 4;
 
-static size_t const REGISTER_SIZE = 16;
+inline constexpr size_t REGISTER_SIZE = 16;
 
 // ! Reflection of shader.
 //

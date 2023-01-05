@@ -2,7 +2,7 @@
 
 #include <sasl/common/token.h>
 #include <sasl/enums/node_ids.h>
-#include <sasl/syntax_tree/syntax_tree_fwd.h>
+#include <sasl/syntax_tree/visitor.h>
 
 #include <eflib/utility/shared_declaration.h>
 
@@ -30,10 +30,10 @@ struct node : public std::enable_shared_from_this<node> {
 protected:
   using token = sasl::common::token;
   token tok_beg, tok_end;
-  virtual ~node();
+  virtual ~node() = default;
 
 public:
-  node();
+  node() = default;
 
   template <typename R> friend std::shared_ptr<R> create_node();
   template <typename R, typename P0> friend std::shared_ptr<R> create_node(P0 &&);
@@ -75,7 +75,9 @@ protected:
 template <typename DerivedT, typename BaseT, node_ids TypeId> class node_impl : public BaseT {
 public:
   constexpr node_ids node_class() const noexcept override { return TypeId; }
-  virtual void accept(syntax_tree_visitor *vis, std::any *data) override;
+  virtual void accept(syntax_tree_visitor *vis, std::any *data) override {
+    vis->visit(static_cast<DerivedT &>(*this), data);
+  }
 };
 
 // template <typename NodeT> std::shared_ptr<NodeT> create_node();

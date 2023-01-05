@@ -125,7 +125,7 @@ private:
   overload_dict overloads_;
   std::vector<std::string_view> null_overloads_;
 
-  static std::string_view null_name;
+  inline static constexpr std::string_view null_name{""};
 };
 
 } // namespace sasl::semantic
