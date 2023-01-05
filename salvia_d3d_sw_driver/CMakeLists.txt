@@ -51,6 +51,5 @@ IF(DDK_DIR)
 	ADD_LIBRARY( salvia_d3d_sw_driver SHARED
 		${HEADER_FILES}	${SOURCE_FILES} )
 	TARGET_LINK_LIBRARIES(salvia_d3d_sw_driver salviar EFLIB)
-	set_target_properties(salvia_d3d_sw_driver PROPERTIES FOLDER "SALVIA Renderer")
 	SALVIA_CONFIG_OUTPUT_PATHS(salvia_d3d_sw_driver)
 ENDIF(DDK_DIR)

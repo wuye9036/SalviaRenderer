@@ -11,20 +11,27 @@ class Module;
 class IRBuilder;
 } // namespace LLVM
 
-namespace salviar {
+namespace salvia::core {
 struct stream_desc;
+}
+
+namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
+} // namespace salvia::resource
+
+namespace salvia::shader {
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_reflection);
-} // namespace salviar
+} // namespace salvia::shader
 
 namespace sasl::shims {
 
 struct ia_shim_key {
-  ia_shim_key(salviar::input_layout *input, salviar::shader_reflection const *reflection)
+  ia_shim_key(salvia::resource::input_layout *input,
+              salvia::shader::shader_reflection const *reflection)
       : input(input), reflection(reflection) {}
 
-  salviar::input_layout *input;
-  salviar::shader_reflection const *reflection;
+  salvia::resource::input_layout *input;
+  salvia::shader::shader_reflection const *reflection;
 
   bool operator==(ia_shim_key const &rhs) const {
     return input == rhs.input && reflection == rhs.reflection;
@@ -34,7 +41,7 @@ struct ia_shim_key {
 size_t hash_value(ia_shim_key const &);
 
 struct ia_shim_data {
-  salviar::stream_desc const *stream_descs;
+  salvia::core::stream_desc const *stream_descs;
   intptr_t const *element_offsets; // TODO: OPTIMIZED BY JIT
   size_t const *dest_offsets;      // TODO: OPTIMIZED BY JIT
   size_t count;                    // TODO: OPTIMIZED BY JIT
@@ -48,8 +55,9 @@ public:
 
   virtual void *get_shim_function(std::vector<size_t> &used_slots,
                                   std::vector<intptr_t> &aligned_element_offsets,
-                                  std::vector<size_t> &dest_offsets, salviar::input_layout *input,
-                                  salviar::shader_reflection const *reflection);
+                                  std::vector<size_t> &dest_offsets,
+                                  salvia::resource::input_layout *input,
+                                  salvia::shader::shader_reflection const *reflection);
 };
 
 } // namespace sasl::shims

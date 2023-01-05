@@ -75,7 +75,6 @@ ADD_CUSTOM_COMMAND(
 			"${SASL_HOME_DIR}/sasl/test/repo/copy_tests.py" ${TEST_SHADERS}
 		)
 ADD_CUSTOM_TARGET( sasl_test_shader_repo ALL DEPENDS test_repo.deps ${TEST_SHADERS} SOURCES ${TEST_SHADERS} )
-set_target_properties( sasl_test_shader_repo PROPERTIES FOLDER "Shader Tests")
 
 install(
 	DIRECTORY ${SASL_HOME_DIR}/sasl/test/repo 

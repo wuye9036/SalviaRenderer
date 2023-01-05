@@ -38,7 +38,6 @@ target_link_libraries( ${SASL_TEST_PROJECT_NAME}
 	PRIVATE GTest::gtest GTest::gtest_main
 )
 add_dependencies(${SASL_TEST_PROJECT_NAME} sasl_test_shader_repo)
-set_target_properties( ${SASL_TEST_PROJECT_NAME} PROPERTIES FOLDER "Shader Tests")
 SASL_TEST_CREATE_VCPROJ_USERFILE( ${SASL_TEST_PROJECT_NAME} )
 
 install(TARGETS sasl_test_jit)

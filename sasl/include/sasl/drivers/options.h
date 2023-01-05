@@ -1,14 +1,10 @@
-#ifndef SASL_DRIVERS_OPTIONS_H
-#define SASL_DRIVERS_OPTIONS_H
+#pragma once
 
-#include <sasl/drivers/drivers_forward.h>
 #include <sasl/syntax_tree/parse_api.h>
 
-#include <salvia/shader/shader.h>
+#include <salvia/core/shader.h>
 
 #include <boost/program_options.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <string>
 #include <vector>
@@ -35,13 +31,14 @@ class options_filter {
 public:
   virtual void reg_extra_parser(po::basic_command_line_parser<char> &);
   virtual void fill_desc(po::options_description &desc) = 0;
-  virtual void filterate(po::variables_map const &vm) = 0;
+  virtual void filtrate(po::variables_map const &vm) = 0;
+  virtual ~options_filter() = default;
 };
 
 class options_global : public options_filter {
 public:
   void fill_desc(po::options_description &desc);
-  void filterate(po::variables_map const &vm);
+  void filtrate(po::variables_map const &vm);
 
   enum detail_level { none, quite, brief, normal, verbose, debug };
 
@@ -54,7 +51,7 @@ public:
   options_display_info();
 
   void fill_desc(po::options_description &desc);
-  void filterate(po::variables_map const &vm);
+  void filtrate(po::variables_map const &vm);
 
   po::options_description *pdesc;
 
@@ -76,14 +73,14 @@ public:
   options_io();
 
   void fill_desc(po::options_description &desc);
-  void filterate(po::variables_map const &vm);
+  void filtrate(po::variables_map const &vm);
 
   enum export_format { none, llvm_ir };
 
   std::string input_file;
   export_format fmt;
   std::string fmt_str;
-  salviar::languages lang;
+  salvia::shader::languages lang;
   std::string lang_str;
   std::string output_file_name;
   std::string dump_ir;
@@ -110,7 +107,7 @@ public:
   option_macros();
 
   void fill_desc(po::options_description &desc);
-  void filterate(po::variables_map const &vm);
+  void filtrate(po::variables_map const &vm);
 
   std::vector<std::string> defines, predefs, undefs;
 
@@ -128,17 +125,15 @@ public:
   options_includes();
 
   void fill_desc(po::options_description &desc);
-  void filterate(po::variables_map const &vm);
+  void filtrate(po::variables_map const &vm);
 
-  std::vector<std::string> sysincls, includes;
+  std::vector<std::string> sys_includes, includes;
 
 private:
   static char const *include_tag;
   static char const *include_desc;
-  static char const *sysincl_tag;
-  static char const *sysincl_desc;
+  static char const *sys_include_tag;
+  static char const *sys_include_desc;
 };
 
 } // namespace sasl::drivers
-
-#endif

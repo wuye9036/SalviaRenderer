@@ -4,7 +4,7 @@
 #include <salvia/core/binary_modules.h>
 #include <salvia/core/sync_renderer.h>
 #include <salvia/resource/sampler_api.h>
-#include <salvia/shader/shader_impl.h>
+#include <salvia/shader/shader_desc.h>
 #include <salvia/shader/shader_object.h>
 
 #include <eflib/platform/dl_loader.h>

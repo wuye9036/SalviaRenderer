@@ -1,3 +1,5 @@
+include(CheckCXXCompilerFlag)
+
 function(append value)
   foreach(variable ${ARGN})
     set(${variable} "${${variable}} ${value}" PARENT_SCOPE)
@@ -9,6 +11,13 @@ function(append_if condition value)
     foreach(variable ${ARGN})
 	  set(${variable} "${${variable}} ${value}" PARENT_SCOPE)
     endforeach(variable)
+  endif()
+endfunction()
+
+function(target_compile_options_if_applicable target flag)
+  check_cxx_compiler_flag (${flag} ${target}_FLAG_COULD_BE_ENABLED)
+  if(${target}_FLAG_COULD_BE_ENABLED)
+    target_compile_options(${target} PUBLIC ${flag})
   endif()
 endfunction()
 

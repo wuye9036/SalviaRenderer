@@ -1,12 +1,10 @@
 #include <sasl/shims/interp_shim.h>
 
 #include <salvia/shader/reflection.h>
-#include <salviar/include/shader_impl.h>
-
-using namespace salvia::core;
 
 using eflib::vec4;
 using std::vector;
+using namespace salvia::shader;
 
 namespace sasl::shims {
 
@@ -20,13 +18,13 @@ void default_vso2reg(vec4 *out_registers, void const *in_data,
     vec4 *current_register = out_registers + i_register;
     language_value_types lvt = static_cast<language_value_types>(in_value_types[i_register]);
     switch (lvt) {
-    case salviar::lvt_f32v4:
+    case lvt_f32v4:
       memcpy(current_register, attr_data, sizeof(float) * 4);
       continue;
-    case salviar::lvt_f32v3:
+    case lvt_f32v3:
       memcpy(current_register, attr_data, sizeof(float) * 3);
       continue;
-    case salviar::lvt_float:
+    case lvt_float:
       memcpy(current_register, attr_data, sizeof(float));
       continue;
     default:
