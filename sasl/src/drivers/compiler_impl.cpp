@@ -15,16 +15,13 @@
 #include <sasl/semantic/symbol.h>
 #include <sasl/syntax_tree/program.h>
 
-#include <salviar/include/shader_impl.h>
+#include <salvia/shader/shader_desc.h>
 
 #include <eflib/diagnostics/profiler.h>
 #include <eflib/platform/intrin.h>
-#include <eflib/string/ustring.h>
 #include <eflib/utility/shared_declaration.h>
 
 #include <boost/program_options.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <fstream>
 #include <math.h>
@@ -37,26 +34,23 @@ EFLIB_USING_SHARED_PTR(sasl::semantic, module_semantic);
 
 EFLIB_USING_SHARED_PTR(sasl::semantic, reflection_impl);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
-EFLIB_USING_SHARED_PTR(sasl::common, lex_context);
-EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
-EFLIB_USING_SHARED_PTR(sasl::common, code_source);
+
+using namespace sasl::common;
+using namespace sasl::parser::diags;
+using namespace salvia::shader;
 
 using sasl::codegen::generate_vmcode;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::reflect;
 
-using salviar::external_function_desc;
-
-using eflib::fixed_string;
-
-using std::dynamic_pointer_cast;
-using std::shared_ptr;
-
 using std::cout;
+using std::dynamic_pointer_cast;
 using std::endl;
 using std::ofstream;
 using std::ostream;
+using std::shared_ptr;
 using std::string;
+using std::string_view;
 using std::vector;
 
 namespace sasl::drivers {
@@ -71,12 +65,12 @@ template <typename ParserT> bool compiler_impl::parse(ParserT &parser) {
 
     po::parsed_options parsed = parser.run();
 
-    std::vector<std::string> unrecg =
+    std::vector<std::string> unrecognized =
         po::collect_unrecognized(parsed.options, po::include_positional);
 
-    if (!unrecg.empty()) {
+    if (!unrecognized.empty()) {
       cout << "Warning: options ";
-      for (std::string const &str : unrecg) {
+      for (std::string const &str : unrecognized) {
         cout << str << " ";
       }
       cout << "are invalid. They were ignored." << endl;
@@ -130,52 +124,54 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
   // Initialize env for compiling.
   shared_ptr<diag_chat> diags = diag_chat::create();
 
-  opt_disp.filterate(vm);
-  opt_global.filterate(vm);
-  opt_io.filterate(vm);
-  opt_macros.filterate(vm);
-  opt_includes.filterate(vm);
+  opt_disp.filtrate(vm);
+  opt_global.filtrate(vm);
+  opt_io.filtrate(vm);
+  opt_macros.filtrate(vm);
+  opt_includes.filtrate(vm);
 
   if (opt_disp.show_help) {
-    diags->report(text_only)->p(desc);
+    std::stringstream ss;
+    ss << desc;
+    diags->report(text_only, "", code_span{}, ss.str());
     return diags;
   }
 
   if (opt_disp.show_version) {
-    diags->report(text_only)->p(opt_disp.version_info);
+    diags->report(text_only, "", code_span{}, opt_disp.version_info);
     return diags;
   }
 
   if (opt_global.detail == options_global::none) {
-    diags->report(unknown_detail_level)->p(opt_global.detail_str);
+    diags->report(unknown_detail_level, "", code_span{}, opt_global.detail_str);
   }
 
-  salviar::languages lang = opt_io.lang;
-  if (lang == salviar::lang_none) {
-    diags->report(unknown_lang);
+  languages lang = opt_io.lang;
+  if (lang == lang_none) {
+    diags->report(unknown_lang, "", code_span{});
   }
 
   // Process inputs and outputs.
-  std::string fname = opt_io.input_file;
+  std::string file_name = opt_io.input_file;
   shared_ptr<code_source> code_src;
   shared_ptr<lex_context> lex_ctxt;
   // Set code source.
-  if (!fname.empty()) {
+  if (!file_name.empty()) {
     shared_ptr<compiler_code_source> file_code_source(new compiler_code_source());
 
-    if (!file_code_source->set_file(fname)) {
-      diags->report(sasl::parser::cannot_open_input_file)->p(fname);
+    if (!file_code_source->set_file(file_name)) {
+      diags->report(cannot_open_input_file, "", code_span{}, file_name);
       return diags;
     }
 
-    diags->report(compiling_input)->p(fname);
+    diags->report(compiling_input, "", code_span{}, file_name);
     code_src = file_code_source;
     lex_ctxt = file_code_source;
   } else if (user_code_src) {
     code_src = user_code_src;
     lex_ctxt = user_lex_ctxt;
   } else {
-    diags->report(input_file_is_missing);
+    diags->report(input_file_is_missing, "", code_span{});
     return diags;
   }
 
@@ -221,7 +217,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
 
       // Apply search path from parameters.
       driver_sc->add_include_path(opt_includes.includes);
-      driver_sc->add_sys_include_path(opt_includes.sysincls);
+      driver_sc->add_sys_include_path(opt_includes.sys_includes);
     }
   }
 
@@ -262,7 +258,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
       }
 
       if (!mreflection) {
-        if (lang != salviar::lang_general) {
+        if (lang != lang_general) {
           cout << "ABI analysis error occurs!" << endl;
           return diags;
         }
@@ -434,10 +430,10 @@ void compiler_impl::set_include_handler(include_handler_fn inc_handler) {
 
 reflection_impl_ptr compiler_impl::get_reflection() const { return mreflection; }
 
-salviar::shader_reflection2_ptr compiler_impl::get_reflection2() const { return mreflection2; }
+shader_reflection2_ptr compiler_impl::get_reflection2() const { return mreflection2; }
 
 void compiler_impl::inject_function(void *pfn, string_view fn_name, bool is_raw_name) {
-  eflib::fixed_string raw_name;
+  string raw_name;
   if (is_raw_name) {
     raw_name = fn_name;
   } else {

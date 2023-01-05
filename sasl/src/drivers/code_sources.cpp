@@ -4,24 +4,28 @@
 #include <sasl/parser/diags.h>
 
 #include <eflib/diagnostics/assert.h>
-#include <eflib/string/ustring.h>
+
+using namespace sasl::parser::diags;
+using namespace sasl::common;
 
 using boost::wave::preprocess_exception;
-using eflib::fixed_string;
-using sasl::common::code_span;
-using sasl::common::diag_chat;
-using sasl::common::diag_item_committer;
+
 using std::cout;
 using std::endl;
+using std::ifstream;
+using std::ios;
+using std::ios_base;
+using std::istream_iterator;
 using std::shared_ptr;
 using std::string;
+using std::string_view;
 using std::unique_ptr;
 using std::unordered_map;
 using std::vector;
 
 namespace sasl::drivers {
 
-std::unordered_map<void *, compiler_code_source *> compiler_code_source::ctxt_to_source;
+unordered_map<void *, compiler_code_source *> compiler_code_source::ctxt_to_source;
 
 bool compiler_code_source::set_code(string const &code) {
   this->code = code;
@@ -31,12 +35,12 @@ bool compiler_code_source::set_code(string const &code) {
 }
 
 bool compiler_code_source::set_file(string const &file_name) {
-  std::ifstream in(file_name.c_str(), std::ios_base::in);
+  ifstream in(file_name.c_str(), ios_base::in);
   if (!in) {
     return false;
   } else {
-    in.unsetf(std::ios::skipws);
-    code.assign(std::istream_iterator<char>(in), std::istream_iterator<char>());
+    in.unsetf(ios::skipws);
+    code.assign(istream_iterator<char>(in), istream_iterator<char>());
     fixes_file_end_with_newline(code);
     filename = file_name;
   }
@@ -55,42 +59,42 @@ bool compiler_code_source::eof() {
   }
 }
 
-fixed_string compiler_code_source::next() {
+string_view compiler_code_source::next() {
   cur_it = next_it;
 
   try {
     ++next_it;
   } catch (preprocess_exception &e) {
     report_wave_pp_exception(diags, e);
-    errtok = to_fixed_string(cur_it->get_value());
+    errtok = to_string(cur_it->get_value());
     next_it = wctxt_wrapper->get_wctxt()->end();
   } catch (wave_reported_fatal_error &) {
     // Error has been reported to diag_chat.
-    errtok = to_fixed_string(cur_it->get_value());
+    errtok = to_string(cur_it->get_value());
     next_it = wctxt_wrapper->get_wctxt()->end();
     is_failed = true;
   }
 
-  return to_fixed_string(cur_it->get_value());
+  return to_string_view(cur_it->get_value());
 }
 
-fixed_string compiler_code_source::error() {
+string_view compiler_code_source::error() {
   if (errtok.empty()) {
-    errtok = to_fixed_string(cur_it->get_value());
+    errtok = to_string(cur_it->get_value());
   }
   return errtok;
 }
 
 void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess_exception &e) {
-  diag_chat::committer_pointer committer;
+  diag_template const *tmpl = nullptr;
   switch (e.get_errorcode()) {
   case preprocess_exception::no_error:
     break;
   case preprocess_exception::last_line_not_terminated:
-    committer = diags->report(sasl::parser::boost_wave_exception_warning);
+    tmpl = &boost_wave_exception_warning;
     break;
   case preprocess_exception::ill_formed_directive:
-    committer = diags->report(sasl::parser::boost_wave_exception_fatal_error);
+    tmpl = &boost_wave_exception_fatal_error;
     is_failed = true;
     break;
   default:
@@ -99,24 +103,23 @@ void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess
     break;
   }
 
-  if (committer) {
-    fixed_string file_name;
+  string file_name;
+  if (tmpl) {
     try {
-      file_name = to_fixed_string(cur_it->get_position().get_file());
+      file_name = to_string(cur_it->get_position().get_file());
     } catch (...) {
-      file_name = to_fixed_string(wctxt_wrapper->get_wctxt()->get_current_filename());
+      file_name = wctxt_wrapper->get_wctxt()->get_current_filename();
     }
-
-    committer->p(preprocess_exception::error_text(e.get_errorcode()))
-        ->span(current_span())
-        ->file(file_name);
   }
+
+  diags->report(*tmpl, file_name, current_span(),
+                preprocess_exception::error_text(e.get_errorcode()));
 }
 
 string_view compiler_code_source::file_name() const {
-  assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end());
+  ef_verify(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end());
 
-  filename = to_fixed_string(cur_it->get_position().get_file());
+  filename = to_string(cur_it->get_position().get_file());
   return filename;
 }
 
@@ -130,7 +133,7 @@ size_t compiler_code_source::line() const {
   return cur_it->get_position().get_line();
 }
 
-void compiler_code_source::update_position(const fixed_string & /*lit*/) {
+void compiler_code_source::update_position(string_view /*lit*/) {
   // Do nothing.
   return;
 }
@@ -159,11 +162,12 @@ compiler_code_source::compiler_code_source() : diags(nullptr) {}
 compiler_code_source::~compiler_code_source() {}
 
 code_span compiler_code_source::current_span() const {
-  return code_span(cur_it->get_position().get_line(), cur_it->get_position().get_column(), 1);
+  auto const &pos = cur_it->get_position();
+  return inline_code_span(pos.get_line(), pos.get_column(), pos.get_column() + 1);
 }
 
-void compiler_code_source::add_virtual_file(std::string const &file_name,
-                                            std::string const &content, bool high_priority) {
+void compiler_code_source::add_virtual_file(string const &file_name, string const &content,
+                                            bool high_priority) {
   virtual_files[file_name] = make_pair(high_priority, content);
 }
 
@@ -186,7 +190,7 @@ bool compiler_code_source::failed() { return is_failed; }
 
 bool compiler_code_source::add_sys_include_path(string const &path) {
   wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
-  assert(wctxt);
+  ef_verify(wctxt);
   return wctxt->add_sysinclude_path(path.c_str());
 }
 
@@ -199,13 +203,13 @@ bool compiler_code_source::add_sys_include_path(vector<string> const &paths) {
   return ret;
 }
 
-bool compiler_code_source::add_include_path(std::string const &path) {
+bool compiler_code_source::add_include_path(string const &path) {
   wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
   assert(wctxt);
   return wctxt->add_include_path(path.c_str());
 }
 
-bool compiler_code_source::add_include_path(std::vector<std::string> const &paths) {
+bool compiler_code_source::add_include_path(vector<string> const &paths) {
   bool ret = true;
   for (size_t i = 0; i < paths.size(); ++i) {
     ret = add_include_path(paths[i]) && ret;
@@ -213,7 +217,7 @@ bool compiler_code_source::add_include_path(std::vector<std::string> const &path
   return ret;
 }
 
-bool compiler_code_source::add_macro(std::string const &macro_def, bool predef) {
+bool compiler_code_source::add_macro(string const &macro_def, bool predef) {
   wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
   assert(wctxt);
   return wctxt->add_macro_definition(macro_def, predef);
@@ -234,7 +238,7 @@ bool compiler_code_source::clear_macros() {
   return true;
 }
 
-bool compiler_code_source::remove_macro(std::string const &macro_def) {
+bool compiler_code_source::remove_macro(string const &macro_def) {
   wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
   assert(wctxt);
   return wctxt->remove_macro_definition(macro_def);
@@ -248,23 +252,21 @@ bool compiler_code_source::remove_macro(vector<string> const &macros) {
   return ret;
 }
 
-void report_load_file_failed(void *ctxt, std::string const &name, bool /*is_system*/) {
+void report_load_file_failed(void *ctxt, string const &name, bool /*is_system*/) {
   compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
-  code_src->diags->report(sasl::parser::cannot_open_include_file)
-      ->file(code_src->file_name())
-      ->span(code_src->current_span())
-      ->p(name);
+  code_src->diags->report(cannot_open_include_file, code_src->file_name(), code_src->current_span(),
+                          name);
 }
 
-void load_virtual_file(bool &is_succeed, bool &is_exclusive, std::string &content, void *ctxt,
-                       std::string const &name, bool is_system, bool before_file_load) {
+void load_virtual_file(bool &is_succeed, bool &is_exclusive, string &content, void *ctxt,
+                       string const &name, bool is_system, bool before_file_load) {
   is_exclusive = false;
   is_succeed = false;
 
   compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
   assert(code_src);
   if (code_src->inc_handler) {
-    std::string native_name;
+    string native_name;
     is_exclusive = true;
     is_succeed = code_src->inc_handler(content, native_name, name, is_system, false);
     fixes_file_end_with_newline(content);
@@ -301,7 +303,7 @@ void check_file(bool &is_succeed, bool &is_exclusive, string &native_name, void 
 
   // If inc handler is enabled, it is exclusive.
   if (code_src->inc_handler) {
-    std::string content;
+    string content;
     is_exclusive = true;
     is_succeed = code_src->inc_handler(content, native_name, name, is_system, true);
     return;
@@ -339,7 +341,7 @@ wave_context_wrapper::~wave_context_wrapper() {
 
 wcontext_t *wave_context_wrapper::get_wctxt() const { return wctxt.get(); }
 
-void fixes_file_end_with_newline(std::string &content) {
+void fixes_file_end_with_newline(string &content) {
   if (content.empty()) {
     return;
   }

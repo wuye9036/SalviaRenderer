@@ -1,10 +1,11 @@
 #pragma once
 
-#include <sasl/drivers/drivers_forward.h>
-
-#include <eflib/string/ustring.h>
 #include <sasl/drivers/compiler.h>
 #include <sasl/drivers/options.h>
+
+namespace salvia::shader {
+struct external_function_desc;
+}
 
 namespace sasl::drivers {
 
@@ -28,9 +29,9 @@ public:
   /// Only support by default code source.
   virtual void add_include_path(std::string const & /*inc_path*/) {}
   /// Only support by default code source.
-  virtual void add_sysinclude_path(std::string const & /*sys_path*/) {}
+  virtual void add_sys_include_path(std::string const & /*sys_path*/) {}
   /// Only support by default code source.
-  virtual void clear_sysinclude_paths() {}
+  virtual void clear_sys_include_paths() {}
   /// Only support by default code source.
   virtual void add_macro(std::string const & /*macro*/, bool /*predef*/) {}
   /// Only support by default code source.
@@ -42,8 +43,8 @@ public:
     return sasl::common::diag_chat_ptr();
   }
 
-  virtual sasl::common::diag_chat_ptr compile(std::vector<salviar::external_function_desc> const &,
-                                              bool) {
+  virtual sasl::common::diag_chat_ptr
+  compile(std::vector<salvia::shader::external_function_desc> const &, bool) {
     return sasl::common::diag_chat_ptr();
   }
 
@@ -94,14 +95,14 @@ public:
   virtual void clear_macros();
 
   virtual sasl::common::diag_chat_ptr compile(bool enable_reflect2);
-  virtual sasl::common::diag_chat_ptr compile(std::vector<salviar::external_function_desc> const &,
+  virtual sasl::common::diag_chat_ptr compile(std::vector<salvia::shader::external_function_desc> const &,
                                               bool enable_reflect2);
 
   virtual sasl::semantic::module_semantic_ptr get_semantic() const;
   virtual sasl::codegen::module_vmcode_ptr get_vmcode() const;
   virtual sasl::syntax_tree::node_ptr get_root() const;
   virtual sasl::semantic::reflection_impl_ptr get_reflection() const;
-  virtual salviar::shader_reflection2_ptr get_reflection2() const override;
+  virtual salvia::shader::shader_reflection2_ptr get_reflection2() const override;
 
   boost::program_options::variables_map const &variables() const;
   options_display_info const &display_info() const;
@@ -121,7 +122,7 @@ private:
   sasl::codegen::module_vmcode_ptr mvmc;
   sasl::syntax_tree::node_ptr mroot;
   sasl::semantic::reflection_impl_ptr mreflection;
-  salviar::shader_reflection2_ptr mreflection2;
+  salvia::shader::shader_reflection2_ptr mreflection2;
 
   // Options
   options_global opt_global;

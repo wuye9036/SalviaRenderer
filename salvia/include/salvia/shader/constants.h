@@ -129,6 +129,15 @@ private:
   }
 };
 
+enum interpolation_modifiers {
+  im_none = 0UL,
+  im_linear = 1UL << 0,
+  im_centroid = 1UL << 1,
+  im_nointerpolation = 1UL << 2,
+  im_noperspective = 1UL << 3,
+  im_sample = 1UL << 4
+};
+
 } // namespace salvia::shader
 
 template <> struct std::hash<salvia::shader::semantic_value> {
@@ -142,3 +151,5 @@ template <> struct std::hash<salvia::shader::semantic_value> {
     return seed;
   }
 };
+
+

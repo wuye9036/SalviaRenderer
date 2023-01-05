@@ -1,7 +1,4 @@
-#ifndef SASL_DRIVERS_CODE_SOURCES_H
-#define SASL_DRIVERS_CODE_SOURCES_H
-
-#include <sasl/drivers/drivers_forward.h>
+#pragma once
 
 #include <sasl/common/diag_item.h>
 #include <sasl/common/lex_context.h>
@@ -9,20 +6,17 @@
 #include <boost/wave.hpp>
 #include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
 #include <boost/wave/cpplexer/cpp_lex_token.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
 
 #include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
-namespace sasl {
-namespace common {
+namespace sasl::common {
 class diag_chat;
 }
-} // namespace sasl
 
 namespace sasl::drivers {
 
@@ -157,8 +151,8 @@ public:
 
   // code source
   virtual bool eof();
-  virtual eflib::fixed_string next();
-  virtual eflib::fixed_string error();
+  virtual std::string_view next();
+  virtual std::string_view error();
   virtual bool failed();
 
   // lex_context
@@ -192,12 +186,12 @@ private:
   sasl::common::code_span current_span() const;
   bool process();
 
-  template <typename StringT> std::string to_std_string(StringT const &str) const {
+  template <typename StringT> std::string to_string(StringT const &str) const {
     return std::string(str.begin(), str.end());
   }
 
-  template <typename StringT> eflib::fixed_string to_fixed_string(StringT const &str) const {
-    return eflib::fixed_string(str.begin(), str.end());
+  template <typename StringT> std::string_view to_string_view(StringT const &str) const {
+    return std::string_view(str.begin(), str.end());
   }
 
   friend void load_virtual_file(bool &is_succeed, bool &is_exclusive, std::string &content,
@@ -210,10 +204,10 @@ private:
   std::unique_ptr<wave_context_wrapper> wctxt_wrapper;
   sasl::common::diag_chat *diags;
 
-  mutable eflib::fixed_string filename;
+  mutable std::string filename;
   bool is_failed;
   std::string code;
-  eflib::fixed_string errtok;
+  std::string errtok;
 
   wcontext_t::iterator_type cur_it;
   wcontext_t::iterator_type next_it;
@@ -227,5 +221,3 @@ private:
 };
 
 } // namespace sasl::drivers
-
-#endif

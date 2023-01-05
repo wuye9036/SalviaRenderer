@@ -48,5 +48,3 @@ add_executable(sasl_test ${SOURCE_LIST})
 target_link_libraries(sasl_test PRIVATE sasl_common eflib GTest::gtest GTest::gtest_main Boost::boost $<$<PLATFORM_ID:UNIX>:dl>)
 target_compile_features(sasl_test PUBLIC cxx_std_20)
 
-set_target_properties(sasl_test PROPERTIES FOLDER "Shader Libs")
-

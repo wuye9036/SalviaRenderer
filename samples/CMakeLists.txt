@@ -5,7 +5,6 @@ function(configure_sample_project project_name source_list dependencies)
 	target_link_libraries(${project_name}
 			salvia_utility salvia_ext salvia_core salvia_shader salvia_resource
 			eflib ${dependencies})
-	set_target_properties(${project_name} PROPERTIES FOLDER "Samples")
 endfunction()
 
 add_subdirectory(ComplexMesh)

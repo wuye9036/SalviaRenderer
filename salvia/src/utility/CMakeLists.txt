@@ -11,7 +11,6 @@ target_link_libraries(salvia_utility
         salvia_ext salvia_core salvia_resource salvia_shader
         eflib fmt::fmt Boost::program_options
         )
-set_target_properties(salvia_utility PROPERTIES FOLDER "Salvia")
 
 #install(TARGETS salviau)
 #install(

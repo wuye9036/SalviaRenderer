@@ -1,8 +1,8 @@
 #include <sasl/drivers/options.h>
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <eflib/platform/boost_begin.h>
-#include <eflib/platform/boost_end.h>
+
+using namespace salvia::shader;
 
 using boost::to_lower;
 
@@ -22,8 +22,8 @@ void options_filter::reg_extra_parser(po::basic_command_line_parser<char> &) {}
 const char *options_display_info::version_tag = "version,v";
 const char *options_display_info::version_desc = "Show version and copyright information";
 const char *options_display_info::version_info =
-    "SALVIA Shading Language Compiler 0.4 \r\n"
-    "Copyright (C) 2007-2012 SALVIA Development Group."
+    "SALVIA Shading Language Compiler 23.02 \r\n"
+    "Copyright (C) 2007-2023 SALVIA Development Group."
     "This software and its full source code copyright is GPLv2.";
 
 const char *options_display_info::help_tag = "help,h";
@@ -36,7 +36,7 @@ void options_display_info::fill_desc(po::options_description &desc) {
   pdesc = &desc;
 }
 
-void options_display_info::filterate(po::variables_map const &vm) {
+void options_display_info::filtrate(po::variables_map const &vm) {
   show_help = (vm.empty() || vm.count("help") > 0);
   show_version = (vm.count("version") > 0);
 }
@@ -62,7 +62,7 @@ const char *options_io::lang_desc = "Specifies language the input file was treat
                                     "as.'general(g)','cpp_vertex_shader(vs)','cpp_pixel_shader(ps)'"
                                     ",'cpp_blend_shader(bs)' are available. ";
 
-options_io::options_io() : fmt(none), lang(salviar::lang_none) {}
+options_io::options_io() : fmt(none), lang(lang_none) {}
 
 void options_io::fill_desc(po::options_description &desc) {
   desc.add_options()(in_tag, po::value<string>(&input_file),
@@ -72,7 +72,7 @@ void options_io::fill_desc(po::options_description &desc) {
       export_as_desc)(lang_tag, po::value<string>(&lang_str), lang_desc);
 }
 
-void options_io::filterate(po::variables_map const &vm) {
+void options_io::filtrate(po::variables_map const &vm) {
   if (!vm.count("out")) {
     // TODO: Guess output from input.
   }
@@ -87,17 +87,17 @@ void options_io::filterate(po::variables_map const &vm) {
   }
 
   if (!vm.count("lang")) {
-    lang = salviar::lang_none;
+    lang = lang_none;
   } else {
     to_lower(lang_str);
     if (lang_str == "general" || lang_str == "g") {
-      lang = salviar::lang_general;
+      lang = lang_general;
     } else if (lang_str == "cpp_vertex_shader" || lang_str == "vs") {
-      lang = salviar::lang_vertex_shader;
+      lang = lang_vertex_shader;
     } else if (lang_str == "cpp_pixel_shader" || lang_str == "ps") {
-      lang = salviar::lang_pixel_shader;
+      lang = lang_pixel_shader;
     } else if (lang_str == "cpp_blend_shader" || lang_str == "bs") {
-      lang = salviar::lang_blending_shader;
+      lang = lang_blending_shader;
     }
   }
 }
@@ -111,7 +111,7 @@ void options_global::fill_desc(po::options_description &desc) {
                      "Default is normal");
 }
 
-void options_global::filterate(po::variables_map const &vm) {
+void options_global::filtrate(po::variables_map const &vm) {
   detail = normal;
   if (vm.count("detail-level")) {
 
@@ -148,24 +148,24 @@ void option_macros::fill_desc(po::options_description &desc) {
       predef_desc)(undef_tag, po::value<vector<string>>(&undefs)->composing(), undef_desc);
 }
 
-void option_macros::filterate(po::variables_map const & /*vm*/) {
+void option_macros::filtrate(po::variables_map const & /*vm*/) {
   // Do nothing. parse_predef will hook all legal definitions.
   return;
 }
 
 char const *options_includes::include_tag = "include,I";
 char const *options_includes::include_desc = "specify an additional include directory";
-char const *options_includes::sysincl_tag = "sysinclude,S";
-char const *options_includes::sysincl_desc = "specify an additional system include directory";
+char const *options_includes::sys_include_tag = "sysinclude,S";
+char const *options_includes::sys_include_desc = "specify an additional system include directory";
 
 options_includes::options_includes() {}
 
 void options_includes::fill_desc(po::options_description &desc) {
   desc.add_options()(include_tag, po::value<vector<string>>(&includes)->composing(), include_desc)(
-      sysincl_tag, po::value<vector<string>>(&sysincls)->composing(), sysincl_desc);
+      sys_include_tag, po::value<vector<string>>(&sys_includes)->composing(), sys_include_desc);
 }
 
-void options_includes::filterate(po::variables_map const & /*vm*/) {
+void options_includes::filtrate(po::variables_map const &vm /*vm*/) {
   // Nothing special to deal with.
   return;
 }

@@ -1,24 +1,6 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
 
-INCLUDE_DIRECTORIES(
-	${SASL_HOME_DIR}
-	${SALVIA_HOME_DIR}
-	${LLVM_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS}
-)
-
-LINK_DIRECTORIES(
-	${SALVIA_BOOST_LIB_DIR}
-	${SALVIA_LLVM_LIB_DIR}
-)
-
-set( SOURCE_FILES
-	command.cpp
-)
-
-ADD_EXECUTABLE( sasl_command ${HEADER_FILES} ${SOURCE_FILES} )
-
-TARGET_LINK_LIBRARIES( sasl_command sasl_common EFLIB )
-
-set_target_properties( sasl_command PROPERTIES FOLDER "Shader Drivers")
+set(SOURCE_LIST command.cpp)
+add_executable(sasl_command ${SOURCE_LIST})
+target_link_libraries(sasl_command sasl_common eflib)
+target_compile_features(sasl_semantic PUBLIC cxx_std_20)
 

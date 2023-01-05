@@ -8,5 +8,3 @@ target_link_libraries(sasl_codegen eflib salvia_shader)
 target_link_llvm(sasl_codegen)
 target_compile_features(sasl_semantic PUBLIC cxx_std_20)
 
-
-set_target_properties(sasl_codegen PROPERTIES FOLDER "Shader Libs")

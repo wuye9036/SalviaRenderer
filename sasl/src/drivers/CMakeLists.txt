@@ -1,30 +1,16 @@
-SALVIA_CHECK_BUILD_WITH_UNICODE()
+file(GLOB HEADER_LIST CONFIGURE_DEPENDS "../../include/drivers/*.h")
+file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "*.cpp")
 
-INCLUDE_DIRECTORIES(
-	${SASL_HOME_DIR}
-	${SALVIA_HOME_DIR}
-	${LLVM_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS}
-)
-
-LINK_DIRECTORIES(
-	${LLVM_LIBRARY_DIRS}
-	${Boost_LIBRARY_DIRS}
-)
+include(CheckCXXCompilerFlag)
 
 # Configure Dynamic Link Driver.
-add_library( sasl_drivers
-	SHARED
-	${SASL_HOME_DIR}/sasl/drivers/drivers_api.h
-	drivers_api.cpp
-	)
-	
+add_library( sasl_drivers ${HEADER_LIST} ${SOURCE_LIST})
+# disable compiler error caused by __DATE__ and __TIME__ which is used in Boost.Wave
+target_compile_options_if_applicable(sasl_drivers "-Wno-date-time")
+target_include_directories(sasl_drivers PUBLIC ../../include)
 target_link_libraries( sasl_drivers
-	sasl_drivers_lib sasl_shims sasl_codegen sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common EFLIB
-	${Boost_LIBRARIES}
-	${LLVM_LIBS}
-)
-set_target_properties(sasl_drivers PROPERTIES FOLDER "Shader Drivers")
+	sasl_shims sasl_codegen sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common eflib)
+
 
 install(TARGETS sasl_drivers)
 install(
@@ -53,26 +39,3 @@ install(
   message(STATUS "Unresolved deps: ${_u_deps}")
 ]]
 )
-# Configure Static Link Driver.
-set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/drivers/drivers_forward.h
-	
-	${SASL_HOME_DIR}/sasl/drivers/options.h
-	${SASL_HOME_DIR}/sasl/drivers/compiler_lib.h
-	${SASL_HOME_DIR}/sasl/drivers/compiler.h
-	${SASL_HOME_DIR}/sasl/drivers/compiler_diags.h
-	${SASL_HOME_DIR}/sasl/drivers/compiler_impl.h
-	${SASL_HOME_DIR}/sasl/drivers/code_sources.h
-)
-
-set( SOURCE_FILES
-	compiler_impl.cpp
-	compiler_diags.cpp
-	compiler_lib.cpp
-	options.cpp
-	code_sources.cpp
-)
-
-add_definitions( -DSASL_STATIC_DRIVER )
-add_library(sasl_drivers_lib STATIC ${HEADER_FILES} ${SOURCE_FILES})
-set_target_properties( sasl_drivers_lib PROPERTIES FOLDER "Shader Drivers")

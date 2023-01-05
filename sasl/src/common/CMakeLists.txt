@@ -14,5 +14,3 @@ target_include_directories(sasl_common PUBLIC ../../include)
 target_link_libraries(sasl_common eflib fmt::fmt)
 target_compile_features(sasl_common PUBLIC cxx_std_20)
 
-set_target_properties(sasl_common PROPERTIES FOLDER "Shader Libs")
-
