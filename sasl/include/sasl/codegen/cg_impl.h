@@ -63,7 +63,7 @@ protected:
   SASL_VISIT_DCL(call_expression);
   SASL_VISIT_DCL(index_expression);
 
-  SASL_VISIT_DCL(declaration);
+  SASL_VISIT_DCL(declaration){}
   SASL_VISIT_DCL(parameter_full);
   SASL_VISIT_DCL(function_full_def);
   SASL_VISIT_DCL(parameter);

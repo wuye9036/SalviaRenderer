@@ -38,7 +38,6 @@ using sasl::syntax_tree::tynode;
 using std::shared_ptr;
 
 symbol *symbol::create_root(module_semantic *owner, node *root_node) {
-  null_name = string_view("");
   return create(owner, nullptr, root_node);
 }
 

@@ -5,6 +5,8 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
+#include <eflib/diagnostics/assert.h>
+
 #include <any>
 
 namespace sasl::syntax_tree {
@@ -45,6 +47,7 @@ struct if_statement;
 struct while_statement;
 struct dowhile_statement;
 struct for_statement;
+struct label;
 struct case_label;
 struct ident_label;
 struct switch_statement;
@@ -147,6 +150,10 @@ public:
 
   // program
   SASL_VISIT_ABSTRACT_DCL(program);
+
+  template <typename NodeT> void visit(NodeT &, std::any *) {
+    ef_unreachable("this function would never be called.");
+  }
 
   virtual ~syntax_tree_visitor(){};
 };

@@ -7,7 +7,7 @@
 
 #include <mutex>
 
-namespace sasl::enums::traits {
+namespace sasl::enums {
 
 std::mutex mtx_btlist_init;
 std::vector<builtin_types> btc_list;
