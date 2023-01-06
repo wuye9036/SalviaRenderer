@@ -90,7 +90,7 @@ public:
 
     // change state
     auto state_translate_key = make_pair(id, splexer_state);
-    if (data->state_translations.contains(state_translate_key) > 0) {
+    if (data->state_translations.contains(state_translate_key)) {
       auto next_state = data->state_translations[state_translate_key];
       splexer_ctxt.set_state_name(next_state.c_str());
     }
