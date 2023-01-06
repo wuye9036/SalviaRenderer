@@ -30,3 +30,10 @@ endif(MSVC)
 if(MINGW OR UNIX)
   include(${CMAKE_CURRENT_LIST_DIR}/GCC.cmake)
 endif(MINGW OR UNIX)
+
+function(deploy_dlls target)
+add_custom_command(TARGET ${target} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+  COMMAND_EXPAND_LISTS
+  )
+endfunction()
