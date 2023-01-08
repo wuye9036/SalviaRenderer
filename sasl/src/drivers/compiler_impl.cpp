@@ -230,8 +230,8 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
 
     {
       eflib::profiling_scope prof_scope(&prof, "parse @ compiler_impl");
-      mroot = sasl::syntax_tree::parse(code_src.get(), lex_ctxt, diags.get());
-      if (!mroot) {
+      root_ = sasl::syntax_tree::parse(code_src.get(), lex_ctxt, diags.get());
+      if (!root_) {
         return diags;
       }
     }
@@ -239,12 +239,12 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
     {
       eflib::profiling_scope prof_scope(&prof, "semantic analysis @ compiler_impl");
       semantic_diags = diag_chat::create();
-      msem = analysis_semantic(mroot.get(), semantic_diags.get(), lang);
+      mod_sem_ = analysis_semantic(root_.get(), semantic_diags.get(), lang);
       if (error_count(semantic_diags.get(), false) > 0) {
-        msem.reset();
+        mod_sem_.reset();
       }
       diag_chat::merge(diags.get(), semantic_diags.get(), true);
-      if (!msem) {
+      if (!mod_sem_) {
         return diags;
       }
     }
@@ -252,12 +252,12 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
     {
       eflib::profiling_scope prof_scope(&prof, "ABI analysis @ compiler_impl");
 
-      mreflection = reflect(msem, diags.get());
+      reflection_ = reflect(mod_sem_, diags.get());
       if (enable_reflect2) {
-        mreflection2 = reflect2(msem);
+        reflection2_ = reflect2(mod_sem_);
       }
 
-      if (!mreflection) {
+      if (!reflection_) {
         if (lang != lang_general) {
           cout << "ABI analysis error occurs!" << endl;
           return diags;
@@ -268,8 +268,8 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
     {
       eflib::profiling_scope prof_scope(&prof, "Code generation @ compiler_impl");
 
-      mvmc = generate_vmcode(msem, mreflection.get());
-      if (!mvmc) {
+      mod_vm_code_ = generate_vmcode(mod_sem_, reflection_.get());
+      if (!mod_vm_code_) {
         cout << "Code generation error occurs!" << endl;
         return diags;
       }
@@ -285,7 +285,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
   if (opt_io.fmt == options_io::llvm_ir) {
     if (!opt_io.output_file_name.empty()) {
       ofstream out_file(opt_io.output_file_name.c_str(), std::ios_base::out);
-      mvmc->dump_ir(out_file);
+      mod_vm_code_->dump_ir(out_file);
     }
   }
   return diags;
@@ -294,7 +294,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_reflect2) {
 shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> const &external_funcs,
                                              bool enable_reflect2) {
   shared_ptr<diag_chat> results = compile(enable_reflect2);
-  if (!mvmc) {
+  if (!mod_vm_code_) {
     return results;
   }
 
@@ -306,11 +306,11 @@ shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> cons
   return results;
 }
 
-module_semantic_ptr compiler_impl::get_semantic() const { return msem; }
+module_semantic_ptr compiler_impl::get_semantic() const { return mod_sem_; }
 
-module_vmcode_ptr compiler_impl::get_vmcode() const { return mvmc; }
+module_vmcode_ptr compiler_impl::get_vmcode() const { return mod_vm_code_; }
 
-node_ptr compiler_impl::get_root() const { return mroot; }
+node_ptr compiler_impl::get_root() const { return root_; }
 
 po::variables_map const &compiler_impl::variables() const { return vm; }
 
@@ -379,7 +379,7 @@ void sasl_reversebits_u32(uint32_t *ret, uint32_t v) {
 }
 
 void compiler_impl::inject_default_functions() {
-  if (!mvmc) {
+  if (!mod_vm_code_) {
     return;
   }
 
@@ -428,19 +428,19 @@ void compiler_impl::set_include_handler(include_handler_fn inc_handler) {
   user_inc_handler = inc_handler;
 }
 
-reflection_impl_ptr compiler_impl::get_reflection() const { return mreflection; }
+reflection_impl_ptr compiler_impl::get_reflection() const { return reflection_; }
 
-shader_reflection2_ptr compiler_impl::get_reflection2() const { return mreflection2; }
+shader_reflection2_ptr compiler_impl::get_reflection2() const { return reflection2_; }
 
 void compiler_impl::inject_function(void *pfn, string_view fn_name, bool is_raw_name) {
   string raw_name;
   if (is_raw_name) {
     raw_name = fn_name;
   } else {
-    raw_name = msem->root_symbol()->find_overloads(fn_name)[0]->mangled_name();
+    raw_name = mod_sem_->root_symbol()->find_overloads(fn_name)[0]->mangled_name();
   }
 
-  mvmc->inject_function(pfn, raw_name);
+  mod_vm_code_->inject_function(pfn, raw_name);
 }
 
 void compiler_impl::add_sysinclude_path(std::string const &sys_path) {

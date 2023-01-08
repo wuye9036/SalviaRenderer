@@ -228,19 +228,19 @@ public:
     }
   }
 
-  virtual languages language() const { return module_sem_->get_language(); }
+  languages language() const override { return module_sem_->get_language(); }
 
-  virtual string_view entry_name() const override { return entry_fn_name_; }
+  string_view entry_name() const override { return entry_fn_name_; }
 
-  virtual vector<semantic_value> varying_semantics() const override {
+  vector<semantic_value> varying_semantics() const override {
     return rfile(rfile_name::varyings())->semantics();
   }
 
-  virtual size_t available_reg_count(reg_categories cat) const override {
+  size_t available_reg_count(reg_categories cat) const override {
     return used_reg_count_[static_cast<uint32_t>(cat)];
   }
 
-  virtual reg_name find_reg(reg_categories cat, semantic_value const &sv) const override {
+  reg_name find_reg(reg_categories cat, semantic_value const &sv) const override {
     switch (cat) {
     case reg_categories::uniforms:
       // NOTE:
@@ -256,7 +256,7 @@ public:
     }
   }
 
-  virtual size_t reg_addr(reg_name const &rname) const override {
+  size_t reg_addr(reg_name const &rname) const override {
     uint32_t cat = static_cast<uint32_t>(rname.rfile.cat);
     return rfile_start_addr_[cat][rname.rfile.index] +
            rfiles_[cat][rname.rfile.index].reg_addr(rname);
@@ -342,7 +342,7 @@ private:
 class reflector2 {
 public:
   reflector2(module_semantic *sem, std::string_view entry_name)
-      : sem_(sem), current_entry_(nullptr), reflection_(nullptr), entry_name_(entry_name) {}
+      : sem_(sem), entry_name_(entry_name), current_entry_(nullptr), reflection_(nullptr) {}
 
   reflector2(module_semantic *sem) : sem_(sem), current_entry_(nullptr), reflection_(nullptr) {}
 
@@ -428,10 +428,14 @@ private:
       reflection_->update_auto_alloc_regs();
       assign_semantics();
       reflection_->update_reg_address();
+      break;
     }
     default:
-      return ret;
+      // do nothing.
+      break;
     }
+
+    return ret;
   }
 
   struct variable_info {
@@ -479,9 +483,6 @@ private:
       break;
     case input_types::param:
       rf_name = ty->is_uniform() ? rfile_name::params() : rfile_name::varyings();
-      break;
-    default:
-      EF_ASSERT(false, "Invalid input type.");
       break;
     }
 
