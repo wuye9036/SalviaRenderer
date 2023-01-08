@@ -74,17 +74,13 @@ struct load_file_to_string {
 
   template <typename IterContext> class inner {
   public:
-    // expose the begin and end iterators for the
+    // expose the 'begin' and 'end' iterators for the
     // included file
     template <typename Position>
     static void init_iterators(IterContext &iter_ctx, Position const & /*act_pos*/,
                                boost::wave::language_support language) {
       typedef typename IterContext::iterator_type iterator_type;
-#if BOOST_VERSION <= 104900
-      bool is_system = true;
-#else
       bool is_system = (iter_ctx.type == IterContext::system_header);
-#endif
       bool is_exclusive = false;
       bool is_succeed = false;
       load_virtual_file(is_succeed, is_exclusive, iter_ctx.instring, &iter_ctx.ctx,
@@ -119,21 +115,20 @@ struct load_file_to_string {
   };
 };
 
-typedef boost::wave::cpplexer::lex_iterator<boost::wave::cpplexer::lex_token<>> wlex_iterator_t;
-typedef boost::wave::context<std::string::iterator, wlex_iterator_t, load_file_to_string,
-                             wave_hooks>
-    wcontext_t;
+using wave_lex_iterator = boost::wave::cpplexer::lex_iterator<boost::wave::cpplexer::lex_token<>>;
+using wave_context =
+    boost::wave::context<std::string::iterator, wave_lex_iterator, load_file_to_string, wave_hooks>;
 
 class compiler_code_source;
 
 class wave_context_wrapper {
 public:
-  wave_context_wrapper(compiler_code_source *src, wcontext_t *ctx);
+  wave_context_wrapper(compiler_code_source *src, wave_context *ctx);
   ~wave_context_wrapper();
-  wcontext_t *get_wctxt() const;
+  wave_context *get_wave_ctxt() const;
 
 private:
-  std::unique_ptr<wcontext_t> wctxt;
+  std::unique_ptr<wave_context> wave_ctxt;
 };
 
 class compiler_code_source : public sasl::common::lex_context, public sasl::common::code_source {
@@ -149,22 +144,22 @@ public:
   bool set_code(std::string const &);
   bool set_file(std::string const &);
 
-  // code source
-  virtual bool eof();
-  virtual std::string_view next();
-  virtual std::string_view error();
-  virtual bool failed();
+  // Inherited from code_source
+  bool eof() override;
+  std::string_view next() override;
+  std::string_view error() override;
+  bool failed() override;
 
-  // lex_context
-  virtual std::string_view file_name() const;
-  virtual size_t column() const;
-  virtual size_t line() const;
-  virtual void update_position(std::string_view /*lit*/);
+  // Inherited from lex_context
+  std::string_view file_name() const override;
+  size_t column() const override;
+  size_t line() const override;
+  void update_position(std::string_view /*lit*/) override;
 
   // hooks. It's enabled after function is called.
   virtual void add_virtual_file(std::string const &file_name, std::string const &content,
                                 bool high_priority);
-  virtual void set_include_handler(include_handler_fn ihandler);
+  virtual void set_include_handler(include_handler_fn handler);
 
   // Inputs of preprocessor.
   bool add_include_path(std::string const &);
@@ -201,20 +196,19 @@ private:
                          std::string const &name, bool is_system, bool is_before_include);
   friend void report_load_file_failed(void *ctxt, std::string const &name, bool is_system);
 
-  std::unique_ptr<wave_context_wrapper> wctxt_wrapper;
+  std::unique_ptr<wave_context_wrapper> wave_ctxt_wrapper;
   sasl::common::diag_chat *diags;
 
   mutable std::string filename;
   bool is_failed;
   std::string code;
-  std::string errtok;
+  std::string err_token;
 
-  wcontext_t::iterator_type cur_it;
-  wcontext_t::iterator_type next_it;
+  wave_context::iterator_type cur_it;
+  wave_context::iterator_type next_it;
 
-  typedef std::unordered_map<std::string, std::pair<bool, std::string>> virtual_file_dict;
-  virtual_file_dict virtual_files;
-  include_handler_fn inc_handler;
+  std::unordered_map<std::string, std::pair<bool, std::string>> virtual_files;
+  include_handler_fn do_include;
 
   static std::unordered_map<void *, compiler_code_source *> ctxt_to_source;
   static compiler_code_source *get_code_source(void *);

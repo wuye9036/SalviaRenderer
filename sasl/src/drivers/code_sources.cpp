@@ -51,10 +51,10 @@ bool compiler_code_source::set_file(string const &file_name) {
 
 bool compiler_code_source::eof() {
   try {
-    return (next_it == wctxt_wrapper->get_wctxt()->end());
+    return (next_it == wave_ctxt_wrapper->get_wave_ctxt()->end());
   } catch (preprocess_exception &e) {
     report_wave_pp_exception(diags, e);
-    next_it = wctxt_wrapper->get_wctxt()->end();
+    next_it = wave_ctxt_wrapper->get_wave_ctxt()->end();
     return false;
   }
 }
@@ -66,12 +66,12 @@ string_view compiler_code_source::next() {
     ++next_it;
   } catch (preprocess_exception &e) {
     report_wave_pp_exception(diags, e);
-    errtok = to_string(cur_it->get_value());
-    next_it = wctxt_wrapper->get_wctxt()->end();
+    err_token = to_string(cur_it->get_value());
+    next_it = wave_ctxt_wrapper->get_wave_ctxt()->end();
   } catch (wave_reported_fatal_error &) {
     // Error has been reported to diag_chat.
-    errtok = to_string(cur_it->get_value());
-    next_it = wctxt_wrapper->get_wctxt()->end();
+    err_token = to_string(cur_it->get_value());
+    next_it = wave_ctxt_wrapper->get_wave_ctxt()->end();
     is_failed = true;
   }
 
@@ -79,10 +79,10 @@ string_view compiler_code_source::next() {
 }
 
 string_view compiler_code_source::error() {
-  if (errtok.empty()) {
-    errtok = to_string(cur_it->get_value());
+  if (err_token.empty()) {
+    err_token = to_string(cur_it->get_value());
   }
-  return errtok;
+  return err_token;
 }
 
 void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess_exception &e) {
@@ -108,7 +108,7 @@ void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess
     try {
       file_name = to_string(cur_it->get_position().get_file());
     } catch (...) {
-      file_name = wctxt_wrapper->get_wctxt()->get_current_filename();
+      file_name = wave_ctxt_wrapper->get_wave_ctxt()->get_current_filename();
     }
   }
 
@@ -117,19 +117,19 @@ void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess
 }
 
 string_view compiler_code_source::file_name() const {
-  ef_verify(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end());
+  ef_verify(is_failed || cur_it != wave_ctxt_wrapper->get_wave_ctxt()->end());
 
   filename = to_string(cur_it->get_position().get_file());
   return filename;
 }
 
 size_t compiler_code_source::column() const {
-  assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end());
+  ef_verify(is_failed || cur_it != wave_ctxt_wrapper->get_wave_ctxt()->end());
   return cur_it->get_position().get_column();
 }
 
 size_t compiler_code_source::line() const {
-  assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end());
+  ef_verify(is_failed || cur_it != wave_ctxt_wrapper->get_wave_ctxt()->end());
   return cur_it->get_position().get_line();
 }
 
@@ -139,17 +139,17 @@ void compiler_code_source::update_position(string_view /*lit*/) {
 }
 
 bool compiler_code_source::process() {
-  wctxt_wrapper.reset(
-      new wave_context_wrapper(this, new wcontext_t(code.begin(), code.end(), filename.c_str())));
+  wave_ctxt_wrapper.reset(
+      new wave_context_wrapper(this, new wave_context(code.begin(), code.end(), filename.c_str())));
 
   size_t lang_flag = boost::wave::support_cpp;
   lang_flag &= ~(boost::wave::support_option_emit_line_directives);
   lang_flag &= ~(boost::wave::support_option_single_line);
   lang_flag &= ~(boost::wave::support_option_emit_pragma_directives);
-  wctxt_wrapper->get_wctxt()->set_language(static_cast<boost::wave::language_support>(lang_flag));
+  wave_ctxt_wrapper->get_wave_ctxt()->set_language(static_cast<boost::wave::language_support>(lang_flag));
 
-  cur_it = wctxt_wrapper->get_wctxt()->begin();
-  next_it = wctxt_wrapper->get_wctxt()->begin();
+  cur_it = wave_ctxt_wrapper->get_wave_ctxt()->begin();
+  next_it = wave_ctxt_wrapper->get_wave_ctxt()->begin();
   is_failed = false;
 
   return true;
@@ -171,13 +171,12 @@ void compiler_code_source::add_virtual_file(string const &file_name, string cons
   virtual_files[file_name] = make_pair(high_priority, content);
 }
 
-void compiler_code_source::set_include_handler(include_handler_fn handler) {
-  inc_handler = handler;
+void compiler_code_source::set_include_handler(include_handler_fn handler) { do_include = handler;
 }
 
 compiler_code_source *compiler_code_source::get_code_source(void *ctxt) {
   if (ctxt) {
-    unordered_map<void *, compiler_code_source *>::iterator it = ctxt_to_source.find(ctxt);
+    auto it = ctxt_to_source.find(ctxt);
     if (it != ctxt_to_source.end()) {
       return it->second;
     }
@@ -189,9 +188,9 @@ compiler_code_source *compiler_code_source::get_code_source(void *ctxt) {
 bool compiler_code_source::failed() { return is_failed; }
 
 bool compiler_code_source::add_sys_include_path(string const &path) {
-  wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
-  ef_verify(wctxt);
-  return wctxt->add_sysinclude_path(path.c_str());
+  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+  ef_verify(wave_ctxt);
+  return wave_ctxt->add_sysinclude_path(path.c_str());
 }
 
 bool compiler_code_source::add_sys_include_path(vector<string> const &paths) {
@@ -204,9 +203,9 @@ bool compiler_code_source::add_sys_include_path(vector<string> const &paths) {
 }
 
 bool compiler_code_source::add_include_path(string const &path) {
-  wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
-  assert(wctxt);
-  return wctxt->add_include_path(path.c_str());
+  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+  ef_verify(wave_ctxt);
+  return wave_ctxt->add_include_path(path.c_str());
 }
 
 bool compiler_code_source::add_include_path(vector<string> const &paths) {
@@ -218,9 +217,9 @@ bool compiler_code_source::add_include_path(vector<string> const &paths) {
 }
 
 bool compiler_code_source::add_macro(string const &macro_def, bool predef) {
-  wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
-  assert(wctxt);
-  return wctxt->add_macro_definition(macro_def, predef);
+  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+  ef_verify(wave_ctxt);
+  return wave_ctxt->add_macro_definition(macro_def, predef);
 }
 
 bool compiler_code_source::add_macro(vector<string> const &macros, bool predef) {
@@ -232,16 +231,16 @@ bool compiler_code_source::add_macro(vector<string> const &macros, bool predef) 
 }
 
 bool compiler_code_source::clear_macros() {
-  wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
-  assert(wctxt);
-  wctxt->reset_macro_definitions();
+  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+  ef_verify(wave_ctxt);
+  wave_ctxt->reset_macro_definitions();
   return true;
 }
 
 bool compiler_code_source::remove_macro(string const &macro_def) {
-  wcontext_t *wctxt = wctxt_wrapper->get_wctxt();
-  assert(wctxt);
-  return wctxt->remove_macro_definition(macro_def);
+  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+  ef_verify(wave_ctxt);
+  return wave_ctxt->remove_macro_definition(macro_def);
 }
 
 bool compiler_code_source::remove_macro(vector<string> const &macros) {
@@ -264,11 +263,11 @@ void load_virtual_file(bool &is_succeed, bool &is_exclusive, string &content, vo
   is_succeed = false;
 
   compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
-  assert(code_src);
-  if (code_src->inc_handler) {
+  ef_verify(code_src);
+  if (code_src->do_include) {
     string native_name;
     is_exclusive = true;
-    is_succeed = code_src->inc_handler(content, native_name, name, is_system, false);
+    is_succeed = code_src->do_include(content, native_name, name, is_system, false);
     fixes_file_end_with_newline(content);
     return;
   }
@@ -277,7 +276,7 @@ void load_virtual_file(bool &is_succeed, bool &is_exclusive, string &content, vo
     return;
   }
 
-  compiler_code_source::virtual_file_dict::iterator it = code_src->virtual_files.find(name);
+  auto it = code_src->virtual_files.find(name);
   if (it == code_src->virtual_files.end()) {
     return;
   }
@@ -299,17 +298,17 @@ void check_file(bool &is_succeed, bool &is_exclusive, string &native_name, void 
   is_succeed = false;
 
   compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
-  assert(code_src);
+  ef_verify(code_src);
 
   // If inc handler is enabled, it is exclusive.
-  if (code_src->inc_handler) {
+  if (code_src->do_include) {
     string content;
     is_exclusive = true;
-    is_succeed = code_src->inc_handler(content, native_name, name, is_system, true);
+    is_succeed = code_src->do_include(content, native_name, name, is_system, true);
     return;
   }
 
-  compiler_code_source::virtual_file_dict::iterator it = code_src->virtual_files.find(name);
+  auto it = code_src->virtual_files.find(name);
   if (it == code_src->virtual_files.end()) {
     return;
   }
@@ -324,22 +323,22 @@ void check_file(bool &is_succeed, bool &is_exclusive, string &native_name, void 
   return;
 }
 
-wave_context_wrapper::wave_context_wrapper(compiler_code_source *src, wcontext_t *ctx) {
-  if (wctxt) {
-    compiler_code_source::ctxt_to_source.erase(wctxt.get());
+wave_context_wrapper::wave_context_wrapper(compiler_code_source *src, wave_context *ctx) {
+  if (wave_ctxt) {
+    compiler_code_source::ctxt_to_source.erase(wave_ctxt.get());
   }
   compiler_code_source::ctxt_to_source[ctx] = src;
-  wctxt.reset(ctx);
+  wave_ctxt.reset(ctx);
 }
 
 wave_context_wrapper::~wave_context_wrapper() {
-  if (wctxt) {
-    compiler_code_source::ctxt_to_source.erase(wctxt.get());
+  if (wave_ctxt) {
+    compiler_code_source::ctxt_to_source.erase(wave_ctxt.get());
   }
-  wctxt.reset(nullptr);
+  wave_ctxt.reset(nullptr);
 }
 
-wcontext_t *wave_context_wrapper::get_wctxt() const { return wctxt.get(); }
+wave_context *wave_context_wrapper::get_wave_ctxt() const { return wave_ctxt.get(); }
 
 void fixes_file_end_with_newline(string &content) {
   if (content.empty()) {

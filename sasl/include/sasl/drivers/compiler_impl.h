@@ -25,7 +25,7 @@ public:
   virtual void add_virtual_file(std::string const & /*file_name*/,
                                 std::string const & /*code_content*/, bool /*high_priority*/) {}
   /// Only support by default code_source.
-  virtual void set_include_handler(include_handler_fn /*inc_handler*/) {}
+  virtual void set_include_handler(include_handler_fn /*do_include*/) {}
   /// Only support by default code source.
   virtual void add_include_path(std::string const & /*inc_path*/) {}
   /// Only support by default code source.
@@ -118,11 +118,11 @@ private:
 
   void inject_function(void *pfn, std::string_view name, bool is_raw_name);
 
-  sasl::semantic::module_semantic_ptr msem;
-  sasl::codegen::module_vmcode_ptr mvmc;
-  sasl::syntax_tree::node_ptr mroot;
-  sasl::semantic::reflection_impl_ptr mreflection;
-  salvia::shader::shader_reflection2_ptr mreflection2;
+  sasl::semantic::module_semantic_ptr mod_sem_;
+  sasl::codegen::module_vmcode_ptr mod_vm_code_;
+  sasl::syntax_tree::node_ptr root_;
+  sasl::semantic::reflection_impl_ptr reflection_;
+  salvia::shader::shader_reflection2_ptr reflection2_;
 
   // Options
   options_global opt_global;

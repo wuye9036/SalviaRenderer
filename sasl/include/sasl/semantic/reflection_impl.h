@@ -31,18 +31,18 @@ public:
   friend class reflector;
 
   // Implements members of shader_reflection
-  virtual salvia::shader::languages get_language() const override;
-  virtual std::string_view entry_name() const override;
-  virtual std::vector<salvia::shader::sv_layout *>
+  salvia::shader::languages get_language() const override;
+  std::string_view entry_name() const override;
+  std::vector<salvia::shader::sv_layout *>
   layouts(salvia::shader::sv_usage usage) const override;
-  virtual size_t layouts_count(salvia::shader::sv_usage usage) const override;
-  virtual size_t total_size(salvia::shader::sv_usage usage) const override;
+  size_t layouts_count(salvia::shader::sv_usage usage) const override;
+  size_t total_size(salvia::shader::sv_usage usage) const override;
 
-  virtual salvia::shader::sv_layout *input_sv_layout(std::string_view) const override;
-  virtual salvia::shader::sv_layout *
+  salvia::shader::sv_layout *input_sv_layout(std::string_view) const override;
+  salvia::shader::sv_layout *
   output_sv_layout(salvia::shader::semantic_value const &) const override;
 
-  virtual bool has_position_output() const override;
+  bool has_position_output() const override;
 
   // Impl specific members
   reflection_impl();
