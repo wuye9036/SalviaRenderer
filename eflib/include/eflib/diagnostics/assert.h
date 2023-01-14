@@ -6,7 +6,19 @@
 
 #include <cstdlib>
 #include <iostream>
+#if __has_include(<source_location>)
 #include <source_location>
+#else
+namespace std {
+  struct source_location {
+    static constexpr source_location current() { return {}; }
+    inline constexpr size_t line() const noexcept { return 1; }
+    inline constexpr size_t column() const noexcept { return 1; }
+    inline constexpr char const* function_name() const noexcept {return "<unknown>"; }
+    inline constexpr char const* file_name() const noexcept { return "<unknown>"; }
+  };
+}
+#endif
 
 #if defined(EFLIB_MSVC)
 #define ef_debug_break() __debugbreak()

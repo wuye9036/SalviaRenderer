@@ -7,7 +7,7 @@
 #include <windows.h>
 #endif
 
-#ifdef EFLIB_LINUX
+#if defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
 #include <dlfcn.h>
 #endif
 
@@ -49,7 +49,7 @@ public:
 
   HMODULE mod;
 };
-#elif defined(EFLIB_LINUX)
+#elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
 class linux_dl : public dynamic_lib {
 public:
   explicit linux_dl(std::string const &name) {
@@ -91,7 +91,7 @@ public:
 shared_ptr<dynamic_lib> dynamic_lib::load(std::string const &name) {
 #if defined(EFLIB_WINDOWS)
   win_dl *dynlib = new win_dl(name);
-#elif defined(EFLIB_LINUX)
+#elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
   auto *dynlib = new linux_dl(name);
 #else
 #error "Platform is not supported."

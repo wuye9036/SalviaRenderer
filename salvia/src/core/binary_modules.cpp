@@ -30,7 +30,7 @@ static void load_function() {
   std::string dll_name;
 #if defined(EFLIB_MSVC)
   dll_name = "sasl_host";
-#elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+#elif defined(EFLIB_MINGW) || defined(EFLIB_GCC) || defined(EFLIB_CLANG)
   dll_name = "libsasl_host";
 #endif // defined
 
@@ -39,7 +39,7 @@ static void load_function() {
 #endif
 #if defined(EFLIB_WINDOWS)
   dll_name += ".dll";
-#elif defined(EFLIB_LINUX)
+#elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
   dll_name += ".so";
 #else
 #error "Unknown system."

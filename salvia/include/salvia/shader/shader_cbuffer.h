@@ -3,6 +3,7 @@
 
 #include <eflib/utility/shared_declaration.h>
 
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>

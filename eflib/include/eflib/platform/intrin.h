@@ -3,18 +3,12 @@
 #include <eflib/platform/config.h>
 #include <eflib/platform/stdint.h>
 
-#if !defined(EFLIB_CPU_X86) && !defined(EFLIB_CPU_X64)
-#error "Unsupported platform!"
+#if !defined(SIMDE_ENABLE_NATIVE_ALIASES)
+#define SIMDE_ENABLE_NATIVE_ALIASES 1
 #endif
 
-#if defined(EFLIB_MSVC) || defined(EFLIB_MINGW64)
-#include <intrin.h>
-#elif defined(EFLIB_MINGW32) || defined(EFLIB_GCC)
-#include <cpuid.h>
-#include <x86intrin.h>
-#else
-#error "Unsupported compiler!"
-#endif
+#include <simde/x86/sse.h>
+#include <simde/x86/sse2.h>
 
 #if defined(EFLIB_MSVC)
 inline uint8_t _xmm_bsr(uint32_t *index, uint32_t mask) {
@@ -56,7 +50,7 @@ inline uint8_t _xmm_bsf(uint32_t *index, uint64_t mask) {
   return 1;
 #endif
 }
-#elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+#elif defined(EFLIB_GCC) || defined(EFLIB_CLANG)
 inline uint8_t _xmm_bsr(uint32_t *index, uint32_t mask) {
   if (mask == 0) {
     return 0;

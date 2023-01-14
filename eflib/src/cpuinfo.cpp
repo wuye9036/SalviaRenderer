@@ -83,6 +83,12 @@ uint32_t num_available_threads() {
 #endif
 }
 
-bool support_feature(cpu_features feat) { return cpuinfo.support(feat); }
+bool support_feature(cpu_features feat) { 
+#if defined(EFLIB_CPU_X64)
+  return cpuinfo.support(feat);
+#endif
+  // A fake return;
+  return true;
+}
 
 } // namespace eflib

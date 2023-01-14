@@ -1,6 +1,7 @@
 #include <salvia/shader/shader_cbuffer.h>
 
 #include <cstring>
+#include <string>
 
 using namespace salvia::resource;
 
