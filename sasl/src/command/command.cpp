@@ -17,7 +17,7 @@ using std::shared_ptr;
 
 #if defined(EFLIB_WINDOWS)
 #define DRIVER_EXT ".dll"
-#elif defined(EFLIB_LINUX)
+#elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
 #define DRIVER_EXT ".so"
 #endif
 

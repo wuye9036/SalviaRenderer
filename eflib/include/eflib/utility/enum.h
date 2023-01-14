@@ -2,6 +2,7 @@
 
 #include <eflib/platform/stdint.h>
 
+#include <concepts>
 #include <type_traits>
 #include <utility>
 

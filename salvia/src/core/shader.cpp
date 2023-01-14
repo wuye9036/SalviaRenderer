@@ -14,7 +14,7 @@ using namespace salvia::shader;
 
 using std::make_pair;
 
-#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) && !defined(EFLIB_NO_SIMD)
+#if (defined(EFLIB_CPU_X64) || defined(EFLIB_CPU_AARCH64)) && !defined(EFLIB_NO_SIMD)
 #define VSO_INTERP_SSE_ENABLED
 #endif
 

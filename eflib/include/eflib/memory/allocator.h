@@ -4,7 +4,7 @@
 #include <eflib/utility/unref_declarator.h>
 
 #include <limits>
-#include <malloc.h>
+#include <cstdlib>
 #include <type_traits>
 #include <vector>
 

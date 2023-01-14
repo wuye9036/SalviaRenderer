@@ -36,6 +36,21 @@
         "CMAKE_C_COMPILER": "clang-15",
         "CMAKE_CXX_COMPILER": "clang++-15"
       }
+    },
+    {
+      "name": "clang_mac_m1_dev",
+      "displayName": "clang_mac_m1_dev",
+      "description": "Clang-15 on MacOS M1, x86-64",
+      "binaryDir": "./.build/salvia.${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_TOOLCHAIN_FILE": "~/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/.install/${presetName}",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
+        "Boost_NO_WARN_NEW_VERSIONS": "1",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
     }
   ],
   "buildPresets": [

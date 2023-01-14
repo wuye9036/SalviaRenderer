@@ -143,7 +143,13 @@ public:
 #if !USE_INDEX_RANGE
     // Unique indices
     unique_indices_ = indices_;
+
+#if !defined(_LIBCPP_VERSION) || defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS)
     std::sort(std::execution::par, unique_indices_.begin(), unique_indices_.end());
+#else
+    std::sort(unique_indices_.begin(), unique_indices_.end());
+#endif
+
     unique_indices_.erase(std::unique(unique_indices_.begin(), unique_indices_.end()),
                           unique_indices_.end());
 

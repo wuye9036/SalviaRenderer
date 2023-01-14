@@ -1212,7 +1212,11 @@ void rasterizer::viewport_and_project_transform(vs_output **vertexes, size_t num
   vector<vs_output *> sorted;
   sorted.insert(sorted.end(), vertexes, vertexes + num_verts);
 
+#if !defined(_LIBCPP_VERSION) || defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS)
   std::sort(std::execution::par, sorted.begin(), sorted.end());
+#else
+  std::sort(sorted.begin(), sorted.end());
+#endif
 
   sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
 

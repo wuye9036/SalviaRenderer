@@ -7,7 +7,7 @@
 #define EFLIB_SYM_IMPORT __declspec(dllimport)
 #endif
 
-#if defined(EFLIB_LINUX)
+#if defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
 #define EFLIB_SYM_EXPORT __attribute__((visibility("default")))
 #define EFLIB_SYM_IMPORT
 #endif
