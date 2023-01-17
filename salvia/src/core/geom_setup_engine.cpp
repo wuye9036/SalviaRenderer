@@ -25,7 +25,7 @@ namespace salvia::core {
 geom_setup_engine::geom_setup_engine()
     : clipped_verts_cap_(0), clipped_package_verts_count_cap_(0), compacted_vertex_cap_(0),
       clipped_package_compacted_addresses_cap_(0), clipping_package_count_(0),
-      thread_count_(eflib::num_available_threads()), ctxt_(nullptr) {}
+      thread_count_(std::thread::hardware_concurrency()), ctxt_(nullptr) {}
 
 void geom_setup_engine::execute(geom_setup_context const *ctxt, uint64_t (*fetch_time_stamp)()) {
   ctxt_ = ctxt;

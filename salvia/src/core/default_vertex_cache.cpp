@@ -44,7 +44,7 @@ public:
       : assembler_(nullptr), host_(nullptr), prim_count_(0), prim_size_(0), cpp_vs_(nullptr),
         pipeline_stat_(nullptr), pipeline_prof_(nullptr), fetch_time_stamp_(nullptr),
         acc_ia_vertices_(nullptr), acc_vs_invocations_(nullptr), acc_gather_vtx_(nullptr),
-        acc_vtx_proc_(nullptr), thread_count_(num_available_threads()) {}
+        acc_vtx_proc_(nullptr), thread_count_(std::thread::hardware_concurrency()) {}
 
   void initialize(render_stages const *stages) override{
     assembler_ = stages->assembler.get();
@@ -322,10 +322,10 @@ private:
 
 class tls_vertex_cache : public vertex_cache_impl {
 public:
-  tls_vertex_cache() : caches_(num_available_threads()) {}
+  tls_vertex_cache() : caches_(std::thread::hardware_concurrency()) {}
 
   void prepare_vertices() override {
-    for (uint32_t i = 0; i < num_available_threads(); ++i) {
+    for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
       auto &cache = caches_[i];
       cache.vso_pool.clear();
       cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
@@ -379,7 +379,7 @@ public:
   }
 
   void update_statistic() override {
-    for (uint32_t i = 0; i < num_available_threads(); ++i) {
+    for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
       auto &cache = caches_[i];
 
       acc_ia_vertices_(pipeline_stat_, cache.ia_vertices);
@@ -415,7 +415,7 @@ private:
 
 class shared_vertex_cache : public vertex_cache_impl {
 public:
-  shared_vertex_cache() : caches_(num_available_threads()) {
+  shared_vertex_cache() : caches_(std::thread::hardware_concurrency()) {
     conflict_count_ = 0;
     l2_missing_ = 0;
     l2_hitting_ = 0;
@@ -428,7 +428,7 @@ public:
   void prepare_vertices() override {
     memset(shared_items_, INVALID_SHARED_ENTRY, sizeof(shared_items_));
 
-    for (uint32_t i = 0; i < num_available_threads(); ++i) {
+    for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
       auto &cache = caches_[i];
       cache.vso_pool.clear();
       cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
@@ -529,7 +529,7 @@ public:
   }
 
   void update_statistic() override {
-    for (uint32_t i = 0; i < num_available_threads(); ++i) {
+    for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
       auto &cache = caches_[i];
 
       acc_ia_vertices_(pipeline_stat_, cache.ia_vertices);

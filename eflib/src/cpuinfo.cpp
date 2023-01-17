@@ -1,22 +1,15 @@
 #include <eflib/platform/config.h>
 #include <eflib/platform/cpuinfo.h>
-#include <eflib/platform/intrin.h>
 #include <eflib/platform/stdint.h>
 
-#ifdef EFLIB_WINDOWS
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#else
-#include <unistd.h>
-#endif
-
 #include <algorithm>
-#include <string.h>
+
+#if defined(EFLIB_CPU_X64)
+#include <intrin.h>
+#endif
 
 namespace eflib {
-#if defined(EFLIB_CPU_X64) || defined(EFLIB_CPU_X86)
+#if defined(EFLIB_CPU_X64)
 
 class x86_cpuinfo {
 public:
@@ -28,7 +21,7 @@ public:
 #if defined(EFLIB_MSVC) || defined(EFLIB_MINGW64)
     __cpuid(cpu_infos, 1);
     __cpuid(cpu_infos_ex, 0x80000001);
-#elif defined(EFLIB_MINGW32) || defined(EFLIB_GCC)
+#elif defined(EFLIB_MINGW32) || defined(EFLIB_GCC) || defined(EFLIB_CLANG)
     __cpuid(1, cpu_infos[0], cpu_infos[1], cpu_infos[2], cpu_infos[3]);
     __cpuid(0x80000001, cpu_infos_ex[0], cpu_infos_ex[1], cpu_infos_ex[2], cpu_infos_ex[3]);
 #endif
@@ -53,35 +46,6 @@ public:
 static x86_cpuinfo cpuinfo;
 
 #endif
-
-uint32_t num_cpu_cores() {
-  static uint32_t num = 0;
-
-#ifdef EFLIB_WINDOWS
-  if (0 == num) {
-    SYSTEM_INFO si;
-    ::GetSystemInfo(&si);
-    num = si.dwNumberOfProcessors;
-  }
-#else
-  if (0 == num) {
-    // Linux doesn't easily allow us to look at the Affinity Bitmask directly,
-    // but it does provide an API to test affinity maskbits of the current process
-    // against each logical processor visible under OS.
-    num = sysconf(_SC_NPROCESSORS_ONLN); // This will tell us how many CPUs are currently enabled.
-  }
-#endif
-
-  return num;
-}
-
-uint32_t num_available_threads() {
-#if defined(EFLIB_DEBUG)
-  return 1;
-#else
-  return num_cpu_cores();
-#endif
-}
 
 bool support_feature(cpu_features feat) { 
 #if defined(EFLIB_CPU_X64)
