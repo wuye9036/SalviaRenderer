@@ -7,6 +7,9 @@
 #define SIMDE_ENABLE_NATIVE_ALIASES 1
 #endif
 
+// NOMINMAX guard due to simde included windows.h.
+#define NOMINMAX
+
 #include <simde/x86/sse.h>
 #include <simde/x86/sse2.h>
 

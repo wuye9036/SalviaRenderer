@@ -1102,7 +1102,7 @@ void rasterizer::draw() {
   vert_cache_->prepare_vertices();
   prepare_draw();
 
-  size_t num_threads = num_available_threads();
+  size_t num_threads = std::thread::hardware_concurrency();
 
   geom_setup_context geom_setup_ctx;
 

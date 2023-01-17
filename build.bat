@@ -1,7 +1,7 @@
 @REM ---------------------------------------
 @REM Configure the path to your cmake and vcpkg.
-@set CMAKE_EXE="<path to cmake.exe>"
-@set VCPKG_CMAKE="<path to vcpkg.cmake>"
+@set CMAKE_EXE="cmake.exe"
+@set VCPKG_CMAKE="E:\Code\Library\vcpkg\scripts\buildsystems\vcpkg.cmake"
 @REM ---------------------------------------
 
 

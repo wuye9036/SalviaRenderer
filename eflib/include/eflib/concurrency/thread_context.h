@@ -77,7 +77,7 @@ concept thread_func = std::invocable<ThreadFunc, thread_context const *>;
 
 template <typename ThreadPool>
 inline void execute_threads(ThreadPool &&pool, thread_func auto &&fn, size_t item_count,
-                            size_t package_size, size_t thread_count = eflib::num_available_threads()) {
+                            size_t package_size, size_t thread_count = std::thread::hardware_concurrency()) {
   // Compute package information
   std::atomic<size_t> working_package(0);
   std::vector<thread_context> contexts(thread_count);

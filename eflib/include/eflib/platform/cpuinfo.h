@@ -23,8 +23,6 @@ enum cpu_features {
 };
 
 bool support_feature(cpu_features);
-uint32_t num_cpu_cores();
-uint32_t num_available_threads();
 } // namespace eflib
 
 #endif
