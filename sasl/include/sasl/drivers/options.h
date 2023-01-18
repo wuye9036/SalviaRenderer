@@ -37,8 +37,8 @@ public:
 
 class options_global : public options_filter {
 public:
-  void fill_desc(po::options_description &desc);
-  void filtrate(po::variables_map const &vm);
+  void fill_desc(po::options_description &desc) override;
+  void filtrate(po::variables_map const &vm) override;
 
   enum detail_level { none, quite, brief, normal, verbose, debug };
 
@@ -50,8 +50,8 @@ class options_display_info : public options_filter {
 public:
   options_display_info();
 
-  void fill_desc(po::options_description &desc);
-  void filtrate(po::variables_map const &vm);
+  void fill_desc(po::options_description &desc) override;
+  void filtrate(po::variables_map const &vm) override;
 
   po::options_description *pdesc;
 
@@ -72,8 +72,8 @@ class options_io : public options_filter {
 public:
   options_io();
 
-  void fill_desc(po::options_description &desc);
-  void filtrate(po::variables_map const &vm);
+  void fill_desc(po::options_description &desc) override;
+  void filtrate(po::variables_map const &vm) override;
 
   enum export_format { none, llvm_ir };
 
@@ -106,8 +106,8 @@ class option_macros : public options_filter {
 public:
   option_macros();
 
-  void fill_desc(po::options_description &desc);
-  void filtrate(po::variables_map const &vm);
+  void fill_desc(po::options_description &desc) override;
+  void filtrate(po::variables_map const &vm) override;
 
   std::vector<std::string> defines, predefs, undefs;
 
@@ -124,8 +124,8 @@ class options_includes : public options_filter {
 public:
   options_includes();
 
-  void fill_desc(po::options_description &desc);
-  void filtrate(po::variables_map const &vm);
+  void fill_desc(po::options_description &desc) override;
+  void filtrate(po::variables_map const &vm) override;
 
   std::vector<std::string> sys_includes, includes;
 

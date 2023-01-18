@@ -5,7 +5,11 @@
 #include <algorithm>
 
 #if defined(EFLIB_CPU_X64)
+#if defined(EFLIB_MSVC)
 #include <intrin.h>
+#elif defined(EFLIB_GCC) || defined(EFLIB_CLANG)
+#include <cpuid.h>
+#endif
 #endif
 
 namespace eflib {
@@ -14,8 +18,6 @@ namespace eflib {
 class x86_cpuinfo {
 public:
   x86_cpuinfo() {
-    memset(feats, 0, sizeof(feats));
-
     int cpu_infos[4];
     int cpu_infos_ex[4];
 #if defined(EFLIB_MSVC) || defined(EFLIB_MINGW64)
@@ -37,7 +39,7 @@ public:
   };
 
 private:
-  bool feats[cpu_unknown];
+  bool feats[cpu_unknown] = {};
 
 public:
   bool support(cpu_features feat) const { return feats[feat]; }
