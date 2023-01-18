@@ -9,100 +9,43 @@ struct external_function_desc;
 
 namespace sasl::drivers {
 
-class null_compiler : public compiler {
-public:
-  null_compiler();
-
-  virtual void set_parameter(int argc, char **argv);
-  virtual void set_parameter(std::string const & /*cmd*/) {}
-
-  virtual void set_code(std::string const & /*code_text*/) {}
-  virtual void set_code_file(std::string const & /*file_name*/) {}
-  virtual void set_code_source(sasl::common::code_source_ptr const &) {}
-  virtual void set_lex_context(sasl::common::lex_context_ptr const &) {}
-
-  /// Only support by default code_source.
-  virtual void add_virtual_file(std::string const & /*file_name*/,
-                                std::string const & /*code_content*/, bool /*high_priority*/) {}
-  /// Only support by default code_source.
-  virtual void set_include_handler(include_handler_fn /*do_include*/) {}
-  /// Only support by default code source.
-  virtual void add_include_path(std::string const & /*inc_path*/) {}
-  /// Only support by default code source.
-  virtual void add_sys_include_path(std::string const & /*sys_path*/) {}
-  /// Only support by default code source.
-  virtual void clear_sys_include_paths() {}
-  /// Only support by default code source.
-  virtual void add_macro(std::string const & /*macro*/, bool /*predef*/) {}
-  /// Only support by default code source.
-  virtual void remove_macro(std::string const & /*macro*/) {}
-  /// Only support by default code source.
-  virtual void clear_macros() {}
-
-  virtual sasl::common::diag_chat_ptr compile(bool /*enable_jit*/, bool /*enable_reflect2*/) {
-    return sasl::common::diag_chat_ptr();
-  }
-
-  virtual sasl::common::diag_chat_ptr
-  compile(std::vector<salvia::shader::external_function_desc> const &, bool) {
-    return sasl::common::diag_chat_ptr();
-  }
-
-  virtual sasl::semantic::module_semantic_ptr get_semantic() const {
-    return sasl::semantic::module_semantic_ptr();
-  }
-
-  virtual sasl::codegen::module_vmcode_ptr get_vmcode() const {
-    return sasl::codegen::module_vmcode_ptr();
-  }
-
-  virtual sasl::syntax_tree::node_ptr get_root() const { return sasl::syntax_tree::node_ptr(); }
-
-  virtual sasl::semantic::reflection_impl_ptr get_reflection() const {
-    return sasl::semantic::reflection_impl_ptr();
-  }
-};
-
 class compiler_impl : public compiler {
 public:
   compiler_impl();
 
   // All setting functions must be called before calling compile().
-  virtual void set_parameter(int argc, char **argv);
-  virtual void set_parameter(std::string const &cmd);
+  void set_parameter(int argc, char **argv) override;
+  void set_parameter(std::string const &cmd) override;
 
-  virtual void set_code(std::string const &code_text);
-  virtual void set_code_file(std::string const &code_file);
-  virtual void set_code_source(std::shared_ptr<sasl::common::code_source> const &);
+  void set_code(std::string const &code_text) override;
+  void set_code_file(std::string const &code_file) override;
+  void set_code_source(std::shared_ptr<sasl::common::code_source> const &) override;
   virtual void set_lex_context(std::shared_ptr<sasl::common::lex_context> const &);
 
   /// Only support by default code_source.
-  virtual void add_virtual_file(std::string const &file_name, std::string const &code_content,
-                                bool high_priority);
+  void add_virtual_file(std::string const &file_name, std::string const &code_content,
+                                bool high_priority) override;
   /// Only support by default code_source.
-  virtual void set_include_handler(include_handler_fn inc_handler);
+  void set_include_handler(include_handler_fn inc_handler) override;
   /// Only support by default code source.
   virtual void add_include_path(std::string const &inc_path);
   /// Only support by default code source.
-  virtual void add_sysinclude_path(std::string const &sys_path);
-  /// Only support by default code source.
-  virtual void clear_sysinclude_paths();
+  virtual void add_sys_include_path(std::string const &sys_path);
   /// Only support by default code source.
   virtual void add_macro(std::string const &macro, bool predef);
   /// Only support by default code source.
   virtual void remove_macro(std::string const &macro);
   /// Only support by default code source.
-  virtual void clear_macros();
 
-  virtual sasl::common::diag_chat_ptr compile(bool enable_reflect2);
-  virtual sasl::common::diag_chat_ptr compile(std::vector<salvia::shader::external_function_desc> const &,
-                                              bool enable_reflect2);
+  sasl::common::diag_chat_ptr compile(bool enable_reflect2) override;
+  sasl::common::diag_chat_ptr compile(std::vector<salvia::shader::external_function_desc> const &,
+                                              bool enable_reflect2) override;
 
-  virtual sasl::semantic::module_semantic_ptr get_semantic() const;
-  virtual sasl::codegen::module_vmcode_ptr get_vmcode() const;
-  virtual sasl::syntax_tree::node_ptr get_root() const;
-  virtual sasl::semantic::reflection_impl_ptr get_reflection() const;
-  virtual salvia::shader::shader_reflection2_ptr get_reflection2() const override;
+  sasl::semantic::module_semantic_ptr get_semantic() const override;
+  sasl::codegen::module_vmcode_ptr get_vmcode() const override;
+  sasl::syntax_tree::node_ptr get_root() const override;
+  sasl::semantic::reflection_impl_ptr get_reflection() const override;
+  salvia::shader::shader_reflection2_ptr get_reflection2() const override;
 
   boost::program_options::variables_map const &variables() const;
   options_display_info const &display_info() const;

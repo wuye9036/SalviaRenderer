@@ -443,26 +443,18 @@ void compiler_impl::inject_function(void *pfn, string_view fn_name, bool is_raw_
   mod_vm_code_->inject_function(pfn, raw_name);
 }
 
-void compiler_impl::add_sysinclude_path(std::string const &sys_path) {
+void compiler_impl::add_sys_include_path(std::string const &sys_path) {
   sys_paths.push_back(sys_path);
 }
 
 void compiler_impl::add_include_path(std::string const &inc_path) { inc_paths.push_back(inc_path); }
 
-void compiler_impl::clear_sysinclude_paths() { sys_paths.clear(); }
-
 void compiler_impl::add_macro(std::string const &macro, bool predef) {
   macros.push_back(make_pair(macro, predef ? ms_predef : ms_normal));
 }
 
-void compiler_impl::clear_macros() { macros.clear(); }
-
 void compiler_impl::remove_macro(std::string const &macro) {
   macros.push_back(make_pair(macro, ms_remove));
 }
-
-void null_compiler::set_parameter(int /*argc*/, char ** /*argv*/) {}
-
-null_compiler::null_compiler() {}
 
 } // namespace sasl::drivers
