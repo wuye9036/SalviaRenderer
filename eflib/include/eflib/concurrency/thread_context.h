@@ -9,6 +9,7 @@
 #include <range/v3/view/subrange.hpp>
 
 #include <atomic>
+#include <thread>
 
 namespace eflib {
 
