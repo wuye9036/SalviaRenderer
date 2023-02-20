@@ -24,6 +24,9 @@
     * stdlibc++ 11 (It may be distributed with same version of GCC) or higher.
     * *All samples cannot be run in Linux*. Will be supported in 2023.
     * Our build & test environment is WSL2 + Ubuntu 22.04 LTS
+  * Mac (M1)
+    * Clang-15.0 or higher
+    * Interactive mode of samples was disabled on Mac M1.
     
 ## Build steps
   * Install [vcpkg](https://github.com/microsoft/vcpkg).
