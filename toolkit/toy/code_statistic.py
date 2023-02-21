@@ -2,11 +2,13 @@ import sys
 import pathlib
 import dataclasses
 
+
 @dataclasses.dataclass
 class Options:
   IncludeList = []
   ExcludeList = set()
   ExtensionFilter = set()
+
 
 @dataclasses.dataclass(repr=True)
 class StatResult:
@@ -22,15 +24,17 @@ class StatResult:
   CodeLines: int = 0
   MixedLines: int = 0
 
+
 def IsEmptyLine(l: str):
   return not any(ch.isalpha() or ch.isdigit() for ch in l)
+
 
 def ParseFile(fPath: pathlib.Path, result: StatResult):
   result.FileCount += 1
   result.FileSizeTotal += fPath.stat().st_size
 
   lines = fPath.read_text(encoding="utf-8").splitlines()
-  
+
   in_multiline_comment = False
   for l in lines:
     stripped_l = l.strip()
@@ -38,7 +42,7 @@ def ParseFile(fPath: pathlib.Path, result: StatResult):
       if stripped_l.startswith("#"):
         result.PreprocessorLines += 1
         continue
-      if stripped_l.startswith( "//" ):
+      if stripped_l.startswith("//"):
         result.SingleLineComments += 1
         continue
       if stripped_l.find("/*") != -1:
@@ -63,7 +67,8 @@ def ParseFile(fPath: pathlib.Path, result: StatResult):
           result.MixedLines += 1
       else:
         result.MultiLineComments += 1
-  
+
+
 def Scan(path: pathlib.Path, opt: Options, result: StatResult):
   for child in path.iterdir():
     assert isinstance(child, pathlib.Path)
@@ -73,11 +78,12 @@ def Scan(path: pathlib.Path, opt: Options, result: StatResult):
       # print(f"! Folder {child.resolve()} was excluded.")
       continue
 
-    if child.is_dir():  
+    if child.is_dir():
       Scan(child, opt, result)
     else:
       if child.suffix in opt.ExtensionFilter:
         ParseFile(child, result)
+
 
 def main():
   root = pathlib.Path(".").resolve()
@@ -112,9 +118,9 @@ def main():
     # print(f">>> {fd.resolve().as_posix()}")
     Scan(fd, opt, result)
     # print(f"<<< {result}")
-  
+
   print(f"{result}")
-  
-        
+
+
 if __name__ == "__main__":
   main()
