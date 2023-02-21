@@ -1,7 +1,7 @@
 import threading
 import typing
-from PexUtils import trace_func
-from PexFunc import Sender
+from Utils import trace_func
+from Meta import Sender
 
 
 class trampoline_scheduler:

@@ -1,9 +1,3 @@
-
-#################
-# logging support
-#################
-
-
 class IndentHistory:
   def __init__(self):
     self._indent = -1

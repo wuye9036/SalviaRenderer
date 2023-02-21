@@ -1,4 +1,10 @@
-def algo_as_continuation(f):
+def chain(snd, *snd_fact_and_args):
+  for fact_n_arg in snd_fact_and_args:
+    snd = fact_n_arg[0](snd, *fact_n_arg[1:])
+  return snd
+
+
+def continuation_style(f):
   """
   Decorator. Added continuation form to the execution algorithm. For e.g.
   ```
@@ -51,3 +57,12 @@ class Sender:
   def __or__(self, partial_sender: PartialSender):
     assert isinstance(partial_sender, PartialSender)
     return partial_sender.apply(self)
+
+
+class Args:
+  def __init__(self, *args, **kwargs) -> None:
+    self._args = args
+    self._kwargs = kwargs
+
+  def invoke(self, fn, *prior_args):
+    return fn(*prior_args, *self._args, **self._kwargs)
