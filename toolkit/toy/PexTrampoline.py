@@ -25,9 +25,9 @@ class operation:
   def start(self):
     current_state: typing.Optional[trampoline_state] = trampoline_state.current()
     if current_state is None:
-      state = trampoline_state()
-      self.execute()
-      state.drain()
+      with trampoline_state.create() as state:
+        self.execute()
+        state.drain()
     elif current_state.recursionDepth < self._maxRecursionDepth:
       current_state.recursionDepth += 1
       self.execute()
@@ -40,9 +40,19 @@ class trampoline_state:
   _current = threading.local()
 
   def __init__(self):
-    trampoline_state._current.state = self
     self.recursionDepth = 1
     self.head = None
+
+  def __enter__(self):
+    trampoline_state._current.state = self
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    trampoline_state._current.state = None
+
+  @staticmethod
+  def create():
+    return trampoline_state()
 
   @staticmethod
   def current():

@@ -312,12 +312,27 @@ def testTrampolineSched():
     assert count[0] == 3
 
 
+@trace_test
+def testForEachViaTrampoline():
+  """
+  sync_wait(
+    typed_via_stream(
+      trampoline_scheduler(1),
+      range_stream(0, 10) | transform_stream(lambda v: v*v)
+    )
+    | for_each(lambda v: print(v))
+    | then(lambda: print("done")
+  )
+  """
+  pass
+
+
 def _main():
   testThen()
   testThenChain()
   testThenPipe()
   testTrampolineSched()
-
+  testForEachViaTrampoline()
 
 if __name__ == "__main__":
   _main()
