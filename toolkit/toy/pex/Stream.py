@@ -1,6 +1,6 @@
 import abc
 from Meta import continuation_style
-
+from Then import then
 
 class Stream:
   @abc.abstractmethod
@@ -61,8 +61,16 @@ class next_stream_decorator(Stream):
   def clean(self):
     return self._stream.clean()
 
+def next_decorate_stream(stream, fn):
+  """
+  fn: Callable[Sender] -> Sender
+  """
+  return next_stream_decorator(stream, fn)
+
 
 @continuation_style
 def transform_stream(stream, fn):
-  return next_stream_decorator(stream, fn)
+  def _transform(sender):
+    return then(sender, fn)
+  return next_stream_decorator(stream, _transform)
 
