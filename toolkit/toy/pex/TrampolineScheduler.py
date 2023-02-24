@@ -9,7 +9,7 @@ class trampoline_scheduler:
     self._maxRecursionDepth = maxRecursionDepth
 
   def schedule(self):
-    return Sender(sender(self._maxRecursionDepth))
+    return sender(self._maxRecursionDepth)
 
 
 class operation:
@@ -70,7 +70,7 @@ class trampoline_state:
       op.execute()
 
 
-class sender:
+class sender(Sender):
   def __init__(self, maxDepth: int):
     self._maxRecursionDepth = maxDepth
 
