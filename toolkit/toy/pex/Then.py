@@ -1,8 +1,8 @@
-from Meta import Args, continuation_style
+from Meta import Sender, Args, continuation_style
 from Utils import trace_func
 
 
-class then_sender:
+class then_sender(Sender):
   def __init__(self, pred, fn):
     self._pred = pred
     self._fn = fn

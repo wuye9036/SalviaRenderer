@@ -30,7 +30,7 @@ class loop_sched_operation(task_base):
     _self._receiver.set_value()
 
 
-class loop_scheduler_task:
+class loop_scheduler_task(Sender):
   def __init__(self, loop):
     self._loop = loop
 
@@ -44,7 +44,7 @@ class loop_scheduler:
     self._loop = loop
 
   def schedule(self):
-    return Sender(loop_scheduler_task(self._loop))
+    return loop_scheduler_task(self._loop)
 
 
 class manual_event_loop:  # manual_event_loop in libunifex

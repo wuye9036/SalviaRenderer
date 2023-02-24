@@ -1,8 +1,9 @@
 import abc
-from Meta import continuation_style
+from Meta import continuation_style, Pipeable, Sender
 from Then import then
 
-class Stream:
+
+class Stream(Pipeable):
   @abc.abstractmethod
   def next(self):
     pass
@@ -10,9 +11,6 @@ class Stream:
   @abc.abstractmethod
   def clean(self):
     pass
-
-  def __or__(self, other):
-    return other(self)
 
 
 class operation:
@@ -27,7 +25,7 @@ class operation:
       self._receiver.set_value(v)
 
 
-class next_sender:
+class next_sender(Sender):
   def __init__(self, stream):
     self._stream = stream
 
@@ -60,6 +58,7 @@ class next_stream_decorator(Stream):
 
   def clean(self):
     return self._stream.clean()
+
 
 def next_decorate_stream(stream, fn):
   """
