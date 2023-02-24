@@ -1,3 +1,20 @@
+import abc
+from Meta import continuation_style
+
+
+class Stream:
+  @abc.abstractmethod
+  def next(self):
+    pass
+
+  @abc.abstractmethod
+  def clean(self):
+    pass
+
+  def __or__(self, other):
+    return other(self)
+
+
 class operation:
   def __init__(self, stream, receiver):
     self._stream = stream
@@ -18,7 +35,7 @@ class next_sender:
     return operation(self._stream, receiver)
 
 
-class range_stream:
+class range_stream(Stream):
   def __init__(self, beg, end):
     self.next = beg
     self.end = end
@@ -29,4 +46,23 @@ class range_stream:
   def clean(self):
     raise NotImplementedError()
     # return ready_done_sender()
+
+
+# eqv to libunifex::stream_adaptor which is used for chaining functions for stream processing.
+class next_stream_decorator(Stream):
+  def __init__(self, stream, decoration_func):
+    assert isinstance(stream, Stream)
+    self._decoration_func = decoration_func
+    self._stream = stream
+
+  def next(self):
+    return self._decoration_func(self._stream.next())
+
+  def clean(self):
+    return self._stream.clean()
+
+
+@continuation_style
+def transform_stream(stream, fn):
+  return next_stream_decorator(stream, fn)
 
