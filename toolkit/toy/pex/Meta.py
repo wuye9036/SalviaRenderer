@@ -70,6 +70,16 @@ class Sender(Pipeable):
     pass
 
 
+class Receiver:
+  @abc.abstractmethod
+  def set_value(self):
+    pass
+
+  @abc.abstractmethod
+  def set_done(self):
+    pass
+
+
 class Args:
   def __init__(self, *args, **kwargs) -> None:
     self._args = args
@@ -77,3 +87,4 @@ class Args:
 
   def invoke(self, fn, *prior_args):
     return fn(*prior_args, *self._args, **self._kwargs)
+

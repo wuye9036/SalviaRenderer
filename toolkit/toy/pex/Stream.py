@@ -1,6 +1,14 @@
 import abc
+import enum
 from Meta import continuation_style, Pipeable, Sender
 from Then import then
+
+
+class BlockingKind:
+  Maybe = "Maybe"
+  Never = "Never"
+  Always = "Always"
+  AlwaysInline = "AlwaysInline"
 
 
 class Stream(Pipeable):
@@ -31,6 +39,10 @@ class next_sender(Sender):
 
   def connect(self, receiver):
     return operation(self._stream, receiver)
+
+  @staticmethod
+  def blocking(self):
+    return BlockingKind.AlwaysInline
 
 
 class range_stream(Stream):
@@ -72,4 +84,5 @@ def transform_stream(stream, fn):
   def _transform(sender):
     return then(sender, fn)
   return next_stream_decorator(stream, _transform)
+
 

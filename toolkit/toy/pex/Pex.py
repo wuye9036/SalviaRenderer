@@ -147,7 +147,7 @@ def testThenPipe():
 
 
 @trace_test
-def testTrampolineSched():
+def testTrampolineScheduler():
     scheduler = trampoline_scheduler(1)
 
     count = [0]
@@ -177,7 +177,7 @@ def _main():
   testThen()
   testThenChain()
   testThenPipe()
-  testTrampolineSched()
+  testTrampolineScheduler()
   testForEachViaTrampoline()
 
 
