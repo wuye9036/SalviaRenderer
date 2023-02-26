@@ -88,3 +88,7 @@ class Args:
   def invoke(self, fn, *prior_args):
     return fn(*prior_args, *self._args, **self._kwargs)
 
+
+# Placeholder class for reduce operations.
+class Unit:
+  pass

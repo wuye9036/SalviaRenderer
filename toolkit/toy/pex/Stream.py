@@ -1,10 +1,10 @@
 import abc
 import enum
-from Meta import continuation_style, Pipeable, Sender
+from Meta import continuation_style, Pipeable, Sender, Unit
 from Then import then
 
 
-class BlockingKind:
+class BlockingKind(enum.Enum):
   Maybe = "Maybe"
   Never = "Never"
   Always = "Always"
@@ -17,7 +17,7 @@ class Stream(Pipeable):
     pass
 
   @abc.abstractmethod
-  def clean(self):
+  def cleanup(self):
     pass
 
 
@@ -53,7 +53,7 @@ class range_stream(Stream):
   def next(self):
     return next_sender(self)
 
-  def clean(self):
+  def cleanup(self):
     raise NotImplementedError()
     # return ready_done_sender()
 
@@ -69,13 +69,11 @@ class next_stream_decorator(Stream):
     return self._decoration_func(self._stream.next())
 
   def clean(self):
-    return self._stream.clean()
+    return self._stream.cleanup()
 
 
 def next_decorate_stream(stream, fn):
-  """
-  fn: Callable[Sender] -> Sender
-  """
+  # fn: Callable[Sender] -> Sender
   return next_stream_decorator(stream, fn)
 
 
@@ -84,5 +82,38 @@ def transform_stream(stream, fn):
   def _transform(sender):
     return then(sender, fn)
   return next_stream_decorator(stream, _transform)
+
+
+def make_for_each_map(map_fn):
+  def _impl(s: Unit, *args, **kwargs):
+    map_fn(*args, **kwargs)
+  return _impl
+
+
+def for_each_reduce(_init_value: Unit):
+  pass
+
+
+class reduce_stream_receiver:
+  pass
+
+
+class reduce_stream_sender(Sender):
+  def __init__(self, stream, init_value, reducer):
+    self._stream = stream
+    self._init_value = init_value
+    self._reducer = reducer
+
+  def connect(self, receiver):
+    raise NotImplementedError()
+
+
+def reduce_stream(stream, init_value, reducer):
+  return reduce_stream_sender(stream, init_value, reducer)
+
+
+@continuation_style
+def for_each(stream: Stream, fn):
+  return then(reduce_stream(stream, Unit(), make_for_each_map(fn)), for_each_reduce)
 
 
