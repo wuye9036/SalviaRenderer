@@ -64,19 +64,25 @@ class BindBack:
     return ret
 
 
-class Sender(Pipeable):
+class OperationState:
   @abc.abstractmethod
-  def connect(self, receiver):
+  def start(self):
     pass
 
 
 class Receiver:
   @abc.abstractmethod
-  def set_value(self):
+  def set_value(self, *args, **kwargs):
     pass
 
   @abc.abstractmethod
   def set_done(self):
+    pass
+
+
+class Sender(Pipeable):
+  @abc.abstractmethod
+  def connect(self, receiver: Receiver) -> OperationState:
     pass
 
 

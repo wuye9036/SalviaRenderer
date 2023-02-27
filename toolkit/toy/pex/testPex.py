@@ -94,10 +94,20 @@ class PexTest(unittest.TestCase):
 
   @trace_test
   def testStreamPipe(self):
-    s = range_stream(0, 10) | transform_stream(lambda v: v*v)
+    n_sum = [0]
+
+    def _accumulate(v):
+      n_sum[0] += v
+      return v
+
+    s = range_stream(0, 10) | transform_stream(lambda v: v * v)
     self.assertIsInstance(s, Stream)
-    s = s | for_each(lambda v: print(v))
+    s = s | for_each(_accumulate)
     self.assertIsInstance(s, Sender)
+
+    sync_wait(s)
+
+    self.assertEqual(n_sum[0], sum(i*i for i in range(10)))
 
   @trace_test
   def testForEachViaTrampoline(self):
