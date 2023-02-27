@@ -1,16 +1,10 @@
 import abc
-import enum
 import typing
-from Meta import continuation_style, Pipeable, Sender, Receiver, OperationState, Unit
+from Meta import Args, continuation_style, Pipeable
+from Meta import Sender, Receiver, OperationState, Unit, SenderDecorator
 from Then import then
+from Via import via
 from Utils import trace_func
-
-
-class BlockingKind(enum.Enum):
-  Maybe = "Maybe"
-  Never = "Never"
-  Always = "Always"
-  AlwaysInline = "AlwaysInline"
 
 
 class Stream(Pipeable):
@@ -65,10 +59,6 @@ class RangeStreamNextSender(Sender):
   def connect(self, receiver: Receiver):
     return RangeStreamOperation(self._stream, receiver)
 
-  @staticmethod
-  def blocking():
-    return BlockingKind.AlwaysInline
-
 
 class ReadyDoneOperation(OperationState):
   def __init__(self, receiver: Receiver):
@@ -86,33 +76,41 @@ class ReadyDoneSender(Sender):
 
 
 # eqv to libunifex::stream_adaptor which is used for chaining functions for stream processing.
-class NextStreamDecorator(Stream):
+class DecoratedStream(Stream):
   def __init__(self,
                stream: Stream,
-               decoration_func: typing.Callable[[Sender], Sender]):
-    self._decoration_func = decoration_func
+               next_decorator: SenderDecorator,
+               cleanup_decorator: SenderDecorator):
+    self._next_decorator = next_decorator
+    self._cleanup_decorator = cleanup_decorator
     self._stream = stream
 
   @trace_func
   def next(self) -> Sender:
     next_sender = self._stream.next()
-    return self._decoration_func(next_sender)
+    ret = self._next_decorator(next_sender)
+    assert isinstance(ret, Sender)
+    return ret
 
   @trace_func
   def cleanup(self):
-    return self._stream.cleanup()
+    cleanup_sender = self._stream.cleanup()
+    ret = self._cleanup_decorator(cleanup_sender)
+    assert isinstance(ret, Sender)
+    return ret
 
 
-def decorate_next_stream(stream, fn):
-  # fn: Callable[Sender] -> Sender
-  return NextStreamDecorator(stream, fn)
+def decorate_stream(stream: Stream,
+                    next_decorator: SenderDecorator,
+                    cleanup_decorator: SenderDecorator):
+  return DecoratedStream(stream, next_decorator, cleanup_decorator)
 
 
 @continuation_style
 def transform_stream(stream, fn):
   def _transform(sender):
     return then(sender, fn)
-  return NextStreamDecorator(stream, _transform)
+  return decorate_stream(stream, _transform, lambda s: s)
 
 
 class ReduceStreamOperation(OperationState):
@@ -184,22 +182,16 @@ def reduce_stream(stream: Stream, init_value, reducer):
 
 @continuation_style
 def for_each(stream: Stream, fn):
-  def _map(s: Unit, *args, **kwargs): return fn(*args, **kwargs)
+  def _map(_s: Unit, *args, **kwargs): return fn(*args, **kwargs)
 
-  def _dummy_reduce(s: Unit): pass
+  def _dummy_reduce(_s: Unit): return Args()
 
   reduced_stream = reduce_stream(stream, Unit(), _map)
   return then(reduced_stream, _dummy_reduce)
 
 
-def via(scheduler, sender):
-  raise NotImplementedError()
-
-
-def decorate_stream(stream: Stream, fn: typing.Callable[[Sender], Sender]):
-  raise NotImplementedError()
-
-
 @continuation_style
 def via_stream(stream: Stream, scheduler):
-  return decorate_stream(stream, lambda sender: via(scheduler, sender))
+  def _reschedule(sender: Sender):
+    return via(scheduler, sender)
+  return decorate_stream(stream, _reschedule, _reschedule)
