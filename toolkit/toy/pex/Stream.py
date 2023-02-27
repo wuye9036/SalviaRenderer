@@ -1,7 +1,9 @@
 import abc
 import enum
-from Meta import continuation_style, Pipeable, Sender, Unit
+import typing
+from Meta import continuation_style, Pipeable, Sender, Receiver, OperationState, Unit
 from Then import then
+from Utils import trace_func
 
 
 class BlockingKind(enum.Enum):
@@ -13,107 +15,182 @@ class BlockingKind(enum.Enum):
 
 class Stream(Pipeable):
   @abc.abstractmethod
-  def next(self):
+  def next(self) -> Sender:
     pass
 
   @abc.abstractmethod
-  def cleanup(self):
+  def cleanup(self) -> Sender:
     pass
 
 
-class operation:
-  def __init__(self, stream, receiver):
+class RangeStream(Stream):
+  def __init__(self, beg, end):
+    self.iter_value = beg
+    self.end_value = end
+
+  def next(self):
+    return NextSender(self)
+
+  def cleanup(self):
+    return ReadyDoneSender()
+
+
+def range_stream(beg, end):
+  # Similar to C++ cases
+  return RangeStream(beg, end)
+
+
+class RangeStreamOperation:
+  def __init__(self, stream: RangeStream, receiver: Receiver):
     self._stream = stream
     self._receiver = receiver
 
   def start(self):
-    if self._stream.next < self._stream.end:
-      v = self._stream.next
-      self._stream.next += 1
+    if self._stream.iter_value < self._stream.end_value:
+      v = self._stream.iter_value
+      self._stream.iter_value += 1
       self._receiver.set_value(v)
+    else:
+      self._receiver.set_done()
 
 
-class next_sender(Sender):
+class NextSender(Sender):
   def __init__(self, stream):
     self._stream = stream
 
-  def connect(self, receiver):
-    return operation(self._stream, receiver)
+  @trace_func
+  def connect(self, receiver: Receiver):
+    return RangeStreamOperation(self._stream, receiver)
 
   @staticmethod
-  def blocking(self):
+  def blocking():
     return BlockingKind.AlwaysInline
 
 
-class range_stream(Stream):
-  def __init__(self, beg, end):
-    self.next = beg
-    self.end = end
+class ReadyDoneOperation(OperationState):
+  def __init__(self, receiver: Receiver):
+    self._receiver = receiver
 
-  def next(self):
-    return next_sender(self)
+  @trace_func
+  def start(self):
+    self._receiver.set_done()
 
-  def cleanup(self):
-    raise NotImplementedError()
-    # return ready_done_sender()
+
+class ReadyDoneSender(Sender):
+  @trace_func
+  def connect(self, receiver: Receiver) -> OperationState:
+    return ReadyDoneOperation(receiver)
 
 
 # eqv to libunifex::stream_adaptor which is used for chaining functions for stream processing.
-class next_stream_decorator(Stream):
-  def __init__(self, stream, decoration_func):
-    assert isinstance(stream, Stream)
+class NextStreamDecorator(Stream):
+  def __init__(self,
+               stream: Stream,
+               decoration_func: typing.Callable[[Sender], Sender]):
     self._decoration_func = decoration_func
     self._stream = stream
 
-  def next(self):
-    return self._decoration_func(self._stream.next())
+  @trace_func
+  def next(self) -> Sender:
+    next_sender = self._stream.next()
+    return self._decoration_func(next_sender)
 
-  def clean(self):
+  @trace_func
+  def cleanup(self):
     return self._stream.cleanup()
 
 
-def next_decorate_stream(stream, fn):
+def decorate_next_stream(stream, fn):
   # fn: Callable[Sender] -> Sender
-  return next_stream_decorator(stream, fn)
+  return NextStreamDecorator(stream, fn)
 
 
 @continuation_style
 def transform_stream(stream, fn):
   def _transform(sender):
     return then(sender, fn)
-  return next_stream_decorator(stream, _transform)
+  return NextStreamDecorator(stream, _transform)
 
 
 def make_for_each_map(map_fn):
-  def _impl(s: Unit, *args, **kwargs):
+  def _impl(_s: Unit, *args, **kwargs):
     map_fn(*args, **kwargs)
   return _impl
 
 
+@trace_func
 def for_each_reduce(_init_value: Unit):
   pass
 
 
-class reduce_stream_receiver:
-  pass
+class ReduceOperation(OperationState):
+  def __init__(self, stream: Stream, state, reducer, receiver: Receiver):
+    self.stream = stream
+    self.state = state
+    self.reducer = reducer
+    self.receiver = receiver
+
+    self.nextOp: typing.Optional[OperationState] = None
+    self.doneOp: typing.Optional[OperationState] = None
+
+  @trace_func
+  def start(self):
+    self.nextOp = self.stream.next().connect(
+      NextReceiver(self)
+    )
+    self.nextOp.start()
 
 
-class reduce_stream_sender(Sender):
-  def __init__(self, stream, init_value, reducer):
+class DoneCleanupReceiver(Receiver):
+  def __init__(self, op: ReduceOperation):
+    self._op = op
+
+  @trace_func
+  def set_done(self):
+    op = self._op
+    op.receiver.set_value(op.state)
+
+  @trace_func
+  def set_value(self):
+    raise RuntimeError("This function is not expected to be invoked")
+
+
+class NextReceiver(Receiver):
+  def __init__(self, op):
+    assert isinstance(op, ReduceOperation)
+    self._op = op
+
+  @trace_func
+  def set_value(self, *args, **kwargs):
+    op = self._op
+    op.state = op.reducer(op.state, *args, **kwargs)
+    op.next = op.stream.next().connect(NextReceiver(self._op))
+    op.next.start()
+
+  @trace_func
+  def set_done(self):
+    op = self._op
+    op.doneOp = op.stream.cleanup().connect(DoneCleanupReceiver(op))
+    op.doneOp.start()
+
+
+class ReduceStreamSender(Sender):
+  def __init__(self, stream: Stream, init_value, reducer):
     self._stream = stream
     self._init_value = init_value
     self._reducer = reducer
 
-  def connect(self, receiver):
-    raise NotImplementedError()
+  @trace_func
+  def connect(self, receiver: Receiver):
+    return ReduceOperation(
+      self._stream, self._init_value, self._reducer, receiver)
 
 
-def reduce_stream(stream, init_value, reducer):
-  return reduce_stream_sender(stream, init_value, reducer)
+def reduce_stream(stream: Stream, init_value, reducer):
+  return ReduceStreamSender(stream, init_value, reducer)
 
 
 @continuation_style
 def for_each(stream: Stream, fn):
-  return then(reduce_stream(stream, Unit(), make_for_each_map(fn)), for_each_reduce)
-
-
+  reduced_stream = reduce_stream(stream, Unit(), make_for_each_map(fn))
+  return then(reduced_stream, for_each_reduce)
