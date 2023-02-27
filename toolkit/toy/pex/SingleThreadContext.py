@@ -4,7 +4,7 @@ from Utils import trace_func
 from Meta import Sender
 
 
-class task_base:
+class TaskBase:
   def __init__(self, executeFn):
     self.next = None
     self._execute = executeFn
@@ -13,11 +13,11 @@ class task_base:
     self._execute(self)
 
 
-class loop_sched_operation(task_base):
+class LoopSchedulerOperation(TaskBase):
   def __init__(self, receiver, loop):
     self._receiver = receiver
     self._loop = loop
-    super().__init__(loop_sched_operation._execute_impl)
+    super().__init__(LoopSchedulerOperation._execute_impl)
 
   @trace_func
   def start(self):
@@ -25,37 +25,38 @@ class loop_sched_operation(task_base):
 
   @staticmethod
   def _execute_impl(t):
-    assert isinstance(t, loop_sched_operation)
+    assert isinstance(t, LoopSchedulerOperation)
     _self = t
     _self._receiver.set_value()
 
 
-class loop_scheduler_task(Sender):
+class LookSchedulerTaskAsSender(Sender):
   def __init__(self, loop):
     self._loop = loop
 
   @trace_func
   def connect(self, receiver):
-    return loop_sched_operation(receiver, self._loop)
+    return LoopSchedulerOperation(receiver, self._loop)
 
 
-class loop_scheduler:
+class LoopScheduler:
   def __init__(self, loop) -> None:
     self._loop = loop
 
+  @trace_func
   def schedule(self):
-    return loop_scheduler_task(self._loop)
+    return LookSchedulerTaskAsSender(self._loop)
 
 
-class manual_event_loop:  # manual_event_loop in libunifex
+class EventLoop:  # manual_event_loop in libunifex
   def __init__(self) -> None:
-    self._head: typing.Optional[task_base] = None
-    self._tail: typing.Optional[task_base] = None
+    self._head: typing.Optional[TaskBase] = None
+    self._tail: typing.Optional[TaskBase] = None
     self._stop = False
     # Mutex and condition variable are ignored in this demo.
 
   def get_scheduler(self):
-    return loop_scheduler(self)
+    return LoopScheduler(self)
 
   def run(self):
     while True:
@@ -81,9 +82,9 @@ class manual_event_loop:  # manual_event_loop in libunifex
     self._tail.next = None
 
 
-class single_thread_context:
+class SingleThreadContext:
   def __init__(self) -> None:
-    self._loop = manual_event_loop()
+    self._loop = EventLoop()
     self._thread = threading.Thread(target=lambda: self._loop.run())
     self._thread.start()
     print(f"<{self.__class__.__name__}>'s thread is launched")
@@ -98,12 +99,8 @@ class single_thread_context:
     self._loop.stop()
     self._thread.join()
 
-  @staticmethod
-  def create():
-    return single_thread_context()
 
-
-class timed_single_thread_context:
+class TimedSingleThreadContext:
   def __init__(self):
     self._head = None
     self._stop = False
@@ -114,4 +111,12 @@ class timed_single_thread_context:
 
   def run(self):
     raise NotImplementedError()
+
+
+def single_thread_context():
+  return SingleThreadContext()
+
+
+def time_single_thread_context():
+  return TimedSingleThreadContext()
 

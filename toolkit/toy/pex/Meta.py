@@ -51,6 +51,10 @@ class AsPipeable(Pipeable):
     self._inner(*args, **kwargs)
 
 
+def as_pipeable(inner_object):
+  return AsPipeable(inner_object)
+
+
 class BindBack:
   def __init__(self, f, *args, **kwargs) -> None:
     self._f = f
