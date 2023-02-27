@@ -6,7 +6,7 @@ from SingleThreadContext import single_thread_context
 from Meta import chain, Args, Sender
 from Then import then
 from SenderConsumers import sync_wait
-from Stream import Stream, range_stream, transform_stream, for_each
+from Stream import Stream, range_stream, transform_stream, for_each, via_stream
 
 
 # ... TO REMAKE ...
@@ -111,16 +111,13 @@ class PexTest(unittest.TestCase):
 
   @trace_test
   def testForEachViaTrampoline(self):
-    """
     sync_wait(
-      typed_via_stream(
-        trampoline_scheduler(1),
-        range_stream(0, 10) | transform_stream(lambda v: v*v)
-      )
-      | for_each(lambda v: print(v))
-      | then(lambda: print("done")
+      range_stream(0, 10)
+      | transform_stream(lambda v: v*v)
+      | via_stream(trampoline_scheduler(1))
+      | for_each(lambda v: print(f"for_each accepted value: {v}."))
+      | then(lambda: print("for_each done."))
     )
-    """
     pass
 
 

@@ -1,4 +1,6 @@
 import abc
+import typing
+import enum
 
 
 def chain(snd, *snd_fact_and_args):
@@ -84,10 +86,36 @@ class Receiver:
     pass
 
 
+class SubmitNotImplemented:
+  pass
+
+
+class BlockingKind(enum.Enum):
+  Maybe = "Maybe"
+  Never = "Never"
+  Always = "Always"
+  AlwaysInline = "AlwaysInline"
+
+
 class Sender(Pipeable):
   @abc.abstractmethod
   def connect(self, receiver: Receiver) -> OperationState:
     pass
+
+
+class HasSubmit:
+  @abc.abstractmethod
+  def submit(self, receiver: Receiver):
+    pass
+
+
+class Scheduler:
+  @abc.abstractmethod
+  def schedule(self) -> Sender:
+    pass
+
+
+SenderDecorator = typing.Callable[[Sender], Sender]
 
 
 class Args:
@@ -102,3 +130,4 @@ class Args:
 # Placeholder class for reduce operations.
 class Unit:
   pass
+
