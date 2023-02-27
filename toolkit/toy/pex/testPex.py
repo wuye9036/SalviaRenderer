@@ -36,7 +36,7 @@ def inc_count(count, addend):
 class PexTest(unittest.TestCase):
   @trace_test
   def testThen(self):
-    with single_thread_context.create() as context:
+    with single_thread_context() as context:
       scheduler = context.get_scheduler()
 
       count = [0]
@@ -54,7 +54,7 @@ class PexTest(unittest.TestCase):
 
   @trace_test
   def testThenChain(self):
-    with single_thread_context.create() as context:
+    with single_thread_context() as context:
       scheduler = context.get_scheduler()
 
       count = [0]
@@ -71,7 +71,7 @@ class PexTest(unittest.TestCase):
 
   @trace_test
   def testThenPipe(self):
-    with single_thread_context.create() as context:
+    with single_thread_context() as context:
       scheduler = context.get_scheduler()
 
       count = [0]

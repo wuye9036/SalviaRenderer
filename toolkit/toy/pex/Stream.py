@@ -28,15 +28,17 @@ class RangeStream(Stream):
     self.iter_value = beg
     self.end_value = end
 
+  @trace_func
   def next(self):
-    return NextSender(self)
+    return RangeStreamNextSender(self)
 
+  @trace_func
   def cleanup(self):
     return ReadyDoneSender()
 
 
 def range_stream(beg, end):
-  # Similar to C++ cases
+  # Entry function for the same form with C++ version
   return RangeStream(beg, end)
 
 
@@ -45,6 +47,7 @@ class RangeStreamOperation:
     self._stream = stream
     self._receiver = receiver
 
+  @trace_func
   def start(self):
     if self._stream.iter_value < self._stream.end_value:
       v = self._stream.iter_value
@@ -54,7 +57,7 @@ class RangeStreamOperation:
       self._receiver.set_done()
 
 
-class NextSender(Sender):
+class RangeStreamNextSender(Sender):
   def __init__(self, stream):
     self._stream = stream
 
@@ -112,18 +115,7 @@ def transform_stream(stream, fn):
   return NextStreamDecorator(stream, _transform)
 
 
-def make_for_each_map(map_fn):
-  def _impl(_s: Unit, *args, **kwargs):
-    map_fn(*args, **kwargs)
-  return _impl
-
-
-@trace_func
-def for_each_reduce(_init_value: Unit):
-  pass
-
-
-class ReduceOperation(OperationState):
+class ReduceStreamOperation(OperationState):
   def __init__(self, stream: Stream, state, reducer, receiver: Receiver):
     self.stream = stream
     self.state = state
@@ -136,13 +128,13 @@ class ReduceOperation(OperationState):
   @trace_func
   def start(self):
     self.nextOp = self.stream.next().connect(
-      NextReceiver(self)
+      ReduceStreamNextReceiver(self)
     )
     self.nextOp.start()
 
 
-class DoneCleanupReceiver(Receiver):
-  def __init__(self, op: ReduceOperation):
+class ReduceStreamDoneCleanupReceiver(Receiver):
+  def __init__(self, op: ReduceStreamOperation):
     self._op = op
 
   @trace_func
@@ -155,22 +147,22 @@ class DoneCleanupReceiver(Receiver):
     raise RuntimeError("This function is not expected to be invoked")
 
 
-class NextReceiver(Receiver):
+class ReduceStreamNextReceiver(Receiver):
   def __init__(self, op):
-    assert isinstance(op, ReduceOperation)
+    assert isinstance(op, ReduceStreamOperation)
     self._op = op
 
   @trace_func
   def set_value(self, *args, **kwargs):
     op = self._op
     op.state = op.reducer(op.state, *args, **kwargs)
-    op.next = op.stream.next().connect(NextReceiver(self._op))
+    op.next = op.stream.next().connect(ReduceStreamNextReceiver(self._op))
     op.next.start()
 
   @trace_func
   def set_done(self):
     op = self._op
-    op.doneOp = op.stream.cleanup().connect(DoneCleanupReceiver(op))
+    op.doneOp = op.stream.cleanup().connect(ReduceStreamDoneCleanupReceiver(op))
     op.doneOp.start()
 
 
@@ -182,7 +174,7 @@ class ReduceStreamSender(Sender):
 
   @trace_func
   def connect(self, receiver: Receiver):
-    return ReduceOperation(
+    return ReduceStreamOperation(
       self._stream, self._init_value, self._reducer, receiver)
 
 
@@ -192,5 +184,22 @@ def reduce_stream(stream: Stream, init_value, reducer):
 
 @continuation_style
 def for_each(stream: Stream, fn):
-  reduced_stream = reduce_stream(stream, Unit(), make_for_each_map(fn))
-  return then(reduced_stream, for_each_reduce)
+  def _map(s: Unit, *args, **kwargs): return fn(*args, **kwargs)
+
+  def _dummy_reduce(s: Unit): pass
+
+  reduced_stream = reduce_stream(stream, Unit(), _map)
+  return then(reduced_stream, _dummy_reduce)
+
+
+def via(scheduler, sender):
+  raise NotImplementedError()
+
+
+def decorate_stream(stream: Stream, fn: typing.Callable[[Sender], Sender]):
+  raise NotImplementedError()
+
+
+@continuation_style
+def via_stream(stream: Stream, scheduler):
+  return decorate_stream(stream, lambda sender: via(scheduler, sender))
