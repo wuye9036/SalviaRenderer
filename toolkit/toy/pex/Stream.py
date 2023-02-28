@@ -4,6 +4,7 @@ from Meta import Args, continuation_style, Pipeable
 from Meta import Sender, Receiver, OperationState, Unit, SenderDecorator
 from Then import then
 from Via import via
+from On import on
 from Utils import trace_func
 
 
@@ -194,4 +195,10 @@ def for_each(stream: Stream, fn):
 def via_stream(stream: Stream, scheduler):
   def _reschedule(sender: Sender):
     return via(scheduler, sender)
+  return decorate_stream(stream, _reschedule, _reschedule)
+
+
+def on_stream(stream: Stream, scheduler):
+  def _reschedule(sender: Sender):
+    return on(scheduler, sender)
   return decorate_stream(stream, _reschedule, _reschedule)

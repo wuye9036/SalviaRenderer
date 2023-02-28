@@ -31,6 +31,10 @@ class ThenReceiver:
   def set_done(self):
     self._receiver.set_done()
 
+  # Similar as CPO
+  def __getattr__(self, item):
+    return getattr(self._receiver, item)
+
 
 @continuation_style
 def then(sender, fn):
