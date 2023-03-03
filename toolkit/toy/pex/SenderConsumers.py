@@ -1,5 +1,5 @@
 from Utils import trace_func
-from Meta import Receiver
+from Meta import Sender, Receiver, Scheduler
 from SingleThreadContext import EventLoop
 
 
@@ -18,9 +18,12 @@ class SyncWaitReceiver(Receiver):
   def signal_complete(self):
     self._ctx.stop()
 
+  def get_scheduler(self) -> Scheduler:
+    return self._ctx.get_scheduler()
+
 
 @trace_func
-def sync_wait(sender):
+def sync_wait(sender: Sender):
   ctx = EventLoop()
   op = sender.connect(SyncWaitReceiver(ctx))
   op.start()

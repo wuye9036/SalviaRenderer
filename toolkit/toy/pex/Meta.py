@@ -9,7 +9,7 @@ def chain(snd, *snd_fact_and_args):
   return snd
 
 
-def continuation_style(f):
+def pipeable(f):
   """
   Decorator. Added continuation form to the execution algorithm. For e.g.
   ```
@@ -34,6 +34,16 @@ def continuation_style(f):
       return f(*args, **kwargs)
     return BindBack(f, *args, **kwargs)
 
+  return _impl
+
+
+def customizable(fn):
+  def _impl(obj, *args, **kwargs):
+    fn_name = fn.__name__
+    if fn_name in obj.customization_table:
+      return obj.customization_table[fn_name](*args, **kwargs)
+    else:
+      return fn(obj, *args, **kwargs)
   return _impl
 
 
@@ -84,6 +94,9 @@ class Receiver:
   @abc.abstractmethod
   def set_done(self):
     pass
+
+  def get_scheduler(self) -> 'Scheduler':
+    raise ValueError()
 
 
 class SubmitNotImplemented:

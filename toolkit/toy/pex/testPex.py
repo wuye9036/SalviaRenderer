@@ -1,12 +1,15 @@
 import unittest
 
 from Utils import trace_test, trace_func
+from Utils import config as trace_config
 from TrampolineScheduler import trampoline_scheduler
 from SingleThreadContext import single_thread_context
 from Meta import chain, Args, Sender
 from Then import then
 from SenderConsumers import sync_wait
 from Stream import Stream, range_stream, transform_stream, for_each, via_stream
+from Schedule import schedule
+from WithQueryValue import with_query_value
 
 
 # ... TO REMAKE ...
@@ -15,10 +18,10 @@ from Stream import Stream, range_stream, transform_stream, for_each, via_stream
 #   just
 #   transfer
 #   bulk
+#   repeat_effect
 #   repeat_effect_until
 # Contexts and schedulers:
 #   timed_single_thread_context
-#   trampoline_scheduler
 #   schedule_at
 #   schedule_after
 # ... ... ... ... ...
@@ -34,6 +37,9 @@ def inc_count(count, addend):
 
 
 class PexTest(unittest.TestCase):
+  def setUp(self) -> None:
+    trace_config.get().trace_func_enabled = False
+
   @trace_test
   def testThen(self):
     with single_thread_context() as context:
@@ -119,6 +125,18 @@ class PexTest(unittest.TestCase):
       | then(lambda: print("for_each done."))
     )
     pass
+
+  @trace_test
+  def testGetScheduler(self):
+    # Test default schedule on sync_wait.receiver
+    sync_wait(schedule() | then(lambda: 0))
+
+    with single_thread_context() as ctx:
+      sync_wait(with_query_value(
+        schedule(),
+        'get_scheduler',
+        ctx.get_scheduler()
+      ))
 
 
 if __name__ == "__main__":

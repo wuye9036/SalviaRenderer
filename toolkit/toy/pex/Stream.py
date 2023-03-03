@@ -1,6 +1,6 @@
 import abc
 import typing
-from Meta import Args, continuation_style, Pipeable
+from Meta import Args, pipeable, Pipeable
 from Meta import Sender, Receiver, OperationState, Unit, SenderDecorator
 from Then import then
 from Via import via
@@ -107,7 +107,7 @@ def decorate_stream(stream: Stream,
   return DecoratedStream(stream, next_decorator, cleanup_decorator)
 
 
-@continuation_style
+@pipeable
 def transform_stream(stream, fn):
   def _transform(sender):
     return then(sender, fn)
@@ -181,7 +181,7 @@ def reduce_stream(stream: Stream, init_value, reducer):
   return ReduceStreamSender(stream, init_value, reducer)
 
 
-@continuation_style
+@pipeable
 def for_each(stream: Stream, fn):
   def _map(_s: Unit, *args, **kwargs): return fn(*args, **kwargs)
 
@@ -191,7 +191,7 @@ def for_each(stream: Stream, fn):
   return then(reduced_stream, _dummy_reduce)
 
 
-@continuation_style
+@pipeable
 def via_stream(stream: Stream, scheduler):
   def _reschedule(sender: Sender):
     return via(scheduler, sender)
