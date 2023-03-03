@@ -1,28 +1,26 @@
-from Meta import continuation_style, Sender, Receiver, OperationState
+from Meta import *
 
 
 class WithQueryValueReceiver(Receiver):
   def __init__(self, receiver, value, cpo_name: str):
     self._receiver = receiver
     self._value = value
-    self._cpo_name = cpo_name
 
-  def __getattribute__(self, item):
-    cpo_name = object.__getattribute__(self, "_cpo_name")
-    value = object.__getattribute__(self, "_value")
-    def _get_value(): return value
+    self.customization_table = {
+      cpo_name: lambda: self._value
+    }
 
-    if item == cpo_name:
-      return _get_value
-
-    return object.__getattribute__(self, item)
-
-  # Just for make link shut mouse up.
+  @customizable
   def set_value(self, *args, **kwargs):
-    raise NotImplementedError()
+    self._receiver.set_value(*args, **kwargs)
 
+  @customizable
   def set_done(self):
-    raise NotImplementedError()
+    self._receiver.set_done()
+
+  @customizable
+  def get_scheduler(self) -> Scheduler:
+    return self._receiver.get_scheduler()
 
 
 class WithQueryValueOperation(OperationState):
@@ -44,6 +42,6 @@ class WithQueryValueSender(Sender):
     return WithQueryValueOperation(self._sender, receiver, self._value, self._cpo_name)
 
 
-@continuation_style
+@pipeable
 def with_query_value(sender: Sender, cpo_name: str, value):
   return WithQueryValueSender(sender, cpo_name, value)

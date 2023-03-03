@@ -1,4 +1,4 @@
-from Meta import Sender, Receiver, Args, continuation_style
+from Meta import Sender, Receiver, Args, pipeable
 from Utils import trace_func
 
 
@@ -14,7 +14,7 @@ class ThenSender(Sender):
     )
 
 
-class ThenReceiver:
+class ThenReceiver(Receiver):
   def __init__(self, fn, receiver: Receiver):
     self._fn = fn
     self._receiver = receiver
@@ -31,11 +31,11 @@ class ThenReceiver:
   def set_done(self):
     self._receiver.set_done()
 
-  # Similar as CPO
-  def __getattr__(self, item):
-    return getattr(self._receiver, item)
+  @trace_func
+  def get_scheduler(self):
+    return self._receiver.get_scheduler()
 
 
-@continuation_style
+@pipeable
 def then(sender, fn):
   return ThenSender(sender, fn)

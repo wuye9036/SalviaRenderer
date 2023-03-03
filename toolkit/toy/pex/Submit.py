@@ -1,7 +1,7 @@
-from Meta import Sender, Receiver, continuation_style
+from Meta import Sender, Receiver, pipeable
 
 
-@continuation_style
+@pipeable
 def submit(sender: Sender, receiver: Receiver):
   # this is much simpler than libunifex version because op is managed object.
   # That means op's lifetime does not need to be handled separately by "blocking"

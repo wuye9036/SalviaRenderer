@@ -1,4 +1,4 @@
-from Meta import Args, Sender, Scheduler, Receiver, OperationState, continuation_style
+from Meta import Args, Sender, Scheduler, Receiver, OperationState, pipeable
 from Submit import submit
 
 
