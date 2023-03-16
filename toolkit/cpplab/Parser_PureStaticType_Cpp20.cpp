@@ -5,7 +5,6 @@
 #include <string_view>
 #include <type_traits>
 #include <variant>
-#include <vector>
 
 #include <fmt/core.h>
 
@@ -13,30 +12,30 @@
 struct nil {};
 
 template <typename T, template <typename...> class Tmpl>
-struct _is_specialized : std::false_type {};
+struct is_specialized_impl : std::false_type {};
 template <template <typename...> class Tmpl, typename... Ps>
-struct _is_specialized<Tmpl<Ps...>, Tmpl> : std::true_type {};
+struct is_specialized_impl<Tmpl<Ps...>, Tmpl> : std::true_type {};
 
 template <typename T, template <typename...> class Tmpl>
-concept is_specialized = _is_specialized<T, Tmpl>::value;
+concept is_specialized = is_specialized_impl<T, Tmpl>::value;
 
 template <typename T>
 concept is_optional = is_specialized<T, std::optional>;
 
-template <typename T1, typename T2> struct combine_composible {};
+template <typename T1, typename T2> struct combine_composition {};
 
 template <template <typename...> class C, typename... T1s, typename... T2s>
-struct combine_composible<C<T1s...>, C<T2s...>> {
+struct combine_composition<C<T1s...>, C<T2s...>> {
   using type = C<T1s..., T2s...>;
 };
 
 template <template <typename...> class C, typename... Ts>
-struct combine_composible<C<nil>, C<Ts...>> {
+struct combine_composition<C<nil>, C<Ts...>> {
   using type = C<Ts...>;
 };
 
 template <typename T1, typename T2>
-using combine_composible_t = typename combine_composible<T1, T2>::type;
+using combine_composible_t = typename combine_composition<T1, T2>::type;
 
 template <typename U, typename T> decltype(auto) retype(T &v) { return ((U &)v); }
 
@@ -68,7 +67,7 @@ struct op {
   static constexpr auto name = "op";
 };
 
-// Rule definitions and concpets
+// Rule definitions and concepts
 template <typename T> struct combinator {};
 
 template <> struct combinator<expr_mono> {
@@ -90,7 +89,7 @@ template <typename Tag, typename D> struct tree_node {
   using data_type = D;
 
   std::string_view code_range;
-  D data;
+  D data{};
 
   template <typename Tag2> using retagged = tree_node<Tag2, D>;
 };
@@ -141,7 +140,7 @@ template <typename T> void print_tree(T &&, std::string indent) {
 }
 #endif
 
-// return type deducer to resolve 'auto' issue
+// return deduced type to resolve 'auto' issue
 template <typename P> struct parse_ {};
 
 template <typename P>
@@ -175,7 +174,9 @@ template <> struct parse_<op> {
 
 template <typename T> using parse_t = typename parse_<T>::type;
 
-void _instantiate_parse_return_types() { auto e = parse_t<expr>{}; }
+[[maybe_unused]] void _instantiate_parse_return_types() {
+    [[maybe_unused]] auto e = parse_t<expr>{};
+}
 
 // #define FUCK_STUPID_COMPILER(deduced_type)
 #define FUCK_STUPID_COMPILER(deduced_type) deduced_type
@@ -195,13 +196,13 @@ auto operator&(OptTree &&op1, Fn &&op2_factory) {
       auto fold_code_range = std::string_view{op1->code_range.begin(), op2->code_range.end()};
       return std::make_optional(make_tree<typename tree_type::tag, return_data_type>(
           fold_code_range,
-          std::tuple_cat(std::move(op1).value().data, std::make_tuple(std::move(op2).value()))));
+          std::tuple_cat(((OptTree&&)op1).value().data, std::make_tuple(std::move(op2).value()))));
     });
   });
 }
 
 template <typename TreeA, typename Fn>
-  requires is_optional_tree_node<TreeA>
+  requires is_optional_tree_node<std::remove_cvref_t<TreeA>>
 auto operator|(TreeA &&op1, Fn &&op2_factory) {
   using op1_data_type = typename std::remove_cvref_t<TreeA>::value_type::data_type;
   using op2_data_type = std::variant<typename decltype(((Fn &&) op2_factory)())::value_type>;
@@ -209,15 +210,11 @@ auto operator|(TreeA &&op1, Fn &&op2_factory) {
   using return_data_type = combine_composible_t<op1_data_type, op2_data_type>;
 
   auto ret_data = return_data_type{};
-  static_assert(std::is_rvalue_reference_v<decltype(op1)>);
-  static_assert(std::is_rvalue_reference_v<decltype(((TreeA &&) op1).value())>);
-  // static_assert(std::is_rvalue_reference_v<decltype(std::move(op1).value().data)>);
 
   if constexpr (!std::is_same_v<op1_data_type, std::variant<nil>>) {
     if (op1.has_value()) {
       std::visit(
           [&ret_data](auto &&v) {
-            static_assert(std::is_rvalue_reference_v<decltype(v)>);
             ret_data = std::forward<decltype(v)>(v);
           },
           std::move(op1->data));
@@ -229,7 +226,7 @@ auto operator|(TreeA &&op1, Fn &&op2_factory) {
   auto op2 = op2_factory();
   return conditional_(op2.has_value(), [&]() {
     return std::make_optional(make_tree<nomad, return_data_type>(
-        op2->code_range, return_data_type{std::move(op2).value()}));
+        op2->code_range, return_data_type{std::move(op2.value())}));
   });
 }
 
@@ -261,7 +258,7 @@ auto parse(std::string_view sv, seq<Ps...>) FUCK_STUPID_COMPILER(->parse_t<seq<P
       [&](auto... parsers) {
         auto init_obj = std::make_optional(make_tree<nomad>(sv.substr(0, 0), std::make_tuple()));
         auto parsing_pos = sv.begin();
-        return (std::move(init_obj) & ... & ([&]() {
+        return (init_obj & ... & ([&parsing_pos, &sv]() {
                   auto parsed =
                       parse({parsing_pos, sv.end()}, std::remove_cvref_t<decltype(parsers)>{});
                   if (parsed.has_value()) {
@@ -279,7 +276,7 @@ auto parse(std::string_view sv, br<Ps...>) FUCK_STUPID_COMPILER(->parse_t<br<Ps.
   return std::apply(
       [&](auto... parsers) {
         auto init_obj = std::make_optional(make_tree<nomad>(sv.substr(0, 0), std::variant<nil>()));
-        return (std::move(init_obj) | ... | ([&]() { return parse(sv, decltype(parsers){}); }));
+        return (init_obj | ... | ([&]() { return parse(sv, decltype(parsers){}); }));
       },
       t);
 }
@@ -297,7 +294,7 @@ template <typename P> struct indirect_data {
 template <typename P>
 auto parse(std::string_view sv, indirect_<P>) FUCK_STUPID_COMPILER(->parse_t<indirect_<P>>) {
   auto parsed = parse(sv, P{});
-  auto data = indirect_data<P>{std::move(parsed).value().data};
+  auto data = indirect_data<P>{std::move(parsed.value().data)};
   auto data_ptr = std::make_unique<indirect_data<P>>(std::move(data));
 
   return conditional_(parsed.has_value(), [&]() {
