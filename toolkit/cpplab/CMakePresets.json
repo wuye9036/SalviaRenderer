@@ -1,0 +1,92 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22
+  },
+  "configurePresets": [
+    {
+      "name": "clang_rel_linux_x64",
+      "displayName": "Clang Release Linux/WSL x64",
+      "description": "Clang Release Linux/WSL x64",
+      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "clang-15",
+        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_MODULE_PATH": "${sourceDir}/cmake/unifex",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+      }
+    },
+    {
+      "name": "clang_dbg_linux_x64",
+      "displayName": "Clang Debug Linux/WSL x64",
+      "description": "Clang Debug Linux/WSL x64",
+      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "clang-15",
+        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MODULE_PATH": "${sourceDir}/cmake/unifex",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+      }
+    },
+    {
+      "name": "gcc_rel_linux_x64",
+      "displayName": "gcc Release Linux/WSL x64",
+      "description": "gcc Release Linux/WSL x64",
+      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "gcc-12",
+        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_MODULE_PATH": "${sourceDir}/cmake/unifex",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+      }
+    },
+    {
+      "name": "gcc_dbg_linux_x64",
+      "displayName": "gcc Debug Linux/WSL x64",
+      "description": "gcc Debug Linux/WSL x64",
+      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "gcc-12",
+        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MODULE_PATH": "${sourceDir}/cmake/unifex",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+      }
+    },
+    {
+      "name": "msvc_dbg_win_x64",
+      "displayName": "MSVC debug windows x64",
+      "description": "MSVC debug windows x64",
+      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MODULE_PATH": "${sourceDir}/cmake/unifex",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+      }
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Debug Poly",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "clang_dbg_linux_x64"
+    }
+  ]
+}
