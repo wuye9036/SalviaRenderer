@@ -3,11 +3,6 @@
     "version-string": "1.0.0",
     "dependencies": [
       "fmt",
-      "range-v3",
-      "abseil",
-      "boost-utility",
-      "boost-thread",
-      "gtest",
-      "libunifex"
+      "gtest"
     ]
 }
