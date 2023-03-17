@@ -7,9 +7,7 @@
   "configurePresets": [
     {
       "name": "default",
-      "displayName": "Default",
-      "description": "Default",
-      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "hidden": true,
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
@@ -17,48 +15,173 @@
       }
     },
     {
-      "name": "clang_rel_linux_x64",
-      "inherits": "default",
+      "name": "win_default",
+      "hidden": true,
+      "toolchainFile": "${sourceDir}/../../../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "macos_default",
+      "hidden": true,
+      "toolchainFile": "~/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "linux_default",
+      "hidden": true,
+      "toolchainFile": "~/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "clang_rel_linux",
+      "inherits": [ "default", "linux_default" ],
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name": "clang_dbg_linux_x64",
-      "inherits": "default",
+      "name": "clang_dbg_linux",
+      "inherits": [ "default", "linux_default" ],
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name": "gcc_rel_linux_x64",
-      "inherits": "default",
+      "name": "gcc_rel_linux",
+      "inherits": [ "default", "linux_default" ],
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc-12",
         "CMAKE_CXX_COMPILER": "g++-12",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name": "gcc_dbg_linux_x64",
-      "inherits": "default",
+      "name": "gcc_dbg_linux",
+      "inherits": [ "default", "linux_default" ],
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc-12",
         "CMAKE_CXX_COMPILER": "g++-12",
         "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name": "msvc_dbg_win_x64",
-      "inherits": "default",
+      "name": "clang_rel_mac",
+      "inherits": [ "default", "macos_default" ],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "clang_dbg_mac",
+      "inherits": [ "default", "macos_default" ],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "gcc_rel_mac",
+      "inherits": [ "default", "macos_default" ],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc-12",
+        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "gcc_dbg_mac",
+      "inherits": [ "default", "macos_default" ],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc-12",
+        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "msvc_dbg_win",
+      "inherits": [ "default", "win_default" ],
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "msvc_rel_win",
+      "inherits": [ "default", "win_default" ],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     }
   ]
