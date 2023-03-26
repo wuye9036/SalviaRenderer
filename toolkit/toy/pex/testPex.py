@@ -38,7 +38,7 @@ def inc_count(count, addend):
 
 class PexTest(unittest.TestCase):
   def setUp(self) -> None:
-    trace_config.get().trace_func_enabled = False
+    trace_config.get().trace_func_enabled = True
 
   @trace_test
   def testThen(self):
@@ -135,7 +135,7 @@ class PexTest(unittest.TestCase):
       sync_wait(with_query_value(
         schedule(),
         'get_scheduler',
-        ctx.get_scheduler()
+        trampoline_scheduler(1)
       ))
 
 
