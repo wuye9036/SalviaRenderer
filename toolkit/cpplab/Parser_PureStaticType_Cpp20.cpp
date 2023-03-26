@@ -37,11 +37,11 @@ struct combine_composition<C<nil>, C<Ts...>> {
 template <typename T1, typename T2>
 using combine_composible_t = typename combine_composition<T1, T2>::type;
 
-template <typename U, typename T> decltype(auto) retype(T &v) { return ((U &)v); }
+template <typename U, typename T> decltype(auto) cast_ref(T &v) { return ((U &)v); }
 
-template <typename U, typename T> decltype(auto) retype(T const &v) { return ((U const &)v); }
+template <typename U, typename T> decltype(auto) cast_ref(T const &v) { return ((U const &)v); }
 
-template <typename U, typename T> decltype(auto) retype(T &&v) { return ((U &&) v); }
+template <typename U, typename T> decltype(auto) cast_ref(T &&v) { return ((U &&) v); }
 
 namespace parsers {
 // Combinators
@@ -106,9 +106,9 @@ concept is_optional_tree_node = is_optional<T> && is_tree_node<typename T::value
 
 template <typename Tag2, typename T>
   requires is_optional_tree_node<std::remove_cvref_t<T>> decltype(auto)
-retag(T &&t) {
+replace_tag(T &&t) {
   using data_type = std::remove_cvref_t<typename T::value_type::data_type>;
-  return retype<std::optional<tree_node<Tag2, data_type>>>(((T &&) t));
+  return cast_ref<std::optional<tree_node<Tag2, data_type>>>(((T &&) t));
 }
 
 template <typename P> struct indirect_data;
@@ -146,8 +146,8 @@ template <typename P> struct parse_ {};
 template <typename P>
   requires has_combinator<std::remove_cvref_t<P>>
 struct parse_<P> {
-  using type = std::remove_cvref_t<decltype(retag<P>(
-      typename parse_<combinator_t<std::remove_cvref_t<P>>>::type{}))>;
+  using type = std::remove_cvref_t<decltype(replace_tag<P>(
+          typename parse_<combinator_t<std::remove_cvref_t<P>>>::type{}))>;
 };
 
 template <typename P> struct parse_<indirect_<P>> {
@@ -248,7 +248,7 @@ auto parse(std::string_view sv, op) FUCK_STUPID_COMPILER(->parse_t<op>) {
 
 template <has_combinator P> auto parse(std::string_view sv, P) FUCK_STUPID_COMPILER(->parse_t<P>) {
   auto parsed = parse(sv, combinator_t<P>{});
-  return retag<P>(std::move(parsed));
+  return replace_tag<P>(std::move(parsed));
 }
 
 template <typename... Ps>
