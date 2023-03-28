@@ -332,5 +332,6 @@ TEST(MetaParser, MetaTokenizer) {
   print_tree(r1, "");
 
   auto r2 = pure_static_parsers::parse("1+2+3", grammars::expr{});
+
   print_tree(r2, "");
 }

@@ -3,57 +3,53 @@
 #include <memory>
 #include <type_traits>
 
+#include "Grammar.h"
+
+using namespace grammars;
+
+template <typename Visitor>
 class attribute {
 public:
-  template <typename T>
-  attribute& operator=(T&) {}
+  template <typename Visitor2>
+  void accept(Visitor2& visitor) {
+    attr_impl_->accept(visitor);
+  }
 
-  template <typename T>
-  attribute& operator=(T&&) {}
-
-  void accept() { attr_impl_->accept(); }
+  template <typename Visitor2>
+  void accept(Visitor2 const& visitor) {
+    attr_impl_->accept(visitor);
+  }
 
   struct _concept {
-    virtual void accept() = 0;
+    virtual void accept(Visitor& visitor) = 0;
+
+    virtual void accept(Visitor const& visitor) = 0;
+
     virtual ~_concept() = default;
   };
 
-  template <typename Visitor, typename Rule, typename AttrValue>
+  template <typename Rule, typename AttrValue>
   struct _model final : _concept {
-    template <typename AttrValue2>
-    _model(Visitor& visitor, AttrValue2&& value)
-      : visitor(visitor)
-      , attr_value{((AttrValue2 &&) value)} {}
-    void accept() override { visitor(Rule{}, attr_value); }
-    Visitor& visitor;
+    explicit _model(AttrValue value) : attr_value{std::move(value)} {}
+
+    void accept(Visitor& visitor) override { visitor(Rule{}, attr_value); }
+
+    void accept(Visitor const& visitor) override { visitor(Rule{}, attr_value); }
+
     AttrValue attr_value;
   };
 
-  template <typename Visitor, typename Rule, typename AttrValue>
-  attribute(Visitor& visitor, Rule, AttrValue&& value)
-    : attr_impl_{
-          std::make_unique<_model<Visitor, Rule, AttrValue>>(visitor, (AttrValue &&) value)} {}
+  template <typename Rule, typename AttrValue>
+  attribute(Rule, AttrValue&& value)
+    : attr_impl_{std::make_unique<_model<Rule, AttrValue>>((AttrValue &&) value)} {}
+
+  template <typename Rule>
+  explicit attribute(Rule) : attr_impl_{} {}
+
+  [[nodiscard]] bool empty() const noexcept { return attr_impl_ == nullptr; }
 
 private:
   std::unique_ptr<_concept> attr_impl_;
-};
-
-class value_of_seq {
-  std::vector<attribute> children;
-};
-
-class value_of_queue {
-  std::vector<attribute> children;
-};
-
-class value_of_select {
-  std::unique_ptr<attribute> selected;
-};
-
-class value_of_term {};
-
-struct rules {
-  struct expr {};
 };
 
 template <typename... Ts>
@@ -64,21 +60,47 @@ struct overloads : Ts... {
 template <typename... Ts>
 overloads(Ts&&...) -> overloads<Ts...>;
 
-template <typename Visitor, typename Grammar, typename TokenRange>
-attribute parse(Visitor& visitor, Grammar const& g, TokenRange tokens) {
-  return {visitor, rules::expr{}, value_of_term{}};
-}
+template <typename Visitor>
+struct parse_ {
+  using attribute = attribute<Visitor>;
 
-struct grammar {};
+  attribute operator()(std::string_view sv, lit_int r) const { return {r, 0}; }
 
-struct token_range {};
+  attribute operator()(std::string_view sv, op r) const { return {r, '+'}; }
+
+  template <typename... Ps, typename Alias>
+  attribute operator()(std::string_view sv, seq<Ps...> r, Alias a) const {
+    std::vector<attribute> ret;
+    return {a, std::move(ret)};
+  }
+
+  template <typename... Ps, typename Alias>
+  attribute operator()(std::string_view sv, br<Ps...> r, Alias a) const {
+    return {a, std::make_pair(-1, attribute{a})};
+  }
+
+  template <typename P>
+  attribute operator()(std::string_view sv, indirect_<P> r) const {
+    return (*this)(sv, P{});
+  }
+
+  template <has_combinator P>
+  attribute operator()(std::string_view sv, P r) const {
+    return (*this)(sv, combinator_t<P>{}, r);
+  }
+};
+
+template <typename Visitor>
+inline constexpr auto parse = parse_<Visitor>{};
 
 TEST(SemiStaticAttribute, SemiStaticAttribute) {
   auto visitor = overloads{[](auto r, auto&& v) {
-    static_assert(std::is_same_v<rules::expr, std::remove_cvref_t<decltype(r)>>);
   }};
 
-  auto attr = parse(visitor, grammar{}, token_range{});
+  auto attr1 = parse<decltype(visitor)>("1+2", grammars::expr_mono{});
 
-  attr.accept();
+  auto attr2 = parse<decltype(visitor)>("1+2+3", grammars::expr{});
+
+  attr1.accept(visitor);
+  attr2.accept(visitor);
 }
