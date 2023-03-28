@@ -4,7 +4,7 @@ BasedOnStyle: LLVM
 Language: Cpp
 Standard: c++20
 ColumnLimit: 100
-TabWidth: 8
+TabWidth: 4
 IndentWidth: 2
 UseTab: Never
 AccessModifierOffset: -2
@@ -33,7 +33,7 @@ BreakBeforeBraces: Custom
 BraceWrapping: {
   AfterCaseLabel: false,
   AfterClass: false,
-  AfterControlStatement: false,
+  AfterControlStatement: Never,
   AfterEnum: false,
   AfterFunction: false,
   AfterNamespace: false,
