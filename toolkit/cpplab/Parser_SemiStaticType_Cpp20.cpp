@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include <fmt/core.h>
+#include <nameof.hpp>
 
 #include "Grammar.h"
 #include "Meta.h"
@@ -105,7 +106,7 @@ struct parse_ {
   }
 
   template <typename... Ps, typename RuleAlias>
-  attribute operator()(std::string_view sv, seq<Ps...> r, RuleAlias a) const {
+  attribute operator()(std::string_view sv, seq<Ps...>, RuleAlias a) const {
     return parse_combination(
         sv.begin(),
         sv.end(),
@@ -128,7 +129,7 @@ struct parse_ {
   }
 
   template <typename... Ps, typename RuleAlias>
-  attribute operator()(std::string_view sv, br<Ps...> r, RuleAlias a) const {
+  attribute operator()(std::string_view sv, br<Ps...>, RuleAlias a) const {
     return parse_combination(
         sv.begin(),
         sv.end(),
@@ -149,17 +150,17 @@ struct parse_ {
   }
 
   template <typename P, typename RuleAlias>
-  attribute operator()(std::string_view sv, indirect_<P> r, RuleAlias) const {
+  attribute operator()(std::string_view sv, indirect_<P>, RuleAlias) const {
     return (*this)(sv, P{}, P{});
   }
 
   template <has_combinator P, typename RuleAlias>
-  attribute operator()(std::string_view sv, P r, RuleAlias a) const {
+  attribute operator()(std::string_view sv, P, RuleAlias a) const {
     return (*this)(sv, combinator_t<P>{}, a);
   }
 
   template <typename P>
-  attribute operator()(std::string_view sv, P r) const {
+  attribute operator()(std::string_view sv, P) const {
     return (*this)(sv, P{}, P{});
   }
 };
@@ -171,13 +172,18 @@ struct Visitor {
   std::string indent{};
 
   template <typename R, typename Attr>
-  void operator()(R r, Attr&& attr) {
-    fmt::print("{}Visited: value type <{}> with rule <{}>.\n", indent, typeid(r).name(), typeid(attr).name());
+  void operator()(R, Attr&& attr) {
+    fmt::print(
+        "{}{}: <{}>.\n", indent, nameof::nameof_short_type<R>(), nameof::nameof_type<decltype(attr)>());
   }
 
   template <typename R, typename SubAttr>
   void operator()(R r, std::vector<SubAttr>& attr) {
-    fmt::print("{}Visited: value type <{}> with rule <{}>.\n", indent, typeid(r).name(), typeid(attr).name());
+    fmt::print(
+        "{}{}: <{}>.\n",
+        indent,
+        nameof::nameof_short_type<R>(),
+        nameof::nameof_type<decltype(attr)>());
     auto old_indent = indent;
     indent += "  ";
     for (auto& sub_attr : attr) {
@@ -188,7 +194,11 @@ struct Visitor {
 
   template <typename R, std::integral IndexT, typename Attr>
   void operator()(R r, std::pair<IndexT, Attr>& attr) {
-    fmt::print("{}Visited: value type <{}> with rule <{}>.\n", indent, typeid(r).name(), typeid(attr).name());
+    fmt::print(
+        "{}{}: <{}>.\n",
+        indent,
+        nameof::nameof_short_type<R>(),
+        nameof::nameof_type<decltype(attr)>());
     auto old_indent = indent;
     indent += "  ";
     attr.second.accept(*this);

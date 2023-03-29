@@ -6,9 +6,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
+find_package(nameof CONFIG REQUIRED)
 
 function( sample_link_libraries target )
  target_link_libraries(${target} PRIVATE fmt::fmt-header-only)
+ target_link_libraries(${target} PRIVATE nameof::nameof)
  target_link_libraries(${target} PRIVATE GTest::gtest GTest::gtest_main)
 endfunction()
 
