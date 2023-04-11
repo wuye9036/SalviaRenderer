@@ -5,6 +5,7 @@
 
 #include <fmt/core.h>
 #include <nameof.hpp>
+#include <range/v3/view/enumerate.hpp>
 
 #include "Grammar.h"
 #include "Meta.h"
@@ -38,7 +39,7 @@ public:
   struct _model final : _concept {
     template <typename AttrValue2>
     explicit _model(AttrValue2&& value, std::string_view token_range)
-      : attr_value{(AttrValue2 &&) value} {
+      : attr_value{(AttrValue2&&)value} {
       this->token_range = token_range;
     }
 
@@ -50,7 +51,7 @@ public:
   template <typename Rule, typename AttrValue>
   attribute(Rule, AttrValue&& value, std::string_view token_range)
     : attr_impl_{std::make_unique<_model<Rule, std::remove_cvref_t<AttrValue>>>(
-          (AttrValue &&) value, token_range)} {}
+          (AttrValue&&)value, token_range)} {}
 
   template <typename Rule>
   explicit attribute(Rule) : attr_impl_{} {}
@@ -102,7 +103,7 @@ struct parse_ {
       return ret;
     }...};
 
-    return std::invoke((Aggregate &&) aggregate, children_parse, cursor);
+    return std::invoke((Aggregate&&)aggregate, children_parse, cursor);
   }
 
   template <typename... Ps, typename RuleAlias>
@@ -135,8 +136,8 @@ struct parse_ {
         sv.end(),
         [a](auto&& children_parse, auto& cursor) -> attribute {
           std::vector<attribute> ret;
-          for (size_t i = 0; i < children_parse.size(); ++i) {
-            auto attr = children_parse[i]();
+          for (auto [i, p] : ranges::views::enumerate(children_parse)) {
+            auto attr = p();
             // return if success
             if (!attr.empty()) {
               auto token_range = attr.token_range();
@@ -165,8 +166,17 @@ struct parse_ {
   }
 };
 
-template <typename Visitor>
-inline constexpr auto parse = parse_<Visitor>{};
+template <typename Visitor, typename... Args>
+attribute<Visitor> parse(Visitor& v, Args&&... args) {
+  auto r = parse_<Visitor>{}(std::forward<Args>(args)...);
+  r.accept(v);
+  return std::move(r);
+}
+
+template <typename Visitor, typename... Args>
+attribute<Visitor> parse(Args&&... args) {
+  return parse_<Visitor>{}(std::forward<Args>(args)...);
+}
 
 struct Visitor {
   std::string indent{};
@@ -174,7 +184,10 @@ struct Visitor {
   template <typename R, typename Attr>
   void operator()(R, Attr&& attr) {
     fmt::print(
-        "{}{}: <{}>.\n", indent, nameof::nameof_short_type<R>(), nameof::nameof_type<decltype(attr)>());
+        "{}{}: <{}>.\n",
+        indent,
+        nameof::nameof_short_type<R>(),
+        nameof::nameof_type<decltype(attr)>());
   }
 
   template <typename R, typename SubAttr>
@@ -209,10 +222,7 @@ struct Visitor {
 TEST(SemiStaticAttribute, SemiStaticAttribute) {
   auto visitor = Visitor{};
 
-  auto attr1 = parse<Visitor>("1+2", grammars::expr_mono{});
-
-  auto attr2 = parse<Visitor>("1+2+3", grammars::expr{});
-
-  attr1.accept(visitor);
-  attr2.accept(visitor);
+  { auto attr = parse<Visitor>("1+2", grammars::expr_mono{}); }
+  { auto attr = parse<Visitor>("1+2+3", grammars::expr{}); }
+  { auto attr = parse(visitor, "1+2", grammars::expr_mono{}); };
 }

@@ -29,7 +29,7 @@ struct tree_node {
 
 template <typename Tag, typename D>
 auto make_tree(std::string_view code_range, D&& data) {
-  return tree_node<Tag, std::remove_cvref_t<D>>{.code_range = code_range, .data = ((D &&) data)};
+  return tree_node<Tag, std::remove_cvref_t<D>>{.code_range = code_range, .data = ((D&&)data)};
 }
 
 template <typename T>
@@ -39,10 +39,10 @@ template <typename T>
 concept is_optional_tree_node = is_optional<T> && is_tree_node<typename T::value_type>;
 
 template <typename Tag2, typename T>
-  requires is_optional_tree_node<std::remove_cvref_t<T>> decltype(auto)
-replace_tag(T&& t) {
+  requires is_optional_tree_node<std::remove_cvref_t<T>>
+decltype(auto) replace_tag(T&& t) {
   using data_type = std::remove_cvref_t<typename T::value_type::data_type>;
-  return cast_ref<std::optional<tree_node<Tag2, data_type>>>(((T &&) t));
+  return cast_ref<std::optional<tree_node<Tag2, data_type>>>(((T&&)t));
 }
 
 template <typename P>
@@ -51,21 +51,21 @@ struct indirect_data;
 template <typename T>
   requires is_optional<std::remove_cvref_t<T>>
 auto make_or_forward_optional(T&& v) {
-  return ((T &&) v);
+  return ((T&&)v);
 }
 
 template <typename T>
   requires(!is_optional<std::remove_cvref_t<T>>)
 auto make_or_forward_optional(T&& v) {
-  return std::make_optional(((T &&) v));
+  return std::make_optional(((T&&)v));
 }
 
 template <typename FnT>
-auto conditional_(bool cond, FnT&& fn) -> decltype(make_or_forward_optional(((FnT &&) fn)())) {
+auto conditional_(bool cond, FnT&& fn) -> decltype(make_or_forward_optional(((FnT&&)fn)())) {
   if (!cond) {
     return std::nullopt;
   }
-  return make_or_forward_optional(((FnT &&) fn)());
+  return make_or_forward_optional(((FnT&&)fn)());
 }
 
 #define DEBUG_TREE 0
@@ -140,18 +140,17 @@ template <typename OptTree, typename Fn>
 auto operator&(OptTree&& op1, Fn&& op2_factory) {
   using tree_type = typename std::remove_cvref_t<OptTree>::value_type;
   using op1_data_type = typename tree_type::data_type;
-  using op2_data_type = std::tuple<typename decltype(((Fn &&) op2_factory)())::value_type>;
+  using op2_data_type = std::tuple<typename decltype(((Fn&&)op2_factory)())::value_type>;
 
   using return_data_type = combine_composible_t<op1_data_type, op2_data_type>;
 
   return conditional_(op1.has_value(), [&]() {
-    auto op2 = ((Fn &&) op2_factory)();
+    auto op2 = ((Fn&&)op2_factory)();
     return conditional_(op2.has_value(), [&] {
       auto fold_code_range = std::string_view{op1->code_range.begin(), op2->code_range.end()};
       return std::make_optional(make_tree<typename tree_type::tag, return_data_type>(
           fold_code_range,
-          std::tuple_cat(
-              ((OptTree &&) op1).value().data, std::make_tuple(std::move(op2).value()))));
+          std::tuple_cat(((OptTree&&)op1).value().data, std::make_tuple(std::move(op2).value()))));
     });
   });
 }
@@ -160,7 +159,7 @@ template <typename TreeA, typename Fn>
   requires is_optional_tree_node<std::remove_cvref_t<TreeA>>
 auto operator|(TreeA&& op1, Fn&& op2_factory) {
   using op1_data_type = typename std::remove_cvref_t<TreeA>::value_type::data_type;
-  using op2_data_type = std::variant<typename decltype(((Fn &&) op2_factory)())::value_type>;
+  using op2_data_type = std::variant<typename decltype(((Fn&&)op2_factory)())::value_type>;
 
   using return_data_type = combine_composible_t<op1_data_type, op2_data_type>;
 
@@ -296,7 +295,7 @@ void print_tree(T&& t, std::string indent = "") {
     fmt::print("{}tree<{}>: {} code: {}\n", indent, tree_type::tag::name, t.data, t.code_range);
   } else {
     fmt::print("{}tree<{}> code: {}\n", indent, tree_type::tag::name, t.code_range);
-    print_tree(((T &&) t).data, indent + "  ");
+    print_tree(((T&&)t).data, indent + "  ");
   }
 }
 
@@ -304,15 +303,14 @@ template <typename T>
   requires is_specialized<std::remove_cvref_t<T>, std::variant>
 void print_tree(T&& t, std::string indent = "") {
   fmt::print("{}variant\n", indent);
-  std::visit(
-      [&](auto&& v) { print_tree(std::forward<decltype(v)>(v), indent + "  "); }, ((T &&) t));
+  std::visit([&](auto&& v) { print_tree(std::forward<decltype(v)>(v), indent + "  "); }, ((T&&)t));
 }
 
 template <typename T>
   requires is_specialized<std::remove_cvref_t<T>, indirect_data>
 void print_tree(T&& t, std::string indent = "") {
   fmt::print("{}indirect\n", indent);
-  print_tree(((T &&) t).value, indent + "  ");
+  print_tree(((T&&)t).value, indent + "  ");
 }
 
 template <typename T>

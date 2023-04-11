@@ -4,6 +4,7 @@
     "dependencies": [
       "fmt",
       "gtest",
-      "nameof"
+      "nameof",
+      "range-v3"
     ]
 }
