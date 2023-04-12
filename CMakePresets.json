@@ -1,72 +1,103 @@
 {
-  "version": 3,
+  "version": 5,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 23,
     "patch": 0
   },
+  "include": [
+    "CMakePresets_Woodblocks.json"
+  ],
   "configurePresets": [
     {
-      "name": "msvc_x64_dev",
-      "displayName": "msvc_x64_dev",
-      "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
-      "generator": "Visual Studio 17 2022",
-      "architecture": "x64",
-      "binaryDir": "${sourceDir}/.build/salvia.${presetName}",
-      "cacheVariables": {
-        "SALVIA_BUILD_WITH_DIRECTX": "0",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "E:/Code/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/.install/${presetName}",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
-        "Boost_NO_WARN_NEW_VERSIONS": "1"
+      "name": "clang_rel_linux",
+      "inherits": [ "default", "_linux", "_clang", "_release" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name": "clang_linux_x64_dev",
-      "displayName": "clang_linux_x64_dev",
-      "description": "Clang-15 on linux, x86-64",
-      "binaryDir": "./.build/salvia.${presetName}",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_TOOLCHAIN_FILE": "~/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/.install/${presetName}",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
-        "Boost_NO_WARN_NEW_VERSIONS": "1",
-        "CMAKE_C_COMPILER": "clang-15",
-        "CMAKE_CXX_COMPILER": "clang++-15"
+      "name": "clang_dbg_linux",
+      "inherits": [ "default", "_linux", "_clang", "_debug" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name": "clang_mac_m1_dev",
-      "displayName": "clang_mac_m1_dev",
-      "description": "Clang-15 on MacOS M1, x86-64",
-      "binaryDir": "./.build/salvia.${presetName}",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_TOOLCHAIN_FILE": "~/Library/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/.install/${presetName}",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
-        "Boost_NO_WARN_NEW_VERSIONS": "1",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
+      "name": "gcc_rel_linux",
+      "inherits": [ "default", "_linux", "_gcc", "_release" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
-    }
-  ],
-  "buildPresets": [
+    },
     {
-      "name": "msvc_x64_dev_build",
-      "configurePreset": "msvc_x64_dev",
-      "configuration": "Debug"
-    }
-  ],
-  "testPresets": [
+      "name": "gcc_dbg_linux",
+      "inherits": [ "default", "_linux", "_gcc", "_debug" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
     {
-      "name": "msvc_x64_dev_test",
-      "description": "",
-      "displayName": "",
-      "configurePreset": "msvc_x64_dev",
-      "configuration": "Debug"
+      "name": "clang_rel_mac",
+      "inherits": [ "default", "_macos", "_clang", "_release" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "clang_dbg_mac",
+      "inherits": [ "default", "_macos", "_clang", "_debug" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "gcc_rel_mac",
+      "inherits": [ "default", "_macos", "_gcc", "_release" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "gcc_dbg_mac",
+      "inherits": [ "default", "_macos", "_gcc", "_debug" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "msvc_dbg_win",
+      "inherits": [ "default", "_windows", "_msvc", "_debug" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "msvc_rel_win",
+      "inherits": [ "default", "_windows", "_msvc", "_release" ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     }
   ]
 }
