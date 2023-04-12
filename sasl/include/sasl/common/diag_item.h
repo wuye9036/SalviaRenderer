@@ -22,14 +22,18 @@ struct diag_template {
 class diag_item {
 public:
   constexpr diag_item() noexcept = default;
-  constexpr diag_item(diag_template t, std::string_view file_name, code_span span,
+  constexpr diag_item(diag_template t,
+                      std::string_view file_name,
+                      code_span span,
                       std::string resolved_diag) noexcept
-      : file_name_{file_name}, span_{span}, resolved_diag_(std::move(resolved_diag)), template_{t} {
-  }
-  constexpr diag_item(diag_item const &) = default;
-  constexpr diag_item(diag_item &&rhs) noexcept = default;
-  constexpr diag_item &operator=(diag_item &&rhs) noexcept = default;
-  constexpr diag_item &operator=(diag_item const &rhs) = default;
+    : file_name_{file_name}
+    , span_{span}
+    , resolved_diag_(std::move(resolved_diag))
+    , template_{t} {}
+  constexpr diag_item(diag_item const&) = default;
+  constexpr diag_item(diag_item&& rhs) noexcept = default;
+  constexpr diag_item& operator=(diag_item&& rhs) noexcept = default;
+  constexpr diag_item& operator=(diag_item const& rhs) = default;
 
   constexpr diag_levels level() const noexcept { return template_.level; }
   constexpr size_t id() const noexcept { return template_.uid; };
@@ -44,4 +48,4 @@ private:
   diag_template template_;
 };
 
-} // namespace sasl::common
+}  // namespace sasl::common

@@ -7,7 +7,8 @@
 #include <string>
 
 namespace eflib {
-template <typename T> struct rect;
+template <typename T>
+struct rect;
 }
 
 namespace salvia {
@@ -16,7 +17,7 @@ struct color_rgba32f;
 
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
-} // namespace salvia
+}  // namespace salvia::resource
 
 namespace salvia::ext::resource {
 
@@ -53,11 +54,13 @@ public:
 
   enum render_hints { bit_pixel, antialias, cleartype };
 
-  static font_ptr create(std::string const &font_file_path, size_t face_index, size_t size,
-                         font::units uint);
+  static font_ptr
+  create(std::string const& font_file_path, size_t face_index, size_t size, font::units uint);
 
-  static font_ptr create_in_system_path(std::string const &font_file_name, size_t face_index,
-                                        size_t size, font::units unit);
+  static font_ptr create_in_system_path(std::string const& font_file_name,
+                                        size_t face_index,
+                                        size_t size,
+                                        font::units unit);
 
   virtual size_t size() const = 0;
   virtual units unit() const = 0;
@@ -69,11 +72,14 @@ public:
   // virtual size_t kerning() const = 0;
   // virtual void kerning( size_t sz ) = 0;
 
-  virtual void draw(std::string const &text, salvia::resource::surface *target,
-                    eflib::rect<int32_t> const &rc, salvia::color_rgba32f const &foreground_color,
-                    salvia::color_rgba32f const &background_color, font::render_hints hint) = 0;
+  virtual void draw(std::string const& text,
+                    salvia::resource::surface* target,
+                    eflib::rect<int32_t> const& rc,
+                    salvia::color_rgba32f const& foreground_color,
+                    salvia::color_rgba32f const& background_color,
+                    font::render_hints hint) = 0;
 
   virtual ~font() = default;
 };
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

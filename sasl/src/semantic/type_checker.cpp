@@ -40,4 +40,4 @@ bool type_equal(shared_ptr<tynode> lhs, shared_ptr<tynode> rhs) {
   return false;
 }
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

@@ -2,10 +2,10 @@
 
 #include <FreeImage.h>
 #include <salvia/core/renderer.h>
+#include <salvia/ext/utility/freeimage_utilities.h>
 #include <salvia/resource/mapped_resource.h>
 #include <salvia/resource/surface.h>
 #include <salvia/resource/texture.h>
-#include <salvia/ext/utility/freeimage_utilities.h>
 
 #include <algorithm>
 #include <memory>
@@ -26,7 +26,8 @@ namespace salvia::ext::resource {
 //	*> FIColorT: The format of color of FIBITMAP
 template <typename FIColorT>
 bool copy_image_to_surface_impl(
-    surface_ptr const &surf, FIBITMAP *image,
+    surface_ptr const& surf,
+    FIBITMAP* image,
     typename FIUC<FIColorT>::CompT default_alpha = (typename FIUC<FIColorT>::CompT)(0)) {
   if (image == nullptr) {
     return false;
@@ -36,15 +37,15 @@ bool copy_image_to_surface_impl(
   size_t image_bpp = (FreeImage_GetBPP(image) >> 3);
   pixel_format surface_format = surf->get_pixel_format();
   pixel_format inter_format = salvia_rgba_color_type<FIColorT>::fmt;
-  BYTE *source_line = FreeImage_GetBits(image);
+  BYTE* source_line = FreeImage_GetBits(image);
 
   for (size_t y = 0; y < surf->height(); ++y) {
-    uint8_t *src_pixel = source_line;
+    uint8_t* src_pixel = source_line;
     for (size_t x = 0; x < surf->width(); ++x) {
-      FIUC<FIColorT> uc((typename FIUC<FIColorT>::CompT *)src_pixel, default_alpha);
+      FIUC<FIColorT> uc((typename FIUC<FIColorT>::CompT*)src_pixel, default_alpha);
       typename salvia_rgba_color_type<FIColorT>::type c(uc.r, uc.g, uc.b, uc.a);
-      pixel_format_convertor::convert(surface_format, inter_format, surf->texel_address(x, y, 0),
-                                      &c);
+      pixel_format_convertor::convert(
+          surface_format, inter_format, surf->texel_address(x, y, 0), &c);
       src_pixel += image_bpp;
     }
     source_line += image_pitch;
@@ -56,7 +57,7 @@ bool copy_image_to_surface_impl(
 // Copy region of image to dest region of surface.
 // If the size of source and destination are different, it will be stretch copy with bi-linear
 // interpolation.
-bool copy_image_to_surface(surface_ptr const &surf, FIBITMAP *img) {
+bool copy_image_to_surface(surface_ptr const& surf, FIBITMAP* img) {
   FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(img);
 
   if (image_type == FIT_RGBAF) {
@@ -74,8 +75,8 @@ bool copy_image_to_surface(surface_ptr const &surf, FIBITMAP *img) {
 }
 
 // Load image file to new texture
-texture_ptr load_texture(renderer *rend, const std::string &filename, pixel_format tex_format) {
-  FIBITMAP *img = load_image(filename);
+texture_ptr load_texture(renderer* rend, const std::string& filename, pixel_format tex_format) {
+  FIBITMAP* img = load_image(filename);
   texture_ptr ret;
 
   size_t src_w = FreeImage_GetWidth(img);
@@ -95,10 +96,12 @@ texture_ptr load_texture(renderer *rend, const std::string &filename, pixel_form
 // Create cube texture by six images.
 // Size of first texture is the size of cube face.
 // If other textures are not same size as first, just stretch it.
-texture_ptr load_cube(renderer *rend, const vector<string> &filenames, pixel_format tex_format) {
+texture_ptr load_cube(renderer* rend, const vector<string>& filenames, pixel_format tex_format) {
   texture_ptr ret;
 
-  auto image_deleter = [](FIBITMAP *bmp) { FreeImage_Unload(bmp); };
+  auto image_deleter = [](FIBITMAP* bmp) {
+    FreeImage_Unload(bmp);
+  };
   size_t tex_width = 0;
   size_t tex_height = 0;
 
@@ -126,7 +129,7 @@ texture_ptr load_cube(renderer *rend, const vector<string> &filenames, pixel_for
       }
     }
 
-    texture_cube *cube_tex = static_cast<texture_cube *>(ret.get());
+    texture_cube* cube_tex = static_cast<texture_cube*>(ret.get());
     surface_ptr face_surface = cube_tex->subresource(i_cubeface, 0);
     copy_image_to_surface(face_surface, cube_img.get());
   }
@@ -135,12 +138,14 @@ texture_ptr load_cube(renderer *rend, const vector<string> &filenames, pixel_for
 }
 
 // Save surface as PNG or HRD formatted file.
-void save_surface(renderer *rend, surface_ptr const &surf, string const &filename,
+void save_surface(renderer* rend,
+                  surface_ptr const& surf,
+                  string const& filename,
                   pixel_format image_format) {
   FREE_IMAGE_TYPE fit = FIT_UNKNOWN;
   FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
-  FIBITMAP *image = nullptr;
+  FIBITMAP* image = nullptr;
   int surface_width = static_cast<int>(surf->width());
   int surface_height = static_cast<int>(surf->height());
 
@@ -156,35 +161,33 @@ void save_surface(renderer *rend, surface_ptr const &surf, string const &filenam
     fif = FIF_HDR;
     image = FreeImage_AllocateT(fit, surface_width, surface_height, 96);
     break;
-  default:
-    ef_unimplemented();
-    return;
+  default: ef_unimplemented(); return;
   }
 
   mapped_resource mapped;
   rend->map(mapped, surf, map_read);
 
-  uint8_t *surf_data = reinterpret_cast<uint8_t *>(mapped.data);
-  uint8_t *img_data = FreeImage_GetBits(image);
+  uint8_t* surf_data = reinterpret_cast<uint8_t*>(mapped.data);
+  uint8_t* img_data = FreeImage_GetBits(image);
   pixel_format surf_format = surf->get_pixel_format();
   size_t height = surf->height();
   size_t width = surf->width();
 
   for (size_t y = 0; y < height; ++y) {
-    pixel_format_convertor::convert_array(image_format, surf_format, img_data, surf_data,
-                                          int(width));
+    pixel_format_convertor::convert_array(
+        image_format, surf_format, img_data, surf_data, int(width));
     surf_data += mapped.row_pitch;
     img_data += FreeImage_GetPitch(image);
   }
 
-   rend->unmap();
+  rend->unmap();
 
   auto result = FreeImage_Save(fif, image, filename.c_str());
   ef_verify(result == 1);
   FreeImage_Unload(image);
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource
 
 /*
 Copyright (C) 2007-2012 Minmin Gong, Ye Wu

@@ -25,16 +25,16 @@ using std::vector;
 
 namespace sasl::drivers {
 
-unordered_map<void *, compiler_code_source *> compiler_code_source::ctxt_to_source;
+unordered_map<void*, compiler_code_source*> compiler_code_source::ctxt_to_source;
 
-bool compiler_code_source::set_code(string const &code) {
+bool compiler_code_source::set_code(string const& code) {
   this->code = code;
   fixes_file_end_with_newline(this->code);
   this->filename = "<In Memory>";
   return process();
 }
 
-bool compiler_code_source::set_file(string const &file_name) {
+bool compiler_code_source::set_file(string const& file_name) {
   ifstream in(file_name.c_str(), ios_base::in);
   if (!in) {
     return false;
@@ -52,7 +52,7 @@ bool compiler_code_source::set_file(string const &file_name) {
 bool compiler_code_source::eof() {
   try {
     return (next_it == wave_ctxt_wrapper->get_wave_ctxt()->end());
-  } catch (preprocess_exception &e) {
+  } catch (preprocess_exception& e) {
     report_wave_pp_exception(diags, e);
     next_it = wave_ctxt_wrapper->get_wave_ctxt()->end();
     return false;
@@ -64,11 +64,11 @@ string_view compiler_code_source::next() {
 
   try {
     ++next_it;
-  } catch (preprocess_exception &e) {
+  } catch (preprocess_exception& e) {
     report_wave_pp_exception(diags, e);
     err_token = to_string(cur_it->get_value());
     next_it = wave_ctxt_wrapper->get_wave_ctxt()->end();
-  } catch (wave_reported_fatal_error &) {
+  } catch (wave_reported_fatal_error&) {
     // Error has been reported to diag_chat.
     err_token = to_string(cur_it->get_value());
     next_it = wave_ctxt_wrapper->get_wave_ctxt()->end();
@@ -85,14 +85,11 @@ string_view compiler_code_source::error() {
   return err_token;
 }
 
-void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess_exception &e) {
-  diag_template const *tmpl = nullptr;
+void compiler_code_source::report_wave_pp_exception(diag_chat* diags, preprocess_exception& e) {
+  diag_template const* tmpl = nullptr;
   switch (e.get_errorcode()) {
-  case preprocess_exception::no_error:
-    break;
-  case preprocess_exception::last_line_not_terminated:
-    tmpl = &boost_wave_exception_warning;
-    break;
+  case preprocess_exception::no_error: break;
+  case preprocess_exception::last_line_not_terminated: tmpl = &boost_wave_exception_warning; break;
   case preprocess_exception::ill_formed_directive:
     tmpl = &boost_wave_exception_fatal_error;
     is_failed = true;
@@ -112,8 +109,8 @@ void compiler_code_source::report_wave_pp_exception(diag_chat *diags, preprocess
     }
   }
 
-  diags->report(*tmpl, file_name, current_span(),
-                preprocess_exception::error_text(e.get_errorcode()));
+  diags->report(
+      *tmpl, file_name, current_span(), preprocess_exception::error_text(e.get_errorcode()));
 }
 
 string_view compiler_code_source::file_name() const {
@@ -146,7 +143,8 @@ bool compiler_code_source::process() {
   lang_flag &= ~(boost::wave::support_option_emit_line_directives);
   lang_flag &= ~(boost::wave::support_option_single_line);
   lang_flag &= ~(boost::wave::support_option_emit_pragma_directives);
-  wave_ctxt_wrapper->get_wave_ctxt()->set_language(static_cast<boost::wave::language_support>(lang_flag));
+  wave_ctxt_wrapper->get_wave_ctxt()->set_language(
+      static_cast<boost::wave::language_support>(lang_flag));
 
   cur_it = wave_ctxt_wrapper->get_wave_ctxt()->begin();
   next_it = wave_ctxt_wrapper->get_wave_ctxt()->begin();
@@ -155,26 +153,32 @@ bool compiler_code_source::process() {
   return true;
 }
 
-void compiler_code_source::set_diag_chat(sasl::common::diag_chat *diags) { this->diags = diags; }
+void compiler_code_source::set_diag_chat(sasl::common::diag_chat* diags) {
+  this->diags = diags;
+}
 
-compiler_code_source::compiler_code_source() : diags(nullptr) {}
+compiler_code_source::compiler_code_source() : diags(nullptr) {
+}
 
-compiler_code_source::~compiler_code_source() {}
+compiler_code_source::~compiler_code_source() {
+}
 
 code_span compiler_code_source::current_span() const {
-  auto const &pos = cur_it->get_position();
+  auto const& pos = cur_it->get_position();
   return inline_code_span(pos.get_line(), pos.get_column(), pos.get_column() + 1);
 }
 
-void compiler_code_source::add_virtual_file(string const &file_name, string const &content,
+void compiler_code_source::add_virtual_file(string const& file_name,
+                                            string const& content,
                                             bool high_priority) {
   virtual_files[file_name] = make_pair(high_priority, content);
 }
 
-void compiler_code_source::set_include_handler(include_handler_fn handler) { do_include = handler;
+void compiler_code_source::set_include_handler(include_handler_fn handler) {
+  do_include = handler;
 }
 
-compiler_code_source *compiler_code_source::get_code_source(void *ctxt) {
+compiler_code_source* compiler_code_source::get_code_source(void* ctxt) {
   if (ctxt) {
     auto it = ctxt_to_source.find(ctxt);
     if (it != ctxt_to_source.end()) {
@@ -185,15 +189,17 @@ compiler_code_source *compiler_code_source::get_code_source(void *ctxt) {
   return nullptr;
 }
 
-bool compiler_code_source::failed() { return is_failed; }
+bool compiler_code_source::failed() {
+  return is_failed;
+}
 
-bool compiler_code_source::add_sys_include_path(string const &path) {
-  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+bool compiler_code_source::add_sys_include_path(string const& path) {
+  wave_context* wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
   ef_verify(wave_ctxt);
   return wave_ctxt->add_sysinclude_path(path.c_str());
 }
 
-bool compiler_code_source::add_sys_include_path(vector<string> const &paths) {
+bool compiler_code_source::add_sys_include_path(vector<string> const& paths) {
   bool ret = true;
   for (size_t i = 0; i < paths.size(); ++i) {
     bool path_ret = add_sys_include_path(paths[i]);
@@ -202,13 +208,13 @@ bool compiler_code_source::add_sys_include_path(vector<string> const &paths) {
   return ret;
 }
 
-bool compiler_code_source::add_include_path(string const &path) {
-  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+bool compiler_code_source::add_include_path(string const& path) {
+  wave_context* wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
   ef_verify(wave_ctxt);
   return wave_ctxt->add_include_path(path.c_str());
 }
 
-bool compiler_code_source::add_include_path(vector<string> const &paths) {
+bool compiler_code_source::add_include_path(vector<string> const& paths) {
   bool ret = true;
   for (size_t i = 0; i < paths.size(); ++i) {
     ret = add_include_path(paths[i]) && ret;
@@ -216,13 +222,13 @@ bool compiler_code_source::add_include_path(vector<string> const &paths) {
   return ret;
 }
 
-bool compiler_code_source::add_macro(string const &macro_def, bool predef) {
-  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+bool compiler_code_source::add_macro(string const& macro_def, bool predef) {
+  wave_context* wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
   ef_verify(wave_ctxt);
   return wave_ctxt->add_macro_definition(macro_def, predef);
 }
 
-bool compiler_code_source::add_macro(vector<string> const &macros, bool predef) {
+bool compiler_code_source::add_macro(vector<string> const& macros, bool predef) {
   bool ret = true;
   for (size_t i = 0; i < macros.size(); ++i) {
     ret = add_macro(macros[i], predef) && ret;
@@ -231,19 +237,19 @@ bool compiler_code_source::add_macro(vector<string> const &macros, bool predef) 
 }
 
 bool compiler_code_source::clear_macros() {
-  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+  wave_context* wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
   ef_verify(wave_ctxt);
   wave_ctxt->reset_macro_definitions();
   return true;
 }
 
-bool compiler_code_source::remove_macro(string const &macro_def) {
-  wave_context *wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
+bool compiler_code_source::remove_macro(string const& macro_def) {
+  wave_context* wave_ctxt = wave_ctxt_wrapper->get_wave_ctxt();
   ef_verify(wave_ctxt);
   return wave_ctxt->remove_macro_definition(macro_def);
 }
 
-bool compiler_code_source::remove_macro(vector<string> const &macros) {
+bool compiler_code_source::remove_macro(vector<string> const& macros) {
   bool ret = true;
   for (size_t i = 0; i < macros.size(); ++i) {
     ret = remove_macro(macros[i]) && ret;
@@ -251,18 +257,23 @@ bool compiler_code_source::remove_macro(vector<string> const &macros) {
   return ret;
 }
 
-void report_load_file_failed(void *ctxt, string const &name, bool /*is_system*/) {
-  compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
-  code_src->diags->report(cannot_open_include_file, code_src->file_name(), code_src->current_span(),
-                          name);
+void report_load_file_failed(void* ctxt, string const& name, bool /*is_system*/) {
+  compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
+  code_src->diags->report(
+      cannot_open_include_file, code_src->file_name(), code_src->current_span(), name);
 }
 
-void load_virtual_file(bool &is_succeed, bool &is_exclusive, string &content, void *ctxt,
-                       string const &name, bool is_system, bool before_file_load) {
+void load_virtual_file(bool& is_succeed,
+                       bool& is_exclusive,
+                       string& content,
+                       void* ctxt,
+                       string const& name,
+                       bool is_system,
+                       bool before_file_load) {
   is_exclusive = false;
   is_succeed = false;
 
-  compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
+  compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
   ef_verify(code_src);
   if (code_src->do_include) {
     string native_name;
@@ -292,12 +303,17 @@ void load_virtual_file(bool &is_succeed, bool &is_exclusive, string &content, vo
   return;
 }
 
-void check_file(bool &is_succeed, bool &is_exclusive, string &native_name, void *ctxt,
-                string const &name, bool is_system, bool is_before_include) {
+void check_file(bool& is_succeed,
+                bool& is_exclusive,
+                string& native_name,
+                void* ctxt,
+                string const& name,
+                bool is_system,
+                bool is_before_include) {
   is_exclusive = false;
   is_succeed = false;
 
-  compiler_code_source *code_src = compiler_code_source::get_code_source(ctxt);
+  compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
   ef_verify(code_src);
 
   // If inc handler is enabled, it is exclusive.
@@ -323,7 +339,7 @@ void check_file(bool &is_succeed, bool &is_exclusive, string &native_name, void 
   return;
 }
 
-wave_context_wrapper::wave_context_wrapper(compiler_code_source *src, wave_context *ctx) {
+wave_context_wrapper::wave_context_wrapper(compiler_code_source* src, wave_context* ctx) {
   if (wave_ctxt) {
     compiler_code_source::ctxt_to_source.erase(wave_ctxt.get());
   }
@@ -338,9 +354,11 @@ wave_context_wrapper::~wave_context_wrapper() {
   wave_ctxt.reset(nullptr);
 }
 
-wave_context *wave_context_wrapper::get_wave_ctxt() const { return wave_ctxt.get(); }
+wave_context* wave_context_wrapper::get_wave_ctxt() const {
+  return wave_ctxt.get();
+}
 
-void fixes_file_end_with_newline(string &content) {
+void fixes_file_end_with_newline(string& content) {
   if (content.empty()) {
     return;
   }
@@ -359,4 +377,4 @@ void fixes_file_end_with_newline(string &content) {
 #endif
 }
 
-} // namespace sasl::drivers
+}  // namespace sasl::drivers

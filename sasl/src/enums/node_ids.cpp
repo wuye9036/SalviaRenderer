@@ -1,7 +1,7 @@
 
 #include <sasl/enums/node_ids.h>
 
-void register_enum_name(std::function<void(char const *, node_ids)> const &reg_fn) {
+void register_enum_name(std::function<void(char const*, node_ids)> const& reg_fn) {
   reg_fn("expression_statement", node_ids::expression_statement);
   reg_fn("member_expression", node_ids::member_expression);
   reg_fn("tynode", node_ids::tynode);

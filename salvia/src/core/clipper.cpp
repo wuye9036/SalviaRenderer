@@ -15,7 +15,8 @@ using namespace eflib;
 using namespace std;
 using namespace salvia::shader;
 
-clip_context::clip_context() : vert_pool(nullptr), prim(pt_none), vso_ops(nullptr), cull(nullptr) {}
+clip_context::clip_context() : vert_pool(nullptr), prim(pt_none), vso_ops(nullptr), cull(nullptr) {
+}
 
 clipper::clipper() {
   // Near plane is 0.
@@ -25,24 +26,23 @@ clipper::clipper() {
   planes_[1] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
 }
 
-void clipper::set_context(clip_context const *ctxt) {
+void clipper::set_context(clip_context const* ctxt) {
   ctxt_ = *ctxt;
 
   // Select clipping function
   switch (ctxt->prim) {
-  case pt_solid_tri:
-    clip_impl_ = &clipper::clip_solid_triangle;
-    break;
-  default:
-    ef_unimplemented();
+  case pt_solid_tri: clip_impl_ = &clipper::clip_solid_triangle; break;
+  default: ef_unimplemented();
   }
 }
 
-void clipper::clip_wireframe_triangle(shader::vs_output ** /*tri_verts*/, clip_results * /*results*/) {}
+void clipper::clip_wireframe_triangle(shader::vs_output** /*tri_verts*/,
+                                      clip_results* /*results*/) {
+}
 
-void clipper::clip_solid_triangle(shader::vs_output **tri_verts, clip_results *results) {
+void clipper::clip_solid_triangle(shader::vs_output** tri_verts, clip_results* results) {
   // Clip triangles to vertex of result polygon
-  shader::vs_output *tri_clipped_verts[5];
+  shader::vs_output* tri_clipped_verts[5];
   clip_results tri_clip_results;
   tri_clip_results.clipped_verts = tri_clipped_verts;
 
@@ -75,7 +75,7 @@ void clipper::clip_solid_triangle(shader::vs_output **tri_verts, clip_results *r
   results->num_clipped_verts = (tri_clip_results.num_clipped_verts - 2) * 3;
   results->is_front = tri_clip_results.is_front;
 
-  vs_output **clipped_cursor = results->clipped_verts;
+  vs_output** clipped_cursor = results->clipped_verts;
   for (size_t i_tri = 1; i_tri < results->num_clipped_verts - 1; ++i_tri) {
     *(clipped_cursor + 0) = tri_clipped_verts[0];
     if (results->is_front) {
@@ -89,7 +89,7 @@ void clipper::clip_solid_triangle(shader::vs_output **tri_verts, clip_results *r
   }
 }
 
-inline bool compute_front(vec4 const &pos0, vec4 const &pos1, vec4 const &pos2) {
+inline bool compute_front(vec4 const& pos0, vec4 const& pos1, vec4 const& pos2) {
   vec2 pv_2d[3] = {
       pos0.xy() * (1.0f / pos0.w()),
       pos1.xy() * (1.0f / pos1.w()),
@@ -100,8 +100,8 @@ inline bool compute_front(vec4 const &pos0, vec4 const &pos1, vec4 const &pos2) 
   return area > 0.0f;
 }
 
-void clipper::clip_triangle_to_poly_general(vs_output **tri_verts, clip_results *results) const {
-  vs_output *clipped_verts[2][5];
+void clipper::clip_triangle_to_poly_general(vs_output** tri_verts, clip_results* results) const {
+  vs_output* clipped_verts[2][5];
   uint32_t num_clipped_verts[2];
 
   // Quick test
@@ -159,10 +159,12 @@ void clipper::clip_triangle_to_poly_general(vs_output **tri_verts, clip_results 
         ++num_clipped_verts[dest_stage];
 
         if (d[1] < 0.0f) {
-          vs_output *pclipped = ctxt_.vert_pool->alloc();
+          vs_output* pclipped = ctxt_.vert_pool->alloc();
 
           // LERP
-          ctxt_.vso_ops->lerp(*pclipped, *clipped_verts[src_stage][i], *clipped_verts[src_stage][j],
+          ctxt_.vso_ops->lerp(*pclipped,
+                              *clipped_verts[src_stage][i],
+                              *clipped_verts[src_stage][j],
                               d[0] / (d[0] - d[1]));
 
           clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
@@ -170,10 +172,12 @@ void clipper::clip_triangle_to_poly_general(vs_output **tri_verts, clip_results 
         }
       } else {
         if (d[1] >= 0.0f) {
-          vs_output *pclipped = ctxt_.vert_pool->alloc();
+          vs_output* pclipped = ctxt_.vert_pool->alloc();
 
           // LERP
-          ctxt_.vso_ops->lerp(*pclipped, *clipped_verts[src_stage][j], *clipped_verts[src_stage][i],
+          ctxt_.vso_ops->lerp(*pclipped,
+                              *clipped_verts[src_stage][j],
+                              *clipped_verts[src_stage][i],
                               d[1] / (d[1] - d[0]));
 
           clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
@@ -189,7 +193,7 @@ void clipper::clip_triangle_to_poly_general(vs_output **tri_verts, clip_results 
       if (num_clipped_verts[dest_stage] >= 3) {
         vec2 pv_2d[3];
         for (size_t i = 0; i < 3; ++i) {
-          vs_output &v = *clipped_verts[dest_stage][i];
+          vs_output& v = *clipped_verts[dest_stage][i];
           float const inv_abs_w = 1 / abs(v.position().w());
           float const x = v.position().x() * inv_abs_w;
           float const y = v.position().y() * inv_abs_w;
@@ -223,8 +227,8 @@ void clipper::clip_triangle_to_poly_general(vs_output **tri_verts, clip_results 
   }
 }
 
-void clipper::clip_triangle_to_poly_simple(vs_output **tri_verts, clip_results *results) const {
-  vs_output *clipped_verts[2][5];
+void clipper::clip_triangle_to_poly_simple(vs_output** tri_verts, clip_results* results) const {
+  vs_output* clipped_verts[2][5];
   uint32_t num_clipped_verts[2];
 
   results->is_clipped = false;
@@ -327,11 +331,13 @@ void clipper::clip_triangle_to_poly_simple(vs_output **tri_verts, clip_results *
         ++num_clipped_verts[dest_stage];
 
         if (d[1] < 0.0f) {
-          vs_output *pclipped = ctxt_.vert_pool->alloc();
+          vs_output* pclipped = ctxt_.vert_pool->alloc();
           results->is_clipped = true;
 
           // LERP
-          ctxt_.vso_ops->lerp(*pclipped, *clipped_verts[src_stage][i], *clipped_verts[src_stage][j],
+          ctxt_.vso_ops->lerp(*pclipped,
+                              *clipped_verts[src_stage][i],
+                              *clipped_verts[src_stage][j],
                               d[0] / (d[0] - d[1]));
 
           clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
@@ -339,11 +345,13 @@ void clipper::clip_triangle_to_poly_simple(vs_output **tri_verts, clip_results *
         }
       } else {
         if (d[1] >= 0.0f) {
-          vs_output *pclipped = ctxt_.vert_pool->alloc();
+          vs_output* pclipped = ctxt_.vert_pool->alloc();
           results->is_clipped = true;
 
           // LERP
-          ctxt_.vso_ops->lerp(*pclipped, *clipped_verts[src_stage][j], *clipped_verts[src_stage][i],
+          ctxt_.vso_ops->lerp(*pclipped,
+                              *clipped_verts[src_stage][j],
+                              *clipped_verts[src_stage][i],
                               d[1] / (d[1] - d[0]));
 
           clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
@@ -359,7 +367,7 @@ void clipper::clip_triangle_to_poly_simple(vs_output **tri_verts, clip_results *
       if (num_clipped_verts[dest_stage] >= 3) {
         vec2 pv_2d[3];
         for (size_t i = 0; i < 3; ++i) {
-          vs_output &v = *clipped_verts[dest_stage][i];
+          vs_output& v = *clipped_verts[dest_stage][i];
           float const inv_abs_w = 1 / abs(v.position().w());
           float const x = v.position().x() * inv_abs_w;
           float const y = v.position().y() * inv_abs_w;
@@ -393,4 +401,4 @@ void clipper::clip_triangle_to_poly_simple(vs_output **tri_verts, clip_results *
   }
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core

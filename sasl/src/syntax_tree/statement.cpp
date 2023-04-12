@@ -14,6 +14,8 @@ std::shared_ptr<struct label> labeled_statement::pop_label() {
   return ret;
 }
 
-void labeled_statement::push_label(std::shared_ptr<label> lbl) { this->labels.push_back(lbl); }
+void labeled_statement::push_label(std::shared_ptr<label> lbl) {
+  this->labels.push_back(lbl);
+}
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

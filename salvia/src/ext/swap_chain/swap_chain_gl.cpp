@@ -1,30 +1,35 @@
 #if defined(SALVIA_EXT_GL_ENABLED)
 
-#include <salvia/ext/swap_chain/swap_chain_impl.h>
+#  include <salvia/ext/swap_chain/swap_chain_impl.h>
 
-#include <salvia/core/renderer.h>
-#include <salvia/resource/mapped_resource.h>
-#include <salvia/resource/surface.h>
+#  include <salvia/core/renderer.h>
+#  include <salvia/resource/mapped_resource.h>
+#  include <salvia/resource/surface.h>
 
-#include <memory>
-#include <vector>
+#  include <memory>
+#  include <vector>
 
-#if defined(EFLIB_WINDOWS)
-#include <windows.h>
-#pragma comment(lib, "opengl32.lib")
-#endif
+#  if defined(EFLIB_WINDOWS)
+#    include <windows.h>
+#    pragma comment(lib, "opengl32.lib")
+#  endif
 
-#include <GL/gl.h>
+#  include <GL/gl.h>
 
 using namespace salvia::core;
 
-namespace salvia::ext{
+namespace salvia::ext {
 
 class gl_swap_chain : public swap_chain_impl {
 public:
-  gl_swap_chain(renderer_ptr const &renderer, renderer_parameters const &params)
-      : swap_chain_impl(renderer, params), window_(nullptr), dc_(nullptr), glrc_(nullptr), tex_(0),
-        width_(0), height_(0) {
+  gl_swap_chain(renderer_ptr const& renderer, renderer_parameters const& params)
+    : swap_chain_impl(renderer, params)
+    , window_(nullptr)
+    , dc_(nullptr)
+    , glrc_(nullptr)
+    , tex_(0)
+    , width_(0)
+    , height_(0) {
     window_ = reinterpret_cast<HWND>(params.native_window);
     initialize();
   }
@@ -55,11 +60,11 @@ public:
     ::wglMakeCurrent(dc_, glrc_);
 
     {
-      std::string ext_str(reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS)));
+      std::string ext_str(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
       if (ext_str.find("WGL_EXT_swap_control") != std::string::npos) {
         typedef BOOL(APIENTRY * wglSwapIntervalEXTFUNC)(int interval);
         wglSwapIntervalEXTFUNC wglSwapIntervalEXT = reinterpret_cast<wglSwapIntervalEXTFUNC>(
-            (void *)(::wglGetProcAddress("wglSwapIntervalEXT")));
+            (void*)(::wglGetProcAddress("wglSwapIntervalEXT")));
         wglSwapIntervalEXT(0);
       }
     }
@@ -87,10 +92,10 @@ public:
     renderer_->map(mapped, resolved_surface_, map_read);
     std::vector<byte> dest(surface_width * surface_height * 4);
     for (size_t y = 0; y < surface_height; ++y) {
-      byte *dst_line = dest.data() + y * surface_width * 4;
-      byte *src_line = static_cast<byte *>(mapped.data) + y * mapped.row_pitch;
-      pixel_format_convertor::convert_array(pixel_format_color_rgba8, surf_format, dst_line,
-                                            src_line, int(surface_width));
+      byte* dst_line = dest.data() + y * surface_width * 4;
+      byte* src_line = static_cast<byte*>(mapped.data) + y * mapped.row_pitch;
+      pixel_format_convertor::convert_array(
+          pixel_format_color_rgba8, surf_format, dst_line, src_line, int(surface_width));
     }
     renderer_->unmap();
 
@@ -98,13 +103,20 @@ public:
     if ((width_ < surface_width) || (height_ < surface_height)) {
       width_ = static_cast<uint32_t>(surface_width);
       height_ = static_cast<uint32_t>(surface_height);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                   &dest[0]);
+      glTexImage2D(
+          GL_TEXTURE_2D, 0, GL_RGBA8, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, &dest[0]);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     } else {
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, static_cast<GLsizei>(surface_width),
-                      static_cast<GLsizei>(surface_height), GL_RGBA, GL_UNSIGNED_BYTE, dest.data());
+      glTexSubImage2D(GL_TEXTURE_2D,
+                      0,
+                      0,
+                      0,
+                      static_cast<GLsizei>(surface_width),
+                      static_cast<GLsizei>(surface_height),
+                      GL_RGBA,
+                      GL_UNSIGNED_BYTE,
+                      dest.data());
     }
 
     float fw = static_cast<float>(surface_width) / width_;
@@ -137,8 +149,8 @@ private:
   uint32_t width_, height_;
 };
 
-swap_chain_ptr create_gl_swap_chain(renderer_ptr const &renderer,
-                                    renderer_parameters const *params) {
+swap_chain_ptr create_gl_swap_chain(renderer_ptr const& renderer,
+                                    renderer_parameters const* params) {
   if (!params) {
     return swap_chain_ptr();
   }
@@ -146,6 +158,6 @@ swap_chain_ptr create_gl_swap_chain(renderer_ptr const &renderer,
   return std::make_shared<gl_swap_chain>(renderer, *params);
 }
 
-}
+}  // namespace salvia::ext
 
 #endif

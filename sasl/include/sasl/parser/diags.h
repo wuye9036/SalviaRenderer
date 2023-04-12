@@ -24,4 +24,4 @@ constexpr sasl::common::diag_template unmatched_token                     {1105,
 constexpr sasl::common::diag_template unmatched_expected_token            {1106, diag_levels::error,          "syntax error: missing '{:s}' before '{:s}'."};
 
 // clang-format on
-} // namespace sasl::parser::diags
+}  // namespace sasl::parser::diags

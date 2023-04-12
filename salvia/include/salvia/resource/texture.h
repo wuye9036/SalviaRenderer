@@ -53,7 +53,7 @@ public:
     return {};
   }
 
-  [[nodiscard]] surface const *subresource_cptr(size_t index) const {
+  [[nodiscard]] surface const* subresource_cptr(size_t index) const {
     if (max_lod_ <= index && index <= min_lod_) {
       return surfs_[index].get();
     }
@@ -101,4 +101,4 @@ public:
   void gen_mipmap(filter_type filter, bool auto_gen) override;
 };
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

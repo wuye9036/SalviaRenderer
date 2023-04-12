@@ -23,21 +23,18 @@ namespace salvia::core {
 using namespace eflib;
 using std::shared_ptr;
 
-void render_core::update(render_state_ptr const &state) { state_ = state; }
+void render_core::update(render_state_ptr const& state) {
+  state_ = state;
+}
 
 result render_core::execute() {
   switch (state_->cmd) {
   case command_id::draw:
-  case command_id::draw_index:
-    return draw();
-  case command_id::clear_color:
-    return clear_color();
-  case command_id::clear_depth_stencil:
-    return clear_depth_stencil();
-  case command_id::async_begin:
-    return async_start();
-  case command_id::async_end:
-    return async_stop();
+  case command_id::draw_index: return draw();
+  case command_id::clear_color: return clear_color();
+  case command_id::clear_depth_stencil: return clear_depth_stencil();
+  case command_id::async_begin: return async_start();
+  case command_id::async_end: return async_stop();
   }
 
   ++batch_id_;
@@ -72,7 +69,7 @@ render_core::render_core() {
   stages_.backend.reset(new framebuffer());
 
   stages_.vert_cache->initialize(&stages_);
-  if (stages_.host){
+  if (stages_.host) {
     stages_.host->initialize(&stages_);
   }
   stages_.ras->initialize(&stages_);
@@ -83,14 +80,14 @@ render_core::render_core() {
 
 void render_core::apply_shader_cbuffer() {
   if (state_->ps_proto) {
-    for (auto const &variable : state_->px_cbuffer.variables()) {
-      auto const &var_name = variable.first;
-      auto const &var_data = variable.second;
+    for (auto const& variable : state_->px_cbuffer.variables()) {
+      auto const& var_name = variable.first;
+      auto const& var_data = variable.second;
       auto var_data_addr = state_->px_cbuffer.data_pointer(var_data);
       state_->ps_proto->set_variable(var_name, var_data_addr);
     }
 
-    for (auto const &samp : state_->px_cbuffer.samplers()) {
+    for (auto const& samp : state_->px_cbuffer.samplers()) {
       state_->ps_proto->set_sampler(samp.first, samp.second);
     }
   }
@@ -103,12 +100,12 @@ result render_core::clear_color() {
 
 result render_core::clear_depth_stencil() {
   if (state_->clear_f == (clear_depth | clear_stencil)) {
-    auto ds_color = color_rgba32f(state_->clear_z,
-                                  *reinterpret_cast<float *>(&state_->clear_stencil), 0.0f, 0.0f);
+    auto ds_color = color_rgba32f(
+        state_->clear_z, *reinterpret_cast<float*>(&state_->clear_stencil), 0.0f, 0.0f);
     state_->clear_ds_target->fill(ds_color);
   } else {
-    framebuffer::clear_depth_stencil(state_->clear_ds_target.get(), state_->clear_f,
-                                     state_->clear_z, state_->clear_stencil);
+    framebuffer::clear_depth_stencil(
+        state_->clear_ds_target.get(), state_->clear_f, state_->clear_z, state_->clear_stencil);
   }
   return result::ok;
 }
@@ -123,4 +120,4 @@ result render_core::async_stop() {
   return result::ok;
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core

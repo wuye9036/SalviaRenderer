@@ -50,7 +50,7 @@ public:
   virtual ~skin_mesh() {}
 };
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource
 
 /********************************************************************
 Copyright (C) 2007-2012 Ye Wu

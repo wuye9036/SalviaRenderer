@@ -56,15 +56,16 @@ struct indexes_of_vertex_attributes {
   vector<uint32_t> indexes;
 };
 
-bool operator==(indexes_of_vertex_attributes const &lhs, indexes_of_vertex_attributes const &rhs) {
+bool operator==(indexes_of_vertex_attributes const& lhs, indexes_of_vertex_attributes const& rhs) {
   return (lhs.indexes.size() == rhs.indexes.size()) &&
-         std::equal(lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin());
+      std::equal(lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin());
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource
 
-template <> struct std::hash<salvia::ext::resource::indexes_of_vertex_attributes> {
-  size_t operator()(salvia::ext::resource::indexes_of_vertex_attributes const &v) const noexcept {
+template <>
+struct std::hash<salvia::ext::resource::indexes_of_vertex_attributes> {
+  size_t operator()(salvia::ext::resource::indexes_of_vertex_attributes const& v) const noexcept {
     return eflib::hash_range{}(v.indexes);
   }
 };
@@ -92,10 +93,15 @@ struct skin_info {
 typedef shared_ptr<skin_info> skin_info_ptr;
 
 template <typename T>
-bool repack_data(void *dst, size_t dst_stride, void const *src, size_t stride, size_t count,
-                 size_t offset, vector<int> const &pattern) {
-  T const *psrc = static_cast<T const *>(src);
-  T *pdst = static_cast<T *>(dst);
+bool repack_data(void* dst,
+                 size_t dst_stride,
+                 void const* src,
+                 size_t stride,
+                 size_t count,
+                 size_t offset,
+                 vector<int> const& pattern) {
+  T const* psrc = static_cast<T const*>(src);
+  T* pdst = static_cast<T*>(dst);
 
   for (size_t i = 0; i < count; ++i) {
     for (size_t i_scalar = 0; i_scalar < pattern.size(); ++i_scalar) {
@@ -112,7 +118,7 @@ bool repack_data(void *dst, size_t dst_stride, void const *src, size_t stride, s
   return true;
 }
 
-vector<char> repack_source(salvia::format &fmt, size_t &stride_in_bytes, dae_source *s) {
+vector<char> repack_source(salvia::format& fmt, size_t& stride_in_bytes, dae_source* s) {
   fmt = salvia::format_unknown;
   dae_accessor_ptr accessor = s->tech->accessor;
 
@@ -121,7 +127,7 @@ vector<char> repack_source(salvia::format &fmt, size_t &stride_in_bytes, dae_sou
   size_t offset = accessor->offset;
 
   vector<int> pattern;
-  for (dae_param_ptr const &par : accessor->params) {
+  for (dae_param_ptr const& par : accessor->params) {
     pattern.push_back(par->index_xyzw_stpq());
   }
 
@@ -137,68 +143,49 @@ vector<char> repack_source(salvia::format &fmt, size_t &stride_in_bytes, dae_sou
 
   switch (s->arr->array_type) {
   case dae_array::float_array:
-    repack_data<float>((&ret[0]), dst_stride, &(s->arr->float_arr[0]), stride, count, offset,
-                       pattern);
+    repack_data<float>(
+        (&ret[0]), dst_stride, &(s->arr->float_arr[0]), stride, count, offset, pattern);
     switch (dst_stride) {
-    case 1:
-      fmt = salvia::format_r32_float;
-      break;
-    case 2:
-      fmt = salvia::format_r32g32_float;
-      break;
-    case 3:
-      fmt = salvia::format_r32g32b32_float;
-      break;
-    case 4:
-      fmt = salvia::format_r32g32b32a32_float;
-      break;
-    default:
-      ef_unreachable("Stride is too big. Expects 1-4, actual {}", dst_stride);
-      break;
+    case 1: fmt = salvia::format_r32_float; break;
+    case 2: fmt = salvia::format_r32g32_float; break;
+    case 3: fmt = salvia::format_r32g32b32_float; break;
+    case 4: fmt = salvia::format_r32g32b32a32_float; break;
+    default: ef_unreachable("Stride is too big. Expects 1-4, actual {}", dst_stride); break;
     }
     break;
   case dae_array::int_array:
-    repack_data<float>((&ret[0]), dst_stride, &(s->arr->int_arr[0]), stride, count, offset,
-                       pattern);
+    repack_data<float>(
+        (&ret[0]), dst_stride, &(s->arr->int_arr[0]), stride, count, offset, pattern);
     switch (dst_stride) {
-    case 1:
-      fmt = salvia::format_r32_sint;
-      break;
-    case 2:
-      fmt = salvia::format_r32g32_sint;
-      break;
-    case 3:
-      fmt = salvia::format_r32g32b32_sint;
-      break;
-    case 4:
-      fmt = salvia::format_r32g32b32a32_sint;
-      break;
-    default:
-      ef_unreachable("Stride is too big. Expects 1-4, actual {}", dst_stride);
-      break;
+    case 1: fmt = salvia::format_r32_sint; break;
+    case 2: fmt = salvia::format_r32g32_sint; break;
+    case 3: fmt = salvia::format_r32g32b32_sint; break;
+    case 4: fmt = salvia::format_r32g32b32a32_sint; break;
+    default: ef_unreachable("Stride is too big. Expects 1-4, actual {}", dst_stride); break;
     }
     break;
-  default:
-    ef_unimplemented();
-    break;
+  default: ef_unimplemented(); break;
   }
 
   return ret;
 }
 
-void transfer_element(vector<char> &out_buffer, vector<char> const &in_buffer, size_t i_element,
-                      size_t offset_in_bytes, size_t stride_in_bytes) {
+void transfer_element(vector<char>& out_buffer,
+                      vector<char> const& in_buffer,
+                      size_t i_element,
+                      size_t offset_in_bytes,
+                      size_t stride_in_bytes) {
   vector<char>::const_iterator src_beg_it =
       in_buffer.begin() + (offset_in_bytes + i_element * stride_in_bytes);
   vector<char>::const_iterator src_end_it = src_beg_it + stride_in_bytes;
   out_buffer.insert(out_buffer.end(), src_beg_it, src_end_it);
 }
 
-vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render) {
+vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info* skinfo, renderer* render) {
   vector<mesh_ptr> ret;
 
   // Collect used sources.
-  set<dae_source *> used_sources_set;
+  set<dae_source*> used_sources_set;
   for (dae_triangles_ptr tri : m->triangle_sets) {
     for (dae_input_ptr input : tri->inputs) {
       if (!input->source) {
@@ -207,11 +194,11 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
 
       dae_verts_ptr pverts = m->node_by_id<dae_verts>(*input->source);
       if (pverts) {
-        for (dae_input_ptr const &input : pverts->inputs) {
+        for (dae_input_ptr const& input : pverts->inputs) {
           if (!input->source) {
             continue;
           }
-          dae_source *psource = pverts->node_by_id<dae_source>(*input->source).get();
+          dae_source* psource = pverts->node_by_id<dae_source>(*input->source).get();
           if (psource) {
             used_sources_set.insert(psource);
           }
@@ -226,11 +213,11 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
   }
 
   // Repack data source, adjust scalar orders, discard unused data.
-  unordered_map<dae_source *, vector<char>> repacked_sources;
-  unordered_map<dae_source *, salvia::format> fmts;
-  unordered_map<dae_source *, size_t> strides;
+  unordered_map<dae_source*, vector<char>> repacked_sources;
+  unordered_map<dae_source*, salvia::format> fmts;
+  unordered_map<dae_source*, size_t> strides;
 
-  for (dae_source *src : used_sources_set) {
+  for (dae_source* src : used_sources_set) {
     salvia::format fmt = salvia::format_unknown;
     size_t stride = 0;
 
@@ -240,17 +227,17 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
   }
 
   // Build Triangles
-  for (dae_triangles_ptr const &triangles : m->triangle_sets) {
+  for (dae_triangles_ptr const& triangles : m->triangle_sets) {
     // Extract vertices to sources.
     vector<dae_input_ptr> inputs;
     vector<size_t> offsets;
     size_t vertex_index_offset = 0;
     size_t index_stride = triangles->inputs.size();
-    for (dae_input_ptr const &input : triangles->inputs) {
+    for (dae_input_ptr const& input : triangles->inputs) {
       dae_node_ptr input_source = input->source_node();
       if (input->semantic && *input->semantic == "VERTEX" && input_source->is_a<dae_verts>()) {
         // 'VERTEX' is an composited stream. Split to atomic streams and add them into inputs.
-        dae_verts *verts = input_source->as<dae_verts>();
+        dae_verts* verts = input_source->as<dae_verts>();
         inputs.insert(inputs.end(), verts->inputs.begin(), verts->inputs.end());
         offsets.insert(offsets.end(), verts->inputs.size(), input->offset);
         vertex_index_offset = input->offset;
@@ -267,16 +254,15 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
     using index_dict_t = unordered_map<indexes_of_vertex_attributes, uint32_t>;
     vector<vector<char>> buffers_data(
         skinfo ? vertex_attributes_count + 2
-               : vertex_attributes_count); // If skinfo is available, last two buffers for joints
-                                           // and weights.
+               : vertex_attributes_count);  // If skinfo is available, last two buffers for joints
+                                            // and weights.
     vector<uint32_t> attribute_merged_indexes;
-    index_dict_t index_dict; // a map from grouped index to merged index.
+    index_dict_t index_dict;                // a map from grouped index to merged index.
     uint32_t merged_vertex_counter = 0;
     indexes_of_vertex_attributes index_group(vertex_attributes_count);
 
     // FOR: index of triangle vertexes.
     for (size_t i_tri_vert = 0; i_tri_vert < triangles->count * 3; ++i_tri_vert) {
-
       // Make indexes
       for (size_t i_comp = 0; i_comp < vertex_attributes_count; ++i_comp) {
         index_group.indexes[i_comp] =
@@ -292,13 +278,16 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
 
         // Copy stream data to buffer.
         for (size_t i_comp = 0; i_comp < vertex_attributes_count; ++i_comp) {
-          dae_source *source_of_input = inputs[i_comp]->source_node()->as<dae_source>();
+          dae_source* source_of_input = inputs[i_comp]->source_node()->as<dae_source>();
           assert(source_of_input);
 
-          vector<char> &repacked_source_data(repacked_sources[source_of_input]);
+          vector<char>& repacked_source_data(repacked_sources[source_of_input]);
           size_t stride_in_bytes = strides[source_of_input];
-          transfer_element(buffers_data[i_comp], repacked_source_data, index_group.indexes[i_comp],
-                           0, stride_in_bytes);
+          transfer_element(buffers_data[i_comp],
+                           repacked_source_data,
+                           index_group.indexes[i_comp],
+                           0,
+                           stride_in_bytes);
         }
 
         // Copy joint id and weights to buffer
@@ -320,13 +309,15 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
           }
 
           // The last two buffers are weights buffer and joints buffer
-          vector<char> &weights_buffer = buffers_data.back();
-          vector<char> &joint_buffer = *(buffers_data.end() - 2);
+          vector<char>& weights_buffer = buffers_data.back();
+          vector<char>& joint_buffer = *(buffers_data.end() - 2);
 
-          joint_buffer.insert(joint_buffer.end(), (char *)(&vert_joint_ids),
-                              (char *)(&vert_joint_ids) + sizeof(vert_joint_ids));
-          weights_buffer.insert(weights_buffer.end(), (char *)(&vert_joint_weights),
-                                (char *)(&vert_joint_weights) + sizeof(vert_joint_weights));
+          joint_buffer.insert(joint_buffer.end(),
+                              (char*)(&vert_joint_ids),
+                              (char*)(&vert_joint_ids) + sizeof(vert_joint_ids));
+          weights_buffer.insert(weights_buffer.end(),
+                                (char*)(&vert_joint_weights),
+                                (char*)(&vert_joint_weights) + sizeof(vert_joint_weights));
         }
 
         attribute_merged_indexes.push_back(merged_vertex_counter);
@@ -342,8 +333,8 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
 
     // Add streams
     for (size_t i_source = 0; i_source < inputs.size(); ++i_source) {
-      dae_input *input = inputs[i_source].get();
-      dae_source *input_source = input->source_node()->as<dae_source>();
+      dae_input* input = inputs[i_source].get();
+      dae_source* input_source = input->source_node()->as<dae_source>();
 
       input_descs.push_back(input_element_desc());
       if (input->semantic) {
@@ -357,8 +348,8 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
 
       size_t buffer_data_size = buffers_data[i_source].size();
       buffer_ptr buf = render->create_buffer(buffer_data_size);
-      buf->transfer(0, &(buffers_data[i_source][0]), buffer_data_size, buffer_data_size,
-                    buffer_data_size, 1);
+      buf->transfer(
+          0, &(buffers_data[i_source][0]), buffer_data_size, buffer_data_size, buffer_data_size, 1);
       buffers.push_back(buf);
       buffer_strides.push_back(strides[input_source]);
     }
@@ -374,11 +365,11 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
       input_descs.back().slot_class = input_per_vertex;
       input_descs.back().aligned_byte_offset = 0;
 
-      vector<char> &joint_indices_buffer = buffers_data[buffers_data.size() - 2];
+      vector<char>& joint_indices_buffer = buffers_data[buffers_data.size() - 2];
       size_t buffer_data_size = joint_indices_buffer.size();
       buffer_ptr buf = render->create_buffer(buffer_data_size);
-      buf->transfer(0, &(joint_indices_buffer[0]), buffer_data_size, buffer_data_size,
-                    buffer_data_size, 1);
+      buf->transfer(
+          0, &(joint_indices_buffer[0]), buffer_data_size, buffer_data_size, buffer_data_size, 1);
       buffers.push_back(buf);
       buffer_strides.push_back(sizeof(int4));
 
@@ -391,16 +382,16 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
       input_descs.back().slot_class = input_per_vertex;
       input_descs.back().aligned_byte_offset = 0;
 
-      vector<char> &joint_weights_buffer = buffers_data.back();
+      vector<char>& joint_weights_buffer = buffers_data.back();
       buffer_data_size = joint_indices_buffer.size();
       buf = render->create_buffer(buffer_data_size);
-      buf->transfer(0, &(joint_weights_buffer[0]), buffer_data_size, buffer_data_size,
-                    buffer_data_size, 1);
+      buf->transfer(
+          0, &(joint_weights_buffer[0]), buffer_data_size, buffer_data_size, buffer_data_size, 1);
       buffers.push_back(buf);
       buffer_strides.push_back(sizeof(int4));
     }
 
-    mesh_impl *pmesh = new mesh_impl(render);
+    mesh_impl* pmesh = new mesh_impl(render);
     for (size_t i = 0; i < buffers.size(); ++i) {
       pmesh->add_vertex_buffer(i, buffers[i], buffer_strides[i], 0);
     }
@@ -410,8 +401,12 @@ vector<mesh_ptr> build_mesh(dae_mesh_ptr m, skin_info *skinfo, renderer *render)
     size_t index_size = attribute_merged_indexes.size();
     size_t index_buffer_size = index_size * 4;
     buffer_ptr index_buf = render->create_buffer(index_buffer_size);
-    index_buf->transfer(0, &(attribute_merged_indexes[0]), index_buffer_size, index_buffer_size,
-                        index_buffer_size, 1);
+    index_buf->transfer(0,
+                        &(attribute_merged_indexes[0]),
+                        index_buffer_size,
+                        index_buffer_size,
+                        index_buffer_size,
+                        1);
 
     pmesh->set_index_buffer(index_buf);
     pmesh->set_index_type(salvia::format_r32_uint);
@@ -429,17 +424,17 @@ skin_info_ptr build_skin_info(dae_skin_ptr skin) {
   ret->bind_matrix = skin->bind_shape_mat;
   ret->source = skin->unqualified_source_name();
 
-  for (dae_input_ptr const &joint_fmt : skin->joint_formats) {
+  for (dae_input_ptr const& joint_fmt : skin->joint_formats) {
     if (!joint_fmt->semantic) {
       continue;
     }
     if (*(joint_fmt->semantic) == "JOINT") {
-      dae_source *joint_name_source = joint_fmt->source_node()->as<dae_source>();
+      dae_source* joint_name_source = joint_fmt->source_node()->as<dae_source>();
       assert(joint_name_source);
       assert(joint_name_source->arr->array_type == dae_array::name_array);
-      ret->joints = joint_name_source->arr->name_arr; // Copy directly.
+      ret->joints = joint_name_source->arr->name_arr;  // Copy directly.
     } else if (*(joint_fmt->semantic) == "INV_BIND_MATRIX") {
-      dae_source *inv_bind_matrix_source = joint_fmt->source_node()->as<dae_source>();
+      dae_source* inv_bind_matrix_source = joint_fmt->source_node()->as<dae_source>();
       assert(inv_bind_matrix_source);
       assert(inv_bind_matrix_source->arr->array_type == dae_array::float_array);
 
@@ -448,8 +443,8 @@ skin_info_ptr build_skin_info(dae_skin_ptr skin) {
 
       for (size_t i = 0; i < accessor->count; ++i) {
         size_t start_addr = i * accessor->stride;
-        float *mat_addr = &((inv_bind_matrix_source->arr->float_arr)[start_addr]);
-        ret->joint_inv_matrix.push_back(*reinterpret_cast<mat44 *>(mat_addr));
+        float* mat_addr = &((inv_bind_matrix_source->arr->float_arr)[start_addr]);
+        ret->joint_inv_matrix.push_back(*reinterpret_cast<mat44*>(mat_addr));
       }
     }
   }
@@ -457,7 +452,7 @@ skin_info_ptr build_skin_info(dae_skin_ptr skin) {
   size_t joint_offset = 0;
   size_t weight_offset = 0;
   size_t weight_index_stride = 0;
-  for (dae_input_ptr const &weight_input : skin->weights->inputs) {
+  for (dae_input_ptr const& weight_input : skin->weights->inputs) {
     if (!weight_input->semantic) {
       continue;
     }
@@ -466,9 +461,9 @@ skin_info_ptr build_skin_info(dae_skin_ptr skin) {
       ++weight_index_stride;
     } else if (*weight_input->semantic == "WEIGHT") {
       weight_offset = weight_input->offset;
-      dae_source *weight_source = weight_input->source_node()->as<dae_source>();
+      dae_source* weight_source = weight_input->source_node()->as<dae_source>();
       assert(weight_source);
-      ret->weights = weight_source->arr->float_arr; // Copy directly. maybe we need to repack.
+      ret->weights = weight_source->arr->float_arr;  // Copy directly. maybe we need to repack.
       ++weight_index_stride;
     }
   }
@@ -494,13 +489,13 @@ skin_info_ptr build_skin_info(dae_skin_ptr skin) {
 
 scene_node_ptr
 build_scene_node(dae_scene_node_ptr scene,
-                 unordered_map<dae_scene_node_ptr, scene_node_ptr> &dae_node_to_joints,
-                 unordered_map<dae_matrix_ptr, mat44 *> &dae_node_to_matrix) {
-  scene_node_ptr ret = std::make_shared<scene_node>((scene_node *)nullptr, std::string());
+                 unordered_map<dae_scene_node_ptr, scene_node_ptr>& dae_node_to_joints,
+                 unordered_map<dae_matrix_ptr, mat44*>& dae_node_to_matrix) {
+  scene_node_ptr ret = std::make_shared<scene_node>((scene_node*)nullptr, std::string());
   ret->name = *(scene->id);
   dae_node_to_joints.insert(make_pair(scene, ret));
 
-  for (dae_scene_node_ptr const &child : scene->children) {
+  for (dae_scene_node_ptr const& child : scene->children) {
     scene_node_ptr child_scene = build_scene_node(child, dae_node_to_joints, dae_node_to_matrix);
     child_scene->parent = ret.get();
     ret->children.push_back(child_scene);
@@ -514,45 +509,46 @@ build_scene_node(dae_scene_node_ptr scene,
   return ret;
 }
 
-void assign_mat44(mat44 *lhs, mat44 const &rhs) { *lhs = rhs; }
+void assign_mat44(mat44* lhs, mat44 const& rhs) {
+  *lhs = rhs;
+}
 
 vector<animation_player_ptr>
 build_animations(dae_animations_ptr animations,
-                 unordered_map<dae_matrix_ptr, mat44 *> &dae_node_to_matrix) {
+                 unordered_map<dae_matrix_ptr, mat44*>& dae_node_to_matrix) {
   using namespace std::placeholders;
 
   vector<animation_player_ptr> ret;
 
-  for (dae_animation_ptr const &anim : animations->anims) {
+  for (dae_animation_ptr const& anim : animations->anims) {
     // Get channel
-    dae_sampler *samp = anim->channel->source_node()->as<dae_sampler>();
+    dae_sampler* samp = anim->channel->source_node()->as<dae_sampler>();
     assert(samp);
     if (!anim->channel->target)
       continue;
     dae_node_ptr target_node = animations->owner->node_by_path(*anim->channel->target);
     assert(target_node);
 
-    dae_source *input_source = samp->data_in->source_node()->as<dae_source>();
+    dae_source* input_source = samp->data_in->source_node()->as<dae_source>();
     assert(input_source);
-    dae_source *output_source = samp->data_out->source_node()->as<dae_source>();
+    dae_source* output_source = samp->data_out->source_node()->as<dae_source>();
     assert(output_source);
-    dae_source *interp_source = samp->interpolation->source_node()->as<dae_source>();
+    dae_source* interp_source = samp->interpolation->source_node()->as<dae_source>();
 
     animation_player_ptr anim_player;
     if (target_node->is_a<dae_matrix>()) {
-      auto anim_player_mat44 =
-          make_shared<animation_player_impl<mat44>>();
+      auto anim_player_mat44 = make_shared<animation_player_impl<mat44>>();
       anim_player = anim_player_mat44;
 
       anim_player_mat44->anim_info2()->X = input_source->arr->float_arr;
 
       for (size_t i = 0; i < output_source->arr->float_arr.size() / 16; ++i) {
-        float *pfloat = &(output_source->arr->float_arr[i * 16]);
-        mat44 *pmat = reinterpret_cast<mat44 *>(pfloat);
+        float* pfloat = &(output_source->arr->float_arr[i * 16]);
+        mat44* pmat = reinterpret_cast<mat44*>(pfloat);
         anim_player_mat44->anim_info2()->Y.push_back(*pmat);
       }
 
-      mat44 *target_data = dae_node_to_matrix[dynamic_pointer_cast<dae_matrix>(target_node)];
+      mat44* target_data = dae_node_to_matrix[dynamic_pointer_cast<dae_matrix>(target_node)];
       anim_player_mat44->anim_info2()->applier = std::bind(assign_mat44, target_data, _1);
     }
 
@@ -572,7 +568,7 @@ build_animations(dae_animations_ptr animations,
   return ret;
 }
 
-skin_mesh_ptr create_mesh_from_collada(renderer *render, std::string const &file_name) {
+skin_mesh_ptr create_mesh_from_collada(renderer* render, std::string const& file_name) {
   skin_mesh_impl_ptr ret = make_shared<skin_mesh_impl>();
 
   fstream fstr(file_name, std::ios::in);
@@ -604,7 +600,7 @@ skin_mesh_ptr create_mesh_from_collada(renderer *render, std::string const &file
 
   // Build skin infos.
   unordered_map<string, skin_info_ptr> skin_infos;
-  for (ptree::value_type &ctrl_child : controllers_root.get()) {
+  for (ptree::value_type& ctrl_child : controllers_root.get()) {
     if (ctrl_child.first == "controller") {
       dae_controller_ptr ctrl_node = pdom->load_node<dae_controller>(ctrl_child.second, nullptr);
       skin_info_ptr skinfo = build_skin_info(ctrl_node->skin);
@@ -613,10 +609,10 @@ skin_mesh_ptr create_mesh_from_collada(renderer *render, std::string const &file
   }
 
   // Build mesh.
-  for (ptree::value_type &geom_child : geometries_root.get()) {
+  for (ptree::value_type& geom_child : geometries_root.get()) {
     if (geom_child.first == "geometry") {
       string geom_id = geom_child.second.get<string>("<xmlattr>.id");
-      skin_info *skinfo = skin_infos.count(geom_id) > 0 ? skin_infos[geom_id].get() : nullptr;
+      skin_info* skinfo = skin_infos.count(geom_id) > 0 ? skin_infos[geom_id].get() : nullptr;
 
       auto mesh_node = geom_child.second.get_child_optional("mesh");
       assert(mesh_node);
@@ -633,16 +629,16 @@ skin_mesh_ptr create_mesh_from_collada(renderer *render, std::string const &file
 
   // Build scene hierarchy
   unordered_map<dae_scene_node_ptr, scene_node_ptr> dae_scene_node_to_scene_node;
-  unordered_map<dae_matrix_ptr, mat44 *> dae_matrix_to_matrix;
+  unordered_map<dae_matrix_ptr, mat44*> dae_matrix_to_matrix;
   {
     dae_visual_scenes_ptr scenes = pdom->load_node<dae_visual_scenes>(*scenes_root, nullptr);
-    for (dae_scene_node_ptr const &child : scenes->scenes) {
+    for (dae_scene_node_ptr const& child : scenes->scenes) {
       ret->roots.push_back(
           build_scene_node(child, dae_scene_node_to_scene_node, dae_matrix_to_matrix));
     }
 
     typedef unordered_map<dae_scene_node_ptr, scene_node_ptr>::value_type item_type;
-    for (item_type const &item : dae_scene_node_to_scene_node) {
+    for (item_type const& item : dae_scene_node_to_scene_node) {
       if (item.first->id) {
         ret->joint_nodes.insert(make_pair(*item.first->id, item.second.get()));
       }
@@ -658,7 +654,7 @@ skin_mesh_ptr create_mesh_from_collada(renderer *render, std::string const &file
   return ret;
 }
 
-vector<mesh_ptr> build_mesh_from_file(renderer *render, std::string const &file_name) {
+vector<mesh_ptr> build_mesh_from_file(renderer* render, std::string const& file_name) {
   vector<mesh_ptr> ret;
 
   fstream fstr(file_name, std::ios::in);
@@ -680,7 +676,7 @@ vector<mesh_ptr> build_mesh_from_file(renderer *render, std::string const &file_
     return ret;
 
   // Build mesh.
-  for (ptree::value_type &geom_child : geometries_root.get()) {
+  for (ptree::value_type& geom_child : geometries_root.get()) {
     if (geom_child.first == "geometry") {
       string geom_id = geom_child.second.get<string>("<xmlattr>.id");
 
@@ -698,15 +694,18 @@ vector<mesh_ptr> build_mesh_from_file(renderer *render, std::string const &file_
   return ret;
 }
 
-void merge_buffer_to_mesh(mesh_impl *merged_mesh, /*OUT*/
-                          vector<input_element_desc> &ieds, size_t &slot_counter /*IN OUT*/,
-                          input_element_desc const &ied, mesh_impl *source_mesh, /*IN*/
+void merge_buffer_to_mesh(mesh_impl* merged_mesh, /*OUT*/
+                          vector<input_element_desc>& ieds,
+                          size_t& slot_counter /*IN OUT*/,
+                          input_element_desc const& ied,
+                          mesh_impl* source_mesh, /*IN*/
                           size_t src_mesh_idx,
                           size_t src_mesh_count /*For compute merged semantic index*/) {
   vector<size_t>::iterator slot_it =
       find(source_mesh->slots_.begin(), source_mesh->slots_.end(), ied.input_slot);
   size_t buffer_index = (size_t)distance(source_mesh->slots_.begin(), slot_it);
-  merged_mesh->add_vertex_buffer(slot_counter, source_mesh->vertex_buffers_[buffer_index],
+  merged_mesh->add_vertex_buffer(slot_counter,
+                                 source_mesh->vertex_buffers_[buffer_index],
                                  source_mesh->strides_[buffer_index],
                                  source_mesh->offsets_[buffer_index]);
 
@@ -719,8 +718,8 @@ void merge_buffer_to_mesh(mesh_impl *merged_mesh, /*OUT*/
 }
 
 mesh_ptr merge_mesh_for_morphing(mesh_ptr lm, mesh_ptr rm) {
-  mesh_impl *left_mesh = dynamic_cast<mesh_impl *>(lm.get());
-  mesh_impl *right_mesh = dynamic_cast<mesh_impl *>(rm.get());
+  mesh_impl* left_mesh = dynamic_cast<mesh_impl*>(lm.get());
+  mesh_impl* right_mesh = dynamic_cast<mesh_impl*>(rm.get());
 
   EFLIB_ASSERT_AND_IF(left_mesh && right_mesh, "Left mesh or right mesh is invalid.") {
     return mesh_ptr();
@@ -740,15 +739,15 @@ mesh_ptr merge_mesh_for_morphing(mesh_ptr lm, mesh_ptr rm) {
   size_t slot_counter = 0;
   vector<input_element_desc> merged_mesh_ieds;
 
-  for (input_element_desc &left_ied : left_mesh->elem_descs_) {
+  for (input_element_desc& left_ied : left_mesh->elem_descs_) {
     semantic_value lsv(left_ied.semantic_name, left_ied.semantic_index);
 
-    for (input_element_desc &right_ied : right_mesh->elem_descs_) {
+    for (input_element_desc& right_ied : right_mesh->elem_descs_) {
       semantic_value rsv(right_ied.semantic_name, right_ied.semantic_index);
       if (lsv == rsv) {
         merge_buffer_to_mesh(ret.get(), merged_mesh_ieds, slot_counter, left_ied, left_mesh, 0, 2);
-        merge_buffer_to_mesh(ret.get(), merged_mesh_ieds, slot_counter, right_ied, right_mesh, 1,
-                             2);
+        merge_buffer_to_mesh(
+            ret.get(), merged_mesh_ieds, slot_counter, right_ied, right_mesh, 1, 2);
         break;
       }
     }
@@ -764,8 +763,9 @@ mesh_ptr merge_mesh_for_morphing(mesh_ptr lm, mesh_ptr rm) {
   return ret;
 }
 
-mesh_ptr create_morph_mesh_from_collada(salvia::core::renderer *render, std::string const &src,
-                                        std::string const &dst) {
+mesh_ptr create_morph_mesh_from_collada(salvia::core::renderer* render,
+                                        std::string const& src,
+                                        std::string const& dst) {
   vector<mesh_ptr> src_meshes = build_mesh_from_file(render, src);
   vector<mesh_ptr> dst_meshes = build_mesh_from_file(render, dst);
 
@@ -784,4 +784,4 @@ mesh_ptr create_morph_mesh_from_collada(salvia::core::renderer *render, std::str
   return mesh_ptr();
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

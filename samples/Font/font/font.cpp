@@ -9,50 +9,51 @@
 #include <filesystem>
 
 #if defined(EFLIB_WINDOWS)
-#include <salvia/ext/utility/inc_windows.h>
+#  include <salvia/ext/utility/inc_windows.h>
 #endif
 
 namespace salvia::ext::resource {
 
 class font_library {
 public:
-  static font_library &instance() {
+  static font_library& instance() {
     static font_library inst;
     FT_Init_FreeType(&inst.ftlib_);
     return inst;
   }
 
-  FT_Library &freetype_library() { return ftlib_; }
+  FT_Library& freetype_library() { return ftlib_; }
 
 private:
   font_library();
   FT_Library ftlib_;
 };
 
-template <typename T> class optional_value {
+template <typename T>
+class optional_value {
 public:
   typedef optional_value<T> this_type;
 
   optional_value<T>() : value_(), enabled_(false) {}
 
-  this_type &operator=(this_type const &v) {
+  this_type& operator=(this_type const& v) {
     value_ = v.value_;
     enabled_ = v.enabled_;
     return *this;
   }
 
-  this_type &operator=(T const &v) {
+  this_type& operator=(T const& v) {
     value_ = v;
     enabled_ = true;
     return *this;
   }
 
-  T &get() { return value_; }
-  T const &get() const { return value_; }
+  T& get() { return value_; }
+  T const& get() const { return value_; }
 
-  T *get_ptr() { return &value_; }
+  T* get_ptr() { return &value_; }
 
-  T const *get_ptr() const { return &value_; }
+  T const* get_ptr() const { return &value_; }
 
   bool enabled() { return enabled_; }
 
@@ -67,7 +68,7 @@ private:
 
 class font_impl : public font {
 public:
-  font_impl(std::string const &file_name, size_t face_index) {
+  font_impl(std::string const& file_name, size_t face_index) {
     size_ = 0;
     unit_ = pixels;
 
@@ -78,8 +79,8 @@ public:
     }
     library_.make_enable();
 
-    err = FT_New_Face(library_.get(), file_name.c_str(), static_cast<FT_Long>(face_index),
-                      face_.get_ptr());
+    err = FT_New_Face(
+        library_.get(), file_name.c_str(), static_cast<FT_Long>(face_index), face_.get_ptr());
     if (!err) {
       face_.make_enable();
       return;
@@ -114,12 +115,8 @@ public:
     auto sz_uint = static_cast<FT_UInt>(sz);
 
     switch (un) {
-    case pixels:
-      FT_Set_Pixel_Sizes(face_.get(), sz_uint, sz_uint);
-      return;
-    case points:
-      FT_Set_Char_Size(face_.get(), sz_uint << 6, sz_uint << 6, dpi, dpi);
-      break;
+    case pixels: FT_Set_Pixel_Sizes(face_.get(), sz_uint, sz_uint); return;
+    case points: FT_Set_Char_Size(face_.get(), sz_uint << 6, sz_uint << 6, dpi, dpi); break;
     }
   }
 
@@ -142,9 +139,12 @@ public:
     return true;
   }
 
-  void draw(std::string const &text, salvia::resource::surface *target, eflib::rect<int32_t> const &rc,
-            salvia::color_rgba32f const &foreground_color,
-            salvia::color_rgba32f const &background_color, font::render_hints /*hint*/) {
+  void draw(std::string const& text,
+            salvia::resource::surface* target,
+            eflib::rect<int32_t> const& rc,
+            salvia::color_rgba32f const& foreground_color,
+            salvia::color_rgba32f const& background_color,
+            font::render_hints /*hint*/) {
     std::wstring wtext;
     ::setlocale(LC_ALL, ".65001");
     eflib::to_wide_string(wtext, text);
@@ -163,7 +163,7 @@ public:
 
       FT_Glyph_To_Bitmap(&ch_glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
       FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)ch_glyph;
-      FT_Bitmap &bitmap = bitmap_glyph->bitmap;
+      FT_Bitmap& bitmap = bitmap_glyph->bitmap;
 
       int32_t target_region_left = target_pen_x + bitmap_glyph->left;
       int32_t target_region_top =
@@ -179,7 +179,9 @@ public:
       for (int i = 0; i < target_region_height; ++i) {
         for (int j = 0; j < target_region_width; ++j) {
           float gray = bitmap.buffer[bitmap.width * i + j] / 255.0f;
-          target->set_texel(target_region_left + j, target_region_top - i - 1, 0,
+          target->set_texel(target_region_left + j,
+                            target_region_top - i - 1,
+                            0,
                             lerp(background_color, foreground_color, gray));
         }
       }
@@ -199,8 +201,8 @@ private:
   units unit_;
 };
 
-font_ptr font::create(std::string const &font_file_path, size_t face_index, size_t size,
-                      font::units unit) {
+font_ptr
+font::create(std::string const& font_file_path, size_t face_index, size_t size, font::units unit) {
   if (!std::filesystem::exists(font_file_path)) {
     return font_ptr();
   }
@@ -210,8 +212,10 @@ font_ptr font::create(std::string const &font_file_path, size_t face_index, size
   return ret;
 }
 
-font_ptr font::create_in_system_path(std::string const &font_file_name, size_t face_index,
-                                     size_t size, font::units unit) {
+font_ptr font::create_in_system_path(std::string const& font_file_name,
+                                     size_t face_index,
+                                     size_t size,
+                                     font::units unit) {
   char system_directory[1024];
 #if defined(EFLIB_WINDOWS)
   GetWindowsDirectoryA(system_directory, 1024);
@@ -226,4 +230,4 @@ font_ptr font::create_in_system_path(std::string const &font_file_name, size_t f
   return create(font_path.string(), face_index, size, unit);
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

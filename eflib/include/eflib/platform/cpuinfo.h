@@ -23,6 +23,6 @@ enum cpu_features {
 };
 
 bool support_feature(cpu_features);
-} // namespace eflib
+}  // namespace eflib
 
 #endif

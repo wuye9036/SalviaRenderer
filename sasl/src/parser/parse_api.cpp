@@ -14,7 +14,7 @@ namespace sasl {
 namespace common {
 class diag_chat;
 }
-} // namespace sasl
+}  // namespace sasl
 
 using namespace sasl::parser::diags;
 
@@ -28,13 +28,18 @@ using std::endl;
 using std::shared_ptr;
 
 namespace sasl::parser {
-bool parse(shared_ptr<attribute> &pt_root, const std::string &code, shared_ptr<lex_context> ctxt,
-           lexer &l, grammars &g, diag_chat *diags) {
+bool parse(shared_ptr<attribute>& pt_root,
+           const std::string& code,
+           shared_ptr<lex_context> ctxt,
+           lexer& l,
+           grammars& g,
+           diag_chat* diags) {
   token_seq toks;
 
   bool tok_result = l.tokenize_with_end(code, ctxt, toks);
   if (!tok_result) {
-    diags->report(unrecognized_token, ctxt->file_name(),
+    diags->report(unrecognized_token,
+                  ctxt->file_name(),
                   inline_code_span(ctxt->line(), ctxt->column(), 1),
                   fmt::arg("token", "<unknown>"));
     return false;
@@ -44,8 +49,12 @@ bool parse(shared_ptr<attribute> &pt_root, const std::string &code, shared_ptr<l
   return g.prog.parse(it, toks.end() - 1, pt_root, diags).is_succeed();
 }
 
-bool parse(shared_ptr<attribute> &pt_root, code_source *src, shared_ptr<lex_context> ctxt, lexer &l,
-           grammars &g, diag_chat *diags) {
+bool parse(shared_ptr<attribute>& pt_root,
+           code_source* src,
+           shared_ptr<lex_context> ctxt,
+           lexer& l,
+           grammars& g,
+           diag_chat* diags) {
   token_seq toks;
 
   l.begin_incremental();
@@ -54,7 +63,8 @@ bool parse(shared_ptr<attribute> &pt_root, code_source *src, shared_ptr<lex_cont
       std::string next_token{src->next()};
       bool tok_result = l.incremental_tokenize(next_token, ctxt, toks);
       if (!tok_result) {
-        diags->report(unrecognized_token, ctxt->file_name(),
+        diags->report(unrecognized_token,
+                      ctxt->file_name(),
                       inline_code_span(ctxt->line(), ctxt->column(), 1),
                       fmt::arg("token", next_token));
         return false;
@@ -69,4 +79,4 @@ bool parse(shared_ptr<attribute> &pt_root, code_source *src, shared_ptr<lex_cont
   token_iterator it = toks.begin();
   return !src->failed() && g.prog.parse(it, toks.end() - 1, pt_root, diags).is_succeed();
 }
-} // namespace sasl::parser
+}  // namespace sasl::parser

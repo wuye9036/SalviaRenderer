@@ -17,7 +17,7 @@
 namespace sasl {
 namespace common {
 EFLIB_DECLARE_CLASS_SHARED_PTR(diag_chat);
-} // namespace common
+}  // namespace common
 namespace syntax_tree {
 EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
@@ -26,8 +26,8 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(function_full_def);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(function_def);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(parameter);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(expression);
-} // namespace syntax_tree
-} // namespace sasl
+}  // namespace syntax_tree
+}  // namespace sasl
 
 namespace sasl::semantic {
 
@@ -94,69 +94,75 @@ public:
   // program
   SASL_VISIT_DCL(program);
 
-  module_semantic_ptr const &get_module_semantic() const;
-  sasl::common::diag_chat *get_diags() const;
+  module_semantic_ptr const& get_module_semantic() const;
+  sasl::common::diag_chat* get_diags() const;
   uint32_t language() const;
   void language(uint32_t);
 
 private:
   template <typename NodeT>
-  std::shared_ptr<NodeT> visit_child(std::shared_ptr<NodeT> const &child,
-                                     node_semantic **return_sem = nullptr);
+  std::shared_ptr<NodeT> visit_child(std::shared_ptr<NodeT> const& child,
+                                     node_semantic** return_sem = nullptr);
   template <typename ReturnNodeT, typename NodeT>
-  std::shared_ptr<ReturnNodeT> visit_child(std::shared_ptr<NodeT> const &child,
-                                           node_semantic **return_sem = nullptr);
+  std::shared_ptr<ReturnNodeT> visit_child(std::shared_ptr<NodeT> const& child,
+                                           node_semantic** return_sem = nullptr);
 
-  void parse_semantic(token sem_tok, token sem_idx_tok, node_semantic *ssi);
+  void parse_semantic(token sem_tok, token sem_idx_tok, node_semantic* ssi);
 
-  node_semantic *get_node_semantic(sasl::syntax_tree::node *);
-  node_semantic *get_node_semantic(sasl::syntax_tree::node_ptr const &);
+  node_semantic* get_node_semantic(sasl::syntax_tree::node*);
+  node_semantic* get_node_semantic(sasl::syntax_tree::node_ptr const&);
 
-  node_semantic *create_node_semantic(sasl::syntax_tree::node *);
-  node_semantic *create_node_semantic(sasl::syntax_tree::node_ptr const &);
+  node_semantic* create_node_semantic(sasl::syntax_tree::node*);
+  node_semantic* create_node_semantic(sasl::syntax_tree::node_ptr const&);
 
-  node_semantic *get_or_create_semantic(sasl::syntax_tree::node *);
-  node_semantic *get_or_create_semantic(sasl::syntax_tree::node_ptr const &);
+  node_semantic* get_or_create_semantic(sasl::syntax_tree::node*);
+  node_semantic* get_or_create_semantic(sasl::syntax_tree::node_ptr const&);
 
-  symbol *get_symbol(sasl::syntax_tree::node *);
-  symbol *get_symbol(sasl::syntax_tree::node_ptr const &);
+  symbol* get_symbol(sasl::syntax_tree::node*);
+  symbol* get_symbol(sasl::syntax_tree::node_ptr const&);
 
   std::string unique_structure_name();
-  void mark_intrin_invoked_recursive(symbol *sym);
+  void mark_intrin_invoked_recursive(symbol* sym);
 
-  void mark_modified(sasl::syntax_tree::expression *expr);
+  void mark_modified(sasl::syntax_tree::expression* expr);
 
   void initialize_casts();
   void initialize_operator_parameter_lrvs();
   void register_builtin_types();
   void register_builtin_functions2();
-  void hold_generated_node(sasl::syntax_tree::node_ptr const &);
+  void hold_generated_node(sasl::syntax_tree::node_ptr const&);
 
-  void register_function2(std::string_view name, std::vector<size_t> const &proto_indexes,
-                          std::vector<proto_info> const &protos, bool is_intrinsic = false,
-                          bool is_partial_exec = false, bool is_constructor = false);
-  void register_intrinsic2(std::string_view name, std::vector<size_t> const &proto_indexes,
-                           std::vector<proto_info> const &protos, bool partial_exec = false);
-  void register_constructor2(std::string_view name, std::vector<size_t> const &proto_indexes,
-                             std::vector<proto_info> const &protos);
+  void register_function2(std::string_view name,
+                          std::vector<size_t> const& proto_indexes,
+                          std::vector<proto_info> const& protos,
+                          bool is_intrinsic = false,
+                          bool is_partial_exec = false,
+                          bool is_constructor = false);
+  void register_intrinsic2(std::string_view name,
+                           std::vector<size_t> const& proto_indexes,
+                           std::vector<proto_info> const& protos,
+                           bool partial_exec = false);
+  void register_constructor2(std::string_view name,
+                             std::vector<size_t> const& proto_indexes,
+                             std::vector<proto_info> const& protos);
 
-  void empty_caster(sasl::syntax_tree::node *, sasl::syntax_tree::node *);
+  void empty_caster(sasl::syntax_tree::node*, sasl::syntax_tree::node*);
 
   module_semantic_ptr module_semantic_;
   caster_t_ptr caster;
   sasl::common::diag_chat_ptr diags;
   uint32_t lang;
-  sasl::syntax_tree::program *prog_;
+  sasl::syntax_tree::program* prog_;
 
   // Global States
   typedef std::vector<std::weak_ptr<sasl::syntax_tree::labeled_statement>> label_list_t;
   typedef sasl::syntax_tree::function_def_ptr function_def_ptr;
 
   function_def_ptr current_function;
-  label_list_t *label_list;
+  label_list_t* label_list;
   sasl::syntax_tree::node_ptr variable_to_initialized;
   sasl::syntax_tree::node_ptr generated_node;
-  node_semantic *generated_sem;
+  node_semantic* generated_sem;
 
   struct parameter_lrvs {
     parameter_lrvs(lvalue_or_rvalue::id ret_lrv = lvalue_or_rvalue::unknown,
@@ -169,11 +175,11 @@ private:
 
   std::unordered_map<operators, parameter_lrvs> operator_parameter_lrvs_;
   bool is_global_scope;
-  symbol *current_symbol;
+  symbol* current_symbol;
   int declaration_tid;
   int member_counter;
 
   int random_name_counter;
 };
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

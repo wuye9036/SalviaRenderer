@@ -4,8 +4,8 @@
 
 #include <salvia/utility/common/window.h>
 
-#include <eflib/platform/constant.h>
 #include <eflib/diagnostics/assert.h>
+#include <eflib/platform/constant.h>
 #include <eflib/utility/string_conv.h>
 
 #include <boost/signals2.hpp>
@@ -14,7 +14,7 @@
 #include <string>
 
 #if defined(EFLIB_WINDOWS)
-#include <Windows.h>
+#  include <Windows.h>
 
 using boost::signals2::signal;
 using std::string;
@@ -22,7 +22,7 @@ using std::string;
 namespace salvia::utility {
 
 class win_gui;
-static win_gui *g_gui = nullptr;
+static win_gui* g_gui = nullptr;
 
 class win_window : public window {
   signal<void()> on_idle;
@@ -30,21 +30,19 @@ class win_window : public window {
   signal<void()> on_create;
 
 public:
-  win_window(win_gui *app) : app_(app), hwnd_(nullptr) {}
+  win_window(win_gui* app) : app_(app), hwnd_(nullptr) {}
 
   void show() { ShowWindow(hwnd_, SW_SHOWDEFAULT); }
 
-  void set_idle_handler(idle_handler_t const &handler) { on_idle.connect(handler); }
+  void set_idle_handler(idle_handler_t const& handler) { on_idle.connect(handler); }
 
-  void set_draw_handler(draw_handler_t const &handler) { on_paint.connect(handler); }
+  void set_draw_handler(draw_handler_t const& handler) { on_paint.connect(handler); }
 
-  void set_create_handler(create_handler_t const &handler) { on_create.connect(handler); }
+  void set_create_handler(create_handler_t const& handler) { on_create.connect(handler); }
 
-  void set_title(string const &title) {
-    SetWindowText(hwnd_, eflib::mb2wide(title).c_str());
-  }
+  void set_title(string const& title) { SetWindowText(hwnd_, eflib::mb2wide(title).c_str()); }
 
-  void *view_handle_as_void() override { return reinterpret_cast<void *>(hwnd_); }
+  void* view_handle_as_void() override { return reinterpret_cast<void*>(hwnd_); }
 
   std::any view_handle() override { return std::any(hwnd_); }
 
@@ -80,19 +78,14 @@ private:
     HDC hdc;
 
     switch (message) {
-    case WM_CREATE:
-      on_create();
-      break;
+    case WM_CREATE: on_create(); break;
     case WM_PAINT:
       hdc = BeginPaint(hwnd_, &ps);
       on_paint();
       EndPaint(hwnd_, &ps);
       break;
-    case WM_DESTROY:
-      PostQuitMessage(0);
-      break;
-    default:
-      return DefWindowProc(hwnd_, message, wparam, lparam);
+    case WM_DESTROY: PostQuitMessage(0); break;
+    default: return DefWindowProc(hwnd_, message, wparam, lparam);
     }
     return 0;
   }
@@ -101,7 +94,7 @@ private:
   static ATOM wnd_class_;
   static constexpr auto wnd_class_name_ = L"SalviaSampleApp";
   HWND hwnd_;
-  win_gui *app_;
+  win_gui* app_;
 };
 
 ATOM win_window::wnd_class_ = 0;
@@ -116,7 +109,7 @@ public:
 
   ~win_gui() { delete main_wnd_; }
 
-  window *main_window() { return main_wnd_; }
+  window* main_window() { return main_wnd_; }
 
   HINSTANCE instance() const { return hinst_; }
 
@@ -136,7 +129,7 @@ public:
     for (;;) {
       if (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
         if (WM_QUIT == msg.message) {
-          break; // WM_QUIT, exit message loop
+          break;  // WM_QUIT, exit message loop
         }
 
         ::TranslateMessage(&msg);
@@ -150,7 +143,7 @@ public:
   }
 
 private:
-  win_window *main_wnd_;
+  win_window* main_wnd_;
   HINSTANCE hinst_;
 };
 
@@ -161,20 +154,33 @@ bool win_window::create(uint32_t width, uint32_t height) {
   DWORD style = WS_OVERLAPPEDWINDOW;
   RECT rc = {0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
   AdjustWindowRect(&rc, style, false);
-  hwnd_ = CreateWindow(wnd_class_name_, L"", style, CW_USEDEFAULT, 0, rc.right - rc.left,
-                       rc.bottom - rc.top, nullptr, nullptr, app_->instance(), nullptr);
+  hwnd_ = CreateWindow(wnd_class_name_,
+                       L"",
+                       style,
+                       CW_USEDEFAULT,
+                       0,
+                       rc.right - rc.left,
+                       rc.bottom - rc.top,
+                       nullptr,
+                       nullptr,
+                       app_->instance(),
+                       nullptr);
   if (!hwnd_) {
     auto err = GetLastError();
 
     LPTSTR lpMsgBuf;
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, nullptr);
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                      FORMAT_MESSAGE_IGNORE_INSERTS,
+                  nullptr,
+                  err,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPTSTR)&lpMsgBuf,
+                  0,
+                  nullptr);
 
     // Display the error message and exit the process
     std::wstringstream ss;
-    ss << L"Window created failed. Error: " << std::hex
-       << lpMsgBuf << ".";
+    ss << L"Window created failed. Error: " << std::hex << lpMsgBuf << ".";
     OutputDebugString(ss.str().c_str());
     LocalFree(lpMsgBuf);
     return false;
@@ -187,16 +193,16 @@ bool win_window::create(uint32_t width, uint32_t height) {
 }
 
 LRESULT CALLBACK win_window::win_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
-  win_window *wnd = static_cast<win_window *>(g_gui->main_window());
+  win_window* wnd = static_cast<win_window*>(g_gui->main_window());
   wnd->hwnd_ = hwnd;
   return wnd->process_message(message, wparam, lparam);
 }
 
-}
+}  // namespace salvia::utility
 #endif
 
 namespace salvia::utility {
-gui *create_win_gui() {
+gui* create_win_gui() {
 #if defined(EFLIB_WINDOWS)
   if (g_gui) {
     assert(false);
@@ -209,17 +215,17 @@ gui *create_win_gui() {
 #endif
 }
 
-void delete_win_gui(gui *app) {
+void delete_win_gui(gui* app) {
 #if defined(EFLIB_WINDOWS)
   if (app == nullptr) {
     return;
   }
 
-  ef_verify(dynamic_cast<win_gui *>(app) != nullptr);
+  ef_verify(dynamic_cast<win_gui*>(app) != nullptr);
 
   delete app;
 #endif
   // Do nothing.
   (void)app;
 }
-}
+}  // namespace salvia::utility

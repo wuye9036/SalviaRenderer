@@ -39,9 +39,11 @@ namespace sasl::parser {
 
 using namespace diags;
 
-parse_results::parse_results() : tag(-1) {}
+parse_results::parse_results() : tag(-1) {
+}
 
-parse_results::parse_results(int t) : tag(t) {}
+parse_results::parse_results(int t) : tag(t) {
+}
 
 namespace parse_result_values {
 int const recover_failed_offset = 4;
@@ -55,7 +57,7 @@ int const failed = 0x2 << recover_failed_offset;
 int const expected_failed = expected | failed;
 int const recovered_expected_failed = expected | recovered;
 
-}; // namespace parse_result_values
+};  // namespace parse_result_values
 
 parse_results const parse_results::succeed(parse_result_values::succeed);
 parse_results const parse_results::recovered(parse_result_values::recovered);
@@ -64,10 +66,18 @@ parse_results const parse_results::expected_failed(parse_result_values::expected
 parse_results const
     parse_results::recovered_expected_failed(parse_result_values::recovered_expected_failed);
 
-bool parse_results::is_succeed() const { return tag == succeed.tag; }
-bool parse_results::is_failed() const { return tag == failed.tag; }
-bool parse_results::is_recovered() const { return tag == recovered.tag; }
-bool parse_results::is_expected_failed() const { return tag == expected_failed.tag; }
+bool parse_results::is_succeed() const {
+  return tag == succeed.tag;
+}
+bool parse_results::is_failed() const {
+  return tag == failed.tag;
+}
+bool parse_results::is_recovered() const {
+  return tag == recovered.tag;
+}
+bool parse_results::is_expected_failed() const {
+  return tag == expected_failed.tag;
+}
 bool parse_results::is_recovered_expected_failed() const {
   return tag == recovered_expected_failed.tag;
 }
@@ -79,21 +89,23 @@ bool parse_results::is_expected_failed_or_recovered() const {
   return (tag & parse_result_values::expected_mask) == parse_result_values::expected;
 }
 
-parse_results parse_results::worse(parse_results const &l, parse_results const &r) {
+parse_results parse_results::worse(parse_results const& l, parse_results const& r) {
   return l.tag > r.tag ? l : r;
 }
 
-parse_results parse_results::better(parse_results const &l, parse_results const &r) {
+parse_results parse_results::better(parse_results const& l, parse_results const& r) {
   return l.tag < r.tag ? l : r;
 }
 
-[[maybe_unused]] bool parse_results::worse_than(parse_results const &v) const {
+[[maybe_unused]] bool parse_results::worse_than(parse_results const& v) const {
   return tag > v.tag;
 }
 
-bool parse_results::better_than(parse_results const &v) const { return tag < v.tag; }
+bool parse_results::better_than(parse_results const& v) const {
+  return tag < v.tag;
+}
 
-parse_results parse_results::recover(parse_results const &v) {
+parse_results parse_results::recover(parse_results const& v) {
   if (v.is_expected_failed()) {
     return recovered_expected_failed;
   }
@@ -102,8 +114,8 @@ parse_results parse_results::recover(parse_results const &v) {
 
 //////////////////////////////////////////////////////////////////////////
 // Exceptions
-expectation_failure::expectation_failure(token_iterator iter, parser const *p) : iter(iter), p(p) {
-  rule_wrapper const *r = dynamic_cast<rule_wrapper const *>(p);
+expectation_failure::expectation_failure(token_iterator iter, parser const* p) : iter(iter), p(p) {
+  rule_wrapper const* r = dynamic_cast<rule_wrapper const*>(p);
   if (r) {
     what_str = str(boost::format("can't match expected rule \"%s\"") % r->name());
   } else {
@@ -117,32 +129,47 @@ expectation_failure::expectation_failure(token_iterator iter, parser const *p) :
   }
 }
 
-parser const *expectation_failure::get_parser() { return p; }
-const char *expectation_failure::what() const throw() { return what_str.c_str(); }
+parser const* expectation_failure::get_parser() {
+  return p;
+}
+const char* expectation_failure::what() const throw() {
+  return what_str.c_str();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Attributes.
-attribute::attribute()
-    : rid(-1), tok_beg{token::uninitialized()}, tok_end{token::uninitialized()} {}
-attribute::~attribute() {}
-intptr_t attribute::rule_id() const { return rid; }
-void attribute::rule_id(intptr_t id) { rid = id; }
+attribute::attribute() : rid(-1), tok_beg{token::uninitialized()}, tok_end{token::uninitialized()} {
+}
+attribute::~attribute() {
+}
+intptr_t attribute::rule_id() const {
+  return rid;
+}
+void attribute::rule_id(intptr_t id) {
+  rid = id;
+}
 
 void attribute::token_range(token beg, token end) {
   tok_beg = std::move(beg);
   tok_end = std::move(end);
 }
 
-token attribute::token_beg() const { return tok_beg; }
+token attribute::token_beg() const {
+  return tok_beg;
+}
 
-token attribute::token_end() const { return tok_end.is_uninitialized() ? tok_beg : tok_end; }
+token attribute::token_end() const {
+  return tok_end.is_uninitialized() ? tok_beg : tok_end;
+}
 
 shared_ptr<attribute> terminal_attribute::child(int /*idx*/) const {
   EF_ASSERT(false, "Terminate attribute has no child.");
   return {};
 }
 
-size_t terminal_attribute::child_size() const { return 0; }
+size_t terminal_attribute::child_size() const {
+  return 0;
+}
 
 shared_ptr<attribute> sequence_attribute::child(int idx) const {
   if (attrs.empty()) {
@@ -156,16 +183,23 @@ shared_ptr<attribute> sequence_attribute::child(int idx) const {
   return attrs[idx];
 }
 
-size_t sequence_attribute::child_size() const { return attrs.size(); }
+size_t sequence_attribute::child_size() const {
+  return attrs.size();
+}
 
-selector_attribute::selector_attribute() : selected_idx(-1) {}
+selector_attribute::selector_attribute() : selected_idx(-1) {
+}
 
 shared_ptr<attribute> selector_attribute::child(int idx) const {
-  EFLIB_ASSERT_AND_IF(idx == 0, "") { return shared_ptr<attribute>(); }
+  EFLIB_ASSERT_AND_IF(idx == 0, "") {
+    return shared_ptr<attribute>();
+  }
   return attr;
 }
 
-size_t selector_attribute::child_size() const { return selected_idx == -1 ? 0 : 1; }
+size_t selector_attribute::child_size() const {
+  return selected_idx == -1 ? 0 : 1;
+}
 
 shared_ptr<attribute> queuer_attribute::child(int idx) const {
   EFLIB_ASSERT_AND_IF(0 <= idx && idx < static_cast<int>(attrs.size()), "") {
@@ -174,23 +208,34 @@ shared_ptr<attribute> queuer_attribute::child(int idx) const {
   return attrs[idx];
 }
 
-size_t queuer_attribute::child_size() const { return attrs.size(); }
+size_t queuer_attribute::child_size() const {
+  return attrs.size();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Parsers
 
-parser::parser() : expected(false) {}
-bool parser::is_expected() const { return expected; }
-void parser::is_expected(bool v) { expected = v; }
+parser::parser() : expected(false) {
+}
+bool parser::is_expected() const {
+  return expected;
+}
+void parser::is_expected(bool v) {
+  expected = v;
+}
 
 // error_catcher parser::operator[](error_handler on_err) { return error_catcher(clone(), on_err); }
 
-terminal::terminal(size_t tok_id, std::string const &desc) : tok_id(tok_id), desc(desc) {}
+terminal::terminal(size_t tok_id, std::string const& desc) : tok_id(tok_id), desc(desc) {
+}
 
-terminal::terminal(terminal const &rhs) : tok_id(rhs.tok_id), desc(rhs.desc) {}
+terminal::terminal(terminal const& rhs) : tok_id(rhs.tok_id), desc(rhs.desc) {
+}
 
-parse_results terminal::parse(token_iterator &iter, token_iterator end, shared_ptr<attribute> &attr,
-                              diag_chat *diags) const {
+parse_results terminal::parse(token_iterator& iter,
+                              token_iterator end,
+                              shared_ptr<attribute>& attr,
+                              diag_chat* diags) const {
   shared_ptr<terminal_attribute> ret = make_shared<terminal_attribute>();
   ret->tok = *iter;
   ret->token_range(*iter);
@@ -207,25 +252,37 @@ parse_results terminal::parse(token_iterator &iter, token_iterator end, shared_p
     return parse_results::succeed;
   }
 
-  diags->report(unmatched_token, iter->file_name(), iter->span(),
-                fmt::arg("syntax_error", iter->lit()));
+  diags->report(
+      unmatched_token, iter->file_name(), iter->span(), fmt::arg("syntax_error", iter->lit()));
   return parse_results::failed;
 }
 
-shared_ptr<parser> terminal::clone() const { return make_shared<terminal>(*this); }
+shared_ptr<parser> terminal::clone() const {
+  return make_shared<terminal>(*this);
+}
 
-string const &terminal::get_desc() const { return desc; }
+string const& terminal::get_desc() const {
+  return desc;
+}
 
 size_t const repeater::unlimited = std::numeric_limits<size_t>::max();
 
 repeater::repeater(size_t lower_bound, size_t upper_bound, shared_ptr<parser> expr)
-    : lower_bound(lower_bound), upper_bound(upper_bound), expr(expr) {}
+  : lower_bound(lower_bound)
+  , upper_bound(upper_bound)
+  , expr(expr) {
+}
 
-repeater::repeater(repeater const &rhs)
-    : lower_bound(rhs.lower_bound), upper_bound(rhs.upper_bound), expr(rhs.expr) {}
+repeater::repeater(repeater const& rhs)
+  : lower_bound(rhs.lower_bound)
+  , upper_bound(rhs.upper_bound)
+  , expr(rhs.expr) {
+}
 
-parse_results repeater::parse(token_iterator &iter, token_iterator end, shared_ptr<attribute> &attr,
-                              diag_chat *diags) const {
+parse_results repeater::parse(token_iterator& iter,
+                              token_iterator end,
+                              shared_ptr<attribute>& attr,
+                              diag_chat* diags) const {
   token_iterator iter_beg = iter;
 
   shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
@@ -274,21 +331,29 @@ parse_results repeater::parse(token_iterator &iter, token_iterator end, shared_p
   return final_result;
 }
 
-shared_ptr<parser> repeater::clone() const { return make_shared<repeater>(*this); }
+shared_ptr<parser> repeater::clone() const {
+  return make_shared<repeater>(*this);
+}
 
-selector::selector() {}
+selector::selector() {
+}
 
-selector::selector(selector const &rhs) : slc_branches(rhs.slc_branches) {}
+selector::selector(selector const& rhs) : slc_branches(rhs.slc_branches) {
+}
 
-selector &selector::add_branch(shared_ptr<parser> p) {
+selector& selector::add_branch(shared_ptr<parser> p) {
   slc_branches.push_back(p);
   return *this;
 }
 
-std::vector<shared_ptr<parser>> const &selector::branches() const { return slc_branches; }
+std::vector<shared_ptr<parser>> const& selector::branches() const {
+  return slc_branches;
+}
 
-parse_results selector::parse(token_iterator &iter, token_iterator end, shared_ptr<attribute> &attr,
-                              diag_chat *diags) const {
+parse_results selector::parse(token_iterator& iter,
+                              token_iterator end,
+                              shared_ptr<attribute>& attr,
+                              diag_chat* diags) const {
   shared_ptr<selector_attribute> slc_attr = make_shared<selector_attribute>();
   slc_attr->token_range(*iter);
   vector<shared_ptr<diag_chat>> branch_diags;
@@ -298,7 +363,7 @@ parse_results selector::parse(token_iterator &iter, token_iterator end, shared_p
   int idx = 0;
 
   // Visit branch and return succeed branch.
-  for (shared_ptr<parser> const &p : branches()) {
+  for (shared_ptr<parser> const& p : branches()) {
     token_iterator start_iter = iter;
 
     branch_diags.push_back(diag_chat::create());
@@ -358,26 +423,28 @@ shared_ptr<parser> selector::clone() const {
   return ret;
 }
 
-queuer::queuer() {}
+queuer::queuer() {
+}
 
-queuer::queuer(queuer const &rhs) : exprlst(rhs.exprlst) {}
+queuer::queuer(queuer const& rhs) : exprlst(rhs.exprlst) {
+}
 
-queuer &queuer::append(shared_ptr<parser> p, bool is_expected) {
+queuer& queuer::append(shared_ptr<parser> p, bool is_expected) {
   p->is_expected(is_expected);
 
   // Add default error handler
   if (is_expected) {
-    terminal *term = dynamic_cast<terminal *>(p.get());
+    terminal* term = dynamic_cast<terminal*>(p.get());
     if (term) {
       shared_ptr<error_catcher> err_catcher(
           new error_catcher(p, get_expected_failed_handler(term->get_desc())));
       exprlst.push_back(err_catcher);
       return *this;
     } else {
-      rule_wrapper *rule_wrp = dynamic_cast<rule_wrapper *>(p.get());
+      rule_wrapper* rule_wrp = dynamic_cast<rule_wrapper*>(p.get());
       if (rule_wrp) {
-        parser const *inner_p = rule_wrp->get_rule()->get_parser();
-        terminal const *inner_term = dynamic_cast<terminal const *>(inner_p);
+        parser const* inner_p = rule_wrp->get_rule()->get_parser();
+        terminal const* inner_term = dynamic_cast<terminal const*>(inner_p);
         if (inner_term) {
           shared_ptr<error_catcher> err_catcher(
               new error_catcher(p, get_expected_failed_handler(inner_term->get_desc())));
@@ -397,10 +464,14 @@ queuer &queuer::append(shared_ptr<parser> p, bool is_expected) {
   return *this;
 }
 
-std::vector<shared_ptr<parser>> const &queuer::exprs() const { return exprlst; }
+std::vector<shared_ptr<parser>> const& queuer::exprs() const {
+  return exprlst;
+}
 
-parse_results queuer::parse(token_iterator &iter, token_iterator end, shared_ptr<attribute> &attr,
-                            diag_chat *diags) const {
+parse_results queuer::parse(token_iterator& iter,
+                            token_iterator end,
+                            shared_ptr<attribute>& attr,
+                            diag_chat* diags) const {
   token_iterator iter_beg = iter;
 
   shared_ptr<queuer_attribute> ret = make_shared<queuer_attribute>();
@@ -430,13 +501,19 @@ parse_results queuer::parse(token_iterator &iter, token_iterator end, shared_ptr
   return final_result;
 }
 
-shared_ptr<parser> queuer::clone() const { return make_shared<queuer>(*this); }
+shared_ptr<parser> queuer::clone() const {
+  return make_shared<queuer>(*this);
+}
 
-negnativer::negnativer(std::shared_ptr<parser> p) : expr(p) {}
-negnativer::negnativer(negnativer const &rhs) : expr(rhs.expr) {}
+negnativer::negnativer(std::shared_ptr<parser> p) : expr(p) {
+}
+negnativer::negnativer(negnativer const& rhs) : expr(rhs.expr) {
+}
 
-parse_results negnativer::parse(token_iterator &iter, token_iterator end,
-                                std::shared_ptr<attribute> &attr, diag_chat *diags) const {
+parse_results negnativer::parse(token_iterator& iter,
+                                token_iterator end,
+                                std::shared_ptr<attribute>& attr,
+                                diag_chat* diags) const {
   if (!expr) {
     return parse_results::failed;
   }
@@ -444,17 +521,24 @@ parse_results negnativer::parse(token_iterator &iter, token_iterator end,
                                                             : parse_results::succeed;
 }
 
-std::shared_ptr<parser> negnativer::clone() const { return make_shared<negnativer>(*this); }
+std::shared_ptr<parser> negnativer::clone() const {
+  return make_shared<negnativer>(*this);
+}
 
-rule::rule() : preset_id(-1) {}
+rule::rule() : preset_id(-1) {
+}
 
-rule::rule(intptr_t id) : preset_id(id) {}
+rule::rule(intptr_t id) : preset_id(id) {
+}
 
-rule::rule(rule const &rhs) : preset_id(rhs.preset_id), expr(rhs.expr) {}
+rule::rule(rule const& rhs) : preset_id(rhs.preset_id), expr(rhs.expr) {
+}
 
-rule::rule(shared_ptr<parser> expr, intptr_t id /*= -1 */) : preset_id(id), expr(expr) {}
+rule::rule(shared_ptr<parser> expr, intptr_t id /*= -1 */) : preset_id(id), expr(expr) {
+}
 
-rule::rule(parser const &rhs) : expr(rhs.clone()) {}
+rule::rule(parser const& rhs) : expr(rhs.clone()) {
+}
 
 intptr_t rule::id() const {
   if (preset_id >= 0)
@@ -462,9 +546,13 @@ intptr_t rule::id() const {
   return (intptr_t)this;
 }
 
-std::string const &rule::name() const { return rule_name; }
+std::string const& rule::name() const {
+  return rule_name;
+}
 
-void rule::name(std::string const &v) { rule_name = v; }
+void rule::name(std::string const& v) {
+  rule_name = v;
+}
 
 #if OUTPUT_GRAMMAR_MATCHING_PATH
 
@@ -476,7 +564,7 @@ struct path_tree {
 
 vector<shared_ptr<path_tree>> path_stack;
 
-void print_path_tree(std::ostream &o, shared_ptr<path_tree> const &path_node, int indent = 0) {
+void print_path_tree(std::ostream& o, shared_ptr<path_tree> const& path_node, int indent = 0) {
   EFLIB_UNREF_DECLARATOR(indent);
   EFLIB_UNREF_DECLARATOR(path_node);
   EFLIB_UNREF_DECLARATOR(o);
@@ -506,12 +594,14 @@ void print_path_tree(std::ostream &o, shared_ptr<path_tree> const &path_node, in
   }
 }
 
-std::fstream *pf = nullptr;
+std::fstream* pf = nullptr;
 
 #endif
 
-parse_results rule::parse(token_iterator &iter, token_iterator end, shared_ptr<attribute> &attr,
-                          diag_chat *diags) const {
+parse_results rule::parse(token_iterator& iter,
+                          token_iterator end,
+                          shared_ptr<attribute>& attr,
+                          diag_chat* diags) const {
 #if OUTPUT_GRAMMAR_MATCHING_PATH
   if (!pf) {
     pf = new std::fstream("rules.xml", std::ios::out);
@@ -588,62 +678,86 @@ parse_results rule::parse(token_iterator &iter, token_iterator end, shared_ptr<a
   return result;
 }
 
-shared_ptr<parser> rule::clone() const { return make_shared<rule_wrapper>(*this); }
+shared_ptr<parser> rule::clone() const {
+  return make_shared<rule_wrapper>(*this);
+}
 
-rule &rule::operator=(parser const &rhs) {
+rule& rule::operator=(parser const& rhs) {
   expr = rhs.clone();
   return *this;
 }
 
-rule &rule::operator=(rule const &rhs) {
+rule& rule::operator=(rule const& rhs) {
   expr = rhs.clone();
   return *this;
 }
 
-parser const *rule::get_parser() const { return expr.get(); }
+parser const* rule::get_parser() const {
+  return expr.get();
+}
 
-rule_wrapper::rule_wrapper(rule_wrapper const &rhs) : r(rhs.r) {}
+rule_wrapper::rule_wrapper(rule_wrapper const& rhs) : r(rhs.r) {
+}
 
-rule_wrapper::rule_wrapper(rule const &rhs) : r(rhs) {}
+rule_wrapper::rule_wrapper(rule const& rhs) : r(rhs) {
+}
 
-parse_results rule_wrapper::parse(token_iterator &iter, token_iterator end,
-                                  shared_ptr<attribute> &attr, diag_chat *diags) const {
+parse_results rule_wrapper::parse(token_iterator& iter,
+                                  token_iterator end,
+                                  shared_ptr<attribute>& attr,
+                                  diag_chat* diags) const {
   return r.parse(iter, end, attr, diags);
 }
 
-shared_ptr<parser> rule_wrapper::clone() const { return make_shared<rule_wrapper>(*this); }
+shared_ptr<parser> rule_wrapper::clone() const {
+  return make_shared<rule_wrapper>(*this);
+}
 
-std::string const &rule_wrapper::name() const { return r.name(); }
+std::string const& rule_wrapper::name() const {
+  return r.name();
+}
 
-rule const *rule_wrapper::get_rule() const { return &r; }
+rule const* rule_wrapper::get_rule() const {
+  return &r;
+}
 
-endholder::endholder() {}
+endholder::endholder() {
+}
 
-endholder::endholder(endholder const &) {}
-parse_results endholder::parse(token_iterator &iter, token_iterator end,
-                               std::shared_ptr<attribute> &attr, diag_chat * /*diags*/) const {
+endholder::endholder(endholder const&) {
+}
+parse_results endholder::parse(token_iterator& iter,
+                               token_iterator end,
+                               std::shared_ptr<attribute>& attr,
+                               diag_chat* /*diags*/) const {
   attr = make_shared<terminal_attribute>();
   if (iter == end) {
     return parse_results::succeed;
   }
   return parse_results::failed;
 }
-std::shared_ptr<parser> endholder::clone() const { return make_shared<endholder>(); }
+std::shared_ptr<parser> endholder::clone() const {
+  return make_shared<endholder>();
+}
 
-repeater operator*(parser const &expr) { return repeater(0, repeater::unlimited, expr.clone()); }
+repeater operator*(parser const& expr) {
+  return repeater(0, repeater::unlimited, expr.clone());
+}
 
-repeater operator-(parser const &expr) { return repeater(0, 1, expr.clone()); }
+repeater operator-(parser const& expr) {
+  return repeater(0, 1, expr.clone());
+}
 
-selector operator|(parser const &expr0, parser const &expr1) {
+selector operator|(parser const& expr0, parser const& expr1) {
   return selector().add_branch(expr0.clone()).add_branch(expr1.clone());
 }
 
-selector operator|(selector const &expr0, parser const &expr1) {
+selector operator|(selector const& expr0, parser const& expr1) {
   selector ret(expr0);
   return ret.add_branch(expr1.clone());
 }
 
-selector operator|(selector const &expr0, selector const &expr1) {
+selector operator|(selector const& expr0, selector const& expr1) {
   selector ret(expr0);
   for (shared_ptr<parser> expr : expr1.branches()) {
     ret.add_branch(expr);
@@ -651,35 +765,44 @@ selector operator|(selector const &expr0, selector const &expr1) {
   return ret;
 }
 
-queuer operator>>(parser const &expr0, parser const &expr1) {
+queuer operator>>(parser const& expr0, parser const& expr1) {
   return queuer().append(expr0.clone()).append(expr1.clone());
 }
 
-queuer operator>>(queuer const &expr0, parser const &expr1) {
+queuer operator>>(queuer const& expr0, parser const& expr1) {
   return queuer(expr0).append(expr1.clone());
 }
 
-queuer operator>(parser const &expr0, parser const &expr1) {
+queuer operator>(parser const& expr0, parser const& expr1) {
   return queuer().append(expr0.clone()).append(expr1.clone(), true);
 }
 
-queuer operator>(queuer const &expr0, parser const &expr1) {
+queuer operator>(queuer const& expr0, parser const& expr1) {
   return queuer(expr0).append(expr1.clone(), true);
 }
 
-negnativer operator!(parser const &expr1) { return negnativer(expr1.clone()); }
+negnativer operator!(parser const& expr1) {
+  return negnativer(expr1.clone());
+}
 
-error_catcher::error_catcher(shared_ptr<parser> const &p, error_handler err_handler)
-    : expr(p), err_handler(err_handler) {}
+error_catcher::error_catcher(shared_ptr<parser> const& p, error_handler err_handler)
+  : expr(p)
+  , err_handler(err_handler) {
+}
 
-error_catcher::error_catcher(error_catcher const &rhs)
-    : expr(rhs.expr), err_handler(rhs.err_handler) {}
+error_catcher::error_catcher(error_catcher const& rhs)
+  : expr(rhs.expr)
+  , err_handler(rhs.err_handler) {
+}
 
-shared_ptr<parser> error_catcher::clone() const { return make_shared<error_catcher>(*this); }
+shared_ptr<parser> error_catcher::clone() const {
+  return make_shared<error_catcher>(*this);
+}
 
-parse_results error_catcher::parse(token_iterator &iter, token_iterator end,
-                                   std::shared_ptr<attribute> &attr,
-                                   sasl::common::diag_chat *diags) const {
+parse_results error_catcher::parse(token_iterator& iter,
+                                   token_iterator end,
+                                   std::shared_ptr<attribute>& attr,
+                                   sasl::common::diag_chat* diags) const {
   token_iterator origin_iter = iter;
 
   shared_ptr<diag_chat> children_diags = make_shared<diag_chat>();
@@ -695,4 +818,4 @@ parse_results error_catcher::parse(token_iterator &iter, token_iterator end,
   return result;
 }
 
-} // namespace sasl::parser
+}  // namespace sasl::parser

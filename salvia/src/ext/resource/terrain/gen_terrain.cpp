@@ -20,8 +20,8 @@ using std::vector;
 
 namespace salvia::ext::resource {
 
-void normalize_terrain(vector<float> &field);
-void filter_terrain_band(float *band, int stride, int count, float filter);
+void normalize_terrain(vector<float>& field);
+void filter_terrain_band(float* band, int stride, int count, float filter);
 
 // Returns a random number between v1 and v2
 float gen_random(float lower, float upper) {
@@ -32,7 +32,7 @@ float gen_random(float lower, float upper) {
 Given a height field, normalize it so that the minimum altitude
 is 0.0 and the maximum altitude is 1.0
 */
-void normalize_terrain(vector<float> &field, int size) {
+void normalize_terrain(vector<float>& field, int size) {
   /*
   Find the maximum and minimum values in the height field
   */
@@ -54,7 +54,7 @@ void normalize_terrain(vector<float> &field, int size) {
 
 // Erosion filter -
 //	filter_terrain_band applies a FIR filter across a row or column of the height field
-void filter_terrain_band(float *band, int stride, int count, float filter) {
+void filter_terrain_band(float* band, int stride, int count, float filter) {
   int pos = stride;
   float v = band[0];
   for (int i_band = 0; i_band < count - 1; ++i_band) {
@@ -65,7 +65,7 @@ void filter_terrain_band(float *band, int stride, int count, float filter) {
 }
 
 // Erosion filter - Erodes a terrain in all 4 directions
-void filter_terrain(vector<float> &field, int size, float filter) {
+void filter_terrain(vector<float>& field, int size, float filter) {
   // Erode rows left to right
   for (int i = 0; i < size; ++i) {
     filter_terrain_band(&field[size * i], 1, size, filter);
@@ -88,7 +88,7 @@ void filter_terrain(vector<float> &field, int size, float filter) {
 }
 
 // Generate terrain using diamond-square (plasma) algorithm
-void make_terrain_plasma(vector<float> &field, int _size, float rough) {
+void make_terrain_plasma(vector<float>& field, int _size, float rough) {
   field.resize(_size * _size);
 
   int size = _size;
@@ -121,7 +121,7 @@ void make_terrain_plasma(vector<float> &field, int _size, float rough) {
         int mj = (j + rect_size / 2) % size;
 
         float neibourgh_total_height = field[i + j * _size] + field[ni + j * _size] +
-                                       field[i + nj * _size] + field[ni + nj * _size];
+            field[i + nj * _size] + field[ni + nj * _size];
         field[mi + mj * _size] = neibourgh_total_height / 4 + gen_random(-dh / 2, dh / 2);
       }
     }
@@ -140,13 +140,13 @@ void make_terrain_plasma(vector<float> &field, int _size, float rough) {
 
         field[mi + j * _size] = (field[i + j * _size] + field[ni + j * _size] +
                                  field[mi + pmj * _size] + field[mi + mj * _size]) /
-                                    4 +
-                                gen_random(-dh / 2, dh / 2);
+                4 +
+            gen_random(-dh / 2, dh / 2);
 
         field[i + mj * _size] = (field[i + j * _size] + field[i + nj * _size] +
                                  field[pmi + mj * _size] + field[mi + mj * _size]) /
-                                    4 +
-                                gen_random(-dh / 2, dh / 2);
+                4 +
+            gen_random(-dh / 2, dh / 2);
       }
     }
 
@@ -163,8 +163,13 @@ void make_terrain_plasma(vector<float> &field, int _size, float rough) {
   normalize_terrain(field, size);
 }
 
-void make_terrain_fault(vector<float> &field, int size, int iterations, int max_delta,
-                        int min_delta, int iterations_per_filter, float filter) {
+void make_terrain_fault(vector<float>& field,
+                        int size,
+                        int iterations,
+                        int max_delta,
+                        int min_delta,
+                        int iterations_per_filter,
+                        float filter) {
   field.resize(size * size);
 
   // Clear the height field
@@ -220,16 +225,16 @@ void make_terrain_fault(vector<float> &field, int size, int iterations, int max_
   normalize_terrain(field, size);
 }
 
-texture_ptr make_terrain_texture(renderer *rend, std::vector<float> &normalized_field,
-                                 size_t size) {
+texture_ptr
+make_terrain_texture(renderer* rend, std::vector<float>& normalized_field, size_t size) {
   texture_ptr ret = rend->create_tex2d(size, size, 1, pixel_format_color_r32f);
 
   salvia::resource::mapped_resource mapped;
 
   rend->map(mapped, ret->subresource(0), map_write);
   for (size_t y = 0; y < size; ++y) {
-    uint8_t *dst_line = reinterpret_cast<uint8_t *>(mapped.data) + y * mapped.row_pitch;
-    float *src_line = normalized_field.data() + y * size;
+    uint8_t* dst_line = reinterpret_cast<uint8_t*>(mapped.data) + y * mapped.row_pitch;
+    float* src_line = normalized_field.data() + y * size;
     memcpy(dst_line, src_line, size * sizeof(float));
   }
   rend->unmap();
@@ -237,4 +242,4 @@ texture_ptr make_terrain_texture(renderer *rend, std::vector<float> &normalized_
   return ret;
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

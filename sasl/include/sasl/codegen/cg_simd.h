@@ -10,19 +10,18 @@ namespace sasl {
 namespace semantic {
 class module_semantic;
 class reflection_impl;
-} // namespace semantic
-} // namespace sasl
+}  // namespace semantic
+}  // namespace sasl
 
 namespace llvm {
 class StructType;
 class Type;
-} // namespace llvm
+}  // namespace llvm
 
 namespace sasl::codegen {
 
 // Code generation for SIMD( Single Instruction Multiple Data )
 class cg_simd : public cg_impl {
-
 public:
   typedef cg_impl parent_class;
 
@@ -62,10 +61,10 @@ public:
   SASL_VISIT_DCL(labeled_statement);
 
 protected:
-  cgs_simd *service() const override;
+  cgs_simd* service() const override;
   abis local_abi(bool is_c_compatible) const override;
 
-  multi_value layout_to_value(salvia::shader::sv_layout *svl);
+  multi_value layout_to_value(salvia::shader::sv_layout* svl);
 
   SASL_SPECIFIC_VISIT_DCL(before_decls_visit, program) override;
 
@@ -79,8 +78,8 @@ protected:
 
   SASL_SPECIFIC_VISIT_DCL(bin_logic, binary_expression) override;
 
-  llvm::Function *entry_fn;
+  llvm::Function* entry_fn;
   multi_value entry_values[salvia::shader::sv_usage_count];
 };
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

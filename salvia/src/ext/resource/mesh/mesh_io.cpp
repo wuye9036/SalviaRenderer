@@ -32,8 +32,8 @@ using namespace salvia::core;
 namespace salvia::ext::resource {
 
 // 0, 0, 0 - 1, 1, 1
-mesh_ptr create_box(salvia::core::renderer *psr) {
-  mesh_impl *pmesh = new mesh_impl(psr);
+mesh_ptr create_box(salvia::core::renderer* psr) {
+  mesh_impl* pmesh = new mesh_impl(psr);
 
   size_t const geometry_slot = 0;
   size_t const normal_slot = 1;
@@ -46,11 +46,11 @@ mesh_ptr create_box(salvia::core::renderer *psr) {
   salvia::resource::buffer_ptr uvs = pmesh->create_buffer(sizeof(vec4) * 24);
 
   // Generate data
-  uint16_t *pidxs = reinterpret_cast<uint16_t *>(indices->raw_data(0));
+  uint16_t* pidxs = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
-  vec4 *pverts = reinterpret_cast<vec4 *>(verts->raw_data(0));
-  vec4 *pnorms = reinterpret_cast<vec4 *>(normals->raw_data(0));
-  vec4 *puvs = reinterpret_cast<vec4 *>(uvs->raw_data(0));
+  vec4* pverts = reinterpret_cast<vec4*>(verts->raw_data(0));
+  vec4* pnorms = reinterpret_cast<vec4*>(normals->raw_data(0));
+  vec4* puvs = reinterpret_cast<vec4*>(uvs->raw_data(0));
 
   //+x
   pverts[0] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -165,12 +165,12 @@ mesh_ptr create_box(salvia::core::renderer *psr) {
 
   vector<input_element_desc> descs;
 
-  descs.push_back(input_element_desc("POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0,
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("NORMAL", 0, format_r32g32b32a32_float, normal_slot, 0,
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("TEXCOORD", 0, format_r32g32b32a32_float, uv_slot, 0,
-                                     input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "NORMAL", 0, format_r32g32b32a32_float, normal_slot, 0, input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "TEXCOORD", 0, format_r32g32b32a32_float, uv_slot, 0, input_per_vertex, 0));
 
   pmesh->set_input_element_descs(descs);
 
@@ -179,10 +179,14 @@ mesh_ptr create_box(salvia::core::renderer *psr) {
   return mesh_ptr(pmesh);
 }
 
-mesh_ptr create_planar(salvia::core::renderer *rend, const eflib::vec3 &start_pos,
-                       const eflib::vec3 &x_dir, const eflib::vec3 &y_dir, size_t repeat_x,
-                       size_t repeat_y, bool positive_normal) {
-  mesh_impl *pmesh = new mesh_impl(rend);
+mesh_ptr create_planar(salvia::core::renderer* rend,
+                       const eflib::vec3& start_pos,
+                       const eflib::vec3& x_dir,
+                       const eflib::vec3& y_dir,
+                       size_t repeat_x,
+                       size_t repeat_y,
+                       bool positive_normal) {
+  mesh_impl* pmesh = new mesh_impl(rend);
 
   size_t nverts = (repeat_x + 1) * (repeat_y + 1);
 
@@ -246,12 +250,12 @@ mesh_ptr create_planar(salvia::core::renderer *rend, const eflib::vec3 &start_po
   pmesh->add_vertex_buffer(uv_slot, uvs, sizeof(vec4), 0);
 
   vector<input_element_desc> descs;
-  descs.push_back(input_element_desc("POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0,
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("NORMAL", 0, format_r32g32b32a32_float, normal_slot, 0,
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("TEXCOORD", 0, format_r32g32b32a32_float, uv_slot, 0,
-                                     input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "NORMAL", 0, format_r32g32b32a32_float, normal_slot, 0, input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "TEXCOORD", 0, format_r32g32b32a32_float, uv_slot, 0, input_per_vertex, 0));
 
   pmesh->set_input_element_descs(descs);
 
@@ -260,9 +264,13 @@ mesh_ptr create_planar(salvia::core::renderer *rend, const eflib::vec3 &start_po
   return mesh_ptr(pmesh);
 }
 
-mesh_ptr create_planar(salvia::core::renderer *rend, eflib::vec3 const &norm,
-                       eflib::vec3 const &start_pos, eflib::vec3 const &major_dir,
-                       eflib::vec2 const &length, size_t repeat_x, size_t repeat_y,
+mesh_ptr create_planar(salvia::core::renderer* rend,
+                       eflib::vec3 const& norm,
+                       eflib::vec3 const& start_pos,
+                       eflib::vec3 const& major_dir,
+                       eflib::vec2 const& length,
+                       size_t repeat_x,
+                       size_t repeat_y,
                        bool positive_normal) {
   eflib::vec3 n = norm;
   if (norm.length_sqr() < eflib::epsilon) {
@@ -290,8 +298,11 @@ mesh_ptr create_planar(salvia::core::renderer *rend, eflib::vec3 const &norm,
   return create_planar(rend, start_pos, binorm, tangent, repeat_x, repeat_y, positive_normal);
 }
 
-mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_center, float radius,
-                     eflib::vec3 const &up_dir, int circle_segments) {
+mesh_ptr create_cone(salvia::core::renderer* psr,
+                     eflib::vec3 const& bottom_center,
+                     float radius,
+                     eflib::vec3 const& up_dir,
+                     int circle_segments) {
   if (circle_segments < 3) {
     circle_segments = 3;
   }
@@ -351,7 +362,7 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
   }
 
   // Fill buffers
-  mesh_impl *pmesh = new mesh_impl(psr);
+  mesh_impl* pmesh = new mesh_impl(psr);
 
   size_t const geometry_slot = 0;
   size_t const normal_slot = 1;
@@ -363,7 +374,7 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
   buffer_ptr uvs = pmesh->create_buffer(sizeof(vec4) * circle_segments * 2);
 
   // Fill vertex buffer
-  vec4 *vert_cursor = reinterpret_cast<vec4 *>(verts->raw_data(0));
+  vec4* vert_cursor = reinterpret_cast<vec4*>(verts->raw_data(0));
   for (int i_seg = 0; i_seg < circle_segments; ++i_seg) {
     *vert_cursor = vec4(top_vertex, 1.0f);
     ++vert_cursor;
@@ -372,7 +383,7 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
   }
 
   // Fill normal buffer
-  vec4 *norm_cursor = reinterpret_cast<vec4 *>(norms->raw_data(0));
+  vec4* norm_cursor = reinterpret_cast<vec4*>(norms->raw_data(0));
   for (int i_seg = 0; i_seg < circle_segments; ++i_seg) {
     *norm_cursor = vec4(face_normals[i_seg], 1.0f);
     ++norm_cursor;
@@ -381,7 +392,7 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
   }
 
   // Fill UV buffer
-  vec4 *uv_cursor = reinterpret_cast<vec4 *>(uvs->raw_data(0));
+  vec4* uv_cursor = reinterpret_cast<vec4*>(uvs->raw_data(0));
   for (int i_seg = 0; i_seg < circle_segments; ++i_seg) {
     *uv_cursor = vec4(top_uv.x(), top_uv.y(), 0.0f, 0.0f);
     ++uv_cursor;
@@ -390,9 +401,9 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
   }
 
   // Fill index buffer
-  uint16_t *index_cursor = reinterpret_cast<uint16_t *>(indices->raw_data(0));
+  uint16_t* index_cursor = reinterpret_cast<uint16_t*>(indices->raw_data(0));
   for (int i_seg = 0; i_seg < circle_segments; ++i_seg) {
-    *index_cursor = static_cast<uint16_t>(i_seg * 2); // Top
+    *index_cursor = static_cast<uint16_t>(i_seg * 2);  // Top
     ++index_cursor;
     *index_cursor = static_cast<uint16_t>((i_seg * 2 + 3) % (circle_segments * 2));
     ++index_cursor;
@@ -410,12 +421,12 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
 
   vector<input_element_desc> descs;
 
-  descs.push_back(input_element_desc("POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0,
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("NORMAL", 0, format_r32g32b32a32_float, normal_slot, 0,
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("TEXCOORD", 0, format_r32g32b32a32_float, uv_slot, 0,
-                                     input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "NORMAL", 0, format_r32g32b32a32_float, normal_slot, 0, input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "TEXCOORD", 0, format_r32g32b32a32_float, uv_slot, 0, input_per_vertex, 0));
 
   pmesh->set_input_element_descs(descs);
 
@@ -424,4 +435,4 @@ mesh_ptr create_cone(salvia::core::renderer *psr, eflib::vec3 const &bottom_cent
   return mesh_ptr(pmesh);
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

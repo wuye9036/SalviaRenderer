@@ -17,11 +17,17 @@
 namespace sasl::enums {
 using namespace eflib::enum_operators;
 
-constexpr bool is_none(builtin_types btc) noexcept { return btc == builtin_types::none; }
+constexpr bool is_none(builtin_types btc) noexcept {
+  return btc == builtin_types::none;
+}
 
-constexpr bool is_void(builtin_types btc) noexcept { return btc == builtin_types::_void; }
+constexpr bool is_void(builtin_types btc) noexcept {
+  return btc == builtin_types::_void;
+}
 
-constexpr bool is_sampler(builtin_types btc) noexcept { return btc == builtin_types::_sampler; }
+constexpr bool is_sampler(builtin_types btc) noexcept {
+  return btc == builtin_types::_sampler;
+}
 
 constexpr bool is_integer(builtin_types btc) noexcept {
   return (btc & builtin_types::_generic_type_mask) == builtin_types::_integer;
@@ -44,7 +50,9 @@ constexpr bool is_scalar(builtin_types btc) noexcept {
   return scalar && !is_void(btc) && !is_none(btc) && !is_sampler(btc);
 }
 
-constexpr bool is_numeric(builtin_types btc) noexcept { return is_integer(btc) || is_real(btc); }
+constexpr bool is_numeric(builtin_types btc) noexcept {
+  return is_integer(btc) || is_real(btc);
+}
 
 constexpr bool is_numeric_scalar(builtin_types btc) noexcept {
   return is_scalar(btc) && is_numeric(btc);
@@ -71,7 +79,7 @@ constexpr builtin_types vector_of(builtin_types btc, size_t len) noexcept {
     return builtin_types::none;
   }
   builtin_types ret = (btc | builtin_types::_vector) |
-                      static_cast<builtin_types>(len << builtin_types::_dim0_field_shift);
+      static_cast<builtin_types>(len << builtin_types::_dim0_field_shift);
   return ret;
 }
 
@@ -80,8 +88,8 @@ constexpr builtin_types matrix_of(builtin_types btc, size_t vec_size, size_t vec
     return builtin_types::none;
   }
   builtin_types ret = (btc | builtin_types::_matrix) |
-                      static_cast<builtin_types>(vec_size << builtin_types::_dim0_field_shift) |
-                      static_cast<builtin_types>(vec_cnt << builtin_types::_dim1_field_shift);
+      static_cast<builtin_types>(vec_size << builtin_types::_dim0_field_shift) |
+      static_cast<builtin_types>(vec_cnt << builtin_types::_dim1_field_shift);
 
   return ret;
 }
@@ -121,14 +129,9 @@ constexpr size_t reg_storage_size(builtin_types btc) noexcept {
   case builtin_types::_sint32:
   case builtin_types::_uint32:
   case builtin_types::_float:
-  case builtin_types::_boolean:
-    comp_size = 4;
-    break;
-  case builtin_types::_sampler:
-    comp_size = sizeof(void *);
-    break;
-  default:
-    break;
+  case builtin_types::_boolean: comp_size = 4; break;
+  case builtin_types::_sampler: comp_size = sizeof(void*); break;
+  default: break;
   }
 
   if (is_matrix(btc)) {
@@ -144,7 +147,7 @@ constexpr size_t storage_size(builtin_types btc) noexcept {
     return 0;
   }
   if (is_sampler(btc)) {
-    return sizeof(void *);
+    return sizeof(void*);
   }
   size_t component_count = vector_size(btc) * vector_count(btc);
   size_t component_size = 0;
@@ -165,30 +168,30 @@ constexpr size_t storage_size(builtin_types btc) noexcept {
   return component_size * component_count;
 }
 
-const std::vector<builtin_types> &list_of_builtin_types();
+const std::vector<builtin_types>& list_of_builtin_types();
 
 //////////////////////////////////////////////////////////////////////////
 // operators
 // types
-bool is_arithmetic(const operators &);
-bool is_relationship(const operators &);
-bool is_bit(const operators &);
-bool is_shift(const operators &);
-bool is_bool_arith(const operators &);
+bool is_arithmetic(const operators&);
+bool is_relationship(const operators&);
+bool is_bit(const operators&);
+bool is_shift(const operators&);
+bool is_bool_arith(const operators&);
 
 // operand count
-bool is_prefix(const operators &);
-bool is_postfix(const operators &);
-bool is_unary_arith(const operators &);
+bool is_prefix(const operators&);
+bool is_postfix(const operators&);
+bool is_unary_arith(const operators&);
 
 // is assign?
-bool is_arith_assign(const operators &);
-bool is_bit_assign(const operators &);
-bool is_shift_assign(const operators &);
-bool is_assign(const operators &);
-bool is_general_assign(const operators &);
+bool is_arith_assign(const operators&);
+bool is_bit_assign(const operators&);
+bool is_shift_assign(const operators&);
+bool is_assign(const operators&);
+bool is_general_assign(const operators&);
 
-const std::vector<operators> &list_of_operators();
+const std::vector<operators>& list_of_operators();
 
 constexpr bool is_standard(builtin_types btc) noexcept {
   if (btc == builtin_types::_sint32 || btc == builtin_types::_uint32 ||
@@ -239,4 +242,4 @@ constexpr bool operator!=(builtin_types lhs, salvia::shader::language_value_type
   return !(lhs == rhs);
 }
 
-} // namespace sasl::enums
+}  // namespace sasl::enums

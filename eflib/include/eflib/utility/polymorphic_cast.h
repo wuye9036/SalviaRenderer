@@ -4,7 +4,8 @@
 #include <cassert>
 
 namespace eflib {
-template <typename T, typename U> T polymorphic_cast(U const *v) {
+template <typename T, typename U>
+T polymorphic_cast(U const* v) {
   T ret = nullptr;
 
 #if defined(EFLIB_DEBUG)
@@ -18,7 +19,8 @@ template <typename T, typename U> T polymorphic_cast(U const *v) {
   return ret;
 }
 
-template <typename T, typename U> T polymorphic_cast(U *v) {
+template <typename T, typename U>
+T polymorphic_cast(U* v) {
   T ret = nullptr;
 
 #if defined(EFLIB_DEBUG)
@@ -31,6 +33,6 @@ template <typename T, typename U> T polymorphic_cast(U *v) {
   ret = static_cast<T>(v);
   return ret;
 }
-} // namespace eflib
+}  // namespace eflib
 
 #endif

@@ -49,8 +49,8 @@ using std::sort;
 using std::transform;
 using std::vector;
 
-#define FUNCTION_SCOPE(fn)                                                                         \
-  push_fn((fn));                                                                                   \
+#define FUNCTION_SCOPE(fn) \
+  push_fn((fn));           \
   scope_guard<void> pop_fn_on_exit##__LINE__([this]() { pop_fn(); });
 
 namespace sasl::codegen {
@@ -64,12 +64,12 @@ SASL_VISIT_DEF(member_expression) {
   EFLIB_UNREF_DECLARATOR(data);
 
   visit_child(v.expr);
-  node_context *agg_ctxt = node_ctxt(v.expr);
+  node_context* agg_ctxt = node_ctxt(v.expr);
   assert(agg_ctxt);
 
   // Aggregated value
-  node_semantic *tisi = sem_->get_semantic(v.expr.get());
-  node_context *ctxt = node_ctxt(v, true);
+  node_semantic* tisi = sem_->get_semantic(v.expr.get());
+  node_context* ctxt = node_ctxt(v, true);
 
   if (tisi->ty_proto()->is_builtin()) {
     // Swizzle or write mask
@@ -81,22 +81,22 @@ SASL_VISIT_DEF(member_expression) {
     ctxt->node_value = service()->emit_extract_elem_mask(agg_value, swz_indexes);
   } else {
     // Member
-    symbol *struct_sym = sem_->get_symbol(tisi->ty_proto());
-    symbol *mem_sym = struct_sym->find_this(v.member.lit());
+    symbol* struct_sym = sem_->get_symbol(tisi->ty_proto());
+    symbol* mem_sym = struct_sym->find_this(v.member.lit());
     assert(mem_sym);
 
     if (agg_ctxt->is_semantic_mode) {
-      node_semantic *param_member_sem = sem_->get_semantic(mem_sym->associated_node());
+      node_semantic* param_member_sem = sem_->get_semantic(mem_sym->associated_node());
       assert(param_member_sem && param_member_sem->ty_proto()->is_builtin());
 
-      salvia::shader::semantic_value const &sem = param_member_sem->semantic_value_ref();
-      sv_layout *psvl = abii->input_sv_layout(sem);
+      salvia::shader::semantic_value const& sem = param_member_sem->semantic_value_ref();
+      sv_layout* psvl = abii->input_sv_layout(sem);
       bool from_cache = layout_to_node_context(ctxt, psvl, false, true);
       // Value and type must get from cache
       EFLIB_UNREF_DECLARATOR(from_cache);
       assert(from_cache);
     } else {
-      node_context *mem_ctxt = node_ctxt(mem_sym->associated_node(), true);
+      node_context* mem_ctxt = node_ctxt(mem_sym->associated_node(), true);
       assert(mem_ctxt);
       ctxt->node_value = mem_ctxt->node_value;
       ctxt->node_value.parent(agg_ctxt->node_value);
@@ -107,14 +107,14 @@ SASL_VISIT_DEF(member_expression) {
 
 SASL_VISIT_DEF(variable_expression) {
   // T ODO Referenced symbol must be evaluated in semantic analysis stages.
-  symbol *sym = find_symbol(v.var_name.lit());
+  symbol* sym = find_symbol(v.var_name.lit());
   assert(sym);
 
   // var_si is not null if sym is global value( sv_none is available )
-  sv_layout *var_si = abii->input_sv_layout(sym);
+  sv_layout* var_si = abii->input_sv_layout(sym);
 
-  node_context *varctxt = node_ctxt(sym->associated_node());
-  node_context *ctxt = node_ctxt(v, true);
+  node_context* varctxt = node_ctxt(sym->associated_node());
+  node_context* ctxt = node_ctxt(v, true);
   if (var_si) {
     // TODO: global only available in entry function.
     assert(is_entry(service()->fn().fn));
@@ -151,18 +151,17 @@ SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression) {
 }
 
 SASL_SPECIFIC_VISIT_DEF(create_fnsig, function_def) {
-
   if (!entry_fn && abii->is_entry(sem_->get_symbol(&v))) {
+    node_context* ctxt = node_ctxt(v, true);
 
-    node_context *ctxt = node_ctxt(v, true);
+    vector<Type*> param_types = generate_vs_entry_param_type(abii, service());
 
-    vector<Type *> param_types = generate_vs_entry_param_type(abii, service());
-
-    FunctionType *fntype =
+    FunctionType* fntype =
         FunctionType::get(Type::getVoidTy(cg_impl::context()), param_types, false);
-    Function *fn =
-        Function::Create(fntype, Function::ExternalLinkage,
-                         std::string{sem_->get_symbol(&v)->mangled_name()}, cg_impl::module());
+    Function* fn = Function::Create(fntype,
+                                    Function::ExternalLinkage,
+                                    std::string{sem_->get_symbol(&v)->mangled_name()},
+                                    cg_impl::module());
     fn->addFnAttr(Attribute::getWithStackAlignment(context(), llvm::Align(32)).getAsString());
     fn->addFnAttr("stackrealign");
     entry_fn = fn;
@@ -178,7 +177,7 @@ SASL_SPECIFIC_VISIT_DEF(create_fnsig, function_def) {
 }
 
 SASL_SPECIFIC_VISIT_DEF(create_fnargs, function_def) {
-  Function *fn = node_ctxt(v)->function_scope->fn;
+  Function* fn = node_ctxt(v)->function_scope->fn;
 
   if (abii->is_entry(sem_->get_symbol(&v))) {
     // Create entry arguments.
@@ -216,15 +215,15 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
 
   service()->new_block(".init.vargs", true);
   for (size_t i_param = 0; i_param < v.params.size(); ++i_param) {
-    parameter *param = v.params[i_param].get();
-    tynode *param_type = v.type->param_types[i_param].get();
+    parameter* param = v.params[i_param].get();
+    tynode* param_type = v.type->param_types[i_param].get();
 
     visit_child(param_type);
 
-    node_semantic *par_ssi = sem_->get_semantic(param);
-    symbol *par_sym = par_ssi->associated_symbol();
+    node_semantic* par_ssi = sem_->get_semantic(param);
+    symbol* par_sym = par_ssi->associated_symbol();
 
-    node_context *pctxt = node_ctxt(param, true);
+    node_context* pctxt = node_ctxt(param, true);
 
     // Create local variable for 'virtual argument' and 'virtual result'.
     if (par_ssi->ty_proto()->is_builtin()) {
@@ -232,13 +231,15 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
 
       // Get Value from semantic.
       // Store value to local variable.
-      salvia::shader::semantic_value const &par_sem = par_ssi->semantic_value_ref();
+      salvia::shader::semantic_value const& par_sem = par_ssi->semantic_value_ref();
       assert(par_sem != salvia::shader::sv_none);
-      sv_layout *psi = abii->input_sv_layout(par_sem);
+      sv_layout* psi = abii->input_sv_layout(par_sem);
 
       builtin_types hint = par_ssi->ty_proto()->tycode;
       pctxt->node_value = service()->create_variable(hint, abis::c, param->name.lit());
-      layout_to_node_context(pctxt, psi, true,          /*store if value existed*/
+      layout_to_node_context(pctxt,
+                             psi,
+                             true,                      /*store if value existed*/
                              sem_->is_modified(par_sym) /*copy from input*/
       );
     } else {
@@ -248,16 +249,16 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
 
       // Add values and types of all used semantics to cache.
       if (param_type->node_class() == node_ids::struct_type) {
-        auto *param_struct = static_cast<struct_type *>(param_type);
-        for (shared_ptr<declaration> const &decl : param_struct->decls) {
+        auto* param_struct = static_cast<struct_type*>(param_type);
+        for (shared_ptr<declaration> const& decl : param_struct->decls) {
           shared_ptr<variable_declaration> var_decl = decl->as_handle<variable_declaration>();
           if (!var_decl) {
             continue;
           }
-          for (shared_ptr<declarator> const &dclr : var_decl->declarators) {
-            node_semantic *dclr_sem = sem_->get_semantic(dclr);
-            salvia::shader::semantic_value const &sem_value = dclr_sem->semantic_value_ref();
-            sv_layout *psvl = abii->input_sv_layout(sem_value);
+          for (shared_ptr<declarator> const& dclr : var_decl->declarators) {
+            node_semantic* dclr_sem = sem_->get_semantic(dclr);
+            salvia::shader::semantic_value const& sem_value = dclr_sem->semantic_value_ref();
+            sv_layout* psvl = abii->input_sv_layout(sem_value);
             layout_to_node_context(nullptr, psvl, false, is_param_modified);
           }
         }
@@ -268,20 +269,20 @@ SASL_SPECIFIC_VISIT_DEF(create_virtual_args, function_def) {
   }
 
   // Get globals address to node context.
-  for (symbol *gsym : sem_->global_vars()) {
-    node_semantic *pssi = sem_->get_semantic(gsym->associated_node());
+  for (symbol* gsym : sem_->global_vars()) {
+    node_semantic* pssi = sem_->get_semantic(gsym->associated_node());
 
     // Global is filled by offset value with null parent.
     // The parent is filled when it is referred.
-    sv_layout *svl = nullptr;
+    sv_layout* svl = nullptr;
     if (pssi->semantic_value_ref() == salvia::shader::sv_none) {
       svl = abii->input_sv_layout(gsym);
     } else {
       svl = abii->input_sv_layout(pssi->semantic_value_ref());
     }
 
-    layout_to_node_context(node_ctxt(gsym->associated_node(), true), svl, false,
-                           sem_->is_modified(gsym));
+    layout_to_node_context(
+        node_ctxt(gsym->associated_node(), true), svl, false, sem_->is_modified(gsym));
 
     // if (v.init){
     //	ef_unimplemented();
@@ -300,8 +301,8 @@ SASL_SPECIFIC_VISIT_DEF(visit_return, jump_statement) {
 
     if (ret_value.hint() != builtin_types::none) {
       // Builtin: Copy directly.
-      node_semantic *ret_ssi = sem_->get_semantic(service()->fn().fn_def);
-      sv_layout *ret_si = abii->output_sv_layout(ret_ssi->semantic_value_ref());
+      node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fn_def);
+      sv_layout* ret_si = abii->output_sv_layout(ret_ssi->semantic_value_ref());
       assert(ret_si);
       layout_to_value(ret_si, false).store(ret_value);
     } else {
@@ -309,12 +310,12 @@ SASL_SPECIFIC_VISIT_DEF(visit_return, jump_statement) {
       shared_ptr<struct_type> ret_struct =
           service()->fn().fn_def->type->result_type->as_handle<struct_type>();
       size_t member_index = 0;
-      for (shared_ptr<declaration> const &child : ret_struct->decls) {
+      for (shared_ptr<declaration> const& child : ret_struct->decls) {
         if (child->node_class() == node_ids::variable_declaration) {
           shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
-          for (shared_ptr<declarator> const &decl : vardecl->declarators) {
-            node_semantic *decl_ssi = sem_->get_semantic(decl);
-            sv_layout *decl_si = abii->output_sv_layout(decl_ssi->semantic_value_ref());
+          for (shared_ptr<declarator> const& decl : vardecl->declarators) {
+            node_semantic* decl_ssi = sem_->get_semantic(decl);
+            sv_layout* decl_si = abii->output_sv_layout(decl_ssi->semantic_value_ref());
             assert(decl_si);
             layout_to_value(decl_si, false)
                 .store(service()->emit_extract_val(ret_value, (int)member_index));
@@ -331,16 +332,20 @@ SASL_SPECIFIC_VISIT_DEF(visit_return, jump_statement) {
   }
 }
 
-cg_vs::cg_vs() : entry_fn(nullptr), entry_sym(nullptr) { service_ = new cgs_sisd(); }
+cg_vs::cg_vs() : entry_fn(nullptr), entry_sym(nullptr) {
+  service_ = new cgs_sisd();
+}
 
-bool cg_vs::is_entry(llvm::Function *fn) const {
+bool cg_vs::is_entry(llvm::Function* fn) const {
   assert(fn && entry_fn);
   return fn && fn == entry_fn;
 }
 
-module_vmcode_impl *cg_vs::mod_ptr() { return vmcode_.get(); }
+module_vmcode_impl* cg_vs::mod_ptr() {
+  return vmcode_.get();
+}
 
-multi_value cg_vs::layout_to_value(sv_layout *svl, bool copy_from_input) {
+multi_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input) {
   if (copy_from_input) {
     ef_unimplemented();
   }
@@ -364,10 +369,12 @@ multi_value cg_vs::layout_to_value(sv_layout *svl, bool copy_from_input) {
   return ret;
 }
 
-bool cg_vs::layout_to_node_context(node_context *psc, salvia::shader::sv_layout *svl,
-                                   bool store_to_existed_value, bool copy_from_input) {
+bool cg_vs::layout_to_node_context(node_context* psc,
+                                   salvia::shader::sv_layout* svl,
+                                   bool store_to_existed_value,
+                                   bool copy_from_input) {
   bool could_cached = (svl->usage == su_stream_in || svl->usage == su_buffer_in) &&
-                      svl->sv.get_system_value() != salvia::shader::sv_none;
+      svl->sv.get_system_value() != salvia::shader::sv_none;
 
   assert(psc || could_cached);
 
@@ -443,4 +450,4 @@ bool cg_vs::layout_to_node_context(node_context *psc, salvia::shader::sv_layout 
 
 cg_vs::~cg_vs() = default;
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

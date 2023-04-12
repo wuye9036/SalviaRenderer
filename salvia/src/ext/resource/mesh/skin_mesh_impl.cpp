@@ -8,9 +8,13 @@ using std::vector;
 
 namespace salvia::ext::resource {
 
-scene_node::scene_node(scene_node *parent, string const &name)
-    : parent(parent), name(name), local_matrix(mat44::identity()),
-      original_matrix(mat44::identity()), world_matrix(mat44::identity()) {}
+scene_node::scene_node(scene_node* parent, string const& name)
+  : parent(parent)
+  , name(name)
+  , local_matrix(mat44::identity())
+  , original_matrix(mat44::identity())
+  , world_matrix(mat44::identity()) {
+}
 
 void scene_node::update_world_matrix() {
   if (parent == nullptr) {
@@ -22,7 +26,7 @@ void scene_node::update_world_matrix() {
 
 void scene_node::update_world_matrix_recursive() {
   update_world_matrix();
-  for (scene_node_ptr const &child : children) {
+  for (scene_node_ptr const& child : children) {
     child->update_world_matrix_recursive();
   }
 }
@@ -34,22 +38,24 @@ void scene_node::reset_world_matrix() {
 
 void scene_node::reset_world_matrix_recursive() {
   reset_world_matrix();
-  for (scene_node_ptr const &child : children) {
+  for (scene_node_ptr const& child : children) {
     child->reset_world_matrix_recursive();
   }
 }
 
-void skin_mesh_impl::render(uint32_t submesh_id) { submeshes[submesh_id]->render(); }
+void skin_mesh_impl::render(uint32_t submesh_id) {
+  submeshes[submesh_id]->render();
+}
 
 vector<mat44> skin_mesh_impl::joint_matrices() {
   if (joint_mats.size() != joints.size()) {
     joint_mats.clear();
-    for (const auto & joint : joints) {
+    for (const auto& joint : joints) {
       joint_mats.push_back(&(joint_nodes[joint]->world_matrix));
     }
   }
 
-  for (scene_node_ptr const &pnode : roots) {
+  for (scene_node_ptr const& pnode : roots) {
     pnode->update_world_matrix_recursive();
   }
 
@@ -65,27 +71,31 @@ vector<mat44> skin_mesh_impl::joint_matrices() {
 }
 
 void skin_mesh_impl::update_time(float t) {
-  for (animation_player_ptr const &anim_player : anims) {
+  for (animation_player_ptr const& anim_player : anims) {
     anim_player->update_play_time(t);
   }
 }
 
 void skin_mesh_impl::set_time(float t) {
-  for (animation_player_ptr const &anim_player : anims) {
+  for (animation_player_ptr const& anim_player : anims) {
     anim_player->set_play_time(t);
   }
 }
 
-size_t skin_mesh_impl::submesh_count() const { return submeshes.size(); }
+size_t skin_mesh_impl::submesh_count() const {
+  return submeshes.size();
+}
 
-vector<mat44> skin_mesh_impl::bind_inv_matrices() const { return bind_inv_mats; }
+vector<mat44> skin_mesh_impl::bind_inv_matrices() const {
+  return bind_inv_mats;
+}
 
 float skin_mesh_impl::animation_length() const {
   float max_length = 0.0f;
-  for (auto const &anim_player : anims) {
+  for (auto const& anim_player : anims) {
     max_length = std::max(max_length, anim_player->anim_length());
   }
   return max_length;
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

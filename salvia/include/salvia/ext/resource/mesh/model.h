@@ -7,7 +7,7 @@ namespace salvia::ext::resource {
 
 class model {
 public:
-  void add_mesh(salviar::h_mesh const &);
+  void add_mesh(salviar::h_mesh const&);
 
   void render();
 

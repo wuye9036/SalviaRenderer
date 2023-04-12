@@ -6,4 +6,4 @@ namespace sasl::codegen {
 
 class cg_ps : public cg_simd {};
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

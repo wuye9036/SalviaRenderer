@@ -4,11 +4,13 @@
 #include <cmath>
 namespace eflib {
 
-quaternion::quaternion(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+quaternion::quaternion(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {
+}
 
-quaternion::quaternion(const vec4 &raw_v) : x(raw_v[0]), y(raw_v[1]), z(raw_v[2]), w(raw_v[3]) {}
+quaternion::quaternion(const vec4& raw_v) : x(raw_v[0]), y(raw_v[1]), z(raw_v[2]), w(raw_v[3]) {
+}
 
-quaternion quaternion::from_axis_angle(const vec3 &axis, float angle) {
+quaternion quaternion::from_axis_angle(const vec3& axis, float angle) {
   vec3 normalized_axis = normalize3(axis);
   float half_angle = angle / 2.0f;
   float half_angle_sin = 0.0f;
@@ -16,11 +18,13 @@ quaternion quaternion::from_axis_angle(const vec3 &axis, float angle) {
 
   sincos(half_angle, half_angle_sin, half_angle_cos);
 
-  return {half_angle_sin * normalized_axis[0], half_angle_sin * normalized_axis[1],
-          half_angle_sin * normalized_axis[2], half_angle_cos};
+  return {half_angle_sin * normalized_axis[0],
+          half_angle_sin * normalized_axis[1],
+          half_angle_sin * normalized_axis[2],
+          half_angle_cos};
 }
 
-quaternion quaternion::from_mat44(const mat44 &mat) {
+quaternion quaternion::from_mat44(const mat44& mat) {
   float _4_w_sqr_minus_1 = +mat.data_[0][0] + mat.data_[1][1] + mat.data_[2][2];
   float _4_x_sqr_minus_1 = +mat.data_[0][0] - mat.data_[1][1] - mat.data_[2][2];
   float _4_y_sqr_minus_1 = -mat.data_[0][0] + mat.data_[1][1] - mat.data_[2][2];
@@ -49,28 +53,40 @@ quaternion quaternion::from_mat44(const mat44 &mat) {
 
   switch (i_biggest) {
   case 0:
-    return {(mat.data_[1][2] - mat.data_[2][1]) * m, (mat.data_[2][0] - mat.data_[0][2]) * m,
-            (mat.data_[0][1] - mat.data_[1][0]) * m, biggest_val};
+    return {(mat.data_[1][2] - mat.data_[2][1]) * m,
+            (mat.data_[2][0] - mat.data_[0][2]) * m,
+            (mat.data_[0][1] - mat.data_[1][0]) * m,
+            biggest_val};
   case 1:
-    return {biggest_val, (mat.data_[0][1] + mat.data_[1][0]) * m,
-            (mat.data_[2][0] + mat.data_[0][2]) * m, (mat.data_[1][2] - mat.data_[2][1]) * m};
+    return {biggest_val,
+            (mat.data_[0][1] + mat.data_[1][0]) * m,
+            (mat.data_[2][0] + mat.data_[0][2]) * m,
+            (mat.data_[1][2] - mat.data_[2][1]) * m};
   case 2:
-    return {(mat.data_[0][1] + mat.data_[1][0]) * m, biggest_val,
-            (mat.data_[1][2] + mat.data_[2][1]) * m, (mat.data_[2][0] - mat.data_[0][2]) * m};
+    return {(mat.data_[0][1] + mat.data_[1][0]) * m,
+            biggest_val,
+            (mat.data_[1][2] + mat.data_[2][1]) * m,
+            (mat.data_[2][0] - mat.data_[0][2]) * m};
   default:
-    return {(mat.data_[2][0] + mat.data_[0][2]) * m, (mat.data_[1][2] + mat.data_[2][1]) * m,
-            biggest_val, (mat.data_[0][1] - mat.data_[1][0]) * m};
+    return {(mat.data_[2][0] + mat.data_[0][2]) * m,
+            (mat.data_[1][2] + mat.data_[2][1]) * m,
+            biggest_val,
+            (mat.data_[0][1] - mat.data_[1][0]) * m};
   }
 }
 
-quaternion quaternion::operator-() const { return {-x, -y, -z, -w}; }
+quaternion quaternion::operator-() const {
+  return {-x, -y, -z, -w};
+}
 
-quaternion &quaternion::operator*=(const quaternion &rhs) {
+quaternion& quaternion::operator*=(const quaternion& rhs) {
   *this = *this * rhs;
   return *this;
 }
 
-float quaternion::norm() const { return std::sqrt(x * x + y * y + z * z + w * w); }
+float quaternion::norm() const {
+  return std::sqrt(x * x + y * y + z * z + w * w);
+}
 
 vec3 quaternion::axis() const {
   if (equal(w, 1.0f)) {
@@ -79,9 +95,13 @@ vec3 quaternion::axis() const {
   return normalize3(vec3(x, y, z));
 }
 
-float quaternion::angle() const { return std::acos(w); }
+float quaternion::angle() const {
+  return std::acos(w);
+}
 
-vec4 quaternion::comps() const { return vec4(x, y, z, w); }
+vec4 quaternion::comps() const {
+  return vec4(x, y, z, w);
+}
 
 mat44 quaternion::to_mat44() const {
   return {1.0f - 2.0f * (y * y + z * z),
@@ -102,13 +122,19 @@ mat44 quaternion::to_mat44() const {
           1.0f};
 }
 
-quaternion normalize(const quaternion &lhs) { return lhs / lhs.norm(); }
+quaternion normalize(const quaternion& lhs) {
+  return lhs / lhs.norm();
+}
 
-quaternion conj(const quaternion &lhs) { return {-lhs.x, -lhs.y, -lhs.z, lhs.w}; }
+quaternion conj(const quaternion& lhs) {
+  return {-lhs.x, -lhs.y, -lhs.z, lhs.w};
+}
 
-quaternion inv(const quaternion &lhs) { return conj(lhs) / lhs.norm(); }
+quaternion inv(const quaternion& lhs) {
+  return conj(lhs) / lhs.norm();
+}
 
-quaternion exp(const quaternion &lhs) {
+quaternion exp(const quaternion& lhs) {
   float alpha = lhs.norm();
   vec3 v = normalize3(lhs.comps().xyz());
 
@@ -123,7 +149,7 @@ quaternion exp(const quaternion &lhs) {
   return quaternion(q_v);
 }
 
-quaternion pow(const quaternion &lhs, float t) {
+quaternion pow(const quaternion& lhs, float t) {
   if (!equal(lhs.w, 1.0f)) {
     float alpha = std::acos(lhs.w);
     float new_alpha = alpha * t;
@@ -135,7 +161,7 @@ quaternion pow(const quaternion &lhs, float t) {
   return lhs;
 }
 
-quaternion log(const quaternion &lhs) {
+quaternion log(const quaternion& lhs) {
   float alpha = std::acos(lhs.w);
   if (equal(std::abs(alpha), 1.0f)) {
     return lhs;
@@ -144,7 +170,7 @@ quaternion log(const quaternion &lhs) {
   return {alpha * new_v[0], alpha * new_v[1], alpha * new_v[2], 0.0f};
 }
 
-quaternion operator*(const quaternion &lhs, const quaternion &rhs) {
+quaternion operator*(const quaternion& lhs, const quaternion& rhs) {
   vec3 lhs_v(lhs.x, lhs.y, lhs.z);
   vec3 rhs_v(rhs.x, rhs.y, rhs.z);
   float w = lhs.w * rhs.w + dot_prod3(lhs_v, rhs_v);
@@ -152,21 +178,29 @@ quaternion operator*(const quaternion &lhs, const quaternion &rhs) {
   return {v[0], v[1], v[2], w};
 }
 
-quaternion operator*(const quaternion &q, float scalar) { return quaternion(q.comps() * scalar); }
+quaternion operator*(const quaternion& q, float scalar) {
+  return quaternion(q.comps() * scalar);
+}
 
-quaternion operator*(float scalar, const quaternion &q) { return q * scalar; }
+quaternion operator*(float scalar, const quaternion& q) {
+  return q * scalar;
+}
 
-quaternion operator/(const quaternion &lhs, const quaternion &rhs) { return lhs * inv(rhs); }
+quaternion operator/(const quaternion& lhs, const quaternion& rhs) {
+  return lhs * inv(rhs);
+}
 
-quaternion operator/(const quaternion &q, float scalar) { return q * (1.0f / scalar); }
+quaternion operator/(const quaternion& q, float scalar) {
+  return q * (1.0f / scalar);
+}
 
-vec3 &transform(vec3 &out, const quaternion &q, const vec3 &v) {
+vec3& transform(vec3& out, const quaternion& q, const vec3& v) {
   quaternion vq(v[0], v[1], v[2], 0.0f);
   out = (q * vq * conj(q)).comps().xyz();
   return out;
 }
 
-quaternion slerp(const quaternion &src, const quaternion &dest, float t) {
+quaternion slerp(const quaternion& src, const quaternion& dest, float t) {
   float cos_omega = dot_prod4(src.comps(), dest.comps());
   vec4 near_dest_v = dest.comps() * sign(cos_omega);
   cos_omega = abs(cos_omega);
@@ -186,4 +220,4 @@ quaternion slerp(const quaternion &src, const quaternion &dest, float t) {
   return quaternion(src.comps() * k0 + near_dest_v * k1);
 }
 
-} // namespace eflib
+}  // namespace eflib

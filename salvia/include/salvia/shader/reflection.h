@@ -42,7 +42,7 @@ uint32_t const classification_mask = 0xFU << classification_field_offset;
 uint32_t const signed_flag = (1U << sign_field_offset) + integer_class;
 uint32_t const unsigned_flag = (2U << sign_field_offset) + integer_class;
 uint32_t const sign_mask = 0xFFU << sign_field_offset;
-} // namespace details
+}  // namespace details
 
 enum language_value_types {
   lvt_none = 0,
@@ -69,7 +69,7 @@ enum language_value_types {
   lvt_f32v4 = lvt_float | details::vector_flag | (4 << details::vector_size_field_offset),
 
   lvt_f32m44 = lvt_float | details::matrix_flag | (4 << details::vector_size_field_offset) |
-               (4 << details::vector_count_field_offset)
+      (4 << details::vector_count_field_offset)
 };
 
 enum aggregation_types { aggt_none, aggt_array };
@@ -87,25 +87,32 @@ enum sv_usage {
 
 enum class reg_categories : uint32_t {
   unknown = 0,
-  offset,   // A special category, which register will be reallocated to correct category.
-  uniforms, // cb#, s#, t#
-  varying,  // v#
-  outputs,  // o#
+  offset,    // A special category, which register will be reallocated to correct category.
+  uniforms,  // cb#, s#, t#
+  varying,   // v#
+  outputs,   // o#
   count
 };
 
 static uint32_t const REG_CATEGORY_REGFILE_COUNTS[] = {
-    0,               // Unknown
-    0,               // Offset
-    16 + 16 + 2 + 2, // Uniform: CB(16) + ICB(16) + Samplers + Textures + Global + Params
-    1,               // Varying
-    1                // Output
+    0,                // Unknown
+    0,                // Offset
+    16 + 16 + 2 + 2,  // Uniform: CB(16) + ICB(16) + Samplers + Textures + Global + Params
+    1,                // Varying
+    1                 // Output
 };
 
 struct sv_layout {
   sv_layout()
-      : logical_index(0), physical_index(0), offset(0), size(0), padding(0), usage(su_none),
-        value_type(lvt_none), agg_type(aggt_none), sv(sv_none) {}
+    : logical_index(0)
+    , physical_index(0)
+    , offset(0)
+    , size(0)
+    , padding(0)
+    , usage(su_none)
+    , value_type(lvt_none)
+    , agg_type(aggt_none)
+    , sv(sv_none) {}
 
   size_t total_size() const { return size + padding; }
 
@@ -120,7 +127,7 @@ struct sv_layout {
 
   language_value_types value_type;
   aggregation_types agg_type;
-  int internal_type; // Type used in SASL.
+  int internal_type;  // Type used in SASL.
 
   semantic_value sv;
 };
@@ -137,12 +144,12 @@ class shader_reflection {
 public:
   virtual languages get_language() const = 0;
   virtual std::string_view entry_name() const = 0;
-  virtual std::vector<sv_layout *> layouts(sv_usage usage) const = 0;
+  virtual std::vector<sv_layout*> layouts(sv_usage usage) const = 0;
   virtual size_t layouts_count(sv_usage usage) const = 0;
   virtual size_t total_size(sv_usage usage) const = 0;
-  virtual sv_layout *input_sv_layout(salvia::shader::semantic_value const &) const = 0;
-  virtual sv_layout *input_sv_layout(std::string_view) const = 0;
-  virtual sv_layout *output_sv_layout(salvia::shader::semantic_value const &) const = 0;
+  virtual sv_layout* input_sv_layout(salvia::shader::semantic_value const&) const = 0;
+  virtual sv_layout* input_sv_layout(std::string_view) const = 0;
+  virtual sv_layout* output_sv_layout(salvia::shader::semantic_value const&) const = 0;
   virtual bool has_position_output() const = 0;
 
   virtual ~shader_reflection() {}
@@ -153,15 +160,15 @@ struct rfile_name {
 
   rfile_name(reg_categories cat, uint32_t index) : cat(cat), index(index) {}
 
-  rfile_name(rfile_name const &rhs) : cat(rhs.cat), index(rhs.index) {}
+  rfile_name(rfile_name const& rhs) : cat(rhs.cat), index(rhs.index) {}
 
-  rfile_name &operator=(rfile_name const &rhs) {
+  rfile_name& operator=(rfile_name const& rhs) {
     cat = rhs.cat;
     index = rhs.index;
     return *this;
   }
 
-  bool operator==(rfile_name const &rhs) const { return cat == rhs.cat && index == rhs.index; }
+  bool operator==(rfile_name const& rhs) const { return cat == rhs.cat && index == rhs.index; }
 
   static rfile_name global() { return rfile_name(reg_categories::uniforms, 34 + 0); }
 
@@ -183,14 +190,18 @@ struct reg_name {
   reg_name() : reg_index(0), elem(0) {}
 
   reg_name(reg_categories cat, uint32_t rfile_index, uint32_t reg_index, uint32_t elem)
-      : rfile(cat, rfile_index), reg_index(reg_index), elem(elem) {}
+    : rfile(cat, rfile_index)
+    , reg_index(reg_index)
+    , elem(elem) {}
 
   reg_name(rfile_name rfile, uint32_t reg_index, uint32_t elem)
-      : rfile(rfile), reg_index(reg_index), elem(elem) {}
+    : rfile(rfile)
+    , reg_index(reg_index)
+    , elem(elem) {}
 
-  reg_name(reg_name const &rhs) : rfile(rhs.rfile), reg_index(rhs.reg_index), elem(rhs.elem) {}
+  reg_name(reg_name const& rhs) : rfile(rhs.rfile), reg_index(rhs.reg_index), elem(rhs.elem) {}
 
-  reg_name &operator=(reg_name const &rhs) {
+  reg_name& operator=(reg_name const& rhs) {
     rfile = rhs.rfile;
     reg_index = rhs.reg_index;
     elem = rhs.elem;
@@ -213,7 +224,7 @@ struct reg_name {
 
   bool valid() const { return rfile.cat != reg_categories::unknown; }
 
-  bool operator<(reg_name const &rhs) const {
+  bool operator<(reg_name const& rhs) const {
     assert(rfile == rhs.rfile);
     if (reg_index < rhs.reg_index)
       return true;
@@ -230,8 +241,8 @@ public:
   virtual std::string_view entry_name() const = 0;
   virtual std::vector<semantic_value> varying_semantics() const = 0;
   virtual size_t available_reg_count(reg_categories cat) const = 0;
-  virtual reg_name find_reg(reg_categories cat, semantic_value const &sv) const = 0;
-  virtual size_t reg_addr(reg_name const &rname) const = 0;
+  virtual reg_name find_reg(reg_categories cat, semantic_value const& sv) const = 0;
+  virtual size_t reg_addr(reg_name const& rname) const = 0;
   virtual ~shader_reflection2() {}
 };
-} // namespace salvia::shader
+}  // namespace salvia::shader

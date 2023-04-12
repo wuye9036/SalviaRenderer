@@ -18,13 +18,13 @@ public:
 
   void reallocate();
 
-  [[nodiscard]] void *data() const;
+  [[nodiscard]] void* data() const;
   [[nodiscard]] size_t size() const;
   [[nodiscard]] size_t alignment() const;
 
 private:
   boost::shared_array<char> data_;
-  char *aligned_data_;
+  char* aligned_data_;
   size_t size_;
   size_t alignment_;
 };
@@ -33,15 +33,18 @@ class sync_renderer;
 
 class resource_data {
 private:
-  [[maybe_unused]] sync_renderer *renderer_;
+  [[maybe_unused]] sync_renderer* renderer_;
   resource_usage usage_;
   aligned_array data_;
   bool client_mapped_;
 
 public:
-  resource_data(sync_renderer *renderer, size_t sz, size_t alignment, resource_usage usage,
-                void *init_data)
-      : renderer_(renderer), usage_(usage), data_(sz, alignment), client_mapped_(false) {
+  resource_data(
+      sync_renderer* renderer, size_t sz, size_t alignment, resource_usage usage, void* init_data)
+    : renderer_(renderer)
+    , usage_(usage)
+    , data_(sz, alignment)
+    , client_mapped_(false) {
     memcpy(data_.data(), init_data, sz);
   }
 
@@ -61,21 +64,17 @@ public:
     }
 
     switch (mm) {
-    case map_read:
-      return (usage_ & resource_read) != 0;
+    case map_read: return (usage_ & resource_read) != 0;
     case map_read_write:
       return usage_ == (usage_ & resource_read) != 0 && (usage_ & resource_write) != 0;
     case map_write_no_overwrite:
     case map_write_discard:
-    case map_write:
-      return (usage_ & resource_write) != 0;
-    default:
-      ef_unreachable("Unknown map mode.");
-      return false;
+    case map_write: return (usage_ & resource_write) != 0;
+    default: ef_unreachable("Unknown map mode."); return false;
     }
   }
 
-  map_result map(void **out_data, map_mode mm, bool do_not_wait, bool force_sync) {
+  map_result map(void** out_data, map_mode mm, bool do_not_wait, bool force_sync) {
     if (!check_mappable(mm, false)) {
       return map_failed;
     }
@@ -105,7 +104,7 @@ public:
 
   void unmap() { client_mapped_ = false; }
 
-  map_result device_map(aligned_array &out_data, map_mode mm) {
+  map_result device_map(aligned_array& out_data, map_mode mm) {
     if (!check_mappable(mm, true)) {
       return map_failed;
     }
@@ -117,7 +116,7 @@ public:
   void device_unmap() {}
 
   // TODO Deprecated
-  void *raw_data(size_t offset) { return reinterpret_cast<char *>(data_.data()) + offset; }
+  void* raw_data(size_t offset) { return reinterpret_cast<char*>(data_.data()) + offset; }
 };
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

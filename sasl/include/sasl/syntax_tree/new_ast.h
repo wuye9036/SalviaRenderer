@@ -97,9 +97,16 @@ struct member_expression {
 };
 
 struct expression
-    : std::variant<constant_expression, variable_expression, unary_expression, binary_expression,
-                   cast_expression, expression_list, cond_expression, subscript_expression,
-                   call_expression, member_expression> {};
+  : std::variant<constant_expression,
+                 variable_expression,
+                 unary_expression,
+                 binary_expression,
+                 cast_expression,
+                 expression_list,
+                 cond_expression,
+                 subscript_expression,
+                 call_expression,
+                 member_expression> {};
 
 // ... statements ...
 
@@ -167,9 +174,18 @@ struct compound_statement {
 };
 
 struct statement
-    : std::variant<empty_statement, declaration_statement, expression_statement, continue_statement,
-                   break_statement, return_statement, if_statement, while_statement,
-                   dowhile_statement, for_statement, switch_statement, compound_statement> {};
+  : std::variant<empty_statement,
+                 declaration_statement,
+                 expression_statement,
+                 continue_statement,
+                 break_statement,
+                 return_statement,
+                 if_statement,
+                 while_statement,
+                 dowhile_statement,
+                 for_statement,
+                 switch_statement,
+                 compound_statement> {};
 
 // ... declarations ...
 
@@ -238,7 +254,7 @@ struct struct_definition {
 };
 
 struct unqualified_type
-    : std::variant<builtin_type, array_type, alias_type, function_signature, struct_definition> {};
+  : std::variant<builtin_type, array_type, alias_type, function_signature, struct_definition> {};
 
 struct qualified_type {
   node_base base;
@@ -263,11 +279,15 @@ struct elaborated_type {
   token name;
 };
 
-struct declaration : std::variant<variable_declaration, function_definition, function_signature,
-                                  struct_definition, elaborated_type> {};
+struct declaration
+  : std::variant<variable_declaration,
+                 function_definition,
+                 function_signature,
+                 struct_definition,
+                 elaborated_type> {};
 
 struct program {
   std::vector<declaration> decls;
 };
 
-} // namespace sasl::syntax_tree_next
+}  // namespace sasl::syntax_tree_next

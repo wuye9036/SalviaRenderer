@@ -30,4 +30,4 @@ public:
   ~obj_material() {}
 };
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

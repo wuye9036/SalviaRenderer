@@ -1,11 +1,11 @@
-#include <salvia/core/shader.h>
 #include <salvia/core/render_state.h>
+#include <salvia/core/shader.h>
 
 #include <salvia/shader/shader_cbuffer.h>
 
 namespace salvia::core {
 
-void copy_using_state(render_state *dest, render_state const *src) {
+void copy_using_state(render_state* dest, render_state const* src) {
   switch (src->cmd) {
   case command_id::draw:
   case command_id::draw_index:
@@ -39,4 +39,4 @@ void copy_using_state(render_state *dest, render_state const *src) {
   }
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core

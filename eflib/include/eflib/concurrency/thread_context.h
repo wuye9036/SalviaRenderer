@@ -18,15 +18,15 @@ struct thread_context {
   private:
     friend struct thread_context;
 
-    thread_context const *owner = nullptr;
+    thread_context const* owner = nullptr;
     size_t cur = 0;
 
-    package_cursor(thread_context const *owner, size_t cur) : owner(owner), cur(cur) {}
+    package_cursor(thread_context const* owner, size_t cur) : owner(owner), cur(cur) {}
 
   public:
     package_cursor() = default;
-    package_cursor(package_cursor const &rhs) = default;
-    package_cursor &operator=(package_cursor const &rhs) = default;
+    package_cursor(package_cursor const& rhs) = default;
+    package_cursor& operator=(package_cursor const& rhs) = default;
 
     [[nodiscard]] size_t package_index() const noexcept { return cur; }
     [[nodiscard]] auto index_range() const noexcept {
@@ -46,7 +46,7 @@ struct thread_context {
   size_t thread_id;
 
   size_t item_count;
-  std::atomic<size_t> *working_package_id;
+  std::atomic<size_t>* working_package_id;
   size_t package_size;
   size_t package_count;
 
@@ -60,8 +60,10 @@ struct thread_context {
 };
 
 template <typename ContextRng>
-inline void init_thread_context(ContextRng &&rng, size_t item_count,
-                                std::atomic<size_t> *working_package_id, size_t package_size) {
+inline void init_thread_context(ContextRng&& rng,
+                                size_t item_count,
+                                std::atomic<size_t>* working_package_id,
+                                size_t package_size) {
   size_t package_count = thread_context::compute_package_count(item_count, package_size);
 
   for (size_t i = 0; i < rng.size(); ++i) {
@@ -74,11 +76,14 @@ inline void init_thread_context(ContextRng &&rng, size_t item_count,
 }
 
 template <typename ThreadFunc>
-concept thread_func = std::invocable<ThreadFunc, thread_context const *>;
+concept thread_func = std::invocable<ThreadFunc, thread_context const*>;
 
 template <typename ThreadPool>
-inline void execute_threads(ThreadPool &&pool, thread_func auto &&fn, size_t item_count,
-                            size_t package_size, size_t thread_count = std::thread::hardware_concurrency()) {
+inline void execute_threads(ThreadPool&& pool,
+                            thread_func auto&& fn,
+                            size_t item_count,
+                            size_t package_size,
+                            size_t thread_count = std::thread::hardware_concurrency()) {
   // Compute package information
   std::atomic<size_t> working_package(0);
   std::vector<thread_context> contexts(thread_count);
@@ -96,4 +101,4 @@ inline void execute_threads(ThreadPool &&pool, thread_func auto &&fn, size_t ite
   std::forward<ThreadPool>(pool).wait();
 }
 
-} // namespace eflib
+}  // namespace eflib

@@ -9,7 +9,7 @@ namespace saliva::shader {
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 struct vs_input_op;
 struct vs_output_op;
-}
+}  // namespace saliva::shader
 
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(resource_manager);
@@ -27,7 +27,7 @@ class render_core {
 private:
 public:
   render_core();
-  void update(render_state_ptr const &state);
+  void update(render_state_ptr const& state);
   result execute();
 
 private:
@@ -44,4 +44,4 @@ private:
   result async_stop();
 };
 
-} // namespace salvia::core
+}  // namespace salvia::core

@@ -11,4 +11,4 @@ struct viewport {
   float maxz;
 };
 
-} // namespace salvia::core
+}  // namespace salvia::core

@@ -21,7 +21,7 @@ struct label;
 struct statement : public node_impl<statement, node, node_ids::statement> {};
 
 struct labeled_statement
-    : public node_impl<labeled_statement, statement, node_ids::labeled_statement> {
+  : public node_impl<labeled_statement, statement, node_ids::labeled_statement> {
   std::shared_ptr<struct label> pop_label();
   void push_label(std::shared_ptr<label> lbl);
 
@@ -30,7 +30,7 @@ struct labeled_statement
 };
 
 struct declaration_statement
-    : public node_impl<declaration_statement, statement, node_ids::declaration_statement> {
+  : public node_impl<declaration_statement, statement, node_ids::declaration_statement> {
   std::vector<std::shared_ptr<declaration>> decls;
 };
 
@@ -45,7 +45,7 @@ struct while_statement : public node_impl<while_statement, statement, node_ids::
 };
 
 struct dowhile_statement
-    : public node_impl<dowhile_statement, statement, node_ids::dowhile_statement> {
+  : public node_impl<dowhile_statement, statement, node_ids::dowhile_statement> {
   std::shared_ptr<statement> body;
   std::shared_ptr<expression> cond;
 };
@@ -69,24 +69,24 @@ struct ident_label : public node_impl<ident_label, label, node_ids::ident_label>
 };
 
 struct switch_statement
-    : public node_impl<switch_statement, statement, node_ids::switch_statement> {
+  : public node_impl<switch_statement, statement, node_ids::switch_statement> {
   std::shared_ptr<expression> cond;
   std::shared_ptr<compound_statement> stmts;
 };
 
 struct compound_statement
-    : public node_impl<compound_statement, statement, node_ids::compound_statement> {
+  : public node_impl<compound_statement, statement, node_ids::compound_statement> {
   std::vector<std::shared_ptr<statement>> stmts;
 };
 
 struct expression_statement
-    : public node_impl<expression_statement, statement, node_ids::expression_statement> {
+  : public node_impl<expression_statement, statement, node_ids::expression_statement> {
   std::shared_ptr<expression> expr;
 };
 
 struct jump_statement : public node_impl<jump_statement, statement, node_ids::jump_statement> {
   jump_mode code;
-  std::shared_ptr<expression> jump_expr; // for return only
+  std::shared_ptr<expression> jump_expr;  // for return only
 };
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

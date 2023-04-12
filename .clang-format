@@ -1,3 +1,105 @@
-BasedOnStyle : LLVM
+---
+BasedOnStyle: LLVM
+---
 Language: Cpp
+Standard: c++20
 ColumnLimit: 100
+TabWidth: 4
+IndentWidth: 2
+UseTab: Never
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: Left
+AlignOperands: false
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: false
+#AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
+BraceWrapping: {
+  AfterCaseLabel: false,
+  AfterClass: false,
+  AfterControlStatement: Never,
+  AfterEnum: false,
+  AfterFunction: false,
+  AfterNamespace: false,
+  AfterStruct: false,
+  AfterUnion: false,
+  BeforeCatch: false,
+  BeforeElse: false,
+  IndentBraces: false,
+  #SplitEmptyFunction: true
+  #SplitEmptyRecord: true
+  #SplitEmptyNamespace: true
+}
+BreakBeforeInheritanceComma: true
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+BreakStringLiterals: true
+PackConstructorInitializers: CurrentLine
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
+FixNamespaceComments: true
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex: '^<eflib/platform/config.h>$'
+    Priority: 1
+  - Regex: '^"'
+    Priority: 2
+  - Regex: '^?sasl/'
+    Priority: 3
+  - Regex: '^?salvia/'
+    Priority: 4
+  - Regex: '^?eflib/'
+    Priority: 5
+  - Regex: '^<fmt/'
+    Priority: 6
+  - Regex: '^<range/'
+    Priority: 7
+  - Regex: '^<boost/'
+    Priority: 8
+  - Regex: '^<'
+    Priority: 9
+IndentCaseLabels: false
+IndentGotoLabels: false
+IndentPPDirectives: AfterHash
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+PointerAlignment: Left
+ReflowComments: true
+SortIncludes: CaseInsensitive
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false

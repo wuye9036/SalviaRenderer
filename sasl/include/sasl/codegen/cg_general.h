@@ -20,13 +20,13 @@ namespace sasl {
 namespace semantic {
 class caster_t;
 class module_semantic;
-} // namespace semantic
+}  // namespace semantic
 namespace syntax_tree {
 struct expression;
 struct tynode;
 struct node;
-} // namespace syntax_tree
-} // namespace sasl
+}  // namespace syntax_tree
+}  // namespace sasl
 
 namespace llvm {
 class Constant;
@@ -65,7 +65,7 @@ protected:
   SASL_SPECIFIC_VISIT_DCL(bin_logic, binary_expression) override;
 
 private:
-  module_vmcode_impl *mod_ptr();
+  module_vmcode_impl* mod_ptr();
 };
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

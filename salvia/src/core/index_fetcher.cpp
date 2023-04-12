@@ -8,7 +8,7 @@
 
 namespace salvia::core {
 
-void index_fetcher::update(render_state const *state) {
+void index_fetcher::update(render_state const* state) {
   index_buffer_ = state->cmd == command_id::draw_index ? state->index_buffer.get() : nullptr;
   index_format_ = state->index_format;
   prim_topo_ = state->prim_topo;
@@ -23,25 +23,22 @@ void index_fetcher::update(render_state const *state) {
   base_vert_ = state->base_vertex;
 }
 
-void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index,
-                                  uint32_t *max_index, uint32_t prim_id_beg, uint32_t prim_id_end) {
-  uint32_t *out_indexes = indexes_of_prim;
+void index_fetcher::fetch_indexes(uint32_t* indexes_of_prim,
+                                  uint32_t* min_index,
+                                  uint32_t* max_index,
+                                  uint32_t prim_id_beg,
+                                  uint32_t prim_id_end) {
+  uint32_t* out_indexes = indexes_of_prim;
   uint32_t prim_vert_count = 0;
 
   switch (prim_topo_) {
   case primitive_line_list:
-  case primitive_line_strip:
-    prim_vert_count = 2;
-    break;
+  case primitive_line_strip: prim_vert_count = 2; break;
 
   case primitive_triangle_list:
-  case primitive_triangle_strip:
-    prim_vert_count = 3;
-    break;
+  case primitive_triangle_strip: prim_vert_count = 3; break;
 
-  default:
-    ef_unreachable("Unknown primitive type.");
-    return;
+  default: ef_unreachable("Unknown primitive type."); return;
   }
 
   if (index_buffer_) {
@@ -79,15 +76,14 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
       }
       break;
 
-    default:
-      break;
+    default: break;
     }
 
     if (index_buffer_) {
       // TODO: need support feature "index restart" from DX 10 Spec
-      uint8_t *index_buffer_address = index_buffer_->raw_data(start_addr_);
+      uint8_t* index_buffer_address = index_buffer_->raw_data(start_addr_);
       if (format_r16_uint == index_format_) {
-        auto *pidx = reinterpret_cast<uint16_t *>(index_buffer_address);
+        auto* pidx = reinterpret_cast<uint16_t*>(index_buffer_address);
         for (uint32_t i = 0; i < prim_vert_count; ++i) {
           uint16_t biased_index = pidx[ids[i]];
           *min_index = std::min<uint32_t>(biased_index, *min_index);
@@ -97,7 +93,7 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
       } else {
         EF_ASSERT(format_r32_uint == index_format_, "Index type is wrong.");
 
-        auto *pidx = reinterpret_cast<uint32_t *>(index_buffer_address);
+        auto* pidx = reinterpret_cast<uint32_t*>(index_buffer_address);
         for (uint32_t i = 0; i < prim_vert_count; ++i) {
           uint32_t biased_index = pidx[ids[i]];
           *min_index = std::min(biased_index, *min_index);
@@ -118,4 +114,4 @@ void index_fetcher::fetch_indexes(uint32_t *indexes_of_prim, uint32_t *min_index
   *max_index += base_vert_;
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core

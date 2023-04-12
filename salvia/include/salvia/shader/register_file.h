@@ -10,27 +10,28 @@ namespace salvia::shader {
 
 class register_file {
 public:
-  static void vls_construct(register_file *rf, size_t stride, register_file const &val) {
+  static void vls_construct(register_file* rf, size_t stride, register_file const& val) {
     for (size_t i_attr = 0; i_attr < stride / sizeof(vec4); ++i_attr) {
       rf->attr(i_attr) = val.attr(i_attr);
     }
   }
 
-  static void vls_destroy(register_file * /*rf*/, size_t /*stride*/) {
+  static void vls_destroy(register_file* /*rf*/, size_t /*stride*/) {
     // do nothing
   }
 
-  eflib::vec4 &attr(size_t index) { return reinterpret_cast<eflib::vec4 *>(this)[index]; }
+  eflib::vec4& attr(size_t index) { return reinterpret_cast<eflib::vec4*>(this)[index]; }
 
-  [[nodiscard]] eflib::vec4 const &attr(size_t index) const {
-    return reinterpret_cast<eflib::vec4 const *>(this)[index];
+  [[nodiscard]] eflib::vec4 const& attr(size_t index) const {
+    return reinterpret_cast<eflib::vec4 const*>(this)[index];
   }
 };
 
-} // namespace salvia::shader
+}  // namespace salvia::shader
 
 namespace eflib {
-template <std::derived_from<register_file> T> struct vls_traits<T> {
+template <std::derived_from<register_file> T>
+struct vls_traits<T> {
   static bool const need_construct = false;
   static bool const need_destroy = false;
 
@@ -51,4 +52,4 @@ template <std::derived_from<register_file> T> struct vls_traits<T> {
     }
   }
 };
-} // namespace eflib
+}  // namespace eflib

@@ -6,7 +6,7 @@
 #if defined(EFLIB_LINUX)
 //	We need alternative init API. It is default in Windows because DYN_LINK is enabled.
 //  But on Linux, we need to force open it.
-#define BOOST_TEST_ALTERNATIVE_INIT_API
+#  define BOOST_TEST_ALTERNATIVE_INIT_API
 #endif
 
 #include <boost/chrono.hpp>
@@ -15,13 +15,12 @@
 #include <eflib/platform/boost_end.h>
 
 #if defined(SASL_USE_LLVM)
-#include <sasl/drivers/drivers_api.h>
+#  include <sasl/drivers/drivers_api.h>
 #endif
 
-
 #if defined(EFLIB_WINDOWS)
-#define NOMINMAX
-#include <Windows.h>
+#  define NOMINMAX
+#  include <Windows.h>
 #endif
 
 namespace chrono = boost::chrono;
@@ -34,7 +33,7 @@ void check_on_exit() {
   }
 }
 
-bool enable_pause(int argc, char *argv[]) {
+bool enable_pause(int argc, char* argv[]) {
   for (int i_arg = 0; i_arg < argc; ++i_arg) {
     if (strncmp("--nopause", argv[i_arg], 9) == 0) {
       return false;
@@ -43,7 +42,7 @@ bool enable_pause(int argc, char *argv[]) {
   return true;
 }
 
-bool display_time(int argc, char *argv[]) {
+bool display_time(int argc, char* argv[]) {
   for (int i_arg = 0; i_arg < argc; ++i_arg) {
     if (strncmp("--display-time", argv[i_arg], 14) == 0) {
       return true;
@@ -52,7 +51,7 @@ bool display_time(int argc, char *argv[]) {
   return false;
 }
 
-bool set_highest_priority(int argc, char *argv[]) {
+bool set_highest_priority(int argc, char* argv[]) {
   for (int i_arg = 0; i_arg < argc; ++i_arg) {
     if (strncmp("--highest-prior", argv[i_arg], 15) == 0) {
       printf("Process Priority is HIGH_PRIORITY_CLASS");
@@ -66,7 +65,7 @@ bool set_highest_priority(int argc, char *argv[]) {
   return false;
 }
 
-int BOOST_TEST_CALL_DECL main(int argc, char *argv[]) {
+int BOOST_TEST_CALL_DECL main(int argc, char* argv[]) {
   set_highest_priority(argc, argv);
 
   normal_exit = false;

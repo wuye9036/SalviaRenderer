@@ -27,23 +27,25 @@ class Function;
 class APInt;
 
 class IRBuilderDefaultInserter;
-template <typename T, typename Inserter> class IRBuilder;
+template <typename T, typename Inserter>
+class IRBuilder;
 class ConstantFolder;
 using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
-template <typename T> class ArrayRef;
-} // namespace llvm
+template <typename T>
+class ArrayRef;
+}  // namespace llvm
 
 namespace sasl {
 namespace syntax_tree {
 struct node;
 struct tynode;
 struct function_def;
-} // namespace syntax_tree
+}  // namespace syntax_tree
 namespace semantic {
 class module_semantic;
 struct elem_indexes;
-} // namespace semantic
-} // namespace sasl
+}  // namespace semantic
+}  // namespace sasl
 
 namespace sasl::codegen {
 
@@ -80,25 +82,25 @@ class cg_type {
 public:
   friend class cg_service;
 
-  cg_type(sasl::syntax_tree::tynode *sty, llvm::Type *ty_c, llvm::Type *ty_llvm);
+  cg_type(sasl::syntax_tree::tynode* sty, llvm::Type* ty_c, llvm::Type* ty_llvm);
 
   cg_type();
 
-  cg_type(cg_type const &);
-  cg_type &operator=(cg_type const &);
+  cg_type(cg_type const&);
+  cg_type& operator=(cg_type const&);
 
-  sasl::syntax_tree::tynode *tyn_ptr() const;
+  sasl::syntax_tree::tynode* tyn_ptr() const;
   builtin_types hint() const;
-  llvm::Type *ty(abis abi) const;
-  void vm_type(abis abi, llvm::Type *t);
+  llvm::Type* ty(abis abi) const;
+  void vm_type(abis abi, llvm::Type* t);
 
 protected:
-  llvm::Type *tys[eflib::to_underlying(abis::count)];
-  sasl::syntax_tree::tynode *tyn;
+  llvm::Type* tys[eflib::to_underlying(abis::count)];
+  sasl::syntax_tree::tynode* tyn;
 };
 
-typedef std::vector<llvm::Value *> value_array;
-bool valid_all(value_array const &arr);
+typedef std::vector<llvm::Value*> value_array;
+bool valid_all(value_array const& arr);
 
 class cg_service;
 
@@ -107,13 +109,13 @@ public:
   friend class cg_service;
 
   multi_value(size_t num_value = 0);
-  multi_value(multi_value const &);
-  multi_value &operator=(multi_value const &);
+  multi_value(multi_value const&);
+  multi_value& operator=(multi_value const&);
 
   /// @name State accessors
   /// @{
   /// Get service.
-  cg_service *service() const;
+  cg_service* service() const;
 
   /// Load llvm value from multi_value.
   value_array raw() const;
@@ -123,9 +125,9 @@ public:
   value_array load_ref() const;
 
   /// Store llvm value to multi_value
-  void store(multi_value const &) const;
-  void emplace(multi_value const &);
-  void emplace(value_array const &v, value_kinds k, abis abi);
+  void store(multi_value const&) const;
+  void emplace(multi_value const&);
+  void emplace(value_array const& v, value_kinds k, abis abi);
 
   size_t value_count() const;
   bool storable() const;
@@ -134,49 +136,52 @@ public:
   bool is_mono() const;
   multi_value as_ref() const;
 
-  cg_type *ty() const; ///< Get type information of value.
-  void ty(cg_type *);  ///< Set type information of value.
+  cg_type* ty() const;  ///< Get type information of value.
+  void ty(cg_type*);    ///< Set type information of value.
 
   builtin_types
-  hint() const; ///< Get type hint. if type is not built-in type it returns builtin_type::none.
-  void hint(builtin_types bt); ///< Set type hint.
+  hint() const;  ///< Get type hint. if type is not built-in type it returns builtin_type::none.
+  void hint(builtin_types bt);   ///< Set type hint.
 
-  value_kinds kind() const;     ///< Get kind.
-  void kind(value_kinds vkind); ///< Set kind.
+  value_kinds kind() const;      ///< Get kind.
+  void kind(value_kinds vkind);  ///< Set kind.
 
-  multi_value *
-  parent() const; ///< Get parent. If value is not a member of aggragation, it return nullptr.
-  void parent(multi_value const &v);
-  void parent(multi_value const *v);
+  multi_value*
+  parent() const;  ///< Get parent. If value is not a member of aggragation, it return nullptr.
+  void parent(multi_value const& v);
+  void parent(multi_value const* v);
 
-  abis abi() const;   ///< Get ABI.
-  void abi(abis abi); ///< Set ABI
+  abis abi() const;    ///< Get ABI.
+  void abi(abis abi);  ///< Set ABI
 
-  multi_value *index() const;
-  void index(multi_value const &);
-  void index(multi_value const *);
-  void index(size_t v);                ///< Set Index. It is only make sense if parent is available.
-  elem_indexes indexes() const;        ///< Get indexes (e.g. swizzle, write mask)
-  void indexes(elem_indexes const &v); ///< Set indexes (e.g. swizzle, write mask)
+  multi_value* index() const;
+  void index(multi_value const&);
+  void index(multi_value const*);
+  void index(size_t v);          ///< Set Index. It is only make sense if parent is available.
+  elem_indexes indexes() const;  ///< Get indexes (e.g. swizzle, write mask)
+  void indexes(elem_indexes const& v);  ///< Set indexes (e.g. swizzle, write mask)
   /// @}
 
   /// @name Operators
   /// @{
-  multi_value swizzle(elem_indexes const &swz_code) const;
+  multi_value swizzle(elem_indexes const& swz_code) const;
   multi_value to_rvalue() const;
   /// @}
 
-  static multi_value slice(multi_value const &vec, elem_indexes const &indexes);
-  static multi_value slice(multi_value const &vec, multi_value const &index);
+  static multi_value slice(multi_value const& vec, elem_indexes const& indexes);
+  static multi_value slice(multi_value const& vec, multi_value const& index);
 
 protected:
   /// @name Constructor, Destructor, Copy constructor and assignment operator
   /// @{
-  multi_value(cg_type *ty, std::vector<llvm::Value *> const &val, value_kinds k, abis abi,
-              cg_service *cg);
+  multi_value(
+      cg_type* ty, std::vector<llvm::Value*> const& val, value_kinds k, abis abi, cg_service* cg);
 
-  multi_value(builtin_types hint, std::vector<llvm::Value *> const &val, value_kinds k, abis abi,
-              cg_service *cg);
+  multi_value(builtin_types hint,
+              std::vector<llvm::Value*> const& val,
+              value_kinds k,
+              abis abi,
+              cg_service* cg);
   /// @}
 
   /// @name Members
@@ -188,10 +193,10 @@ protected:
   elem_indexes elem_indexes_;
 
   // Value
-  std::vector<llvm::Value *> val_;
+  std::vector<llvm::Value*> val_;
 
   // Types
-  cg_type *ty_;
+  cg_type* ty_;
   builtin_types builtin_ty_;
 
   // Kind and ABI
@@ -199,11 +204,12 @@ protected:
   abis abi_;
 
   // Owner
-  cg_service *cg_;
+  cg_service* cg_;
   /// @}
 };
 
-template <typename RVT> struct cg_scope_guard {
+template <typename RVT>
+struct cg_scope_guard {
   typedef std::function<RVT()> on_exit_fn;
   cg_scope_guard(on_exit_fn do_exit) : do_exit(do_exit) {}
   ~cg_scope_guard() { do_exit(); }
@@ -215,7 +221,7 @@ private:
 struct insert_point_t {
   insert_point_t();
   explicit operator bool() const noexcept { return block != nullptr; }
-  llvm::BasicBlock *block;
+  llvm::BasicBlock* block;
 };
 
 struct cg_function {
@@ -231,7 +237,7 @@ struct cg_function {
   size_t physical_args_count() const;
 
   /// Set arguments name. Size of names must be less than argument size.
-  void args_name(std::vector<std::string> const &names);
+  void args_name(std::vector<std::string> const& names);
 
   /// Set argument name.
   void arg_name(size_t logical_index, std::string_view);
@@ -270,23 +276,23 @@ struct cg_function {
   /// Need mask
   bool need_mask() const;
   /// Return name
-  void return_name(std::string const &s) const;
+  void return_name(std::string const& s) const;
   /// Set Inline hint
   void inline_hint();
-  void allocation_block(insert_point_t const &ip);
+  void allocation_block(insert_point_t const& ip);
   insert_point_t allocation_block() const;
 
-  cg_type *result_type() const;
+  cg_type* result_type() const;
 
   insert_point_t alloc_block;
-  std::vector<llvm::Argument *> arg_cache;
-  sasl::syntax_tree::function_def *fn_def;
-  llvm::Function *fn;
+  std::vector<llvm::Argument*> arg_cache;
+  sasl::syntax_tree::function_def* fn_def;
+  llvm::Function* fn;
   bool c_compatible;
   bool external{};
   bool partial_execution;
   bool ret_void;
-  cg_service *cg;
+  cg_service* cg;
 };
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

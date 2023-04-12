@@ -13,11 +13,11 @@ find_package(Freetype REQUIRED)
 # find_package(magic_enum CONFIG REQUIRED)
 find_path(SIMDE_INCLUDE_DIRS "simde/arm/neon.h")
 
-include (cmake/IncludeBoost.cmake)
-include (cmake/IncludeLLVM.cmake)
-include (cmake/ConfigCompiler.cmake)
+include(cmake/IncludeBoost.cmake)
+include(cmake/IncludeLLVM.cmake)
+include(cmake/ConfigCompiler.cmake)
 
-add_subdirectory(cmake) 
+add_subdirectory(cmake)
 
 # Add projects
 add_subdirectory(eflib)
@@ -33,3 +33,10 @@ enable_testing()
 add_test(NAME Test-Shader COMMAND $<TARGET_FILE:sasl_test>)
 add_test(NAME Test-EFLib COMMAND $<TARGET_FILE:eflib_test>)
 add_test(NAME Test-Salvia COMMAND $<TARGET_FILE:salvia_test>)
+
+add_custom_target(
+        copy-compile-commands ALL
+        ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_CURRENT_LIST_DIR}
+)

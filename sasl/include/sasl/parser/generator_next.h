@@ -19,7 +19,7 @@ using token = sasl::common::token;
 using namespace eflib::composition;
 using namespace sasl::parser::diags;
 
-} // namespace sasl::parser_next
+}  // namespace sasl::parser_next
 
 namespace sasl::parser_next::attributes {
 
@@ -56,22 +56,26 @@ struct queue_attribute {
   std::vector<any_attribute> children;
 };
 
-struct any_attribute : std::variant<nil_attribute, terminal_attribute, select_attribute,
-                                    sequence_attribute, queue_attribute> {};
+struct any_attribute
+  : std::variant<nil_attribute,
+                 terminal_attribute,
+                 select_attribute,
+                 sequence_attribute,
+                 queue_attribute> {};
 
 template <typename T>
 concept attribute = std::same_as<decltype(std::declval<T>().base), attribute_base> ||
-                    std::same_as<T, any_attribute>;
+    std::same_as<T, any_attribute>;
 
 template <typename AttrT>
 concept aggregated_attribute =
     std::same_as<AttrT, sequence_attribute> || std::same_as<AttrT, queue_attribute>;
 
-decltype(auto) get_child(aggregated_attribute auto &&attr, size_t i) {
+decltype(auto) get_child(aggregated_attribute auto&& attr, size_t i) {
   return std::forward<decltype(attr)>(attr).children[i];
 }
 
-} // namespace sasl::parser_next::attributes
+}  // namespace sasl::parser_next::attributes
 
 // ... Parser combinations ...
 namespace sasl::parser_next::combinators {
@@ -84,7 +88,7 @@ constexpr uint32_t _recover_failed_offset = 4;
 constexpr uint32_t _recover_failed_mask = 0xF0;
 constexpr uint32_t _expected_offset = 0;
 constexpr uint32_t _expected_mask = 0x0F;
-} // namespace
+}  // namespace
 
 enum class result_state : uint32_t {
   succeed = 0,
@@ -110,9 +114,13 @@ constexpr result_state to_better(result_state lhs, result_state rhs) noexcept {
   return std::min(lhs, rhs);
 }
 
-constexpr bool is_worse(result_state lhs, result_state rhs) noexcept { return lhs > rhs; }
+constexpr bool is_worse(result_state lhs, result_state rhs) noexcept {
+  return lhs > rhs;
+}
 
-constexpr bool is_better(result_state lhs, result_state rhs) noexcept { return lhs < rhs; }
+constexpr bool is_better(result_state lhs, result_state rhs) noexcept {
+  return lhs < rhs;
+}
 
 constexpr bool is_expected_failed_or_recovered(result_state rs) noexcept {
   using enum result_state;
@@ -125,8 +133,9 @@ constexpr bool is_continuable(result_state rs) noexcept {
 
 using token_range = ranges::subrange<std::vector<token>::iterator>;
 
-template <attribute Attr> struct parsing_result {
-  result_state state {result_state::failed};
+template <attribute Attr>
+struct parsing_result {
+  result_state state{result_state::failed};
   token_range rng;
   Attr attr;
 };
@@ -136,16 +145,20 @@ struct parser_base {
 };
 
 struct terminal_p {
-  parsing_result<attributes::any_attribute> parse(token_range rng, sasl::common::diag_chat &diags) const {
+  parsing_result<attributes::any_attribute> parse(token_range rng,
+                                                  sasl::common::diag_chat& diags) const {
     if (rng.empty()) {
       return {result_state::failed, rng, {nil_attribute{}}};
     }
 
     if (rng.front().id() == token_id) {
-      return {result_state::succeed, rng.next(), {terminal_attribute{{0, rng.front(), rng.front()}}}};
+      return {
+          result_state::succeed, rng.next(), {terminal_attribute{{0, rng.front(), rng.front()}}}};
     }
 
-    diags.report(unmatched_token, rng.front().file_name(), rng.front().span(),
+    diags.report(unmatched_token,
+                 rng.front().file_name(),
+                 rng.front().span(),
                  fmt::arg("syntax_error", rng.front().lit()));
     return {result_state::failed, rng, {nil_attribute{}}};
   }
@@ -167,10 +180,13 @@ struct named_p {
   std::string name;
 };
 
-template <typename T> struct is_parsing_result : std::false_type {};
-template <attribute Attr> struct is_parsing_result<parsing_result<Attr>> : std::true_type {};
+template <typename T>
+struct is_parsing_result : std::false_type {};
+template <attribute Attr>
+struct is_parsing_result<parsing_result<Attr>> : std::true_type {};
 
-template <typename T> constexpr auto is_parsing_result_v = is_parsing_result<T>::value;
+template <typename T>
+constexpr auto is_parsing_result_v = is_parsing_result<T>::value;
 
 template <typename T>
 concept range_p = is_parsing_result_v<T>;
@@ -359,9 +375,9 @@ queuer operator>(parser const &expr0, parser const &expr1);
 queuer operator>(queuer const &expr0, parser const &expr1);
 negnativer operator!(parser const &expr1);
 #endif
-} // namespace sasl::parser_next::combinators
+}  // namespace sasl::parser_next::combinators
 
 namespace sasl::parser_next {
 using namespace attributes;
 using namespace combinators;
-} // namespace sasl::parser_next
+}  // namespace sasl::parser_next

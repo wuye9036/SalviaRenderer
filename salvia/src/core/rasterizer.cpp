@@ -43,7 +43,7 @@ bool is_valid_quad(size_t quad_x, size_t quad_y) {
   size_t height = 4;
 
   return debug_start_x <= quad_x && quad_x < debug_start_x + width && debug_start_y <= quad_y &&
-         quad_y < debug_start_y + height;
+      quad_y < debug_start_y + height;
 }
 #endif
 
@@ -53,9 +53,9 @@ struct pixel_statistic {
 };
 
 struct drawing_triangle_context {
-  float const *aa_z_offset;
-  triangle_info const *tri_info;
-  pixel_statistic *pixel_stat;
+  float const* aa_z_offset;
+  triangle_info const* tri_info;
+  pixel_statistic* pixel_stat;
 };
 
 /*************************************************
@@ -70,18 +70,18 @@ struct drawing_triangle_context {
  *      2 x y z components of w-pos have been divided by w component.
  *      3 position.w() = 1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
+void rasterizer::rasterize_line(rasterize_prim_context const* ctx) {
   // Extract to local variables
   // cpp_pixel_shader *cpp_ps = ctx->shaders.cpp_ps;
   // pixel_shader_unit *psu = ctx->shaders.ps_unit;
-  viewport const &vp = *ctx->tile_vp;
-  vs_output const &v0 = *clipped_verts_[ctx->prim_id * 2 + 0];
-  vs_output const &v1 = *clipped_verts_[ctx->prim_id * 2 + 1];
+  viewport const& vp = *ctx->tile_vp;
+  vs_output const& v0 = *clipped_verts_[ctx->prim_id * 2 + 0];
+  vs_output const& v1 = *clipped_verts_[ctx->prim_id * 2 + 1];
 
   // Rasterize
   vs_output diff;
   vso_ops_->sub(diff, v1, v0);
-  eflib::vec4 const &dir = diff.position();
+  eflib::vec4 const& dir = diff.position();
   float diff_dir = abs(dir.x()) > abs(dir.y()) ? dir.x() : dir.y();
 
   // Computing differential.
@@ -156,7 +156,7 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
       ++step;
       vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
     }
-  } else // y major
+  } else  // y major
   {
     const vs_output *start, *end;
     if (dir.y() < 0) {
@@ -212,13 +212,13 @@ void rasterizer::rasterize_line(rasterize_prim_context const *ctx) {
   }
 }
 
-void rasterizer::initialize(render_stages const *stages) {
+void rasterizer::initialize(render_stages const* stages) {
   frame_buffer_ = stages->backend.get();
   vert_cache_ = stages->vert_cache.get();
   host_ = stages->host.get();
 }
 
-void rasterizer::update(render_state const *state) {
+void rasterizer::update(render_state const* state) {
   state_ = state->ras_state.get();
   ps_proto_ = state->ps_proto.get();
   cpp_vs_ = state->cpp_vs.get();
@@ -229,8 +229,8 @@ void rasterizer::update(render_state const *state) {
   target_sample_count_ = state->target_sample_count;
   full_mask_ = (1ULL << target_sample_count_) - 1;
   quad_full_mask_ = (full_mask_ << (MAX_SAMPLE_COUNT * 0)) |
-                    (full_mask_ << (MAX_SAMPLE_COUNT * 1)) |
-                    (full_mask_ << (MAX_SAMPLE_COUNT * 2)) | (full_mask_ << (MAX_SAMPLE_COUNT * 3));
+      (full_mask_ << (MAX_SAMPLE_COUNT * 1)) | (full_mask_ << (MAX_SAMPLE_COUNT * 2)) |
+      (full_mask_ << (MAX_SAMPLE_COUNT * 3));
   prim_reorderable_ = false;
 
   vs_reflection_ = state->vx_shader ? state->vx_shader->get_reflection() : nullptr;
@@ -282,9 +282,12 @@ void rasterizer::update(render_state const *state) {
   }
 }
 
-void rasterizer::draw_full_tile(int tile_left, int tile_top, int tile_right, int tile_bottom,
-                                drawing_shader_context const *shaders,
-                                drawing_triangle_context const *triangle_ctx) {
+void rasterizer::draw_full_tile(int tile_left,
+                                int tile_top,
+                                int tile_right,
+                                int tile_bottom,
+                                drawing_shader_context const* shaders,
+                                drawing_triangle_context const* triangle_ctx) {
   for (int top = tile_top; top < tile_bottom; top += 2) {
     for (int left = tile_left; left < tile_right; left += 2) {
       draw_full_quad(left, top, shaders, triangle_ctx);
@@ -292,9 +295,11 @@ void rasterizer::draw_full_tile(int tile_left, int tile_top, int tile_right, int
   }
 }
 
-void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_factors,
-                                   drawing_shader_context const *shaders,
-                                   drawing_triangle_context const *triangle_ctx) {
+void rasterizer::draw_partial_tile(int left,
+                                   int top,
+                                   const eflib::vec4* edge_factors,
+                                   drawing_shader_context const* shaders,
+                                   drawing_triangle_context const* triangle_ctx) {
   // auto &v0 = *triangle_ctx->tri_info->v0;
   // const uint32_t full_mask = (1UL << target_sample_count_) - 1;
 
@@ -324,17 +329,17 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
 
 #if !defined(EFLIB_NO_SIMD)
   __m128i zero = _mm_setzero_si128();
-  _mm_store_si128(reinterpret_cast<__m128i *>(pixel_mask + 0), zero);
-  _mm_store_si128(reinterpret_cast<__m128i *>(pixel_mask + 4), zero);
-  _mm_store_si128(reinterpret_cast<__m128i *>(pixel_mask + 8), zero);
-  _mm_store_si128(reinterpret_cast<__m128i *>(pixel_mask + 12), zero);
+  _mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 0), zero);
+  _mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 4), zero);
+  _mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 8), zero);
+  _mm_store_si128(reinterpret_cast<__m128i*>(pixel_mask + 12), zero);
 #else
   memset(pixel_mask, 0, sizeof(pixel_mask));
 #endif
 
 #if !defined(EFLIB_NO_SIMD)
   for (size_t i_sample = 0; i_sample < target_sample_count_; ++i_sample) {
-    const vec2 &sp = samples_pattern_[i_sample];
+    const vec2& sp = samples_pattern_[i_sample];
     __m128 mspx = _mm_set1_ps(sp.x());
     __m128 mspy = _mm_set1_ps(sp.y());
 
@@ -374,9 +379,9 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
       __m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1 << i_sample));
       sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
 
-      __m128 stored_mask = _mm_load_ps(reinterpret_cast<float *>(pixel_mask + iy * 4));
+      __m128 stored_mask = _mm_load_ps(reinterpret_cast<float*>(pixel_mask + iy * 4));
       stored_mask = _mm_or_ps(sample_mask, stored_mask);
-      _mm_store_ps(reinterpret_cast<float *>(pixel_mask + iy * 4), stored_mask);
+      _mm_store_ps(reinterpret_cast<float*>(pixel_mask + iy * 4), stored_mask);
     }
   }
 #else
@@ -389,7 +394,7 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
     // Rasterizer.
     for (size_t ix = 0; ix < 4; ++ix) {
       for (int i_sample = 0; i_sample < target_sample_count_; ++i_sample) {
-        vec2 const &sp = samples_pattern_[i_sample];
+        vec2 const& sp = samples_pattern_[i_sample];
         float const fx = ix + sp.x();
         float const fy = iy + sp.y();
         bool inside = true;
@@ -433,11 +438,20 @@ void rasterizer::draw_partial_tile(int left, int top, const eflib::vec4 *edge_fa
   }
 }
 
-void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &cur_region,
-                                const vec4 *edge_factors, uint32_t *test_regions,
-                                uint32_t &test_region_size, float x_min, float x_max, float y_min,
-                                float y_max, const float *rej_to_acc, const float *evalue,
-                                const float *step_x, const float *step_y) {
+void rasterizer::subdivide_tile(int left,
+                                int top,
+                                const eflib::rect<uint32_t>& cur_region,
+                                const vec4* edge_factors,
+                                uint32_t* test_regions,
+                                uint32_t& test_region_size,
+                                float x_min,
+                                float x_max,
+                                float y_min,
+                                float y_max,
+                                const float* rej_to_acc,
+                                const float* evalue,
+                                const float* step_x,
+                                const float* step_y) {
   const uint32_t new_w = cur_region.w;
   const uint32_t new_h = cur_region.h;
 
@@ -535,7 +549,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &
     miregion = _mm_or_si128(miregion, _mm_castps_si128(mask_acc));
 
     EFLIB_ALIGN(16) uint32_t region_code[4];
-    _mm_store_si128(reinterpret_cast<__m128i *>(&region_code[0]), miregion);
+    _mm_store_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
 
     mask_rej = _mm_or_ps(
         mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_cvtepi32_ps(_mm_add_epi32(mix, mineww))));
@@ -600,11 +614,11 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t> &
  *    2 x, y, z components of window-pos have been divided by 'clip w'.
  *    3 position.w() == 1.0f / 'clip w'
  **************************************************/
-void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
+void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx) {
   // Extract to local variables
-  cpp_pixel_shader *cpp_ps = ctx->shaders.cpp_ps;
+  cpp_pixel_shader* cpp_ps = ctx->shaders.cpp_ps;
   // pixel_shader_unit *psu = ctx->shaders.ps_unit;
-  viewport const &vp = *ctx->tile_vp;
+  viewport const& vp = *ctx->tile_vp;
   uint32_t prim_id = ctx->prim_id >> 1;
   uint32_t full = ctx->prim_id & 1;
 
@@ -612,12 +626,12 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   // vs_output const &v1 = *clipped_verts_[prim_id * 3 + 1];
   // vs_output const &v2 = *clipped_verts_[prim_id * 3 + 2];
 
-  triangle_info const *tri_info = tri_infos_.data() + prim_id;
-  eflib::vec4 const *edge_factors = tri_info->edge_factors;
-  bool const mark_x[3] = {edge_factors[0].x() > 0, edge_factors[1].x() > 0,
-                          edge_factors[2].x() > 0};
-  bool const mark_y[3] = {edge_factors[0].y() > 0, edge_factors[1].y() > 0,
-                          edge_factors[2].y() > 0};
+  triangle_info const* tri_info = tri_infos_.data() + prim_id;
+  eflib::vec4 const* edge_factors = tri_info->edge_factors;
+  bool const mark_x[3] = {
+      edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0};
+  bool const mark_y[3] = {
+      edge_factors[0].y() > 0, edge_factors[1].y() > 0, edge_factors[2].y() > 0};
 
   enum TRI_VS_TILE { TVT_FULL, TVT_PARTIAL, TVT_EMPTY, TVT_PIXEL };
 
@@ -664,9 +678,9 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   float aa_z_offset[MAX_NUM_MULTI_SAMPLES];
   if (target_sample_count_ > 1) {
     for (unsigned long i_sample = 0; i_sample < target_sample_count_; ++i_sample) {
-      const vec2 &sp = samples_pattern_[i_sample];
+      const vec2& sp = samples_pattern_[i_sample];
       aa_z_offset[i_sample] = (sp.x() - 0.5f) * tri_info->ddx.position().z() +
-                              (sp.y() - 0.5f) * tri_info->ddy.position().z();
+          (sp.y() - 0.5f) * tri_info->ddy.position().z();
     }
   } else {
     aa_z_offset[0] = 0.0f;
@@ -697,8 +711,8 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
 
     for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ivp) {
       const uint32_t packed_region = test_regions[src_stage][ivp];
-      eflib::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF, subtile_w,
-                                       subtile_h);
+      eflib::rect<uint32_t> cur_region(
+          packed_region & 0xFF, (packed_region >> 8) & 0xFF, subtile_w, subtile_h);
       TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
       const int vpleft = max(0U, static_cast<unsigned>(vpleft0 + cur_region.x));
@@ -735,9 +749,20 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
 
       default:
         // Only a part of the triangle is inside the tile. So subdivide the tile into small ones.
-        this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, test_regions[dst_stage],
-                             test_region_size[dst_stage], x_min, x_max, y_min, y_max, rej_to_acc,
-                             e_value, step_x, step_y);
+        this->subdivide_tile(vpleft,
+                             vptop,
+                             cur_region,
+                             edge_factors,
+                             test_regions[dst_stage],
+                             test_region_size[dst_stage],
+                             x_min,
+                             x_max,
+                             y_min,
+                             y_max,
+                             rej_to_acc,
+                             e_value,
+                             step_x,
+                             step_y);
         break;
       }
     }
@@ -747,9 +772,9 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const *ctx) {
   }
 }
 
-void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
-  vector<vector<uint32_t>> &tiled_prims = threaded_tiled_prims_[thread_ctx->thread_id];
-  for (auto &prims : tiled_prims) {
+void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx) {
+  vector<vector<uint32_t>>& tiled_prims = threaded_tiled_prims_[thread_ctx->thread_id];
+  for (auto& prims : tiled_prims) {
     prims.clear();
   }
 
@@ -762,7 +787,7 @@ void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
         compute_triangle_info(i);
       }
 
-      triangle_info const *tri_info = tri_infos_.data() + i;
+      triangle_info const* tri_info = tri_infos_.data() + i;
 
       if (tri_info->v0 == nullptr) {
         continue;
@@ -786,13 +811,13 @@ void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
         tiled_prims[sy * tile_x_count_ + sx].push_back(i << 1);
       } else {
         if (3 == prim_size_) {
-          vec4 const *edge_factors = tri_infos_[i].edge_factors;
+          vec4 const* edge_factors = tri_infos_[i].edge_factors;
 
-          bool const mark_x[3] = {edge_factors[0].x() > 0, edge_factors[1].x() > 0,
-                                  edge_factors[2].x() > 0};
+          bool const mark_x[3] = {
+              edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0};
 
-          bool const mark_y[3] = {edge_factors[0].y() > 0, edge_factors[1].y() > 0,
-                                  edge_factors[2].y() > 0};
+          bool const mark_y[3] = {
+              edge_factors[0].y() > 0, edge_factors[1].y() > 0, edge_factors[2].y() > 0};
 
           float step_x[3];
           float step_y[3];
@@ -810,8 +835,7 @@ void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
 
               // Trivial rejection & acceptance
               for (int e = 0; e < 3; ++e) {
-                float e_value =
-                    edge_factors[e].z() -
+                float e_value = edge_factors[e].z() -
                     (static_cast<float>(x + mark_x[e]) * TILE_SIZE * edge_factors[e].x() +
                      static_cast<float>(y + mark_y[e]) * TILE_SIZE * edge_factors[e].y());
                 rejection |= (0 < e_value);
@@ -838,17 +862,17 @@ void rasterizer::threaded_dispatch_primitive(thread_context const *thread_ctx) {
 }
 
 void rasterizer::compute_triangle_info(uint32_t i) {
-  triangle_info *tri_info = tri_infos_.data() + i;
+  triangle_info* tri_info = tri_infos_.data() + i;
   tri_info->v0 = nullptr;
 
-  vs_output const *verts[3] = {
+  vs_output const* verts[3] = {
       clipped_verts_[i * prim_size_ + 0],
       clipped_verts_[i * prim_size_ + 1],
       clipped_verts_[i * prim_size_ + 2],
   };
 
-  vec4 const *vert_pos[3] = {&(verts[0]->position()), &(verts[1]->position()),
-                             &(verts[2]->position())};
+  vec4 const* vert_pos[3] = {
+      &(verts[0]->position()), &(verts[1]->position()), &(verts[2]->position())};
 
   // Reorder vertexes.
   // Pick the vertex which is nearby center of viewport
@@ -874,8 +898,8 @@ void rasterizer::compute_triangle_info(uint32_t i) {
   reordered_index[1] = (reordered_index[0] + 1) % 3;
   reordered_index[2] = (reordered_index[1] + 1) % 3;
 
-  vs_output const *reordered_verts[3] = {verts[reordered_index[0]], verts[reordered_index[1]],
-                                         verts[reordered_index[2]]};
+  vs_output const* reordered_verts[3] = {
+      verts[reordered_index[0]], verts[reordered_index[1]], verts[reordered_index[2]]};
 
   // Compute difference along edge.
   vs_output e01, e02;
@@ -893,20 +917,20 @@ void rasterizer::compute_triangle_info(uint32_t i) {
 
   // Compute bounding box
   tri_info->bounding_box[0] =
-      std::min(std::min(vert_pos[0]->x(), vert_pos[1]->x()), vert_pos[2]->x()); // xmin
+      std::min(std::min(vert_pos[0]->x(), vert_pos[1]->x()), vert_pos[2]->x());  // xmin
   tri_info->bounding_box[1] =
-      std::max(std::max(vert_pos[0]->x(), vert_pos[1]->x()), vert_pos[2]->x()); // xmax
+      std::max(std::max(vert_pos[0]->x(), vert_pos[1]->x()), vert_pos[2]->x());  // xmax
   tri_info->bounding_box[2] =
-      std::min(std::min(vert_pos[0]->y(), vert_pos[1]->y()), vert_pos[2]->y()); // ymin
+      std::min(std::min(vert_pos[0]->y(), vert_pos[1]->y()), vert_pos[2]->y());  // ymin
   tri_info->bounding_box[3] =
-      std::max(std::max(vert_pos[0]->y(), vert_pos[1]->y()), vert_pos[2]->y()); // ymax
+      std::max(std::max(vert_pos[0]->y(), vert_pos[1]->y()), vert_pos[2]->y());  // ymax
 
   for (int i_vert = 0; i_vert < 3; ++i_vert) {
     // Edge factors: x * (y1 - y0) - y * (x1 - x0) - (y1 * x0 - x1 * y0)
     int const se = i_vert;
     int const ee = (i_vert + 1) % 3;
 
-    vec4 *edge_factors = tri_info->edge_factors;
+    vec4* edge_factors = tri_info->edge_factors;
     edge_factors[i_vert].x(vert_pos[se]->y() - vert_pos[ee]->y());
     edge_factors[i_vert].y(vert_pos[ee]->x() - vert_pos[se]->x());
     edge_factors[i_vert].z(vert_pos[ee]->x() * vert_pos[se]->y() -
@@ -920,10 +944,13 @@ void rasterizer::compute_triangle_info(uint32_t i) {
   tri_info->v0 = reordered_verts[0];
 }
 
-void rasterizer::threaded_rasterize_multi_prim(thread_context const *thread_ctx) {
-  viewport tile_vp{
-      0.0f,      0.0f,     static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
-      vp_->minz, vp_->maxz};
+void rasterizer::threaded_rasterize_multi_prim(thread_context const* thread_ctx) {
+  viewport tile_vp{0.0f,
+                   0.0f,
+                   static_cast<float>(TILE_SIZE),
+                   static_cast<float>(TILE_SIZE),
+                   vp_->minz,
+                   vp_->maxz};
 
   std::vector<uint32_t> prims;
   pixel_statistic pixel_stat;
@@ -943,7 +970,7 @@ void rasterizer::threaded_rasterize_multi_prim(thread_context const *thread_ctx)
     auto tile_range = current_package.index_range();
     for (size_t tile_id = tile_range.first; tile_id < tile_range.second; ++tile_id) {
       prims.clear();
-      for (auto const &thread_prims : threaded_tiled_prims_) {
+      for (auto const& thread_prims : threaded_tiled_prims_) {
         prims.insert(prims.end(), thread_prims[tile_id].begin(), thread_prims[tile_id].end());
       }
       std::sort(prims.begin(), prims.end());
@@ -966,7 +993,7 @@ void rasterizer::threaded_rasterize_multi_prim(thread_context const *thread_ctx)
   acc_backend_input_pixels_(internal_stat_, pixel_stat.backend_input_pixels);
 }
 
-void rasterizer::rasterize_multi_line(rasterize_multi_prim_context const *ctx) {
+void rasterizer::rasterize_multi_line(rasterize_multi_prim_context const* ctx) {
   rasterize_prim_context prim_ctxt;
   prim_ctxt.shaders = ctx->shaders;
   prim_ctxt.tile_vp = ctx->tile_vp;
@@ -977,7 +1004,7 @@ void rasterizer::rasterize_multi_line(rasterize_multi_prim_context const *ctx) {
   }
 }
 
-void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const *ctx) {
+void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const* ctx) {
   rasterize_prim_context prim_ctxt;
   prim_ctxt.shaders = ctx->shaders;
   prim_ctxt.tile_vp = ctx->tile_vp;
@@ -989,7 +1016,7 @@ void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const *ct
   }
 }
 
-void rasterizer::update_prim_info(render_state const *state) {
+void rasterizer::update_prim_info(render_state const* state) {
   bool is_tri = false;
 
   bool is_wireframe = false;
@@ -998,29 +1025,20 @@ void rasterizer::update_prim_info(render_state const *state) {
   prim_count_ = state->prim_count;
 
   switch (state_->get_desc().fm) {
-  case fill_solid:
-    is_solid = true;
-    break;
-  case fill_wireframe:
-    is_wireframe = true;
-    break;
-  default:
-    break;
+  case fill_solid: is_solid = true; break;
+  case fill_wireframe: is_wireframe = true; break;
+  default: break;
   }
 
   switch (state->prim_topo) {
   case primitive_point_list:
   case primitive_point_sprite:
   case primitive_line_list:
-  case primitive_line_strip:
-    break;
+  case primitive_line_strip: break;
   case primitive_triangle_list:
   case primitive_triangle_fan:
-  case primitive_triangle_strip:
-    is_tri = true;
-    break;
-  default:
-    break;
+  case primitive_triangle_strip: is_tri = true; break;
+  default: break;
   }
 
   if (is_solid && is_tri) {
@@ -1034,14 +1052,9 @@ void rasterizer::update_prim_info(render_state const *state) {
 
   switch (prim_) {
   case pt_line:
-  case pt_wireframe_tri:
-    prim_size_ = 2;
-    break;
-  case pt_solid_tri:
-    prim_size_ = 3;
-    break;
-  default:
-    ef_unimplemented();
+  case pt_wireframe_tri: prim_size_ = 2; break;
+  case pt_solid_tri: prim_size_ = 3; break;
+  default: ef_unimplemented();
   }
 }
 
@@ -1072,9 +1085,7 @@ void rasterizer::prepare_draw() {
 
   // Compute sample patterns
   switch (target_sample_count_) {
-  case 1:
-    samples_pattern_[0] = vec2(0.5f, 0.5f);
-    break;
+  case 1: samples_pattern_[0] = vec2(0.5f, 0.5f); break;
 
   case 2:
     samples_pattern_[0] = vec2(0.25f, 0.25f);
@@ -1088,8 +1099,7 @@ void rasterizer::prepare_draw() {
     samples_pattern_[3] = vec2(0.625f, 0.875f);
     break;
 
-  default:
-    break;
+  default: break;
   }
 
   // Compute tile count
@@ -1143,21 +1153,18 @@ void rasterizer::draw() {
   // Execute dispatching primitive
   execute_threads(
       global_thread_pool(),
-      [this](thread_context const *thread_ctx) { this->threaded_dispatch_primitive(thread_ctx); },
-      clipped_prims_count_, DISPATCH_PRIMITIVE_PACKAGE_SIZE, num_threads);
+      [this](thread_context const* thread_ctx) { this->threaded_dispatch_primitive(thread_ctx); },
+      clipped_prims_count_,
+      DISPATCH_PRIMITIVE_PACKAGE_SIZE,
+      num_threads);
   acc_tri_dispatch_(pipeline_prof_, fetch_time_stamp_() - tri_dispatch_start_time);
 
   // Rasterize tiles
   switch (prim_) {
   case pt_line:
-  case pt_wireframe_tri:
-    rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_line);
-    break;
-  case pt_solid_tri:
-    rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_triangle);
-    break;
-  default:
-    EF_ASSERT(false, "Primitive type is not correct.");
+  case pt_wireframe_tri: rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_line); break;
+  case pt_solid_tri: rasterize_prims_ = std::mem_fn(&rasterizer::rasterize_multi_triangle); break;
+  default: EF_ASSERT(false, "Primitive type is not correct.");
   }
 
   std::vector<cpp_pixel_shader_ptr> ppps(num_threads);
@@ -1181,8 +1188,10 @@ void rasterizer::draw() {
   uint64_t ras_start_time = fetch_time_stamp_();
   execute_threads(
       global_thread_pool(),
-      [this](thread_context const *thread_ctx) { this->threaded_rasterize_multi_prim(thread_ctx); },
-      tile_count_, RASTERIZE_PRIMITIVE_PACKAGE_SIZE, num_threads);
+      [this](thread_context const* thread_ctx) { this->threaded_rasterize_multi_prim(thread_ctx); },
+      tile_count_,
+      RASTERIZE_PRIMITIVE_PACKAGE_SIZE,
+      num_threads);
   acc_ras_(pipeline_prof_, fetch_time_stamp_() - ras_start_time);
 
   // destroy all cpp_pixel_shader clone
@@ -1192,13 +1201,14 @@ void rasterizer::draw() {
 }
 
 void threaded_viewport_and_project_transform(vs_output_functions::project proj_fn,
-                                             vs_output **verts, viewport const *vp,
-                                             thread_context const *thread_ctx) {
+                                             vs_output** verts,
+                                             viewport const* vp,
+                                             thread_context const* thread_ctx) {
   thread_context::package_cursor current_package = thread_ctx->next_package();
   while (current_package.valid()) {
     auto prim_range = current_package.range(verts);
 
-    for (vs_output *vso : prim_range) {
+    for (vs_output* vso : prim_range) {
       viewport_transform(vso->position(), *vp);
       proj_fn(*vso, *vso);
     }
@@ -1207,9 +1217,9 @@ void threaded_viewport_and_project_transform(vs_output_functions::project proj_f
   }
 }
 
-void rasterizer::viewport_and_project_transform(vs_output **vertexes, size_t num_verts) {
+void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts) {
   // Gathering vs_output need to be processed.
-  vector<vs_output *> sorted;
+  vector<vs_output*> sorted;
   sorted.insert(sorted.end(), vertexes, vertexes + num_verts);
 
 #if !defined(_LIBCPP_VERSION) || defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS)
@@ -1220,19 +1230,22 @@ void rasterizer::viewport_and_project_transform(vs_output **vertexes, size_t num
 
   sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
 
-  vs_output **in_out_vertexes = sorted.data();
+  vs_output** in_out_vertexes = sorted.data();
 
   execute_threads(
       global_thread_pool(),
-      [this, in_out_vertexes](thread_context const *thread_ctx) {
-        threaded_viewport_and_project_transform(this->vso_ops_->project, in_out_vertexes, this->vp_,
-                                                thread_ctx);
+      [this, in_out_vertexes](thread_context const* thread_ctx) {
+        threaded_viewport_and_project_transform(
+            this->vso_ops_->project, in_out_vertexes, this->vp_, thread_ctx);
       },
-      static_cast<int>(sorted.size()), VP_PROJ_TRANSFORM_PACKAGE_SIZE);
+      static_cast<int>(sorted.size()),
+      VP_PROJ_TRANSFORM_PACKAGE_SIZE);
 }
 
-void rasterizer::draw_full_quad(uint32_t left, uint32_t top, drawing_shader_context const *shaders,
-                                drawing_triangle_context const *triangle_ctx) {
+void rasterizer::draw_full_quad(uint32_t left,
+                                uint32_t top,
+                                drawing_shader_context const* shaders,
+                                drawing_triangle_context const* triangle_ctx) {
 #if DEBUG_QUAD
   if (!is_valid_quad(left, top))
     return;
@@ -1244,12 +1257,18 @@ void rasterizer::draw_full_quad(uint32_t left, uint32_t top, drawing_shader_cont
   float const dx = 0.5f + left - triangle_ctx->tri_info->v0->position().x();
   float const dy = 0.5f + top - triangle_ctx->tri_info->v0->position().y();
 
-  vso_ops_->step_2d_unproj_pos_quad(pixels, *triangle_ctx->tri_info->v0, dx,
-                                    triangle_ctx->tri_info->ddx, dy, triangle_ctx->tri_info->ddy);
+  vso_ops_->step_2d_unproj_pos_quad(pixels,
+                                    *triangle_ctx->tri_info->v0,
+                                    dx,
+                                    triangle_ctx->tri_info->ddx,
+                                    dy,
+                                    triangle_ctx->tri_info->ddy);
 
   uint64_t quad_mask = quad_full_mask_;
   ps_output pso[4];
-  float depth[4] = {pixels[0].position().z(), pixels[1].position().z(), pixels[2].position().z(),
+  float depth[4] = {pixels[0].position().z(),
+                    pixels[1].position().z(),
+                    pixels[2].position().z(),
                     pixels[3].position().z()};
 
   if (frame_buffer_->early_z_enabled()) {
@@ -1262,10 +1281,14 @@ void rasterizer::draw_full_quad(uint32_t left, uint32_t top, drawing_shader_cont
 
   triangle_ctx->pixel_stat->ps_invocations += 4;
 
-  vso_ops_->step_2d_unproj_attr_quad(pixels, *triangle_ctx->tri_info->v0, dx,
-                                     triangle_ctx->tri_info->ddx, dy, triangle_ctx->tri_info->ddy);
+  vso_ops_->step_2d_unproj_attr_quad(pixels,
+                                     *triangle_ctx->tri_info->v0,
+                                     dx,
+                                     triangle_ctx->tri_info->ddx,
+                                     dy,
+                                     triangle_ctx->tri_info->ddy);
 
-#if 0
+#  if 0
 	for(int i = 0; i < 4; ++i)
 	{
 		printf("%f_%f_%f_%f\n",
@@ -1276,7 +1299,7 @@ void rasterizer::draw_full_quad(uint32_t left, uint32_t top, drawing_shader_cont
 		);
 	}
 	printf("\n");
-#endif
+#  endif
 
   if (shaders->ps_unit) {
     shaders->ps_unit->update(pixels, vs_reflection_);
@@ -1287,16 +1310,23 @@ void rasterizer::draw_full_quad(uint32_t left, uint32_t top, drawing_shader_cont
 
   if (quad_mask != 0) {
     triangle_ctx->pixel_stat->backend_input_pixels += 4;
-    frame_buffer_->render_sample_quad(shaders->cpp_bs, left, top, quad_mask, pso, depth,
+    frame_buffer_->render_sample_quad(shaders->cpp_bs,
+                                      left,
+                                      top,
+                                      quad_mask,
+                                      pso,
+                                      depth,
                                       triangle_ctx->tri_info->front_face,
                                       triangle_ctx->aa_z_offset);
   }
 #endif
 }
 
-void rasterizer::draw_quad(uint32_t left, uint32_t top, uint64_t quad_mask,
-                           drawing_shader_context const *shaders,
-                           drawing_triangle_context const *triangle_ctx) {
+void rasterizer::draw_quad(uint32_t left,
+                           uint32_t top,
+                           uint64_t quad_mask,
+                           drawing_shader_context const* shaders,
+                           drawing_triangle_context const* triangle_ctx) {
 #if DEBUG_QUAD
   if (!is_valid_quad(left, top))
     return;
@@ -1315,7 +1345,9 @@ void rasterizer::draw_quad(uint32_t left, uint32_t top, uint64_t quad_mask,
   vso_ops_->step_2d_unproj_pos_quad(pixels, *v0, quad_dx, *ddx, quad_dy, *ddy);
 
   ps_output pso[4];
-  float depth[4] = {pixels[0].position().z(), pixels[1].position().z(), pixels[2].position().z(),
+  float depth[4] = {pixels[0].position().z(),
+                    pixels[1].position().z(),
+                    pixels[2].position().z(),
                     pixels[3].position().z()};
 
   uint64_t tested_quad_mask = quad_mask;
@@ -1347,7 +1379,7 @@ void rasterizer::draw_quad(uint32_t left, uint32_t top, uint64_t quad_mask,
         uint32_t i_sample;
         uint32_t const mask_backup = pixel_mask;
         while (_xmm_bsf(&i_sample, pixel_mask)) {
-          const vec2 &sp = samples_pattern_[i_sample];
+          const vec2& sp = samples_pattern_[i_sample];
           sp_centroid.x() += sp.x();
           sp_centroid.y() += sp.y();
           ++n;
@@ -1376,11 +1408,16 @@ void rasterizer::draw_quad(uint32_t left, uint32_t top, uint64_t quad_mask,
 
   if (quad_mask != 0) {
     triangle_ctx->pixel_stat->backend_input_pixels += 4;
-    frame_buffer_->render_sample_quad(shaders->cpp_bs, left, top, tested_quad_mask, pso, depth,
+    frame_buffer_->render_sample_quad(shaders->cpp_bs,
+                                      left,
+                                      top,
+                                      tested_quad_mask,
+                                      pso,
+                                      depth,
                                       triangle_ctx->tri_info->front_face,
                                       triangle_ctx->aa_z_offset);
   }
 #endif
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core

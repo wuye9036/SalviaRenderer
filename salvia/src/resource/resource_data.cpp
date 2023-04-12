@@ -18,13 +18,19 @@ void aligned_array::reallocate() {
   if (addr % alignment_ != 0) {
     addr = addr + alignment_ - (addr % alignment_);
   }
-  aligned_data_ = reinterpret_cast<char *>(addr);
+  aligned_data_ = reinterpret_cast<char*>(addr);
 }
 
-void *aligned_array::data() const { return aligned_data_; }
+void* aligned_array::data() const {
+  return aligned_data_;
+}
 
-size_t aligned_array::size() const { return size_; }
+size_t aligned_array::size() const {
+  return size_;
+}
 
-size_t aligned_array::alignment() const { return alignment_; }
+size_t aligned_array::alignment() const {
+  return alignment_;
+}
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

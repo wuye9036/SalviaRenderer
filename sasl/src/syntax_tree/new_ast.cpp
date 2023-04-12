@@ -6,4 +6,4 @@ void _compile_tree() {
 
   // static_assert(sizeof(program) == 32);
 }
-} // namespace sasl::syntax_tree_next
+}  // namespace sasl::syntax_tree_next

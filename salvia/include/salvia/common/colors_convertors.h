@@ -6,18 +6,22 @@ namespace salvia {
 
 struct color_max {};
 
-template <class T> struct pixel_type_to_fmt {};
+template <class T>
+struct pixel_type_to_fmt {};
 
-template <int pixel_fmt> struct pixel_fmt_to_type {};
+template <int pixel_fmt>
+struct pixel_fmt_to_type {};
 
-#define decl_type_fmt_pair(color_type, fmt_code)                                                   \
-  const pixel_format pixel_format_##color_type = fmt_code;                                         \
-  template <> struct pixel_type_to_fmt<color_type> {                                               \
-    static const pixel_format fmt = fmt_code;                                                      \
-  };                                                                                               \
-                                                                                                   \
-  template <> struct pixel_fmt_to_type<fmt_code> {                                                 \
-    typedef color_type type;                                                                       \
+#define decl_type_fmt_pair(color_type, fmt_code)           \
+  const pixel_format pixel_format_##color_type = fmt_code; \
+  template <>                                              \
+  struct pixel_type_to_fmt<color_type> {                   \
+    static const pixel_format fmt = fmt_code;              \
+  };                                                       \
+                                                           \
+  template <>                                              \
+  struct pixel_fmt_to_type<fmt_code> {                     \
+    typedef color_type type;                               \
   };
 
 typedef int pixel_format;
@@ -30,7 +34,7 @@ struct pixel_information {
   char describe[32];
 };
 
-#define decl_color_info(pixel_type)                                                                \
+#define decl_color_info(pixel_type) \
   { sizeof(pixel_type), #pixel_type }
 
 decl_type_fmt_pair(color_rgba32f, 0);
@@ -48,23 +52,34 @@ int const pixel_format_invalid = -1;
 // Pixel format information
 
 const pixel_information color_infos[pixel_type_to_fmt<color_max>::fmt] = {
-    decl_color_info(color_rgba32f), decl_color_info(color_rgb32f), decl_color_info(color_bgra8),
-    decl_color_info(color_rgba8),   decl_color_info(color_r32f),   decl_color_info(color_rg32f),
+    decl_color_info(color_rgba32f),
+    decl_color_info(color_rgb32f),
+    decl_color_info(color_bgra8),
+    decl_color_info(color_rgba8),
+    decl_color_info(color_r32f),
+    decl_color_info(color_rg32f),
     decl_color_info(color_r32i)};
 
-inline const pixel_information &get_color_info(pixel_format pf) { return color_infos[pf]; }
+inline const pixel_information& get_color_info(pixel_format pf) {
+  return color_infos[pf];
+}
 
 class pixel_format_convertor {
-  template <int outColor, int inColor> friend struct color_convertor_initializer;
+  template <int outColor, int inColor>
+  friend struct color_convertor_initializer;
 
 public:
-  static inline void convert(pixel_format outfmt, pixel_format infmt, void *outpixel,
-                             const void *inpixel) {
+  static inline void
+  convert(pixel_format outfmt, pixel_format infmt, void* outpixel, const void* inpixel) {
     (convertors[outfmt][infmt])(outpixel, inpixel);
   }
 
-  static inline void convert_array(pixel_format outfmt, pixel_format infmt, void *outpixel,
-                                   const void *inpixel, int count, int outstride = 0,
+  static inline void convert_array(pixel_format outfmt,
+                                   pixel_format infmt,
+                                   void* outpixel,
+                                   const void* inpixel,
+                                   int count,
+                                   int outstride = 0,
                                    int instride = 0) {
     outstride = (outstride == 0) ? color_infos[outfmt].size : outstride;
     instride = (instride == 0) ? color_infos[infmt].size : instride;
@@ -72,12 +87,15 @@ public:
     array_convertors[outfmt][infmt](outpixel, inpixel, count, outstride, instride);
   }
 
-  typedef void (*pixel_convertor)(void *outcolor, const void *incolor);
-  typedef void (*pixel_array_convertor)(void *outcolor, const void *incolor, int count,
-                                        int outstride, int instride);
-  typedef color_rgba32f (*pixel_lerp_1d)(const void *incolor0, const void *incolor1, float t);
-  typedef color_rgba32f (*pixel_lerp_2d)(const void *incolor0, const void *incolor1,
-                                         const void *incolor2, const void *incolor3, float tx,
+  typedef void (*pixel_convertor)(void* outcolor, const void* incolor);
+  typedef void (*pixel_array_convertor)(
+      void* outcolor, const void* incolor, int count, int outstride, int instride);
+  typedef color_rgba32f (*pixel_lerp_1d)(const void* incolor0, const void* incolor1, float t);
+  typedef color_rgba32f (*pixel_lerp_2d)(const void* incolor0,
+                                         const void* incolor1,
+                                         const void* incolor2,
+                                         const void* incolor3,
+                                         float tx,
                                          float ty);
 
   static pixel_convertor get_convertor_func(pixel_format outfmt, pixel_format infmt) {
@@ -99,4 +117,4 @@ private:
   static pixel_lerp_2d lerpers_2d[pixel_format_color_max];
 };
 
-} // namespace salvia::resource
+}  // namespace salvia

@@ -37,26 +37,28 @@ public:
   void set_skippers(std::initializer_list<std::string_view> skippers);
   void set_init_states(std::initializer_list<std::string_view> state_list);
 
-  std::string const &get_name(size_t id);
-  size_t get_id(std::string const &name);
+  std::string const& get_name(size_t id);
+  size_t get_id(std::string const& name);
 
   std::shared_ptr<lexer_impl> get_impl() const;
 
   bool tokenize_with_end(
-      /*INPUTS*/ std::string const &code, std::shared_ptr<sasl::common::lex_context> ctxt,
-      /*OUTPUT*/ std::vector<token> &seq);
+      /*INPUTS*/ std::string const& code,
+      std::shared_ptr<sasl::common::lex_context> ctxt,
+      /*OUTPUT*/ std::vector<token>& seq);
 
   bool begin_incremental();
-  bool incremental_tokenize(std::string const &word,
+  bool incremental_tokenize(std::string const& word,
                             std::shared_ptr<sasl::common::lex_context> ctxt,
-                            std::vector<token> &seq);
-  bool end_incremental(std::shared_ptr<sasl::common::lex_context> ctxt, std::vector<token> &seq);
+                            std::vector<token>& seq);
+  bool end_incremental(std::shared_ptr<sasl::common::lex_context> ctxt, std::vector<token>& seq);
 
 private:
   bool tokenize(
-      /*INPUTS*/ std::string const &code, std::shared_ptr<sasl::common::lex_context> ctxt,
-      /*OUTPUT*/ std::vector<token> &seq);
+      /*INPUTS*/ std::string const& code,
+      std::shared_ptr<sasl::common::lex_context> ctxt,
+      /*OUTPUT*/ std::vector<token>& seq);
   std::shared_ptr<lexer_impl> impl;
 };
 
-} // namespace sasl::parser
+}  // namespace sasl::parser

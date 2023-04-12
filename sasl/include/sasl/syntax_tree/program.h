@@ -20,4 +20,4 @@ struct program : public node_impl<program, node, node_ids::program> {
   std::vector<std::shared_ptr<declaration>> decls;
 };
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

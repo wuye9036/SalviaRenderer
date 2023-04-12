@@ -15,4 +15,4 @@ enum class token_types : uint32_t {
   _keyword = UINT32_C(1)
 };
 
-void register_enum_name(std::function<void(char const *, token_types)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, token_types)> const& reg_fn);

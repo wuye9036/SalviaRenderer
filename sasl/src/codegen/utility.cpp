@@ -8,7 +8,7 @@ using llvm::Function;
 
 namespace sasl::codegen {
 
-void dbg_print_blocks(Function *fn) {
+void dbg_print_blocks(Function* fn) {
 #ifdef EFLIB_DEBUG
   /*printf( "Function: 0x%X\n", fn );
   for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin(); it !=
@@ -20,4 +20,4 @@ void dbg_print_blocks(Function *fn) {
 #endif
 }
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

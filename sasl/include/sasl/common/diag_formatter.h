@@ -9,6 +9,6 @@ class diag_item;
 
 enum compiler_compatibility { cc_msvc, cc_gcc };
 
-std::string str(diag_item const *, compiler_compatibility cc = cc_msvc);
+std::string str(diag_item const*, compiler_compatibility cc = cc_msvc);
 
-} // namespace sasl::common
+}  // namespace sasl::common

@@ -24,10 +24,11 @@ struct animation_info {
   std::vector<interpolation_methods> interps;
 };
 
-template <typename T> struct animation_info_impl : public animation_info {
+template <typename T>
+struct animation_info_impl : public animation_info {
   std::vector<float> X;
   std::vector<T> Y;
-  std::function<void(T const &)> applier;
+  std::function<void(T const&)> applier;
 };
 
 class animation_player {
@@ -39,7 +40,8 @@ public:
   virtual ~animation_player() = default;
 };
 
-template <typename T> class animation_player_impl : public animation_player {
+template <typename T>
+class animation_player_impl : public animation_player {
 public:
   animation_player_impl() : aninfo(std::make_shared<animation_info_impl<T>>()), current_time(0) {}
 
@@ -73,16 +75,14 @@ private:
     if (it == aninfo->X.begin()) {
       switch (aninfo->interps[0]) {
       case im_none:
-      case im_linear:
-        return aninfo->Y[0];
+      case im_linear: return aninfo->Y[0];
       }
     }
 
     if (it == aninfo->X.end()) {
       switch (aninfo->interps[i_segment]) {
       case im_none:
-      case im_linear:
-        return aninfo->Y.back();
+      case im_linear: return aninfo->Y.back();
       }
     }
 
@@ -103,9 +103,9 @@ private:
 
 class scene_node {
 public:
-  scene_node(scene_node *parent, std::string const &name);
+  scene_node(scene_node* parent, std::string const& name);
 
-  scene_node *parent;
+  scene_node* parent;
   std::string name;
 
   std::vector<scene_node_ptr> children;
@@ -132,13 +132,13 @@ public:
   std::vector<eflib::mat44> bind_inv_matrices() const override;
 
 public:
-  std::unordered_map<std::string, scene_node *> joint_nodes;
+  std::unordered_map<std::string, scene_node*> joint_nodes;
   std::vector<eflib::mat44> bind_inv_mats;
   std::vector<animation_player_ptr> anims;
   std::vector<std::string> joints;
-  std::vector<eflib::mat44 *> joint_mats;
+  std::vector<eflib::mat44*> joint_mats;
   std::vector<mesh_ptr> submeshes;
   std::vector<scene_node_ptr> roots;
 };
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

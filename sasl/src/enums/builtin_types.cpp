@@ -1,7 +1,7 @@
 
 #include <sasl/enums/builtin_types.h>
 
-void register_enum_name(std::function<void(char const *, builtin_types)> const &reg_fn) {
+void register_enum_name(std::function<void(char const*, builtin_types)> const& reg_fn) {
   reg_fn("_unsigned", builtin_types::_unsigned);
   reg_fn("_sint32", builtin_types::_sint32);
   reg_fn("_c_int", builtin_types::_c_int);

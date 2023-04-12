@@ -9,9 +9,9 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 namespace salvia::core {
 struct renderer_parameters;
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
-}
+}  // namespace salvia::core
 
-namespace salvia::ext{
+namespace salvia::ext {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(swap_chain);
 class swap_chain {
@@ -30,12 +30,13 @@ enum swap_chain_types {
 
 enum renderer_types { renderer_none = 0UL, renderer_async = 1UL, renderer_sync = 2UL };
 
-}
+}  // namespace salvia::ext
 
 extern "C" {
-void salviax_create_swap_chain_and_renderer(salvia::ext::swap_chain_ptr &out_swap_chain,
-                                            salvia::core::renderer_ptr &out_renderer,
-                                            salvia::core::renderer_parameters const *render_params,
-                                            uint32_t renderer_type = salvia::ext::renderer_async,
-                                            uint32_t swap_chain_type = salvia::ext::swap_chain_default);
+void salviax_create_swap_chain_and_renderer(
+    salvia::ext::swap_chain_ptr& out_swap_chain,
+    salvia::core::renderer_ptr& out_renderer,
+    salvia::core::renderer_parameters const* render_params,
+    uint32_t renderer_type = salvia::ext::renderer_async,
+    uint32_t swap_chain_type = salvia::ext::swap_chain_default);
 }

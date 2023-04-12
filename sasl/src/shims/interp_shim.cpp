@@ -8,39 +8,39 @@ using namespace salvia::shader;
 
 namespace sasl::shims {
 
-void default_vso2reg(vec4 *out_registers, void const *in_data,
-                     intptr_t const *in_offsets,     // TODO: OPTIMIZED BY JIT
-                     uint32_t const *in_value_types, // TODO: OPTIMIZED BY JIT
-                     uint32_t register_count         // TODO: OPTIMIZED BY JIT
+void default_vso2reg(vec4* out_registers,
+                     void const* in_data,
+                     intptr_t const* in_offsets,      // TODO: OPTIMIZED BY JIT
+                     uint32_t const* in_value_types,  // TODO: OPTIMIZED BY JIT
+                     uint32_t register_count          // TODO: OPTIMIZED BY JIT
 ) {
   for (size_t i_register = 0; i_register < register_count; ++i_register) {
-    void const *attr_data = static_cast<char const *>(in_data) + in_offsets[i_register];
-    vec4 *current_register = out_registers + i_register;
+    void const* attr_data = static_cast<char const*>(in_data) + in_offsets[i_register];
+    vec4* current_register = out_registers + i_register;
     language_value_types lvt = static_cast<language_value_types>(in_value_types[i_register]);
     switch (lvt) {
-    case lvt_f32v4:
-      memcpy(current_register, attr_data, sizeof(float) * 4);
-      continue;
-    case lvt_f32v3:
-      memcpy(current_register, attr_data, sizeof(float) * 3);
-      continue;
-    case lvt_float:
-      memcpy(current_register, attr_data, sizeof(float));
-      continue;
-    default:
-      ef_unreachable("unsupported LVT.");
+    case lvt_f32v4: memcpy(current_register, attr_data, sizeof(float) * 4); continue;
+    case lvt_f32v3: memcpy(current_register, attr_data, sizeof(float) * 3); continue;
+    case lvt_float: memcpy(current_register, attr_data, sizeof(float)); continue;
+    default: ef_unreachable("unsupported LVT.");
     }
   }
 }
 
-interp_shim_ptr interp_shim::create() { return interp_shim_ptr(new interp_shim()); }
+interp_shim_ptr interp_shim::create() {
+  return interp_shim_ptr(new interp_shim());
+}
 
-void interp_shim::get_shim_functions(
-    vso2reg_func_ptr *out_vso2reg_fn, interp_func_ptr *out_interp_fn,
-    reg2psi_func_ptr *out_reg2psi_fn, vector<uint32_t> &out_interp_modifiers,
-    vector<intptr_t> &out_vso_offsets, vector<uint32_t> &out_vso_types,
-    vector<intptr_t> &out_psi_offsets, vector<uint32_t> &out_psi_types,
-    shader_reflection const *vs_reflection, shader_reflection const *ps_reflection) {
+void interp_shim::get_shim_functions(vso2reg_func_ptr* out_vso2reg_fn,
+                                     interp_func_ptr* out_interp_fn,
+                                     reg2psi_func_ptr* out_reg2psi_fn,
+                                     vector<uint32_t>& out_interp_modifiers,
+                                     vector<intptr_t>& out_vso_offsets,
+                                     vector<uint32_t>& out_vso_types,
+                                     vector<intptr_t>& out_psi_offsets,
+                                     vector<uint32_t>& out_psi_types,
+                                     shader_reflection const* vs_reflection,
+                                     shader_reflection const* ps_reflection) {
   *out_vso2reg_fn = nullptr;
   *out_interp_fn = nullptr;
   *out_reg2psi_fn = nullptr;
@@ -54,7 +54,7 @@ void interp_shim::get_shim_functions(
     if (ps_reflection) {
       assert(false);
     } else {
-      vector<sv_layout *> vs_layouts = vs_reflection->layouts(su_buffer_out);
+      vector<sv_layout*> vs_layouts = vs_reflection->layouts(su_buffer_out);
 
       out_interp_modifiers.resize(vs_layouts.size());
       out_vso_offsets.resize(vs_layouts.size());
@@ -62,7 +62,7 @@ void interp_shim::get_shim_functions(
 
       size_t output_index = 1;
       for (size_t i_layout = 0; i_layout < vs_layouts.size(); ++i_layout) {
-        sv_layout *layout = vs_layouts[i_layout];
+        sv_layout* layout = vs_layouts[i_layout];
         if (layout->sv == semantic_value(sv_position)) {
           out_interp_modifiers[0] = im_linear | im_noperspective;
           out_vso_offsets[0] = layout->offset;
@@ -86,4 +86,4 @@ void interp_shim::get_shim_functions(
   }
 }
 
-} // namespace sasl::shims
+}  // namespace sasl::shims

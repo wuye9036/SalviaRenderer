@@ -30,21 +30,13 @@ struct elem_indexes {
       char ch_index = -1;
       switch (ch) {
       case 'x':
-      case 'r':
-        ch_index = 0;
-        break;
+      case 'r': ch_index = 0; break;
       case 'y':
-      case 'g':
-        ch_index = 1;
-        break;
+      case 'g': ch_index = 1; break;
       case 'z':
-      case 'b':
-        ch_index = 2;
-        break;
+      case 'b': ch_index = 2; break;
       case 'w':
-      case 'a':
-        ch_index = 3;
-        break;
+      case 'a': ch_index = 3; break;
       }
       data[i] = ch_index;
       ++i;
@@ -77,4 +69,4 @@ struct elem_indexes {
   }
 };
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

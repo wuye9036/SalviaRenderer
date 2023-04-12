@@ -6,13 +6,13 @@
 #define STERM(name) terminal(lxr.get_id(#name), #name)
 #define STERM2(name, desc) terminal(lxr.get_id(#name), desc)
 
-#define SRULE(rule_name, def)                                                                      \
-  rule_name = def;                                                                                 \
+#define SRULE(rule_name, def) \
+  rule_name = def;            \
   rule_name.name(#rule_name);
 
 namespace sasl::parser {
 
-grammars::grammars(lexer &lxr) : lxr(lxr) {
+grammars::grammars(lexer& lxr) : lxr(lxr) {
   set_terms();
   set_prog();
   set_decls();
@@ -22,7 +22,9 @@ grammars::grammars(lexer &lxr) : lxr(lxr) {
   set_stmts();
 }
 
-void grammars::set_prog() { SRULE(prog, *decl > eof); }
+void grammars::set_prog() {
+  SRULE(prog, *decl > eof);
+}
 
 void grammars::set_decls() {
   SRULE(decl, function_full_def | (function_decl > semicolon) | basic_decl);
@@ -93,8 +95,9 @@ void grammars::set_inits() {
 }
 
 void grammars::set_stmts() {
-  SRULE(stmt, stmt_if | stmt_while | stmt_dowhile | stmt_for | stmt_switch | stmt_compound |
-                  stmt_flowctrl | labeled_stmt | stmt_decl | stmt_expr);
+  SRULE(stmt,
+        stmt_if | stmt_while | stmt_dowhile | stmt_for | stmt_switch | stmt_compound |
+            stmt_flowctrl | labeled_stmt | stmt_decl | stmt_expr);
   SRULE(stmt_if, kw_if > lparen > expr > rparen > stmt > -(kw_else > stmt));
   SRULE(stmt_while, kw_while > lparen > expr > rparen > stmt);
   SRULE(stmt_dowhile, kw_do > stmt > kw_while > lparen > expr > rparen > semicolon);
@@ -120,15 +123,16 @@ void grammars::set_terms() {
   SRULE(lit_bool, STERM2(lit_bool, "bool"));
 
   SRULE(opadd, STERM2(plus, "+") | STERM2(minus, "-"));
-  SRULE(opassign, STERM2(equal, "=") | STERM2(add_assign, "+=") | STERM2(sub_assign, "-=") |
-                      STERM2(mul_assign, "*=") | STERM2(div_assign, "/=") |
-                      STERM2(mod_assign, "%=") | STERM2(shift_assign, "<<= or >>=") |
-                      STERM2(band_assign, "&=") | STERM2(bor_assign, "|=") |
-                      STERM2(bxor_assign, "^="));
+  SRULE(opassign,
+        STERM2(equal, "=") | STERM2(add_assign, "+=") | STERM2(sub_assign, "-=") |
+            STERM2(mul_assign, "*=") | STERM2(div_assign, "/=") | STERM2(mod_assign, "%=") |
+            STERM2(shift_assign, "<<= or >>=") | STERM2(band_assign, "&=") |
+            STERM2(bor_assign, "|=") | STERM2(bxor_assign, "^="));
   SRULE(opmul, STERM2(asterisk, "*") | STERM2(slash, "/") | STERM2(percent, "%"));
   SRULE(opshift, STERM2(shift, "<< or >>"));
-  SRULE(oprel, STERM2(less_equal, "<=") | STERM2(greater_equal, ">=") | STERM2(labracket, "<") |
-                   STERM2(rabracket, ">"));
+  SRULE(oprel,
+        STERM2(less_equal, "<=") | STERM2(greater_equal, ">=") | STERM2(labracket, "<") |
+            STERM2(rabracket, ">"));
   SRULE(opequal, STERM2(equal_to, "==") | STERM2(not_equal, "!="));
   SRULE(opband, STERM2(ampersand, "&"));
   SRULE(opbxor, STERM2(caret, "^"));
@@ -175,4 +179,4 @@ void grammars::set_terms() {
   SRULE(eof, endholder());
 }
 
-} // namespace sasl::parser
+}  // namespace sasl::parser

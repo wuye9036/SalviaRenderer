@@ -19,18 +19,20 @@ namespace parser {
 class attribute;
 class lexer;
 class grammars;
-} // namespace parser
-} // namespace sasl
+}  // namespace parser
+}  // namespace sasl
 
 namespace sasl::syntax_tree {
 
 class builder_context {
-  builder_context(const builder_context &rhs, bool reset_gen_node = true)
-      : parent(rhs.parent), gen_node(reset_gen_node ? std::shared_ptr<node>() : rhs.gen_node) {}
+  builder_context(const builder_context& rhs, bool reset_gen_node = true)
+    : parent(rhs.parent)
+    , gen_node(reset_gen_node ? std::shared_ptr<node>() : rhs.gen_node) {}
 
   builder_context(std::shared_ptr<node> parent = std::shared_ptr<node>(),
                   std::shared_ptr<node> gen_node = std::shared_ptr<node>())
-      : parent(parent), gen_node(gen_node) {}
+    : parent(parent)
+    , gen_node(gen_node) {}
 
   std::shared_ptr<node> unqual_type;
   std::shared_ptr<node> parent;
@@ -38,7 +40,7 @@ class builder_context {
 };
 class syntax_tree_builder {
 public:
-  syntax_tree_builder(sasl::parser::lexer &l, sasl::parser::grammars &g);
+  syntax_tree_builder(sasl::parser::lexer& l, sasl::parser::grammars& g);
   std::shared_ptr<program> build_prog(std::shared_ptr<sasl::parser::attribute> attr);
   std::shared_ptr<function_full_def> build_fndef(std::shared_ptr<sasl::parser::attribute> attr);
   std::vector<std::shared_ptr<declaration>>
@@ -48,13 +50,15 @@ public:
   std::vector<std::shared_ptr<variable_declaration>>
   build_vardecl(std::shared_ptr<sasl::parser::attribute> attr);
   std::vector<std::shared_ptr<declarator>> build_declarators(
-      std::shared_ptr<sasl::parser::attribute> attr, std::shared_ptr<sasl::syntax_tree::tynode> tyn,
-      std::vector<std::shared_ptr<sasl::syntax_tree::variable_declaration>> &new_decls);
+      std::shared_ptr<sasl::parser::attribute> attr,
+      std::shared_ptr<sasl::syntax_tree::tynode> tyn,
+      std::vector<std::shared_ptr<sasl::syntax_tree::variable_declaration>>& new_decls);
 
   void build_initdecl(
-      std::shared_ptr<sasl::parser::attribute> attr, std::shared_ptr<sasl::syntax_tree::tynode> tyn,
-      std::vector<std::shared_ptr<sasl::syntax_tree::declarator>> &declarators,
-      std::vector<std::shared_ptr<sasl::syntax_tree::variable_declaration>> &declarations);
+      std::shared_ptr<sasl::parser::attribute> attr,
+      std::shared_ptr<sasl::syntax_tree::tynode> tyn,
+      std::vector<std::shared_ptr<sasl::syntax_tree::declarator>>& declarators,
+      std::vector<std::shared_ptr<sasl::syntax_tree::variable_declaration>>& declarations);
 
   std::shared_ptr<function_full_def> build_fndecl(std::shared_ptr<sasl::parser::attribute> attr);
   std::shared_ptr<parameter_full> build_param(std::shared_ptr<sasl::parser::attribute> attr);
@@ -119,27 +123,28 @@ public:
   std::shared_ptr<tynode> bind_typequal(std::shared_ptr<sasl::parser::attribute> qual,
                                         std::shared_ptr<tynode> unqual);
 
-  operators build_binop(std::shared_ptr<sasl::parser::attribute> attr, token &op_tok);
+  operators build_binop(std::shared_ptr<sasl::parser::attribute> attr, token& op_tok);
 
-  operators build_prefix_op(std::shared_ptr<sasl::parser::attribute> attr, token &op_tok);
+  operators build_prefix_op(std::shared_ptr<sasl::parser::attribute> attr, token& op_tok);
 
-  operators build_postfix_op(std::shared_ptr<sasl::parser::attribute> attr, token &op_tok);
+  operators build_postfix_op(std::shared_ptr<sasl::parser::attribute> attr, token& op_tok);
 
-  void build_semantic(std::shared_ptr<sasl::parser::attribute> const &attr, token &out_semantic,
-                      token &out_semantic_index);
+  void build_semantic(std::shared_ptr<sasl::parser::attribute> const& attr,
+                      token& out_semantic,
+                      token& out_semantic_index);
 
 private:
   void initialize_bt_cache();
-  std::shared_ptr<builtin_type> get_builtin(std::shared_ptr<sasl::parser::attribute> const &attr);
+  std::shared_ptr<builtin_type> get_builtin(std::shared_ptr<sasl::parser::attribute> const& attr);
 
-  syntax_tree_builder &operator=(syntax_tree_builder const &) = delete;
+  syntax_tree_builder& operator=(syntax_tree_builder const&) = delete;
 
-  sasl::parser::lexer &l;
-  sasl::parser::grammars &g;
+  sasl::parser::lexer& l;
+  sasl::parser::grammars& g;
 
   std::unordered_map<std::string, std::shared_ptr<builtin_type>> bt_cache;
 };
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree
 
 #endif

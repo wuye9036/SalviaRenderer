@@ -53,17 +53,19 @@ using std::vector;
 
 BOOST_AUTO_TEST_SUITE(death)
 
-string make_command(string const &file_name, string const &options) {
+string make_command(string const& file_name, string const& options) {
   return (format("--input=\"%s\" %s") % file_name % options).str();
 }
 
-string make_command(string const &inc, string const &sysinc, string const &file_name,
-                    string const &options) {
+string make_command(string const& inc,
+                    string const& sysinc,
+                    string const& file_name,
+                    string const& options) {
   return (format("--input=\"%s\" -I \"%s\" -S \"%s\" %s") % file_name % inc % sysinc % options)
       .str();
 }
 
-bool print_diagnostic(diag_chat *, diag_item *item) {
+bool print_diagnostic(diag_chat*, diag_item* item) {
   BOOST_TEST_MESSAGE(sasl::common::str(item));
   return true;
 }
@@ -71,21 +73,21 @@ bool print_diagnostic(diag_chat *, diag_item *item) {
 struct jit_fixture {
   jit_fixture() {}
 
-  void init_g(string const &file_name) { init(file_name, "--lang=g"); }
+  void init_g(string const& file_name) { init(file_name, "--lang=g"); }
 
-  void init_vs(string const &file_name) { init(file_name, "--lang=vs"); }
+  void init_vs(string const& file_name) { init(file_name, "--lang=vs"); }
 
-  void init_ps(string const &file_name) { init(file_name, "--lang=ps"); }
+  void init_ps(string const& file_name) { init(file_name, "--lang=ps"); }
 
-  void add_virtual_file(char const *name, char const *content) {
+  void add_virtual_file(char const* name, char const* content) {
     vfiles.push_back(make_pair(name, content));
   }
 
-  void init(string const &file_name, string const &options) {
+  void init(string const& file_name, string const& options) {
     init_cmd(make_command(file_name, options));
   }
 
-  void init_cmd(string const &cmd) {
+  void init_cmd(string const& cmd) {
     diags = diag_chat::create();
     diags->add_report_raised_handler(print_diagnostic);
     sasl_create_compiler(drv);
@@ -107,22 +109,26 @@ struct jit_fixture {
   ~jit_fixture() {}
 
   shared_ptr<compiler> drv;
-  symbol *root_sym;
+  symbol* root_sym;
   shared_ptr<diag_chat> diags;
-  vector<pair<char const *, char const *>> vfiles;
+  vector<pair<char const*, char const*>> vfiles;
 };
 
 #if ALL_TESTS_ENABLED
-BOOST_FIXTURE_TEST_CASE(incomplete, jit_fixture) { init_g("repo/incomplete.ss"); }
+BOOST_FIXTURE_TEST_CASE(incomplete, jit_fixture) {
+  init_g("repo/incomplete.ss");
+}
 #endif
 
 #if ALL_TESTS_ENABLED
-BOOST_FIXTURE_TEST_CASE(semantic_errors, jit_fixture) { init_g("repo/semantic_errors.ss"); }
+BOOST_FIXTURE_TEST_CASE(semantic_errors, jit_fixture) {
+  init_g("repo/semantic_errors.ss");
+}
 #endif
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE(include_test, jit_fixture) {
-  const char *virtual_include_content = "float virtual_include_add(float a, float b){ \r\n"
+  const char* virtual_include_content = "float virtual_include_add(float a, float b){ \r\n"
                                         "	return a+b; \r\n"
                                         "} \r\n";
   add_virtual_file("virtual_include.ss", virtual_include_content);

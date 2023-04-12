@@ -1,7 +1,7 @@
-#include <salvia/utility/api_symbols.h>
 #include <FreeImage.h>
+#include <salvia/utility/api_symbols.h>
 
-namespace salvia::utility{
+namespace salvia::utility {
 void initialize() {
   FreeImage_Initialise();
 }
@@ -9,4 +9,4 @@ void initialize() {
 void finalize() {
   FreeImage_DeInitialise();
 }
-}
+}  // namespace salvia::utility

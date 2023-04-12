@@ -19,9 +19,10 @@ static const uint32_t ASYNC_RENDER_QUEUE_SIZE = 32;
 class async_renderer : public renderer_impl {
 public:
   async_renderer()
-      : state_queue_(ASYNC_RENDER_QUEUE_SIZE), state_pool_(ASYNC_RENDER_QUEUE_SIZE),
-        waiting_exit_(false) {
-    for (auto &state : state_pool_) {
+    : state_queue_(ASYNC_RENDER_QUEUE_SIZE)
+    , state_pool_(ASYNC_RENDER_QUEUE_SIZE)
+    , waiting_exit_(false) {
+    for (auto& state : state_pool_) {
       state.reset(new render_state());
     }
   }
@@ -54,7 +55,7 @@ private:
     }
   }
 
-  void free_render_state(render_state_ptr const &state) {
+  void free_render_state(render_state_ptr const& state) {
     std::lock_guard<std::mutex> pool_lock(state_pool_mutex_);
     state_pool_.push_back(state);
   }
@@ -108,4 +109,4 @@ renderer_ptr create_async_renderer() {
   return ret;
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core

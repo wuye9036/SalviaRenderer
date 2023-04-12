@@ -27,12 +27,12 @@ Modify Log:
 #define SALVIA_EXT_INC_WINDOWS_H
 
 #ifndef EFLIB_USE_STD_MINMAX
-#include <algorithm>
+#  include <algorithm>
 using ::std::max;
 using ::std::min;
-#define NOMINMAX
-#define EFLIB_USE_STD_MINMAX
+#  define NOMINMAX
+#  define EFLIB_USE_STD_MINMAX
 #endif
 #include <windows.h>
 
-#endif // SALVIA_EXT_INC_WINDOWS_H
+#endif  // SALVIA_EXT_INC_WINDOWS_H

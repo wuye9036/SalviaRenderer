@@ -5,9 +5,9 @@
 
 namespace salvia::core {
 
-eflib::thread_pool &global_thread_pool() {
+eflib::thread_pool& global_thread_pool() {
   static eflib::thread_pool tp(std::thread::hardware_concurrency() - 1);
   return tp;
 }
 
-} // namespace salvia::core
+}  // namespace salvia::core
