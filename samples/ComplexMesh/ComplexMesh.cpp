@@ -47,14 +47,14 @@ struct Material {
   TextureSlotsType texture_slots;
 };
 
-void ReadShortString(std::istream &file, std::string &str) {
+void ReadShortString(std::istream& file, std::string& str) {
   uint8_t len;
-  file.read(reinterpret_cast<char *>(&len), sizeof(len));
+  file.read(reinterpret_cast<char*>(&len), sizeof(len));
   str.resize(len);
-  file.read(reinterpret_cast<char *>(&str[0]), len * sizeof(str[0]));
+  file.read(reinterpret_cast<char*>(&str[0]), len * sizeof(str[0]));
 }
 
-mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name) {
+mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const& mesh_name) {
   if (mesh_name.empty()) {
     return {};
   }
@@ -62,55 +62,55 @@ mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name)
   std::vector<Material> mtls;
   std::vector<std::string> mesh_names;
 
-  auto *pmesh = new mesh_impl(hsr.get());
+  auto* pmesh = new mesh_impl(hsr.get());
 
   size_t const geometry_slot = 0;
   size_t const normal_slot = 1;
 
   std::ifstream file(mesh_name.c_str(), std::ios::binary);
   uint32_t fourcc;
-  file.read(reinterpret_cast<char *>(&fourcc), sizeof(fourcc));
+  file.read(reinterpret_cast<char*>(&fourcc), sizeof(fourcc));
 
   uint64_t original_len, len;
-  file.read(reinterpret_cast<char *>(&original_len), sizeof(original_len));
-  file.read(reinterpret_cast<char *>(&len), sizeof(len));
+  file.read(reinterpret_cast<char*>(&original_len), sizeof(original_len));
+  file.read(reinterpret_cast<char*>(&len), sizeof(len));
 
   uint32_t num_mtls;
-  file.read(reinterpret_cast<char *>(&num_mtls), sizeof(num_mtls));
+  file.read(reinterpret_cast<char*>(&num_mtls), sizeof(num_mtls));
   uint32_t num_meshes;
-  file.read(reinterpret_cast<char *>(&num_meshes), sizeof(num_meshes));
+  file.read(reinterpret_cast<char*>(&num_meshes), sizeof(num_meshes));
   uint32_t num_joints;
-  file.read(reinterpret_cast<char *>(&num_joints), sizeof(num_joints));
+  file.read(reinterpret_cast<char*>(&num_joints), sizeof(num_joints));
   uint32_t num_kfs;
-  file.read(reinterpret_cast<char *>(&num_kfs), sizeof(num_kfs));
+  file.read(reinterpret_cast<char*>(&num_kfs), sizeof(num_kfs));
 
   mtls.resize(num_mtls);
   for (uint32_t mtl_index = 0; mtl_index < num_mtls; ++mtl_index) {
-    Material &mtl = mtls[mtl_index];
-    file.read(reinterpret_cast<char *>(&mtl.ambient.x()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.ambient.y()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.ambient.z()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.diffuse.x()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.diffuse.y()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.diffuse.z()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.specular.x()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.specular.y()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.specular.z()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.emit.x()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.emit.y()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.emit.z()), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.opacity), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.specular_level), sizeof(float));
-    file.read(reinterpret_cast<char *>(&mtl.shininess), sizeof(float));
+    Material& mtl = mtls[mtl_index];
+    file.read(reinterpret_cast<char*>(&mtl.ambient.x()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.ambient.y()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.ambient.z()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.diffuse.x()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.diffuse.y()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.diffuse.z()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.specular.x()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.specular.y()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.specular.z()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.emit.x()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.emit.y()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.emit.z()), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.opacity), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.specular_level), sizeof(float));
+    file.read(reinterpret_cast<char*>(&mtl.shininess), sizeof(float));
 
     uint32_t num_texs;
-    file.read(reinterpret_cast<char *>(&num_texs), sizeof(num_texs));
+    file.read(reinterpret_cast<char*>(&num_texs), sizeof(num_texs));
 
     for (uint32_t tex_index = 0; tex_index < num_texs; ++tex_index) {
       std::string type, name;
       ReadShortString(file, type);
       ReadShortString(file, name);
-      mtl.texture_slots.emplace_back(type, name);\
+      mtl.texture_slots.emplace_back(type, name);
       std::cout << tex_index << std::endl;
     }
   }
@@ -123,10 +123,10 @@ mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name)
     ReadShortString(file, mesh_names[mesh_index]);
 
     int32_t mtl_id;
-    file.read(reinterpret_cast<char *>(&mtl_id), sizeof(mtl_id));
+    file.read(reinterpret_cast<char*>(&mtl_id), sizeof(mtl_id));
 
     uint32_t num_ves;
-    file.read(reinterpret_cast<char *>(&num_ves), sizeof(num_ves));
+    file.read(reinterpret_cast<char*>(&num_ves), sizeof(num_ves));
 
     for (uint32_t ve_index = 0; ve_index < num_ves; ++ve_index) {
       struct vertex_element {
@@ -136,7 +136,7 @@ mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name)
       };
 
       vertex_element ve;
-      file.read(reinterpret_cast<char *>(&ve), sizeof(ve));
+      file.read(reinterpret_cast<char*>(&ve), sizeof(ve));
     }
 
     elem_descs.emplace_back("POSITION", 0, format_r32g32b32_float, 0, 0, input_per_vertex, 0);
@@ -144,33 +144,33 @@ mesh_ptr LoadModel(salvia::core::renderer_ptr hsr, std::string const &mesh_name)
 
     // Read vertex buffers
     uint32_t num_vertices;
-    file.read(reinterpret_cast<char *>(&num_vertices), sizeof(num_vertices));
+    file.read(reinterpret_cast<char*>(&num_vertices), sizeof(num_vertices));
 
     uint32_t max_num_blend;
-    file.read(reinterpret_cast<char *>(&max_num_blend), sizeof(max_num_blend));
+    file.read(reinterpret_cast<char*>(&max_num_blend), sizeof(max_num_blend));
 
     salvia::resource::buffer_ptr verts = pmesh->create_buffer(sizeof(vec3) * num_vertices);
     salvia::resource::buffer_ptr normals = pmesh->create_buffer(sizeof(vec3) * num_vertices);
-    vec3 *verts_data = reinterpret_cast<vec3 *>(verts->raw_data(0));
-    vec3 *normals_data = reinterpret_cast<vec3 *>(normals->raw_data(0));
-    file.read(reinterpret_cast<char *>(verts_data), num_vertices * sizeof(vec3));
-    file.read(reinterpret_cast<char *>(normals_data), num_vertices * sizeof(vec3));
+    vec3* verts_data = reinterpret_cast<vec3*>(verts->raw_data(0));
+    vec3* normals_data = reinterpret_cast<vec3*>(normals->raw_data(0));
+    file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
+    file.read(reinterpret_cast<char*>(normals_data), num_vertices * sizeof(vec3));
     pmesh->add_vertex_buffer(geometry_slot, verts, sizeof(vec3), 0);
     pmesh->add_vertex_buffer(normal_slot, normals, sizeof(vec3), 0);
 
     // Read index buffer.
     uint32_t num_triangles;
-    file.read(reinterpret_cast<char *>(&num_triangles), sizeof(num_triangles));
+    file.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
 
     salvia::resource::buffer_ptr indices =
         pmesh->create_buffer(sizeof(uint16_t) * num_triangles * 3);
-    uint16_t *indices_data = reinterpret_cast<uint16_t *>(indices->raw_data(0));
+    uint16_t* indices_data = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
     char is_index_16_bit;
     file.read(&is_index_16_bit, sizeof(is_index_16_bit));
     pmesh->set_index_type(is_index_16_bit ? format_r16_uint : format_r32_uint);
 
-    file.read(reinterpret_cast<char *>(indices_data), sizeof(uint16_t) * num_triangles * 3);
+    file.read(reinterpret_cast<char*>(indices_data), sizeof(uint16_t) * num_triangles * 3);
 
     pmesh->set_index_buffer(indices);
 
@@ -199,7 +199,7 @@ public:
     bind_semantic("NORMAL", 0, 1);
   }
 
-  void shader_prog(const vs_input &in, vs_output &out) override {
+  void shader_prog(const vs_input& in, vs_output& out) override {
     vec4 pos = in.attribute(0);
     vec4 pos_es, normal_es;
     transform(pos_es, pos, wv);
@@ -213,7 +213,6 @@ public:
   uint32_t num_output_attributes() const override { return 3; }
 
   uint32_t output_attribute_modifiers(uint32_t index) const override {
-
     (void)index;
 
     return vs_output::am_linear;
@@ -228,7 +227,7 @@ public:
 class ps_mesh : public cpp_pixel_shader {
 public:
   ps_mesh() = default;
-  bool shader_prog(const vs_output &in, ps_output &out) override {
+  bool shader_prog(const vs_output& in, ps_output& out) override {
     vec3 l = normalize3(in.attribute(0).xyz());
     vec3 e = normalize3(in.attribute(1).xyz());
     vec3 n = normalize3(in.attribute(2).xyz());
@@ -248,7 +247,7 @@ public:
 
 class ts_blend_off : public cpp_blend_shader {
 public:
-  bool shader_prog(size_t sample, pixel_accessor &inout, const ps_output &in) override {
+  bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in) override {
     inout.color(0, sample, color_rgba32f(in.color[0]));
     return true;
   }
@@ -267,8 +266,11 @@ public:
   complex_mesh() : sample_app("ComplexMesh") {}
 
   void on_init() override {
-    create_devices_and_targets(data_->screen_width, data_->screen_height, 1,
-                               pixel_format_color_bgra8, pixel_format_color_rg32f);
+    create_devices_and_targets(data_->screen_width,
+                               data_->screen_height,
+                               1,
+                               pixel_format_color_bgra8,
+                               pixel_format_color_rg32f);
     data_->renderer->set_viewport(data_->screen_vp);
 
     raster_desc rs_desc;
@@ -277,10 +279,11 @@ public:
 
     // Loading mesh
     cout << "Loading mesh ... " << endl;
-    mesh_ = LoadModel(data_->renderer, find_path("complex_mesh/M134 Predator.MESHML.model_bin",
-                                                 data_->resource_files_root.empty()
-                                                     ? default_search_paths()
-                                                     : vector<string>{data_->resource_files_root}));
+    mesh_ = LoadModel(data_->renderer,
+                      find_path("complex_mesh/M134 Predator.MESHML.model_bin",
+                                data_->resource_files_root.empty()
+                                    ? default_search_paths()
+                                    : vector<string>{data_->resource_files_root}));
     cout << "Loading pixel and blend shader... " << endl;
 
     // Initialize shader
@@ -289,12 +292,8 @@ public:
     cpp_bs.reset(new ts_blend_off());
 
     switch (data_->mode) {
-    case app_modes::benchmark:
-      quit_at_frame(BENCHMARK_FRAME_COUNT);
-      break;
-    case app_modes::test:
-      quit_at_frame(TEST_FRAME_COUNT);
-      break;
+    case app_modes::benchmark: quit_at_frame(BENCHMARK_FRAME_COUNT); break;
+    case app_modes::test: quit_at_frame(TEST_FRAME_COUNT); break;
     default:
       // No quit condition.
       break;
@@ -312,8 +311,8 @@ public:
     vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
     vec3 eye(0.0f, 0.0f, 0.0f);
     mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
-    mat_perspective_fov(proj, static_cast<float>(HALF_PI), data_->screen_aspect_ratio, 0.1f,
-                        1000.0f);
+    mat_perspective_fov(
+        proj, static_cast<float>(HALF_PI), data_->screen_aspect_ratio, 0.1f, 1000.0f);
     mat_mul(wv, world, view);
 
     vec3 light_pos(vec3(-4, 2, 0));
@@ -343,7 +342,7 @@ protected:
   raster_state_ptr rs_back;
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   scoped_initializer salvia_utility_initializer;
 
   complex_mesh loader;
