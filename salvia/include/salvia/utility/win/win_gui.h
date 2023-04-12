@@ -7,7 +7,7 @@
 
 namespace salvia::utility {
 
-SALVIA_UTILITY_API gui *create_win_gui();
-SALVIA_UTILITY_API void delete_win_gui(gui *app);
+SALVIA_UTILITY_API gui* create_win_gui();
+SALVIA_UTILITY_API void delete_win_gui(gui* app);
 
-}
+}  // namespace salvia::utility

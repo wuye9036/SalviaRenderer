@@ -11,28 +11,32 @@ using namespace salvia::core;
 
 namespace salvia::ext {
 
-swap_chain_impl::swap_chain_impl(renderer_ptr const &renderer,
-                                 renderer_parameters const &render_params) {
+swap_chain_impl::swap_chain_impl(renderer_ptr const& renderer,
+                                 renderer_parameters const& render_params) {
   renderer_ = renderer;
 
-  surface_ =
-      renderer_
-          ->create_tex2d(render_params.backbuffer_width, render_params.backbuffer_height,
-                         render_params.backbuffer_num_samples, render_params.backbuffer_format)
-          ->subresource(0);
+  surface_ = renderer_
+                 ->create_tex2d(render_params.backbuffer_width,
+                                render_params.backbuffer_height,
+                                render_params.backbuffer_num_samples,
+                                render_params.backbuffer_format)
+                 ->subresource(0);
 
   if (render_params.backbuffer_num_samples > 1) {
-    resolved_surface_ =
-        renderer_
-            ->create_tex2d(render_params.backbuffer_width, render_params.backbuffer_height, 1,
-                           render_params.backbuffer_format)
-            ->subresource(0);
+    resolved_surface_ = renderer_
+                            ->create_tex2d(render_params.backbuffer_width,
+                                           render_params.backbuffer_height,
+                                           1,
+                                           render_params.backbuffer_format)
+                            ->subresource(0);
   } else {
     resolved_surface_ = surface_;
   }
 }
 
-surface_ptr swap_chain_impl::get_surface() { return surface_; }
+surface_ptr swap_chain_impl::get_surface() {
+  return surface_;
+}
 
 void swap_chain_impl::present() {
   renderer_->flush();
@@ -44,13 +48,14 @@ void swap_chain_impl::present() {
   present_impl();
 }
 
-}
+}  // namespace salvia::ext
 
 extern "C" {
-void salviax_create_swap_chain_and_renderer(salvia::ext::swap_chain_ptr &out_swap_chain,
-                                            salvia::core::renderer_ptr &out_renderer,
-                                            salvia::core::renderer_parameters const *render_params,
-                                            uint32_t renderer_type, uint32_t swap_chain_type) {
+void salviax_create_swap_chain_and_renderer(salvia::ext::swap_chain_ptr& out_swap_chain,
+                                            salvia::core::renderer_ptr& out_renderer,
+                                            salvia::core::renderer_parameters const* render_params,
+                                            uint32_t renderer_type,
+                                            uint32_t swap_chain_type) {
   out_renderer.reset();
   out_swap_chain.reset();
 

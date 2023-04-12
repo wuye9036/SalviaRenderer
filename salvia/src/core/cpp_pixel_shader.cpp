@@ -20,7 +20,7 @@ eflib::vec4 cpp_pixel_shader::ddy(size_t iReg) const {
 
 // ---------------------------------------
 // Sample Texture
-color_rgba32f cpp_pixel_shader::tex2d(const sampler &s, size_t iReg) {
+color_rgba32f cpp_pixel_shader::tex2d(const sampler& s, size_t iReg) {
   if ((lod_flag_ & (1ULL << iReg)) == 0) {
     lod_[iReg] = s.calc_lod_2d(ddx(iReg).xy(), ddy(iReg).xy());
     lod_flag_ |= (1ULL << iReg);
@@ -30,16 +30,16 @@ color_rgba32f cpp_pixel_shader::tex2d(const sampler &s, size_t iReg) {
   // return s.sample_2d_grad( px_->attribute(iReg).xy(), ddx(iReg).xy(), ddy(iReg).xy(), 0.0f );
 }
 
-color_rgba32f cpp_pixel_shader::tex2dlod(sampler const &s, eflib::vec4 const &coord_with_lod) {
+color_rgba32f cpp_pixel_shader::tex2dlod(sampler const& s, eflib::vec4 const& coord_with_lod) {
   return s.sample(coord_with_lod[0], coord_with_lod[1], coord_with_lod[3]);
 }
 
-color_rgba32f cpp_pixel_shader::tex2dlod(const sampler &s, size_t iReg) {
+color_rgba32f cpp_pixel_shader::tex2dlod(const sampler& s, size_t iReg) {
   return tex2dlod(s, px_->attribute(iReg));
 }
 
-color_rgba32f cpp_pixel_shader::tex2dproj(const sampler &s, size_t iReg) {
-  eflib::vec4 const &attr = px_->attribute(iReg);
+color_rgba32f cpp_pixel_shader::tex2dproj(const sampler& s, size_t iReg) {
+  eflib::vec4 const& attr = px_->attribute(iReg);
 
   eflib::vec4 dadx = ddx(iReg);
   eflib::vec4 dady = ddy(iReg);
@@ -59,7 +59,8 @@ color_rgba32f cpp_pixel_shader::tex2dproj(const sampler &s, size_t iReg) {
   return s.sample_2d_grad(proj_coord.xy(), dcdx.xy(), dcdy.xy(), 0.0f);
 }
 
-uint64_t cpp_pixel_shader::execute(shader::vs_output const *quad, shader::ps_output *out, float * /*depth*/) {
+uint64_t
+cpp_pixel_shader::execute(shader::vs_output const* quad, shader::ps_output* out, float* /*depth*/) {
   quad_ = quad;
   lod_flag_ = 0;
 
@@ -72,6 +73,8 @@ uint64_t cpp_pixel_shader::execute(shader::vs_output const *quad, shader::ps_out
   return mask;
 }
 
-bool cpp_pixel_shader::output_depth() const { return false; }
+bool cpp_pixel_shader::output_depth() const {
+  return false;
+}
 
-} // namespace salvia::core
+}  // namespace salvia::core

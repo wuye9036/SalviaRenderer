@@ -1,5 +1,15 @@
 #include <salvia/core/renderer_impl.h>
 
+#include <salvia/core/async_object.h>
+#include <salvia/core/binary_modules.h>
+#include <salvia/core/clipper.h>
+#include <salvia/core/framebuffer.h>
+#include <salvia/core/host.h>
+#include <salvia/core/rasterizer.h>
+#include <salvia/core/render_state.h>
+#include <salvia/core/shader_unit.h>
+#include <salvia/core/stream_assembler.h>
+#include <salvia/core/vertex_cache.h>
 #include <salvia/resource/input_layout.h>
 #include <salvia/resource/resource_manager.h>
 #include <salvia/resource/surface.h>
@@ -8,16 +18,6 @@
 #include <salvia/shader/shader_object.h>
 #include <salvia/shader/shader_regs.h>
 #include <salvia/shader/shader_regs_op.h>
-#include <salvia/core/shader_unit.h>
-#include <salvia/core/async_object.h>
-#include <salvia/core/binary_modules.h>
-#include <salvia/core/clipper.h>
-#include <salvia/core/framebuffer.h>
-#include <salvia/core/host.h>
-#include <salvia/core/rasterizer.h>
-#include <salvia/core/render_state.h>
-#include <salvia/core/stream_assembler.h>
-#include <salvia/core/vertex_cache.h>
 
 using namespace salvia::shader;
 using namespace salvia::resource;
@@ -27,7 +27,7 @@ using std::shared_ptr;
 
 namespace salvia::core {
 
-result renderer_impl::set_input_layout(const input_layout_ptr &layout) {
+result renderer_impl::set_input_layout(const input_layout_ptr& layout) {
   size_t min_slot = 0, max_slot = 0;
   layout->slot_range(min_slot, max_slot);
   state_->vsi_ops = &get_vs_input_op(static_cast<uint32_t>(max_slot));
@@ -36,21 +36,20 @@ result renderer_impl::set_input_layout(const input_layout_ptr &layout) {
   return result::ok;
 }
 
-result renderer_impl::set_vertex_buffers(size_t starts_slot, size_t buffers_count,
-                                         buffer_ptr const *buffers, size_t const *strides,
-                                         size_t const *offsets) {
+result renderer_impl::set_vertex_buffers(size_t starts_slot,
+                                         size_t buffers_count,
+                                         buffer_ptr const* buffers,
+                                         size_t const* strides,
+                                         size_t const* offsets) {
   state_->str_state.update(starts_slot, buffers_count, buffers, strides, offsets);
   return result::ok;
 }
 
-result renderer_impl::set_index_buffer(buffer_ptr const &hbuf, format index_fmt) {
+result renderer_impl::set_index_buffer(buffer_ptr const& hbuf, format index_fmt) {
   switch (index_fmt) {
   case format_r16_uint:
-  case format_r32_uint:
-    break;
-  default:
-    EF_ASSERT(false, "The value of index type is invalid.");
-    return result::failed;
+  case format_r32_uint: break;
+  default: EF_ASSERT(false, "The value of index type is invalid."); return result::failed;
   }
 
   state_->index_buffer = hbuf;
@@ -59,9 +58,13 @@ result renderer_impl::set_index_buffer(buffer_ptr const &hbuf, format index_fmt)
   return result::ok;
 }
 
-buffer_ptr renderer_impl::get_index_buffer() const { return state_->index_buffer; }
+buffer_ptr renderer_impl::get_index_buffer() const {
+  return state_->index_buffer;
+}
 
-format renderer_impl::get_index_format() const { return state_->index_format; }
+format renderer_impl::get_index_format() const {
+  return state_->index_format;
+}
 
 //
 result renderer_impl::set_primitive_topology(primitive_topology topology) {
@@ -69,25 +72,26 @@ result renderer_impl::set_primitive_topology(primitive_topology topology) {
   case primitive_line_list:
   case primitive_line_strip:
   case primitive_triangle_list:
-  case primitive_triangle_strip:
-    state_->prim_topo = topology;
-    return result::ok;
-  default:
-    return result::failed;
+  case primitive_triangle_strip: state_->prim_topo = topology; return result::ok;
+  default: return result::failed;
   }
 }
 
-primitive_topology renderer_impl::get_primitive_topology() const { return state_->prim_topo; }
+primitive_topology renderer_impl::get_primitive_topology() const {
+  return state_->prim_topo;
+}
 
-result renderer_impl::set_vertex_shader(cpp_vertex_shader_ptr const &hvs) {
+result renderer_impl::set_vertex_shader(cpp_vertex_shader_ptr const& hvs) {
   state_->cpp_vs = hvs;
 
   return result::ok;
 }
 
-cpp_vertex_shader_ptr renderer_impl::get_vertex_shader() const { return state_->cpp_vs; }
+cpp_vertex_shader_ptr renderer_impl::get_vertex_shader() const {
+  return state_->cpp_vs;
+}
 
-result renderer_impl::set_vertex_shader_code(shared_ptr<shader_object> const &code) {
+result renderer_impl::set_vertex_shader_code(shared_ptr<shader_object> const& code) {
   state_->vx_shader = code;
   return result::ok;
 }
@@ -96,41 +100,49 @@ shared_ptr<shader_object> renderer_impl::get_vertex_shader_code() const {
   return state_->vx_shader;
 }
 
-result renderer_impl::set_rasterizer_state(const raster_state_ptr &rs) {
+result renderer_impl::set_rasterizer_state(const raster_state_ptr& rs) {
   state_->ras_state = rs;
   return result::ok;
 }
 
-raster_state_ptr renderer_impl::get_rasterizer_state() const { return state_->ras_state; }
+raster_state_ptr renderer_impl::get_rasterizer_state() const {
+  return state_->ras_state;
+}
 
-result renderer_impl::set_depth_stencil_state(const depth_stencil_state_ptr &dss,
+result renderer_impl::set_depth_stencil_state(const depth_stencil_state_ptr& dss,
                                               int32_t stencil_ref) {
   state_->ds_state = dss;
   state_->stencil_ref = stencil_ref;
   return result::ok;
 }
 
-const depth_stencil_state_ptr &renderer_impl::get_depth_stencil_state() const {
+const depth_stencil_state_ptr& renderer_impl::get_depth_stencil_state() const {
   return state_->ds_state;
 }
 
-int32_t renderer_impl::get_stencil_ref() const { return state_->stencil_ref; }
+int32_t renderer_impl::get_stencil_ref() const {
+  return state_->stencil_ref;
+}
 
-result renderer_impl::set_pixel_shader(cpp_pixel_shader_ptr const &hps) {
+result renderer_impl::set_pixel_shader(cpp_pixel_shader_ptr const& hps) {
   state_->cpp_ps = hps;
   return result::ok;
 }
 
-cpp_pixel_shader_ptr renderer_impl::get_pixel_shader() const { return state_->cpp_ps; }
+cpp_pixel_shader_ptr renderer_impl::get_pixel_shader() const {
+  return state_->cpp_ps;
+}
 
-result renderer_impl::set_blend_shader(cpp_blend_shader_ptr const &hbs) {
+result renderer_impl::set_blend_shader(cpp_blend_shader_ptr const& hbs) {
   state_->cpp_bs = hbs;
   return result::ok;
 }
 
-cpp_blend_shader_ptr renderer_impl::get_blend_shader() const { return state_->cpp_bs; }
+cpp_blend_shader_ptr renderer_impl::get_blend_shader() const {
+  return state_->cpp_bs;
+}
 
-result renderer_impl::set_viewport(const viewport &vp) {
+result renderer_impl::set_viewport(const viewport& vp) {
   if (vp.x < 0 || vp.y < 0 || vp.w >= MAX_RENDER_TARGET_WIDTH || vp.h >= MAX_RENDER_TARGET_HEIGHT) {
     EF_ASSERT(false, "Viewport size is invalid.");
     return result::failed;
@@ -139,12 +151,14 @@ result renderer_impl::set_viewport(const viewport &vp) {
   return result::ok;
 }
 
-viewport renderer_impl::get_viewport() const { return state_->vp; }
+viewport renderer_impl::get_viewport() const {
+  return state_->vp;
+}
 
 // do not support get function for a while
 result renderer_impl::set_render_targets(size_t color_target_count,
-                                         surface_ptr const *color_targets,
-                                         surface_ptr const &ds_target) {
+                                         surface_ptr const* color_targets,
+                                         surface_ptr const& ds_target) {
   // Initialize target attributes
   viewport target_vp;
   target_vp.x = 0;
@@ -176,7 +190,7 @@ result renderer_impl::set_render_targets(size_t color_target_count,
   target_vp.maxz = 0;
 
   for (size_t i = 0; i < color_target_count; ++i) {
-    auto const &color_target = color_targets[i];
+    auto const& color_target = color_targets[i];
     if (color_target.get() != nullptr) {
       target_vp.w = std::min<float>(static_cast<float>(color_target->width()), target_vp.w);
       target_vp.h = std::min<float>(static_cast<float>(color_target->height()), target_vp.h);
@@ -193,10 +207,8 @@ result renderer_impl::set_render_targets(size_t color_target_count,
 
   if (ds_target) {
     switch (ds_target->get_pixel_format()) {
-    case pixel_format_color_rg32f:
-      break;
-    default:
-      return result::failed;
+    case pixel_format_color_rg32f: break;
+    default: return result::failed;
     }
 
     if (color_target_count == 0) {
@@ -225,19 +237,21 @@ result renderer_impl::set_render_targets(size_t color_target_count,
   return result::ok;
 }
 
-buffer_ptr renderer_impl::create_buffer(size_t size) { return resource_pool_->create_buffer(size); }
+buffer_ptr renderer_impl::create_buffer(size_t size) {
+  return resource_pool_->create_buffer(size);
+}
 
-texture_ptr renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples,
-                                        pixel_format fmt) {
+texture_ptr
+renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt) {
   return resource_pool_->create_texture_2d(width, height, num_samples, fmt);
 }
 
-texture_ptr renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples,
-                                          pixel_format fmt) {
+texture_ptr
+renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt) {
   return resource_pool_->create_texture_cube(width, height, num_samples, fmt);
 }
 
-sampler_ptr renderer_impl::create_sampler(sampler_desc const &desc, texture_ptr const &tex) {
+sampler_ptr renderer_impl::create_sampler(sampler_desc const& desc, texture_ptr const& tex) {
   return sampler_ptr(new sampler(desc, tex));
 }
 
@@ -247,10 +261,8 @@ async_object_ptr renderer_impl::create_query(async_object_ids id) {
     return async_object_ptr(new async_pipeline_statistics());
   case async_object_ids::internal_statistics:
     return async_object_ptr(new async_internal_statistics());
-  case async_object_ids::pipeline_profiles:
-    return async_object_ptr(new async_pipeline_profiles());
-  default:
-    return async_object_ptr{};
+  case async_object_ids::pipeline_profiles: return async_object_ptr(new async_pipeline_profiles());
+  default: return async_object_ptr{};
   }
 }
 
@@ -271,31 +283,31 @@ renderer_impl::renderer_impl() {
   state_->vp.x = state_->vp.y = 0;
 }
 
-result renderer_impl::set_vs_variable_value(std::string const &name, void const *var_addr,
-                                            size_t sz) {
+result
+renderer_impl::set_vs_variable_value(std::string const& name, void const* var_addr, size_t sz) {
   state_->vx_cbuffer.set_variable(name, var_addr, sz);
   return result::ok;
 }
 
-result renderer_impl::set_vs_variable_pointer(std::string const &name, void const *var_addr,
-                                              size_t sz) {
+result
+renderer_impl::set_vs_variable_pointer(std::string const& name, void const* var_addr, size_t sz) {
   state_->vx_cbuffer.set_variable(name, var_addr, sz);
   return result::ok;
 }
 
-input_layout_ptr renderer_impl::create_input_layout(input_element_desc const *elem_descs,
+input_layout_ptr renderer_impl::create_input_layout(input_element_desc const* elem_descs,
                                                     size_t elems_count,
-                                                    shader_object_ptr const &vs) {
+                                                    shader_object_ptr const& vs) {
   return input_layout::create(elem_descs, elems_count);
 }
 
-input_layout_ptr renderer_impl::create_input_layout(input_element_desc const *elem_descs,
-                                                             size_t elems_count,
-                                                             cpp_vertex_shader_ptr const &vs) {
+input_layout_ptr renderer_impl::create_input_layout(input_element_desc const* elem_descs,
+                                                    size_t elems_count,
+                                                    cpp_vertex_shader_ptr const& vs) {
   return input_layout::create(elem_descs, elems_count);
 }
 
-result renderer_impl::set_pixel_shader_code(shared_ptr<shader_object> const &code) {
+result renderer_impl::set_pixel_shader_code(shared_ptr<shader_object> const& code) {
   state_->px_shader = code;
   state_->ps_proto.reset(new pixel_shader_unit());
   state_->ps_proto->initialize(state_->px_shader.get());
@@ -303,19 +315,21 @@ result renderer_impl::set_pixel_shader_code(shared_ptr<shader_object> const &cod
   return result::ok;
 }
 
-shared_ptr<shader_object> renderer_impl::get_pixel_shader_code() const { return state_->px_shader; }
+shared_ptr<shader_object> renderer_impl::get_pixel_shader_code() const {
+  return state_->px_shader;
+}
 
-result renderer_impl::set_ps_variable(std::string const &name, void const *data, size_t sz) {
+result renderer_impl::set_ps_variable(std::string const& name, void const* data, size_t sz) {
   state_->px_cbuffer.set_variable(name, data, sz);
   return result::ok;
 }
 
-result renderer_impl::set_ps_sampler(std::string const &name, sampler_ptr const &samp) {
+result renderer_impl::set_ps_sampler(std::string const& name, sampler_ptr const& samp) {
   state_->px_cbuffer.set_sampler(name, samp);
   return result::ok;
 }
 
-result renderer_impl::set_vs_sampler(std::string const &name, sampler_ptr const &samp) {
+result renderer_impl::set_vs_sampler(std::string const& name, sampler_ptr const& samp) {
   state_->vx_cbuffer.set_sampler(name, samp);
   return result::ok;
 }
@@ -338,7 +352,7 @@ result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert) 
   return commit_state_and_command();
 }
 
-result renderer_impl::clear_color(surface_ptr const &color_target, color_rgba32f const &c) {
+result renderer_impl::clear_color(surface_ptr const& color_target, color_rgba32f const& c) {
   state_->clear_color_target = color_target;
   state_->clear_color = c;
   state_->cmd = command_id::clear_color;
@@ -346,8 +360,10 @@ result renderer_impl::clear_color(surface_ptr const &color_target, color_rgba32f
   return commit_state_and_command();
 }
 
-result renderer_impl::clear_depth_stencil(surface_ptr const &depth_stencil_target, uint32_t flag,
-                                          float d, uint32_t s) {
+result renderer_impl::clear_depth_stencil(surface_ptr const& depth_stencil_target,
+                                          uint32_t flag,
+                                          float d,
+                                          uint32_t s) {
   state_->clear_f = flag;
   state_->clear_z = d;
   state_->clear_stencil = s;
@@ -357,7 +373,7 @@ result renderer_impl::clear_depth_stencil(surface_ptr const &depth_stencil_targe
   return commit_state_and_command();
 }
 
-result renderer_impl::begin(async_object_ptr const &async_obj) {
+result renderer_impl::begin(async_object_ptr const& async_obj) {
   if (!async_obj->begin()) {
     return result::failed;
   }
@@ -373,7 +389,7 @@ result renderer_impl::begin(async_object_ptr const &async_obj) {
   return commit_state_and_command();
 }
 
-result renderer_impl::end(async_object_ptr const &async_obj) {
+result renderer_impl::end(async_object_ptr const& async_obj) {
   if (!async_obj->end()) {
     return result::failed;
   }
@@ -387,19 +403,21 @@ result renderer_impl::end(async_object_ptr const &async_obj) {
   return commit_state_and_command();
 }
 
-async_status renderer_impl::get_data(async_object_ptr const &async_obj, void *data,
-                                     bool do_not_wait) {
+async_status
+renderer_impl::get_data(async_object_ptr const& async_obj, void* data, bool do_not_wait) {
   return async_obj->get(data, do_not_wait);
 }
 
-result renderer_impl::map(mapped_resource &mapped, buffer_ptr const &buf, map_mode mm) {
+result renderer_impl::map(mapped_resource& mapped, buffer_ptr const& buf, map_mode mm) {
   return resource_pool_->map(mapped, buf, mm);
 }
 
-result renderer_impl::map(mapped_resource &mapped, surface_ptr const &surf, map_mode mm) {
+result renderer_impl::map(mapped_resource& mapped, surface_ptr const& surf, map_mode mm) {
   return resource_pool_->map(mapped, surf, mm);
 }
 
-result renderer_impl::unmap() { return resource_pool_->unmap(); }
+result renderer_impl::unmap() {
+  return resource_pool_->unmap();
+}
 
-} // namespace salvia::core
+}  // namespace salvia::core

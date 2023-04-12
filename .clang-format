@@ -76,7 +76,7 @@ IncludeCategories:
     Priority: 8
   - Regex: '^<'
     Priority: 9
-IndentCaseLabels: true
+IndentCaseLabels: false
 IndentGotoLabels: false
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: false

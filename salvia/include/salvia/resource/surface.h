@@ -20,21 +20,22 @@ class surface;
 using surface_ptr = std::shared_ptr<surface>;
 
 class surface {
-
 public:
   surface();
   surface(size_t width, size_t height, size_t num_samples, pixel_format pxfmt);
   ~surface();
 
-  result map(internal_mapped_resource &mapped, map_mode mm);
-  result unmap(internal_mapped_resource &mapped, map_mode mm);
+  result map(internal_mapped_resource& mapped, map_mode mm);
+  result unmap(internal_mapped_resource& mapped, map_mode mm);
 
-  void resolve(surface &target);
+  void resolve(surface& target);
   surface_ptr make_mip_surface(filter_type filter);
 
-  void transfer(pixel_format source_format, const eflib::rect<size_t> &dest_rect, void *pdata);
-  void transfer(const eflib::rect<size_t> &dest_rect, size_t src_start_x, size_t src_start_y,
-                surface &src_surf);
+  void transfer(pixel_format source_format, const eflib::rect<size_t>& dest_rect, void* pdata);
+  void transfer(const eflib::rect<size_t>& dest_rect,
+                size_t src_start_x,
+                size_t src_start_y,
+                surface& src_surf);
 
   size_t width() const { return size_[0]; }
 
@@ -48,19 +49,19 @@ public:
 
   pixel_format get_pixel_format() const { return format_; }
 
-  void *texel_address(size_t x, size_t y, size_t sample);
-  void const *texel_address(size_t x, size_t y, size_t sample) const;
+  void* texel_address(size_t x, size_t y, size_t sample);
+  void const* texel_address(size_t x, size_t y, size_t sample) const;
 
   color_rgba32f get_texel(size_t x, size_t y, size_t sample) const;
-  color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty,
-                          size_t sample) const;
-  void get_texel(void *color, size_t x, size_t y, size_t sample) const;
+  color_rgba32f
+  get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty, size_t sample) const;
+  void get_texel(void* color, size_t x, size_t y, size_t sample) const;
 
-  void set_texel(size_t x, size_t y, size_t sample, const color_rgba32f &color);
-  void set_texel(size_t x, size_t y, size_t sample, const void *color);
+  void set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color);
+  void set_texel(size_t x, size_t y, size_t sample, const void* color);
 
-  void fill(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f &color);
-  void fill(color_rgba32f const &color);
+  void fill(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);
+  void fill(color_rgba32f const& color);
 
 private:
   size_t elem_size_;
@@ -78,8 +79,8 @@ private:
   size_t texel_offset(size_t x, size_t y, size_t sample) const;
 
 #if SALVIA_TILED_SURFACE
-  void tile(internal_mapped_resource const &mapped);
-  void untile(internal_mapped_resource &mapped);
+  void tile(internal_mapped_resource const& mapped);
+  void untile(internal_mapped_resource& mapped);
 #endif
 
   pixel_format_convertor::pixel_convertor to_rgba32_func_;
@@ -90,4 +91,4 @@ private:
   pixel_format_convertor::pixel_lerp_2d lerp_2d_func_;
 };
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

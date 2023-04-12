@@ -1,16 +1,16 @@
 #include <salvia/utility/common/sample_app.h>
 
 #if defined(EFLIB_WINDOWS)
-#include <salvia/utility/win/win_gui.h>
+#  include <salvia/utility/win/win_gui.h>
 #endif
-#include <salvia/utility/common/window.h>
 #include <salvia/utility/common/gui.h>
+#include <salvia/utility/common/window.h>
 
 #include <salvia/ext/resource/texture/tex_io.h>
 
-#include <salvia/resource/texture.h>
 #include <salvia/core/async_renderer.h>
 #include <salvia/core/sync_renderer.h>
+#include <salvia/resource/texture.h>
 
 #include <fmt/format.h>
 
@@ -20,7 +20,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #if defined(EFLIB_WINDOWS)
-#include <Windows.h>
+#  include <Windows.h>
 #endif
 
 namespace po = boost::program_options;
@@ -43,12 +43,12 @@ std::string compiler_name() {
 #elif defined(BOOST_COMP_INTEL)
   s << "intel_" << BOOST_COMP_MSVC;
 #else
-#error "Unknown compiler."
+#  error "Unknown compiler."
 #endif
   return s.str();
 }
 
-sample_app::sample_app(std::string const &app_name) : data_(new sample_app_data) {
+sample_app::sample_app(std::string const& app_name) : data_(new sample_app_data) {
   data_->benchmark_name = app_name;
   data_->mode = app_modes::unknown;
   data_->quiting = false;
@@ -69,7 +69,7 @@ sample_app::~sample_app() {
   }
 }
 
-void sample_app::init(int argc, char *argv[]) {
+void sample_app::init(int argc, char* argv[]) {
   init_params(argc, argv);
 
   if (data_->runnable) {
@@ -86,19 +86,21 @@ void sample_app::init(int argc, char *argv[]) {
   }
 }
 
-void sample_app::init_params(int argc, char *argv[]) {
+void sample_app::init_params(int argc, char* argv[]) {
   cout << "Initialize with parameters ..." << endl;
 
   po::options_description opdesc("Sample parameters");
   opdesc.add_options()("help", "show help message")(
-      "mode,m", po::value<string>()->default_value("r"),
+      "mode,m",
+      po::value<string>()->default_value("r"),
       "mode should be one of: r - replay, i - interactive, b - benchmark or t - test.")(
-      "width,w", po::value<int>()->default_value(512),
+      "width,w",
+      po::value<int>()->default_value(512),
       "width of screen or back buffer. should be in 1 - 8192")(
-      "height,h", po::value<int>()->default_value(512),
+      "height,h",
+      po::value<int>()->default_value(512),
       "height of screen or back buffer. should be in 1 - 8192")(
-      "res-dir,r", po::value<string>()->default_value(".")
-      );
+      "res-dir,r", po::value<string>()->default_value("."));
 
   auto parsed = po::parse_command_line(argc, argv, opdesc);
 
@@ -119,18 +121,10 @@ void sample_app::init_params(int argc, char *argv[]) {
   }
 
   switch (mode_str[0]) {
-  case 'r':
-    data_->mode = app_modes::replay;
-    break;
-  case 'i':
-    data_->mode = app_modes::interactive;
-    break;
-  case 'b':
-    data_->mode = app_modes::benchmark;
-    break;
-  case 't':
-    data_->mode = app_modes::test;
-    break;
+  case 'r': data_->mode = app_modes::replay; break;
+  case 'i': data_->mode = app_modes::interactive; break;
+  case 'b': data_->mode = app_modes::benchmark; break;
+  case 't': data_->mode = app_modes::test; break;
   default:
     cout << "Error: argument for -m or --mode is incorrect. Please see help." << endl;
     data_->runnable = false;
@@ -172,7 +166,9 @@ void sample_app::init_params(int argc, char *argv[]) {
   data_->second_timer.restart();
 }
 
-void sample_app::create_devices_and_targets(size_t width, size_t height, size_t sample_count,
+void sample_app::create_devices_and_targets(size_t width,
+                                            size_t height,
+                                            size_t sample_count,
                                             salvia::pixel_format color_fmt,
                                             salvia::pixel_format ds_format) {
   if (data_->mode == app_modes::unknown) {
@@ -195,12 +191,10 @@ void sample_app::create_devices_and_targets(size_t width, size_t height, size_t 
   case app_modes::benchmark:
     // no gui node.
     break;
-  default:
-    ef_unreachable("incorrect app mode.");
-    return;
+  default: ef_unreachable("incorrect app mode."); return;
   };
 
-  void *wnd_handle = nullptr;
+  void* wnd_handle = nullptr;
   if (data_->gui) {
     data_->gui->create_window(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
@@ -219,28 +213,24 @@ void sample_app::create_devices_and_targets(size_t width, size_t height, size_t 
   renderer_parameters rparams = {width, height, sample_count, color_fmt, wnd_handle};
 
   renderer_types rtype = salvia::ext::renderer_none;
-  swap_chain_types sc_type = data_->gui ? salvia::ext::swap_chain_default : salvia::ext::swap_chain_none;
+  swap_chain_types sc_type =
+      data_->gui ? salvia::ext::swap_chain_default : salvia::ext::swap_chain_none;
 
   if (data_->is_sync_renderer.has_value()) {
-    rtype = data_->is_sync_renderer.value() ? salvia::ext::renderer_sync : salvia::ext::renderer_async;
+    rtype =
+        data_->is_sync_renderer.value() ? salvia::ext::renderer_sync : salvia::ext::renderer_async;
   } else {
     switch (data_->mode) {
     case app_modes::interactive:
     case app_modes::replay:
-    case app_modes::test:
-      rtype = salvia::ext::renderer_async;
-      break;
-    case app_modes::benchmark:
-      rtype = salvia::ext::renderer_sync;
-      break;
-    default:
-      ef_unreachable("incorrect app mode.");
-      return;
+    case app_modes::test: rtype = salvia::ext::renderer_async; break;
+    case app_modes::benchmark: rtype = salvia::ext::renderer_sync; break;
+    default: ef_unreachable("incorrect app mode."); return;
     }
   }
 
-  salviax_create_swap_chain_and_renderer(data_->swap_chain, data_->renderer, &rparams, rtype,
-                                         sc_type);
+  salviax_create_swap_chain_and_renderer(
+      data_->swap_chain, data_->renderer, &rparams, rtype, sc_type);
 
   if (!data_->renderer) {
     return;
@@ -366,9 +356,12 @@ void sample_app::draw_frame() {
   }
 }
 
-void sample_app::on_gui_idle() { draw_frame(); }
+void sample_app::on_gui_idle() {
+  draw_frame();
+}
 
-void sample_app::on_gui_draw() {}
+void sample_app::on_gui_draw() {
+}
 
 void sample_app::run() {
   if (!data_->runnable) {
@@ -412,7 +405,7 @@ void sample_app::quit() {
 }
 
 // Utilities
-void sample_app::profiling(std::string const &stage_name, std::function<void()> const &fn) {
+void sample_app::profiling(std::string const& stage_name, std::function<void()> const& fn) {
   if (data_->mode == app_modes::benchmark) {
     eflib::profiling_scope pscope(&data_->prof, stage_name, 0);
     fn();
@@ -421,14 +414,15 @@ void sample_app::profiling(std::string const &stage_name, std::function<void()> 
   }
 }
 
-void sample_app::save_frame(salvia::resource::surface_ptr const &surf) {
+void sample_app::save_frame(salvia::resource::surface_ptr const& surf) {
   stringstream ss;
   ss << data_->benchmark_name << "_" << data_->frame_count - 1 << ".png";
-  salvia::ext::resource::save_surface(data_->renderer.get(), surf, ss.str(),
-                                  pixel_format_color_bgra8);
+  salvia::ext::resource::save_surface(
+      data_->renderer.get(), surf, ss.str(), pixel_format_color_bgra8);
 }
 
-template <typename T> void min_max(T &in_out_min, T &in_out_max, T v) {
+template <typename T>
+void min_max(T& in_out_min, T& in_out_max, T v) {
   if (v < in_out_min) {
     in_out_min = v;
   } else if (v > in_out_max) {
@@ -437,8 +431,8 @@ template <typename T> void min_max(T &in_out_min, T &in_out_max, T v) {
 }
 
 template <typename ValueT, typename IterT, typename TransformT>
-void reduce_and_output(IterT beg, IterT end, TransformT trans, ptree &parent,
-                       std::string const &path) {
+void reduce_and_output(
+    IterT beg, IterT end, TransformT trans, ptree& parent, std::string const& path) {
   ValueT minv;
   ValueT maxv;
   ValueT total = 0;
@@ -483,64 +477,93 @@ void sample_app::save_profiling_result() {
   root.put("frames", data_->frame_count);
 
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_stat.cinvocations; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_stat.cinvocations; },
+      root,
       "async.pipeline_stat.cinvocations");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_stat.cprimitives; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_stat.cprimitives; },
+      root,
       "async.pipeline_stat.cprimitives");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_stat.ia_primitives; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_stat.ia_primitives; },
+      root,
       "async.pipeline_stat.ia_primitives");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_stat.ia_vertices; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_stat.ia_vertices; },
+      root,
       "async.pipeline_stat.ia_vertices");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_stat.vs_invocations; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_stat.vs_invocations; },
+      root,
       "async.pipeline_stat.vs_invocations");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_stat.ps_invocations; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_stat.ps_invocations; },
+      root,
       "async.pipeline_stat.ps_invocations");
 
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.internal_stat.backend_input_pixels; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.internal_stat.backend_input_pixels; },
+      root,
       "async.internal_stat.backend_input_pixels");
 
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.gather_vtx; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.gather_vtx; },
+      root,
       "async.pipeline_prof.gather_vtx");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.vtx_proc; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.vtx_proc; },
+      root,
       "async.pipeline_prof.vtx_proc");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.clipping; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.clipping; },
+      root,
       "async.pipeline_prof.clipping");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.compact_clip; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.compact_clip; },
+      root,
       "async.pipeline_prof.compact_clip");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.vp_trans; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.vp_trans; },
+      root,
       "async.pipeline_prof.vp_trans");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.tri_dispatch; }, root,
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.tri_dispatch; },
+      root,
       "async.pipeline_prof.tri_dispatch");
   reduce_and_output<uint64_t>(
-      data_->frame_profs.begin(), data_->frame_profs.end(),
-      [](frame_data const &v) { return v.pipeline_prof.ras; }, root, "async.pipeline_prof.ras");
+      data_->frame_profs.begin(),
+      data_->frame_profs.end(),
+      [](frame_data const& v) { return v.pipeline_prof.ras; },
+      root,
+      "async.pipeline_prof.ras");
 
   write_json(fmt::format("{}_Profiling.json", data_->benchmark_name), root);
 }
 
-}
+}  // namespace salvia::utility

@@ -15,4 +15,4 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
 renderer_ptr create_async_renderer();
 
-} // namespace salvia::core
+}  // namespace salvia::core

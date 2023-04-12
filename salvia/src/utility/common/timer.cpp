@@ -3,21 +3,30 @@
 
 namespace salvia::utility {
 
-timer::timer() { restart(); }
+timer::timer() {
+  restart();
+}
 
-void timer::restart() { start_time_ = current_time(); }
+void timer::restart() {
+  start_time_ = current_time();
+}
 
 double timer::elapsed() const {
   seconds sec = current_time() - start_time_;
   return sec.count();
 }
 
-timer::time_point timer::current_time() { return clock_type::now(); }
+timer::time_point timer::current_time() {
+  return clock_type::now();
+}
 
 fps_counter::fps_counter(float interval)
-    : elapsed_frame_(0), elapsed_seconds_(0), interval_(interval) {}
+  : elapsed_frame_(0)
+  , elapsed_seconds_(0)
+  , interval_(interval) {
+}
 
-bool fps_counter::on_frame(float &fps) {
+bool fps_counter::on_frame(float& fps) {
   elapsed_seconds_ += static_cast<float>(timer_.elapsed());
   ++elapsed_frame_;
   timer_.restart();
@@ -31,4 +40,4 @@ bool fps_counter::on_frame(float &fps) {
   return false;
 }
 
-}
+}  // namespace salvia::utility

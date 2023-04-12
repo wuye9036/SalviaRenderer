@@ -14,4 +14,4 @@ constexpr uint32_t MAX_RENDER_TARGET_HEIGHT = 8192;
 constexpr uint32_t MAX_SAMPLE_COUNT = 16;
 constexpr uint32_t SAMPLE_MASK = 0xFFFF;
 
-} // namespace salvia
+}  // namespace salvia

@@ -30,4 +30,4 @@ void texture_cube::gen_mipmap(filter_type filter, bool auto_gen) {
   }
 }
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

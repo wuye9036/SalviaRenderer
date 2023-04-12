@@ -29,4 +29,4 @@ public:
 
 renderer_ptr create_sync_renderer();
 
-} // namespace salvia::core
+}  // namespace salvia::core

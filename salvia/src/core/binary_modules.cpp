@@ -15,13 +15,17 @@ using std::vector;
 namespace salvia::core {
 
 namespace modules {
-static void (*compile_func)(shader_object_ptr &, shader_log_ptr &, string const &,
-                            shader_profile const &,
-                            vector<external_function_desc> const &) = nullptr;
-static void (*compile_from_file_func)(shader_object_ptr &, shader_log_ptr &, string const &,
-                                      shader_profile const &,
-                                      vector<external_function_desc> const &) = nullptr;
-static void (*create_host_func)(host_ptr &out) = nullptr;
+static void (*compile_func)(shader_object_ptr&,
+                            shader_log_ptr&,
+                            string const&,
+                            shader_profile const&,
+                            vector<external_function_desc> const&) = nullptr;
+static void (*compile_from_file_func)(shader_object_ptr&,
+                                      shader_log_ptr&,
+                                      string const&,
+                                      shader_profile const&,
+                                      vector<external_function_desc> const&) = nullptr;
+static void (*create_host_func)(host_ptr& out) = nullptr;
 
 static shared_ptr<dynamic_lib> host_lib;
 
@@ -32,7 +36,7 @@ static void load_function() {
   dll_name = "sasl_host";
 #elif defined(EFLIB_MINGW) || defined(EFLIB_GCC) || defined(EFLIB_CLANG)
   dll_name = "libsasl_host";
-#endif // defined
+#endif  // defined
 
 #ifdef EFLIB_DEBUG
   dll_name += "_d";
@@ -42,7 +46,7 @@ static void load_function() {
 #elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
   dll_name += ".so";
 #else
-#error "Unknown system."
+#  error "Unknown system."
 #endif
 
   host_lib = dynamic_lib::load(dll_name);
@@ -51,8 +55,11 @@ static void load_function() {
   host_lib->get_function(create_host_func, "salvia_create_host");
 }
 
-void host::compile(shader_object_ptr &obj, shader_log_ptr &log, string const &code,
-                   shader_profile const &prof, vector<external_function_desc> const &funcs) {
+void host::compile(shader_object_ptr& obj,
+                   shader_log_ptr& log,
+                   string const& code,
+                   shader_profile const& prof,
+                   vector<external_function_desc> const& funcs) {
   if (!compile_func) {
     load_function();
   }
@@ -63,9 +70,11 @@ void host::compile(shader_object_ptr &obj, shader_log_ptr &log, string const &co
   compile_func(obj, log, code, prof, funcs);
 }
 
-void host::compile_from_file(shader_object_ptr &obj, shader_log_ptr &log, string const &file_name,
-                             shader_profile const &prof,
-                             vector<external_function_desc> const &funcs) {
+void host::compile_from_file(shader_object_ptr& obj,
+                             shader_log_ptr& log,
+                             string const& file_name,
+                             shader_profile const& prof,
+                             vector<external_function_desc> const& funcs) {
   if (!compile_from_file_func) {
     load_function();
   }
@@ -88,5 +97,5 @@ host_ptr host::create_host() {
 
   return ret;
 }
-} // namespace modules
-} // namespace salvia::core
+}  // namespace modules
+}  // namespace salvia::core

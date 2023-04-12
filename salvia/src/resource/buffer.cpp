@@ -6,7 +6,7 @@
 
 namespace salvia::resource {
 
-result buffer::map(internal_mapped_resource &mapped, map_mode mm) {
+result buffer::map(internal_mapped_resource& mapped, map_mode mm) {
   switch (mm) {
   case map_read:
     mapped.data = mapped.reallocator(data_.size());
@@ -15,12 +15,8 @@ result buffer::map(internal_mapped_resource &mapped, map_mode mm) {
   case map_read_write:
   case map_write_no_overwrite:
   case map_write_discard:
-  case map_write:
-    mapped.data = data_.data();
-    break;
-  default:
-    ef_unreachable("Unknown map mode.");
-    return result::failed;
+  case map_write: mapped.data = data_.data(); break;
+  default: ef_unreachable("Unknown map mode."); return result::failed;
   }
 
   mapped.depth_pitch = mapped.row_pitch = static_cast<uint32_t>(size());
@@ -28,21 +24,27 @@ result buffer::map(internal_mapped_resource &mapped, map_mode mm) {
   return result::ok;
 }
 
-result buffer::unmap(internal_mapped_resource & /*mapped*/, map_mode /*mm*/) {
+result buffer::unmap(internal_mapped_resource& /*mapped*/, map_mode /*mm*/) {
   // No intermediate buffer needed in linear mode.
   return result::ok;
 }
 
-void buffer::transfer(size_t offset, void const *psrcdata, size_t sz, size_t count) {
-  EFLIB_ASSERT_AND_IF(offset + sz * count <= size(), "Out of boundary of buffer.") { return; }
+void buffer::transfer(size_t offset, void const* psrcdata, size_t sz, size_t count) {
+  EFLIB_ASSERT_AND_IF(offset + sz * count <= size(), "Out of boundary of buffer.") {
+    return;
+  }
 
-  uint8_t *dest = raw_data(offset);
+  uint8_t* dest = raw_data(offset);
 
   memcpy(dest, psrcdata, sz * count);
 }
 
-void buffer::transfer(size_t offset, void const *psrcdata, size_t stride_dest, size_t stride_src,
-                      size_t sz, size_t count) {
+void buffer::transfer(size_t offset,
+                      void const* psrcdata,
+                      size_t stride_dest,
+                      size_t stride_src,
+                      size_t sz,
+                      size_t count) {
   EFLIB_ASSERT_AND_IF(offset + stride_dest * (count - 1) + sz <= size(), "Out of buffer.") {
     return;
   }
@@ -62,4 +64,4 @@ void buffer::transfer(size_t offset, void const *psrcdata, size_t stride_dest, s
   }
 }
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

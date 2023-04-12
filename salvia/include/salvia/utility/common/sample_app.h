@@ -27,10 +27,10 @@ class gui;
 
 enum class app_modes {
   unknown,
-  benchmark,   // Run as benchmark. It will generate some benchmark results.
-  test,        // Run as regression test. It will generate final frames as image file for test.
-  interactive, // Interactive mode.
-  replay,      // Play mode.
+  benchmark,    // Run as benchmark. It will generate some benchmark results.
+  test,         // Run as regression test. It will generate final frames as image file for test.
+  interactive,  // Interactive mode.
+  replay,       // Play mode.
   count
 };
 
@@ -60,7 +60,7 @@ public:
   std::optional<bool> is_sync_renderer;
   salvia::ext::swap_chain_types sc_type;
 
-  salvia::utility::gui *gui;
+  salvia::utility::gui* gui;
   salvia::core::renderer_ptr renderer;
   salvia::ext::swap_chain_ptr swap_chain;
   salvia::resource::surface_ptr color_target;
@@ -79,7 +79,7 @@ public:
 
   std::vector<frame_data> frame_profs;
   quit_conditions quit_cond;
-  uint32_t quit_cond_data; // frame count or millisecond.
+  uint32_t quit_cond_data;  // frame count or millisecond.
   bool runnable;
   bool quiting;
   timer frame_timer;
@@ -89,18 +89,21 @@ public:
 
 class SALVIA_UTILITY_API sample_app {
 public:
-  explicit sample_app(std::string const &app_name);
+  explicit sample_app(std::string const& app_name);
   virtual ~sample_app();
 
   // Called by client
   void run();
-  void init(int argc, char *argv[]);
+  void init(int argc, char* argv[]);
 
 protected:
-  virtual void profiling(std::string const &stage_name, std::function<void()> const &fn);
+  virtual void profiling(std::string const& stage_name, std::function<void()> const& fn);
 
-  void create_devices_and_targets(size_t width, size_t height, size_t sample_count,
-                                  salvia::pixel_format color_fmt, salvia::pixel_format ds_format);
+  void create_devices_and_targets(size_t width,
+                                  size_t height,
+                                  size_t sample_count,
+                                  salvia::pixel_format color_fmt,
+                                  salvia::pixel_format ds_format);
 
   void quit_at_frame(uint32_t frame_cnt);
   void quit_if_time_out(uint32_t milli_sec);
@@ -115,14 +118,14 @@ protected:
   std::unique_ptr<sample_app_data> data_;
 
 private:
-  void init_params(int argc, char *argv[]);
+  void init_params(int argc, char* argv[]);
   void draw_frame();
 
-  virtual void save_frame(salvia::resource::surface_ptr const &surf);
+  virtual void save_frame(salvia::resource::surface_ptr const& surf);
   virtual void save_profiling_result();
 
   void on_gui_idle();
   void on_gui_draw();
 };
 
-}
+}  // namespace salvia::utility

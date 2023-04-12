@@ -27,9 +27,16 @@ struct raster_desc {
   bool anti_aliased_line_enable;
 
   raster_desc()
-      : fm(fill_solid), cm(cull_back), front_ccw(false), depth_bias(0), depth_bias_clamp(0),
-        slope_scaled_depth_bias(0), depth_clip_enable(true), scissor_enable(false),
-        multisample_enable(true), anti_aliased_line_enable(false) {}
+    : fm(fill_solid)
+    , cm(cull_back)
+    , front_ccw(false)
+    , depth_bias(0)
+    , depth_bias_clamp(0)
+    , slope_scaled_depth_bias(0)
+    , depth_clip_enable(true)
+    , scissor_enable(false)
+    , multisample_enable(true)
+    , anti_aliased_line_enable(false) {}
 };
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(clipper);
@@ -51,13 +58,13 @@ private:
   prim_type prim_;
 
 public:
-  raster_state(raster_desc const &desc);
+  raster_state(raster_desc const& desc);
 
-  inline raster_desc const &get_desc() const { return desc_; }
+  inline raster_desc const& get_desc() const { return desc_; }
 
   inline cull_func get_cull_func() const { return cull_; }
 
   inline bool cull(float area) const { return cull_(area); }
 };
 
-} // namespace salvia::core
+}  // namespace salvia::core

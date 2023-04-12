@@ -13,12 +13,11 @@
 #    define EF_CLANG_BUILTIN_COLUMN() 0
 #  endif
 namespace std {
-struct source_location { // NOLINT
-  static constexpr source_location
-  current(const char* f = __builtin_FILE(),
-          const char* fn = __builtin_FUNCTION(),
-          uint_least32_t l = __builtin_LINE(),
-          uint_least32_t c = EF_CLANG_BUILTIN_COLUMN()) noexcept {
+struct source_location {  // NOLINT
+  static constexpr source_location current(const char* f = __builtin_FILE(),
+                                           const char* fn = __builtin_FUNCTION(),
+                                           uint_least32_t l = __builtin_LINE(),
+                                           uint_least32_t c = EF_CLANG_BUILTIN_COLUMN()) noexcept {
     source_location location;
     location.file_ = f;
     location.func_ = fn;

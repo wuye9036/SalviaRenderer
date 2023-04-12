@@ -12,7 +12,7 @@
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(texture);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
-}
+}  // namespace salvia::resource
 
 namespace salvia::shader {
 
@@ -28,21 +28,21 @@ struct shader_cdata {
 
 class shader_cbuffer {
 public:
-  virtual void set_sampler(std::string_view name, resource::sampler_ptr const &samp);
-  virtual void set_variable(std::string_view name, void const *data, size_t data_length);
+  virtual void set_sampler(std::string_view name, resource::sampler_ptr const& samp);
+  virtual void set_variable(std::string_view name, void const* data, size_t data_length);
 
-  auto const &variables() const { return variables_; }
+  auto const& variables() const { return variables_; }
 
-  auto const &samplers() const { return samplers_; }
+  auto const& samplers() const { return samplers_; }
 
-  void const *data_pointer(shader_cdata const &cdata) const {
+  void const* data_pointer(shader_cdata const& cdata) const {
     if (cdata.length == 0) {
       return nullptr;
     }
     return data_memory_.data() + cdata.offset;
   }
 
-  void copy_from(shader_cbuffer const *src) { *this = *src; }
+  void copy_from(shader_cbuffer const* src) { *this = *src; }
 
   virtual ~shader_cbuffer() {}
 
@@ -53,4 +53,4 @@ private:
   std::vector<resource::texture_ptr> textures_;
 };
 
-} // namespace salvia::shader
+}  // namespace salvia::shader

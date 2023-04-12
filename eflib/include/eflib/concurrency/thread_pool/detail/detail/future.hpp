@@ -124,9 +124,9 @@ public:
 template <template <typename> class Future, typename Function>
 class future_impl_task_func {
 public:
-  typedef void result_type;  //!< Indicates the functor's result type.
+  typedef void result_type;                        //!< Indicates the functor's result type.
 
-  typedef Function function_type;  //!< Indicates the function's type.
+  typedef Function function_type;                  //!< Indicates the function's type.
   typedef typename result_of<function_type()>::type
       future_result_type;                          //!< Indicates the future's result type.
   typedef Future<future_result_type> future_type;  //!< Indicates the future's type.

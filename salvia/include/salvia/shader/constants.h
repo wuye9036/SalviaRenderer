@@ -38,9 +38,9 @@ enum system_values {
 
 class semantic_value {
 public:
-  static constexpr std::string lower_copy(std::string const &name) {
+  static constexpr std::string lower_copy(std::string const& name) {
     std::string ret(name);
-    for (auto &ch : ret) {
+    for (auto& ch : ret) {
       if ('A' <= ch && ch <= 'Z') {
         ch -= ('A' - 'a');
       }
@@ -51,7 +51,7 @@ public:
 
   constexpr semantic_value() : sv(sv_none), index(0) {}
 
-  constexpr explicit semantic_value(std::string const &name, uint32_t index = 0) {
+  constexpr explicit semantic_value(std::string const& name, uint32_t index = 0) {
     assert(!name.empty());
 
     std::string lower_name = lower_copy(name);
@@ -85,23 +85,26 @@ public:
     this->index = index;
   }
 
-  constexpr std::string const &get_name() const { return name; }
+  constexpr std::string const& get_name() const { return name; }
 
   constexpr system_values get_system_value() const { return sv; }
 
   constexpr uint32_t get_index() const { return index; }
 
-  constexpr bool operator<(semantic_value const &rhs) const {
+  constexpr bool operator<(semantic_value const& rhs) const {
     return sv < rhs.sv || name < rhs.name || index < rhs.index;
   }
 
-  constexpr bool operator==(semantic_value const &rhs) const {
+  constexpr bool operator==(semantic_value const& rhs) const {
     return is_same_sv(rhs) && index == rhs.index;
   }
 
   constexpr bool operator==(system_values rhs) const { return sv == rhs && index == 0; }
 
-  template <typename T> bool operator!=(T const &v) const { return *this != v; }
+  template <typename T>
+  bool operator!=(T const& v) const {
+    return *this != v;
+  }
 
   [[nodiscard]] semantic_value advance_index(size_t i) const {
     semantic_value ret;
@@ -120,7 +123,7 @@ private:
   system_values sv;
   uint32_t index;
 
-  [[nodiscard]] constexpr bool is_same_sv(semantic_value const &rhs) const noexcept {
+  [[nodiscard]] constexpr bool is_same_sv(semantic_value const& rhs) const noexcept {
     if (sv != rhs.sv)
       return false;
     if (sv == sv_customized)
@@ -138,10 +141,11 @@ enum interpolation_modifiers {
   im_sample = 1UL << 4
 };
 
-} // namespace salvia::shader
+}  // namespace salvia::shader
 
-template <> struct std::hash<salvia::shader::semantic_value> {
-  constexpr size_t operator()(salvia::shader::semantic_value const &sv) const noexcept {
+template <>
+struct std::hash<salvia::shader::semantic_value> {
+  constexpr size_t operator()(salvia::shader::semantic_value const& sv) const noexcept {
     size_t seed = sv.get_index();
     if (sv.get_system_value() != salvia::shader::sv_customized) {
       eflib::hash_combine(seed, static_cast<size_t>(sv.get_system_value()));
@@ -151,5 +155,3 @@ template <> struct std::hash<salvia::shader::semantic_value> {
     return seed;
   }
 };
-
-

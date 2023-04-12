@@ -5,7 +5,7 @@
 namespace salvia::resource {
 
 template <typename T>
-result resource_manager::map_impl(mapped_resource &mapped, T const &res, map_mode mm) {
+result resource_manager::map_impl(mapped_resource& mapped, T const& res, map_mode mm) {
   if (!res) {
     return result::invalid_parameter;
   }
@@ -15,12 +15,11 @@ result resource_manager::map_impl(mapped_resource &mapped, T const &res, map_mod
   }
 
   switch (mm) {
-  case map_mode_none:
-    return result::failed;
+  case map_mode_none: return result::failed;
 
   case map_read:
   case map_read_write:
-    renderer_sync_(); // Mapping when renderer is flushed.
+    renderer_sync_();  // Mapping when renderer is flushed.
     break;
 
   case map_write:
@@ -40,9 +39,7 @@ result resource_manager::map_impl(mapped_resource &mapped, T const &res, map_mod
   if (mapped_resource_.data == mapped_data_.data()) {
     switch (mm) {
     case map_write:
-    case map_write_discard:
-      renderer_sync_();
-      break;
+    case map_write_discard: renderer_sync_(); break;
     default:
       // Do nothing.
       break;
@@ -56,7 +53,7 @@ result resource_manager::map_impl(mapped_resource &mapped, T const &res, map_mod
   return ret;
 }
 
-result resource_manager::map(mapped_resource &mapped, buffer_ptr const &buf, map_mode mm) {
+result resource_manager::map(mapped_resource& mapped, buffer_ptr const& buf, map_mode mm) {
   result ret = map_impl(mapped, buf, mm);
   if (ret == result::ok) {
     mapped_buf_ = buf;
@@ -64,7 +61,7 @@ result resource_manager::map(mapped_resource &mapped, buffer_ptr const &buf, map
   return ret;
 }
 
-result resource_manager::map(mapped_resource &mapped, surface_ptr const &surf, map_mode mm) {
+result resource_manager::map(mapped_resource& mapped, surface_ptr const& surf, map_mode mm) {
   result ret = map_impl(mapped, surf, mm);
   if (ret == result::ok) {
     mapped_surf_ = surf;
@@ -81,7 +78,7 @@ result resource_manager::unmap() {
     switch (map_mode_) {
     case map_write:
     case map_write_discard:
-      renderer_sync_(); // Sync for actual write.
+      renderer_sync_();  // Sync for actual write.
       break;
     default:
       // do nothing.
@@ -102,7 +99,7 @@ result resource_manager::unmap() {
   return result::ok;
 }
 
-void *resource_manager::reallocate_buffer(size_t sz) {
+void* resource_manager::reallocate_buffer(size_t sz) {
   assert(sz > 0);
 
   if (sz <= 0) {
@@ -116,4 +113,4 @@ void *resource_manager::reallocate_buffer(size_t sz) {
   return mapped_data_.data();
 }
 
-} // namespace salvia::resource
+}  // namespace salvia::resource

@@ -97,9 +97,9 @@ private:  // The following members are accessed only by _one_ thread at the same
 
   bool m_terminate_all_workers;  // Indicates if termination of all workers was triggered.
   std::vector<shared_ptr<worker_type>>
-      m_terminated_workers;  // List of workers which are terminated but not fully destructed.
+      m_terminated_workers;      // List of workers which are terminated but not fully destructed.
 
-private:  // The following members are implemented thread-safe:
+private:                         // The following members are implemented thread-safe:
   mutable recursive_mutex m_monitor;
   mutable condition_variable_any
       m_worker_idle_or_terminated_event;  // A worker is idle or was terminated.
@@ -278,7 +278,7 @@ private:
         m_active_worker_count++;
         return true;
       }
-    } else {  // decrease worker count
+    } else {              // decrease worker count
       lockedThis->m_task_or_terminate_workers_event
           .notify_all();  // TODO: Optimize number of notified workers
     }

@@ -5,6 +5,6 @@
 
 namespace salvia::core {
 
-eflib::thread_pool &global_thread_pool();
+eflib::thread_pool& global_thread_pool();
 
 }

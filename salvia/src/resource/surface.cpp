@@ -14,8 +14,10 @@ const size_t TILE_MASK = TILE_SIZE - 1;
 #endif
 
 surface::surface(size_t w, size_t h, size_t samp_count, pixel_format fmt)
-    : elem_size_(color_infos[fmt].size), sample_count_(samp_count),
-      size_(static_cast<int>(w), static_cast<int>(h), 1, 0), format_(fmt) {
+  : elem_size_(color_infos[fmt].size)
+  , sample_count_(samp_count)
+  , size_(static_cast<int>(w), static_cast<int>(h), 1, 0)
+  , format_(fmt) {
 #if SALVIA_TILED_SURFACE
   tile_size_[0] = (width + TILE_SIZE - 1) >> TILE_BITS;
   tile_size_[1] = (height + TILE_SIZE - 1) >> TILE_BITS;
@@ -27,7 +29,7 @@ surface::surface(size_t w, size_t h, size_t samp_count, pixel_format fmt)
 
   if (tile_mode_) {
     data_.resize(tile_size_[0] * tile_size_[1] * TILE_SIZE * TILE_SIZE * sample_count_ *
-                  elem_size_);
+                 elem_size_);
   } else {
     data_.resize(size_[0] * size_[1] * sample_count_ * elem_size_);
   }
@@ -70,9 +72,10 @@ surface_ptr surface::make_mip_surface(filter_type filter) {
     for (size_t y = 0; y < mip_h; ++y) {
       for (size_t x = 0; x < mip_w; ++x) {
         for (size_t s = 0; s < sample_count_; ++s) {
-          color_rgba32f c[4] = {
-              get_texel(x * 2 + 0, y * 2 + 0, s), get_texel(x * 2 + 1, y * 2 + 0, s),
-              get_texel(x * 2 + 0, y * 2 + 1, s), get_texel(x * 2 + 1, y * 2 + 1, s)};
+          color_rgba32f c[4] = {get_texel(x * 2 + 0, y * 2 + 0, s),
+                                get_texel(x * 2 + 1, y * 2 + 0, s),
+                                get_texel(x * 2 + 0, y * 2 + 1, s),
+                                get_texel(x * 2 + 1, y * 2 + 1, s)};
 
           color_rgba32f dst_color(
               (c[0].get_vec4() + c[1].get_vec4() + c[2].get_vec4() + c[3].get_vec4()) * 0.25);
@@ -82,14 +85,13 @@ surface_ptr surface::make_mip_surface(filter_type filter) {
     }
     break;
 
-  default:
-    ef_unreachable("filter mode is invalid for make mipmap.");
+  default: ef_unreachable("filter mode is invalid for make mipmap.");
   }
 
   return ret;
 }
 
-result surface::map(internal_mapped_resource &mapped, map_mode mm) {
+result surface::map(internal_mapped_resource& mapped, map_mode mm) {
 #if SALVIA_TILED_SURFACE
   // Unimplemented
   this->untile(mapped_data_);
@@ -102,12 +104,8 @@ result surface::map(internal_mapped_resource &mapped, map_mode mm) {
   case map_read_write:
   case map_write_no_overwrite:
   case map_write_discard:
-  case map_write:
-    mapped.data = data_.data();
-    break;
-  default:
-    ef_unreachable("Unrecognized map mode.");
-    break;
+  case map_write: mapped.data = data_.data(); break;
+  default: ef_unreachable("Unrecognized map mode."); break;
   }
 
   mapped.row_pitch = static_cast<uint32_t>(pitch());
@@ -117,12 +115,12 @@ result surface::map(internal_mapped_resource &mapped, map_mode mm) {
 #endif
 }
 
-result surface::unmap(internal_mapped_resource & /*mapped*/, map_mode /*mm*/) {
+result surface::unmap(internal_mapped_resource& /*mapped*/, map_mode /*mm*/) {
   // No intermediate buffer needed in linear mode.
   return result::ok;
 }
 
-void surface::resolve(surface &target) {
+void surface::resolve(surface& target) {
   EF_ASSERT(1 == target.sample_count(), "Resolve's target can't be a multi-sample surface");
 
   color_rgba32f clr;
@@ -147,28 +145,29 @@ color_rgba32f surface::get_texel(size_t x, size_t y, size_t sample) const {
   return color;
 }
 
-void surface::get_texel(void *color, size_t x, size_t y, size_t sample) const {
+void surface::get_texel(void* color, size_t x, size_t y, size_t sample) const {
   memcpy(color, texel_address(x, y, sample), elem_size_);
 }
 
-color_rgba32f surface::get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty,
-                                 size_t sample) const {
-  void const *addrs[] = {texel_address(x0, y0, sample), texel_address(x1, y0, sample),
-                         texel_address(x0, y1, sample), texel_address(x1, y1, sample)};
+color_rgba32f surface::get_texel(
+    size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty, size_t sample) const {
+  void const* addrs[] = {texel_address(x0, y0, sample),
+                         texel_address(x1, y0, sample),
+                         texel_address(x0, y1, sample),
+                         texel_address(x1, y1, sample)};
 
   return lerp_2d_func_(addrs[0], addrs[1], addrs[2], addrs[3], tx, ty);
 }
 
-void surface::set_texel(size_t x, size_t y, size_t sample, const color_rgba32f &color) {
+void surface::set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color) {
   from_rgba32_func_(texel_address(x, y, sample), &color);
 }
 
-void surface::set_texel(size_t x, size_t y, size_t sample, const void *color) {
+void surface::set_texel(size_t x, size_t y, size_t sample, const void* color) {
   memcpy(texel_address(x, y, sample), color, elem_size_);
 }
 
-void surface::fill(size_t sx, size_t sy, size_t width, size_t height,
-                          const color_rgba32f &color) {
+void surface::fill(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color) {
   uint8_t pix_clr[4 * 4 * sizeof(float)];
   from_rgba32_func_(pix_clr, &color);
 
@@ -181,7 +180,8 @@ void surface::fill(size_t sx, size_t sy, size_t width, size_t height,
         }
       }
       for (uint32_t y = 1; y < TILE_SIZE; ++y) {
-        memcpy(&data_[this->texel_offset(0, y, 0)], &data_[this->texel_offset(0, 0, 0)],
+        memcpy(&data_[this->texel_offset(0, y, 0)],
+               &data_[this->texel_offset(0, 0, 0)],
                TILE_SIZE * sample_count_ * elem_size_);
       }
       for (uint32_t tx = 1; tx < tile_size_[0]; ++tx) {
@@ -203,12 +203,14 @@ void surface::fill(size_t sx, size_t sy, size_t width, size_t height,
       {
         for (size_t x = begin_x_in_tile; x < TILE_SIZE; ++x) {
           for (size_t s = 0; s < sample_count_; ++s) {
-            memcpy(&data_[this->texel_offset((begin_tile_x << TILE_BITS) + x, sy, s)], pix_clr,
+            memcpy(&data_[this->texel_offset((begin_tile_x << TILE_BITS) + x, sy, s)],
+                   pix_clr,
                    elem_size_);
           }
         }
         for (size_t y = sy + 1; y < sy + height; ++y) {
-          memcpy(&data_[this->texel_offset(sx, y, 0)], &data_[this->texel_offset(sx, sy, 0)],
+          memcpy(&data_[this->texel_offset(sx, y, 0)],
+                 &data_[this->texel_offset(sx, sy, 0)],
                  (TILE_SIZE - begin_x_in_tile) * sample_count_ * elem_size_);
         }
       }
@@ -229,7 +231,8 @@ void surface::fill(size_t sx, size_t sy, size_t width, size_t height,
       {
         for (size_t x = 0; x < end_x_in_tile; ++x) {
           for (size_t s = 0; s < sample_count_; ++s) {
-            memcpy(&data_[this->texel_offset((end_tile_x << TILE_BITS) + x, sy, s)], pix_clr,
+            memcpy(&data_[this->texel_offset((end_tile_x << TILE_BITS) + x, sy, s)],
+                   pix_clr,
                    elem_size_);
           }
         }
@@ -243,8 +246,7 @@ void surface::fill(size_t sx, size_t sy, size_t width, size_t height,
   } else {
     for (size_t x = sx; x < sx + width; ++x) {
       for (size_t s = 0; s < sample_count_; ++s) {
-        memcpy(&data_[((size_[0] * sy + x) * sample_count_ + s) * elem_size_], pix_clr,
-               elem_size_);
+        memcpy(&data_[((size_[0] * sy + x) * sample_count_ + s) * elem_size_], pix_clr, elem_size_);
       }
     }
     for (size_t y = sy + 1; y < sy + height; ++y) {
@@ -268,7 +270,8 @@ void surface::fill(size_t sx, size_t sy, size_t width, size_t height,
 #endif
 }
 
-void surface::fill(color_rgba32f const &color) { fill(0, 0, size_[0], size_[1], color);
+void surface::fill(color_rgba32f const& color) {
+  fill(0, 0, size_[0], size_[1], color);
 }
 
 size_t surface::texel_offset(size_t x, size_t y, size_t sample) const {
@@ -282,7 +285,7 @@ size_t surface::texel_offset(size_t x, size_t y, size_t sample) const {
              (y_in_tile * TILE_SIZE + x_in_tile)) *
                 sample_count_ +
             sample) *
-           elem_size_;
+        elem_size_;
   } else {
     return ((y * size_[0] + x) * sample_count_ + sample) * elem_size_;
   }
@@ -292,7 +295,7 @@ size_t surface::texel_offset(size_t x, size_t y, size_t sample) const {
 }
 
 #if SALVIA_TILED_SURFACE
-void surface::tile(internal_mapped_resource const &mapped) {
+void surface::tile(internal_mapped_resource const& mapped) {
   if (tile_mode_) {
     for (size_t ty = 0; ty < tile_size_[1]; ++ty) {
       const size_t by = ty << TILE_BITS;
@@ -313,7 +316,7 @@ void surface::tile(internal_mapped_resource const &mapped) {
   }
 }
 
-void surface::untile(std::vector<byte> &untile_data) {
+void surface::untile(std::vector<byte>& untile_data) {
   if (tile_mode_) {
     for (size_t ty = 0; ty < tile_size_[1]; ++ty) {
       const size_t by = ty << TILE_BITS;
@@ -336,11 +339,11 @@ void surface::untile(std::vector<byte> &untile_data) {
 
 #endif
 
-void *surface::texel_address(size_t x, size_t y, size_t sample) {
-  return reinterpret_cast<void *>(data_.data() + texel_offset(x, y, sample));
+void* surface::texel_address(size_t x, size_t y, size_t sample) {
+  return reinterpret_cast<void*>(data_.data() + texel_offset(x, y, sample));
 }
 
-void const *surface::texel_address(size_t x, size_t y, size_t sample) const {
-  return reinterpret_cast<void const *>(data_.data() + texel_offset(x, y, sample));
+void const* surface::texel_address(size_t x, size_t y, size_t sample) const {
+  return reinterpret_cast<void const*>(data_.data() + texel_offset(x, y, sample));
 }
-} // namespace salvia::resource
+}  // namespace salvia::resource

@@ -44,13 +44,13 @@ struct obj_mesh_vertex {
   vec4 normal;
 };
 
-int peek(FILE *f) {
+int peek(FILE* f) {
   int ch = fgetc(f);
   ungetc(ch, f);
   return ch;
 }
 
-void ignore(FILE *f, int max_count, char delim) {
+void ignore(FILE* f, int max_count, char delim) {
   int cur = 0;
   while (!feof(f) && cur++ < max_count) {
     int ch = fgetc(f);
@@ -60,9 +60,10 @@ void ignore(FILE *f, int max_count, char delim) {
   }
 }
 
-bool load_material(renderer *rend, vector<obj_material> &mtls, string const &mtl_file,
-                   path const &base_path) {
-
+bool load_material(renderer* rend,
+                   vector<obj_material>& mtls,
+                   string const& mtl_file,
+                   path const& base_path) {
   std::string mtl_fullpath = (base_path / mtl_file).string();
 
   ifstream mtlf(mtl_fullpath.c_str());
@@ -71,7 +72,7 @@ bool load_material(renderer *rend, vector<obj_material> &mtls, string const &mtl
 
   std::string cmd;
 
-  obj_material *pmtl = nullptr;
+  obj_material* pmtl = nullptr;
   for (;;) {
     mtlf >> cmd;
     if (!mtlf) {
@@ -137,10 +138,14 @@ bool load_material(renderer *rend, vector<obj_material> &mtls, string const &mtl
   return true;
 }
 
-bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &verts,
-                     vector<uint32_t> &indices, vector<uint32_t> &attrs, vector<obj_material> &mtls,
+bool load_obj_mesh_c(renderer* r,
+                     string const& fname,
+                     vector<obj_mesh_vertex>& verts,
+                     vector<uint32_t>& indices,
+                     vector<uint32_t>& attrs,
+                     vector<obj_material>& mtls,
                      bool flip_tex_v) {
-  FILE *objf = fopen(fname.c_str(), "r");
+  FILE* objf = fopen(fname.c_str(), "r");
   if (!objf) {
     return false;
   }
@@ -148,8 +153,8 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
   int const BUFFER_SIZE = 2048;
   vector<char> obj_cmd_data(BUFFER_SIZE);
   vector<char> mtl_fname_data(BUFFER_SIZE);
-  char *obj_cmd = &(obj_cmd_data[0]);
-  char *mtl_fname = &(mtl_fname_data[0]);
+  char* obj_cmd = &(obj_cmd_data[0]);
+  char* mtl_fname = &(mtl_fname_data[0]);
   vector<vec4> positions;
   vector<vec4> uvs;
   vector<vec4> normals;
@@ -169,7 +174,7 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
       break;
     }
     if (obj_cmd[0] == '#') {
-      ; // Comment
+      ;  // Comment
     } else if (strncmp(obj_cmd, "v", BUFFER_SIZE) == 0) {
       float x = 0.0f, y = 0.0f, z = 0.0f;
       fscanf(objf, "%f %f %f", &x, &y, &z);
@@ -183,7 +188,6 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
       fscanf(objf, "%f %f %f", &x, &y, &z);
       normals.push_back(vec4(x, y, z, 0.0f));
     } else if (strncmp(obj_cmd, "f", BUFFER_SIZE) == 0) {
-
       uint32_t pos_index = 0, texcoord_index = 0, normal_index = 0;
       obj_mesh_vertex vert;
 
@@ -225,12 +229,12 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
       fscanf(objf, "%s", mtl_fname);
     } else if (strncmp(obj_cmd, "usemtl", BUFFER_SIZE) == 0) {
       vector<char> name_data(BUFFER_SIZE);
-      char *name = &(name_data[0]);
+      char* name = &(name_data[0]);
       fscanf(objf, "%s", name);
 
       bool found = false;
       for (size_t mtl_index = 0; mtl_index < mtls.size(); ++mtl_index) {
-        obj_material *pmtl = &mtls[mtl_index];
+        obj_material* pmtl = &mtls[mtl_index];
         if (pmtl->name == name) {
           found = true;
           subset = static_cast<uint32_t>(mtl_index);
@@ -245,7 +249,7 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
       }
 
     } else {
-      ; // Unrecognized command
+      ;  // Unrecognized command
     }
 
     ignore(objf, 65536, '\n');
@@ -260,8 +264,12 @@ bool load_obj_mesh_c(renderer *r, string const &fname, vector<obj_mesh_vertex> &
   return true;
 }
 
-bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &verts,
-                   vector<uint32_t> &indices, vector<uint32_t> &attrs, vector<obj_material> &mtls,
+bool load_obj_mesh(renderer* r,
+                   string const& fname,
+                   vector<obj_mesh_vertex>& verts,
+                   vector<uint32_t>& indices,
+                   vector<uint32_t>& attrs,
+                   vector<obj_material>& mtls,
                    bool flip_tex_v) {
   ifstream objf(fname.c_str());
 
@@ -290,7 +298,7 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
       break;
     }
     if (obj_cmd == "#") {
-      ; // Comment
+      ;  // Comment
     } else if (obj_cmd == "v") {
       float x = 0.0f, y = 0.0f, z = 0.0f;
       objf >> x >> y >> z;
@@ -304,7 +312,6 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
       objf >> x >> y >> z;
       normals.push_back(vec4(x, y, z, 0.0f));
     } else if (obj_cmd == "f") {
-
       uint32_t pos_index = 0, texcoord_index = 0, normal_index = 0;
       obj_mesh_vertex vert;
 
@@ -349,7 +356,7 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
       objf >> name;
       bool found = false;
       for (size_t mtl_index = 0; mtl_index < mtls.size(); ++mtl_index) {
-        obj_material *pmtl = &mtls[mtl_index];
+        obj_material* pmtl = &mtls[mtl_index];
         if (pmtl->name == name) {
           found = true;
           subset = static_cast<uint32_t>(mtl_index);
@@ -364,7 +371,7 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
       }
 
     } else {
-      ; // Unrecognized command
+      ;  // Unrecognized command
     }
 
     objf.ignore(1000, '\n');
@@ -379,9 +386,12 @@ bool load_obj_mesh(renderer *r, string const &fname, vector<obj_mesh_vertex> &ve
   return true;
 }
 
-void construct_meshes(std::vector<mesh_ptr> &meshes, salvia::core::renderer *render,
-                      vector<obj_mesh_vertex> const &verts, vector<uint32_t> const &indices,
-                      vector<uint32_t> const &attrs, vector<obj_material> const &mtls) {
+void construct_meshes(std::vector<mesh_ptr>& meshes,
+                      salvia::core::renderer* render,
+                      vector<obj_mesh_vertex> const& verts,
+                      vector<uint32_t> const& indices,
+                      vector<uint32_t> const& attrs,
+                      vector<obj_material> const& mtls) {
   buffer_ptr vert_buf = render->create_buffer(sizeof(obj_mesh_vertex) * verts.size());
   vert_buf->transfer(0, &verts[0], sizeof(obj_mesh_vertex), verts.size());
 
@@ -389,13 +399,13 @@ void construct_meshes(std::vector<mesh_ptr> &meshes, salvia::core::renderer *ren
 
   descs.push_back(
       input_element_desc("POSITION", 0, format_r32g32b32a32_float, 0, 0, input_per_vertex, 0));
-  descs.push_back(input_element_desc("TEXCOORD", 0, format_r32g32b32a32_float, 0, sizeof(vec4),
-                                     input_per_vertex, 0));
-  descs.push_back(input_element_desc("NORMAL", 0, format_r32g32b32a32_float, 0, sizeof(vec4) * 2,
-                                     input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "TEXCOORD", 0, format_r32g32b32a32_float, 0, sizeof(vec4), input_per_vertex, 0));
+  descs.push_back(input_element_desc(
+      "NORMAL", 0, format_r32g32b32a32_float, 0, sizeof(vec4) * 2, input_per_vertex, 0));
 
   for (size_t i_mtl = 0; i_mtl < mtls.size(); ++i_mtl) {
-    mesh_impl *pmesh = new mesh_impl(render);
+    mesh_impl* pmesh = new mesh_impl(render);
 
     // Fill data
     pmesh->add_vertex_buffer(0, vert_buf, sizeof(obj_mesh_vertex), 0);
@@ -425,7 +435,8 @@ void construct_meshes(std::vector<mesh_ptr> &meshes, salvia::core::renderer *ren
   }
 }
 
-vector<mesh_ptr> create_mesh_from_obj(salvia::core::renderer *render, std::string const &file_name,
+vector<mesh_ptr> create_mesh_from_obj(salvia::core::renderer* render,
+                                      std::string const& file_name,
                                       bool flip_tex_v) {
   vector<obj_mesh_vertex> verts;
   vector<uint32_t> indices;
@@ -443,4 +454,4 @@ vector<mesh_ptr> create_mesh_from_obj(salvia::core::renderer *render, std::strin
   return meshes;
 }
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

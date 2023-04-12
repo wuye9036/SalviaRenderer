@@ -39,7 +39,8 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_matrix);
 struct dae_dom {
   std::unordered_map<std::string, dae_node_ptr> id_nodes;
 
-  template <typename T> std::shared_ptr<T> get_node(std::string const &name) {
+  template <typename T>
+  std::shared_ptr<T> get_node(std::string const& name) {
     std::string unqual_name = (name[0] == '#' ? name.substr(1) : name);
     auto it = id_nodes.find(unqual_name);
     if (it == id_nodes.end()) {
@@ -48,22 +49,24 @@ struct dae_dom {
     return std::dynamic_pointer_cast<T>(it->second);
   }
 
-  template <typename T> void get_node(std::string const &name, std::shared_ptr<T> &ret) {
+  template <typename T>
+  void get_node(std::string const& name, std::shared_ptr<T>& ret) {
     ret = get_node<T>(name);
- }
+  }
 
   template <typename T>
-  std::shared_ptr<T> load_node(boost::property_tree::ptree &xml_node, dae_node *parent);
+  std::shared_ptr<T> load_node(boost::property_tree::ptree& xml_node, dae_node* parent);
 
-  dae_node_ptr node_by_path(std::string const &path);
+  dae_node_ptr node_by_path(std::string const& path);
 };
 
 struct dae_node {
-  void parse_attribute(boost::property_tree::ptree &xml_node);
+  void parse_attribute(boost::property_tree::ptree& xml_node);
 
-  virtual bool parse(boost::property_tree::ptree &xml_node) = 0;
+  virtual bool parse(boost::property_tree::ptree& xml_node) = 0;
 
-  template <typename T> std::shared_ptr<T> node_by_id(std::string const &name) {
+  template <typename T>
+  std::shared_ptr<T> node_by_id(std::string const& name) {
     return owner->get_node<T>(name);
   }
 
@@ -80,26 +83,36 @@ struct dae_node {
     return {};
   }
 
-  template <typename T> bool is_a() const { return dynamic_cast<T const *>(this) != nullptr; }
+  template <typename T>
+  bool is_a() const {
+    return dynamic_cast<T const*>(this) != nullptr;
+  }
 
-  template <typename T> T *as() { return dynamic_cast<T *>(this); }
+  template <typename T>
+  T* as() {
+    return dynamic_cast<T*>(this);
+  }
 
-  template <typename T> T const *as() const { return dynamic_cast<T const *>(this); }
+  template <typename T>
+  T const* as() const {
+    return dynamic_cast<T const*>(this);
+  }
 
-  template <typename T> std::shared_ptr<T> load_child(boost::property_tree::ptree &xml_node) {
+  template <typename T>
+  std::shared_ptr<T> load_child(boost::property_tree::ptree& xml_node) {
     return owner->load_node<T>(xml_node, this);
   }
 
   boost::optional<std::string> id, sid, name, source;
-  dae_dom *owner;
-  dae_node *parent;
+  dae_dom* owner;
+  dae_node* parent;
   std::unordered_map<std::string, dae_node_ptr> sid_children;
 
   virtual ~dae_node() = default;
 };
 
 template <typename T>
-std::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree &xml_node, dae_node *parent) {
+std::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree& xml_node, dae_node* parent) {
   std::shared_ptr<T> ret = std::make_shared<T>();
   ret->owner = this;
   ret->parent = parent;
@@ -116,7 +129,7 @@ std::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree &xml_node, dae
 }
 
 struct dae_mesh : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
 
   std::vector<dae_source_ptr> sources;
   std::vector<dae_verts_ptr> verts;
@@ -124,7 +137,7 @@ struct dae_mesh : public dae_node {
 };
 
 struct dae_triangles : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   size_t count;
   std::vector<dae_input_ptr> inputs;
   std::vector<int32_t> indexes;
@@ -132,28 +145,28 @@ struct dae_triangles : public dae_node {
 };
 
 struct dae_verts : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   std::vector<dae_input_ptr> inputs;
   size_t count;
   boost::optional<std::string> material_name;
 };
 
 struct dae_input : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   boost::optional<std::string> semantic;
   size_t offset;
   size_t set;
 };
 
 struct dae_source : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   dae_array_ptr arr;
   dae_tech_ptr tech;
 };
 
 struct dae_array : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
-  void parse_content(std::string const &tag_name);
+  bool parse(boost::property_tree::ptree& root) override;
+  void parse_content(std::string const& tag_name);
 
   enum array_types { none_array, float_array, int_array, name_array, idref_array };
 
@@ -170,10 +183,10 @@ struct dae_array : public dae_node {
 };
 
 struct dae_param : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
 
-  bool index(std::string const &index_seq, size_t &idx);
-  int index(std::string const &index_seq);
+  bool index(std::string const& index_seq, size_t& idx);
+  int index(std::string const& index_seq);
   int index_xyzw_stpq();
 
   enum special_types { st_none, st_name };
@@ -183,7 +196,7 @@ struct dae_param : public dae_node {
 };
 
 struct dae_accessor : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
 
   size_t offset, stride, count;
   dae_array_ptr source_array;
@@ -191,17 +204,17 @@ struct dae_accessor : public dae_node {
 };
 
 struct dae_tech : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   dae_accessor_ptr accessor;
 };
 
 struct dae_controller : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   dae_skin_ptr skin;
 };
 
 struct dae_skin : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
 
   eflib::mat44 bind_shape_mat;
   std::vector<dae_source_ptr> joint_sources;
@@ -210,7 +223,7 @@ struct dae_skin : public dae_node {
 };
 
 struct dae_vertex_weights : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   size_t count;
   std::vector<dae_input_ptr> inputs;
   std::vector<uint32_t> vcount;
@@ -218,42 +231,42 @@ struct dae_vertex_weights : public dae_node {
 };
 
 struct dae_animations : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   std::vector<dae_animation_ptr> anims;
 };
 
 struct dae_animation : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   std::vector<dae_source_ptr> sources;
   dae_sampler_ptr samp;
   dae_channel_ptr channel;
 };
 
 struct dae_sampler : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   dae_input_ptr data_in, data_out, interpolation;
 };
 
 struct dae_channel : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   boost::optional<std::string> target;
 };
 
 struct dae_visual_scenes : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   std::vector<dae_scene_node_ptr> scenes;
 };
 
 struct dae_scene_node : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   std::vector<dae_scene_node_ptr> children;
   dae_matrix_ptr mat;
   boost::optional<std::string> type_name;
 };
 
 struct dae_matrix : public dae_node {
-  bool parse(boost::property_tree::ptree &root) override;
+  bool parse(boost::property_tree::ptree& root) override;
   eflib::mat44 mat;
 };
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

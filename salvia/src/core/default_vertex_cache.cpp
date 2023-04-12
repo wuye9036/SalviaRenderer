@@ -19,10 +19,10 @@
 #include <eflib/platform/cpuinfo.h>
 
 #include <atomic>
+#include <execution>
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <execution>
 
 using namespace salvia::shader;
 using namespace eflib;
@@ -41,17 +41,26 @@ const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
 class vertex_cache_impl : public vertex_cache {
 public:
   vertex_cache_impl()
-      : assembler_(nullptr), host_(nullptr), prim_count_(0), prim_size_(0), cpp_vs_(nullptr),
-        pipeline_stat_(nullptr), pipeline_prof_(nullptr), fetch_time_stamp_(nullptr),
-        acc_ia_vertices_(nullptr), acc_vs_invocations_(nullptr), acc_gather_vtx_(nullptr),
-        acc_vtx_proc_(nullptr), thread_count_(std::thread::hardware_concurrency()) {}
+    : assembler_(nullptr)
+    , host_(nullptr)
+    , prim_count_(0)
+    , prim_size_(0)
+    , cpp_vs_(nullptr)
+    , pipeline_stat_(nullptr)
+    , pipeline_prof_(nullptr)
+    , fetch_time_stamp_(nullptr)
+    , acc_ia_vertices_(nullptr)
+    , acc_vs_invocations_(nullptr)
+    , acc_gather_vtx_(nullptr)
+    , acc_vtx_proc_(nullptr)
+    , thread_count_(std::thread::hardware_concurrency()) {}
 
-  void initialize(render_stages const *stages) override{
+  void initialize(render_stages const* stages) override {
     assembler_ = stages->assembler.get();
     host_ = stages->host.get();
   }
 
-  void update(render_state const *state) override{
+  void update(render_state const* state) override {
     // transformed_verts_.reset();
     index_fetcher_.update(state);
     cpp_vs_ = state->cpp_vs.get();
@@ -60,17 +69,12 @@ public:
     prim_size_ = 0;
     switch (state->prim_topo) {
     case primitive_line_list:
-    case primitive_line_strip:
-      prim_size_ = 2;
-      break;
+    case primitive_line_strip: prim_size_ = 2; break;
 
     case primitive_triangle_list:
-    case primitive_triangle_strip:
-      prim_size_ = 3;
-      break;
+    case primitive_triangle_strip: prim_size_ = 3; break;
 
-    default:
-      break;
+    default: break;
     }
 
     pipeline_stat_ =
@@ -99,17 +103,17 @@ public:
   }
 
 protected:
-  stream_assembler *assembler_;
-  host *host_;
+  stream_assembler* assembler_;
+  host* host_;
 
   uint32_t prim_count_;
   uint32_t prim_size_;
-  cpp_vertex_shader *cpp_vs_;
+  cpp_vertex_shader* cpp_vs_;
 
   index_fetcher index_fetcher_;
 
-  async_object *pipeline_stat_;
-  async_object *pipeline_prof_;
+  async_object* pipeline_stat_;
+  async_object* pipeline_prof_;
 
   time_stamp_fn::type fetch_time_stamp_;
 
@@ -135,7 +139,9 @@ public:
     max_index_ = 0;
 
     execute_threads(
-        global_thread_pool(), [this](auto ctx) { this->generate_indices(ctx); }, prim_count_,
+        global_thread_pool(),
+        [this](auto ctx) { this->generate_indices(ctx); },
+        prim_count_,
         GENERATE_INDICES_PACKAGE_SIZE);
 
     uint32_t verts_count = 0;
@@ -144,11 +150,11 @@ public:
     // Unique indices
     unique_indices_ = indices_;
 
-#if !defined(_LIBCPP_VERSION) || defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS)
+#  if !defined(_LIBCPP_VERSION) || defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS)
     std::sort(std::execution::par, unique_indices_.begin(), unique_indices_.end());
-#else
+#  else
     std::sort(unique_indices_.begin(), unique_indices_.end());
-#endif
+#  endif
 
     unique_indices_.erase(std::unique(unique_indices_.begin(), unique_indices_.end()),
                           unique_indices_.end());
@@ -181,29 +187,31 @@ public:
 
     execute_threads(
         global_thread_pool(),
-        [this, transform_vertex_fn](thread_context const *thread_ctx) {
+        [this, transform_vertex_fn](thread_context const* thread_ctx) {
           std::invoke(transform_vertex_fn, this, thread_ctx);
         },
-        verts_count, TRANSFORM_VERTEX_PACKAGE_SIZE);
+        verts_count,
+        TRANSFORM_VERTEX_PACKAGE_SIZE);
 
     acc_vtx_proc_(pipeline_prof_, fetch_time_stamp_() - vtx_proc_start_time);
   }
 
-  void fetch3(vs_output **v, cache_entry_index prim, uint32_t /*thread_id*/) override{
+  void fetch3(vs_output** v, cache_entry_index prim, uint32_t /*thread_id*/) override {
     static vs_output null_obj;
     uint32_t id0 = indices_[prim * 3 + 0];
     uint32_t id1 = indices_[prim * 3 + 1];
     uint32_t id2 = indices_[prim * 3 + 2];
 #if !USE_INDEX_RANGE
 
-#if defined(EFLIB_DEBUG)
+#  if defined(EFLIB_DEBUG)
     if ((id2 > used_verts_.size()) || (-1 == used_verts_[id0]) || (-1 == used_verts_[id1]) ||
         (-1 == used_verts_[id2])) {
-      EF_ASSERT(false, "The vertex could not be transformed. Maybe errors occurred on index statistics or "
-              "vertex tranformation.");
+      EF_ASSERT(false,
+                "The vertex could not be transformed. Maybe errors occurred on index statistics or "
+                "vertex tranformation.");
       // return null_obj;
     }
-#endif
+#  endif
 
     v[0] = &transformed_verts_[used_verts_[id0]];
     v[1] = &transformed_verts_[used_verts_[id1]];
@@ -213,12 +221,12 @@ public:
 #endif
   }
 
-  void update_statistic() override{
+  void update_statistic() override {
     // do nothing
   }
 
 private:
-  void generate_indices(thread_context const *thread_ctx) {
+  void generate_indices(thread_context const* thread_ctx) {
     // Fetch indexes and min/max of package
     uint32_t thread_min_index = std::numeric_limits<uint32_t>::max();
     uint32_t thread_max_index = 0;
@@ -227,8 +235,11 @@ private:
     while (current_package.valid()) {
       auto prim_range = current_package.index_range();
       uint32_t pkg_min_index, pkg_max_index;
-      index_fetcher_.fetch_indexes(&indices_[prim_range.first * prim_size_], &pkg_min_index,
-                                   &pkg_max_index, prim_range.first, prim_range.second);
+      index_fetcher_.fetch_indexes(&indices_[prim_range.first * prim_size_],
+                                   &pkg_min_index,
+                                   &pkg_max_index,
+                                   prim_range.first,
+                                   prim_range.second);
       thread_min_index = std::min(pkg_min_index, thread_min_index);
       thread_max_index = std::max(pkg_max_index, thread_max_index);
       current_package = thread_ctx->next_package();
@@ -251,7 +262,7 @@ private:
   }
 
 #if !USE_INDEX_RANGE
-  void transform_vertex_cppvs(thread_context const *thread_ctx) {
+  void transform_vertex_cppvs(thread_context const* thread_ctx) {
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
       auto vert_range = current_package.index_range();
@@ -266,7 +277,7 @@ private:
     }
   }
 
-  void transform_vertex_vs(thread_context const *thread_ctx) {
+  void transform_vertex_vs(thread_context const* thread_ctx) {
     vx_shader_unit_ptr vsu = host_->get_vx_shader_unit();
 
     thread_context::package_cursor current_package = thread_ctx->next_package();
@@ -281,7 +292,7 @@ private:
     }
   }
 #else
-  void transform_vertex_cppvs(thread_context *thread_ctx) {
+  void transform_vertex_cppvs(thread_context* thread_ctx) {
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
       auto vert_range = current_package.item_range();
@@ -294,7 +305,7 @@ private:
     }
   }
 
-  void transform_vertex_vs(thread_context *thread_ctx) {
+  void transform_vertex_vs(thread_context* thread_ctx) {
     vx_shader_unit_ptr vsu = host_->get_vx_shader_unit();
     thread_context::package_cursor current_package = thread_ctx->next_package();
     while (current_package.valid()) {
@@ -326,10 +337,10 @@ public:
 
   void prepare_vertices() override {
     for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-      auto &cache = caches_[i];
+      auto& cache = caches_[i];
       cache.vso_pool.clear();
       cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
-      for (auto & item : cache.items) {
+      for (auto& item : cache.items) {
         item = std::make_pair(std::numeric_limits<uint32_t>::max(), nullptr);
       }
       if (host_)
@@ -340,21 +351,21 @@ public:
     }
   }
 
-  void fetch3(vs_output **v, cache_entry_index prim, uint32_t thread_id) override {
+  void fetch3(vs_output** v, cache_entry_index prim, uint32_t thread_id) override {
     // uint64_t vs_start_time = fetch_time_stamp_();
 
     uint32_t indexes[3];
     uint32_t min_index, max_index;
     index_fetcher_.fetch_indexes(indexes, &min_index, &max_index, prim, prim + 1);
 
-    auto &cache = caches_[thread_id];
+    auto& cache = caches_[thread_id];
 
     cache.ia_vertices += 3;
 
     for (int i = 0; i < 3; ++i) {
       uint32_t index = indexes[i];
       uint32_t key = indexes[i] % ENTRY_SIZE;
-      auto &cache_item = cache.items[key];
+      auto& cache_item = cache.items[key];
       if (cache_item.first == indexes[i]) {
         v[i] = cache_item.second;
       } else {
@@ -380,7 +391,7 @@ public:
 
   void update_statistic() override {
     for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-      auto &cache = caches_[i];
+      auto& cache = caches_[i];
 
       acc_ia_vertices_(pipeline_stat_, cache.ia_vertices);
       cache.ia_vertices = 0;
@@ -398,8 +409,8 @@ private:
 
   struct EFLIB_ALIGN(64) thread_cache {
     thread_cache() = default;
-    thread_cache(thread_cache const &);
-    thread_cache &operator=(thread_cache const &) { return *this; }
+    thread_cache(thread_cache const&);
+    thread_cache& operator=(thread_cache const&) { return *this; }
 
     eflib::pool::reserved_pool<vs_output> vso_pool;
     vx_shader_unit_ptr vsu;
@@ -407,7 +418,7 @@ private:
     uint64_t ia_vertices{};
     uint64_t vs_during{};
 
-    std::pair<uint32_t, vs_output *> items[ENTRY_SIZE];
+    std::pair<uint32_t, vs_output*> items[ENTRY_SIZE];
   };
 
   std::vector<thread_cache, eflib::aligned_allocator<thread_cache, 64>> caches_;
@@ -429,7 +440,7 @@ public:
     memset(shared_items_, INVALID_SHARED_ENTRY, sizeof(shared_items_));
 
     for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-      auto &cache = caches_[i];
+      auto& cache = caches_[i];
       cache.vso_pool.clear();
       cache.vso_pool.reserve(prim_count_ * prim_size_, 16);
       for (int j = 0; j < ENTRY_SIZE; ++j) {
@@ -446,8 +457,8 @@ public:
     }
   }
 
-  inline uint32_t lock_shared_item(uint32_t &conflict_count,
-                                   std::pair<std::atomic<uint32_t>, vs_output *> &item) {
+  inline uint32_t lock_shared_item(uint32_t& conflict_count,
+                                   std::pair<std::atomic<uint32_t>, vs_output*>& item) {
     uint32_t index_in_cache;
 
     for (;;) {
@@ -464,31 +475,31 @@ public:
     }
   }
 
-  inline void release_shared_item(std::pair<std::atomic<uint32_t>, vs_output *> &item,
+  inline void release_shared_item(std::pair<std::atomic<uint32_t>, vs_output*>& item,
                                   uint32_t index) {
     item.first = index;
   }
 
-  void fetch3(vs_output **v, cache_entry_index prim, uint32_t thread_id) override {
+  void fetch3(vs_output** v, cache_entry_index prim, uint32_t thread_id) override {
     // uint64_t vs_start_time = fetch_time_stamp_();
 
     uint32_t indexes[3];
     uint32_t min_index, max_index;
     index_fetcher_.fetch_indexes(indexes, &min_index, &max_index, prim, prim + 1);
 
-    auto &cache = caches_[thread_id];
+    auto& cache = caches_[thread_id];
 
     cache.ia_vertices += 3;
 
     for (int i = 0; i < 3; ++i) {
       uint32_t index = indexes[i];
       uint32_t key = indexes[i] % ENTRY_SIZE;
-      auto &cache_item = cache.items[key];
+      auto& cache_item = cache.items[key];
       if (cache_item.first == indexes[i]) {
         v[i] = cache_item.second;
       } else {
         uint32_t sc_key = index % SHARED_ENTRY_SIZE;
-        auto &shared_item = shared_items_[sc_key];
+        auto& shared_item = shared_items_[sc_key];
         uint32_t index_in_cache = lock_shared_item(cache.conflict_count, shared_item);
 
         if (index_in_cache == index) {
@@ -530,7 +541,7 @@ public:
 
   void update_statistic() override {
     for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-      auto &cache = caches_[i];
+      auto& cache = caches_[i];
 
       acc_ia_vertices_(pipeline_stat_, cache.ia_vertices);
       cache.ia_vertices = 0;
@@ -555,8 +566,8 @@ private:
 
   struct EFLIB_ALIGN(64) thread_cache {
     thread_cache() = default;
-    thread_cache(thread_cache const &) = delete;
-    thread_cache &operator=(thread_cache const &) = delete;
+    thread_cache(thread_cache const&) = delete;
+    thread_cache& operator=(thread_cache const&) = delete;
 
     uint32_t conflict_count;
     uint32_t l2_hitting;
@@ -568,7 +579,7 @@ private:
     uint64_t ia_vertices;
     uint64_t vs_during;
 
-    std::pair<uint32_t, vs_output *> items[ENTRY_SIZE];
+    std::pair<uint32_t, vs_output*> items[ENTRY_SIZE];
   };
 
   uint32_t conflict_count_;
@@ -576,9 +587,11 @@ private:
   uint32_t l2_hitting_;
 
   std::vector<thread_cache, eflib::aligned_allocator<thread_cache, 64>> caches_;
-  std::pair<std::atomic<uint32_t>, vs_output *> shared_items_[SHARED_ENTRY_SIZE];
+  std::pair<std::atomic<uint32_t>, vs_output*> shared_items_[SHARED_ENTRY_SIZE];
 };
 
-vertex_cache_ptr create_default_vertex_cache() { return vertex_cache_ptr(new tls_vertex_cache()); }
+vertex_cache_ptr create_default_vertex_cache() {
+  return vertex_cache_ptr(new tls_vertex_cache());
+}
 
-} // namespace salvia::core
+}  // namespace salvia::core

@@ -52,26 +52,26 @@ quaternion quaternion::from_mat44(const mat44& mat) {
   float m = 0.25f / biggest_val;
 
   switch (i_biggest) {
-    case 0:
-      return {(mat.data_[1][2] - mat.data_[2][1]) * m,
-              (mat.data_[2][0] - mat.data_[0][2]) * m,
-              (mat.data_[0][1] - mat.data_[1][0]) * m,
-              biggest_val};
-    case 1:
-      return {biggest_val,
-              (mat.data_[0][1] + mat.data_[1][0]) * m,
-              (mat.data_[2][0] + mat.data_[0][2]) * m,
-              (mat.data_[1][2] - mat.data_[2][1]) * m};
-    case 2:
-      return {(mat.data_[0][1] + mat.data_[1][0]) * m,
-              biggest_val,
-              (mat.data_[1][2] + mat.data_[2][1]) * m,
-              (mat.data_[2][0] - mat.data_[0][2]) * m};
-    default:
-      return {(mat.data_[2][0] + mat.data_[0][2]) * m,
-              (mat.data_[1][2] + mat.data_[2][1]) * m,
-              biggest_val,
-              (mat.data_[0][1] - mat.data_[1][0]) * m};
+  case 0:
+    return {(mat.data_[1][2] - mat.data_[2][1]) * m,
+            (mat.data_[2][0] - mat.data_[0][2]) * m,
+            (mat.data_[0][1] - mat.data_[1][0]) * m,
+            biggest_val};
+  case 1:
+    return {biggest_val,
+            (mat.data_[0][1] + mat.data_[1][0]) * m,
+            (mat.data_[2][0] + mat.data_[0][2]) * m,
+            (mat.data_[1][2] - mat.data_[2][1]) * m};
+  case 2:
+    return {(mat.data_[0][1] + mat.data_[1][0]) * m,
+            biggest_val,
+            (mat.data_[1][2] + mat.data_[2][1]) * m,
+            (mat.data_[2][0] - mat.data_[0][2]) * m};
+  default:
+    return {(mat.data_[2][0] + mat.data_[0][2]) * m,
+            (mat.data_[1][2] + mat.data_[2][1]) * m,
+            biggest_val,
+            (mat.data_[0][1] - mat.data_[1][0]) * m};
   }
 }
 

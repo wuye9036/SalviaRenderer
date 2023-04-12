@@ -50,8 +50,8 @@ class thread_pool {
   shared_ptr<void> m_shutdown_controller;  // If the last pool holding a pointer to the core is
                                            // deleted the controller shuts the pool down.
 
-public:                                                // Type definitions
-  typedef Task task_type;                              //!< Indicates the task's type.
+public:                                    // Type definitions
+  typedef Task task_type;                  //!< Indicates the task's type.
   typedef SchedulingPolicy<task_type> scheduler_type;  //!< Indicates the scheduler's type.
                                                        /*   typedef thread_pool<Task,
                                                                               SchedulingPolicy,

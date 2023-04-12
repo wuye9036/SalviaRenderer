@@ -20,4 +20,4 @@ struct render_stages {
   host_ptr host;
 };
 
-} // namespace salvia::core
+}  // namespace salvia::core

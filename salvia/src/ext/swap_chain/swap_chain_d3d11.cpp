@@ -1,40 +1,40 @@
 #if defined(SALVIA_EXT_D3D11_ENABLED)
 
-#include <salvia/ext/swap_chain/swap_chain_impl.h>
+#  include <salvia/ext/swap_chain/swap_chain_impl.h>
 
-#include <salvia/core/renderer.h>
-#include <salvia/resource/mapped_resource.h>
-#include <salvia/resource/surface.h>
+#  include <salvia/core/renderer.h>
+#  include <salvia/resource/mapped_resource.h>
+#  include <salvia/resource/surface.h>
 
-#include <memory>
+#  include <memory>
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
 
-#include <d3d11.h>
-#include <dxgi.h>
+#  include <d3d11.h>
+#  include <dxgi.h>
 
-#include <sdkddkver.h>
-#if WINVER >= 0x0602
-#include <d3dcompiler.h>
-#pragma comment(lib, "d3dcompiler.lib")
-#else
-#include <d3dx11.h>
-#ifdef EFLIB_DEBUG
-#pragma comment(lib, "d3dx11d.lib")
-#else
-#pragma comment(lib, "d3dx11.lib")
-#endif
-#endif
+#  include <sdkddkver.h>
+#  if WINVER >= 0x0602
+#    include <d3dcompiler.h>
+#    pragma comment(lib, "d3dcompiler.lib")
+#  else
+#    include <d3dx11.h>
+#    ifdef EFLIB_DEBUG
+#      pragma comment(lib, "d3dx11d.lib")
+#    else
+#      pragma comment(lib, "d3dx11.lib")
+#    endif
+#  endif
 
-#include <tchar.h>
+#  include <tchar.h>
 
-#ifdef EFLIB_DEBUG
-#pragma comment(lib, "dxguid.lib")
-#else
-#pragma comment(lib, "dxguid.lib")
-#endif
+#  ifdef EFLIB_DEBUG
+#    pragma comment(lib, "dxguid.lib")
+#  else
+#    pragma comment(lib, "dxguid.lib")
+#  endif
 
 using namespace eflib;
 using namespace salvia::core;
@@ -43,7 +43,7 @@ struct quad_vertex {
   float x, y;
 };
 
-namespace salvia::ext{
+namespace salvia::ext {
 
 HINSTANCE get_dll_instance() {
   MEMORY_BASIC_INFORMATION mbi;
@@ -70,12 +70,23 @@ char const vs_data[] = "void VSMain(float2 pos : POSITION,\n"
 
 class d3d11_swap_chain : public swap_chain_impl {
 public:
-  d3d11_swap_chain(renderer_ptr const &renderer, renderer_parameters const &params)
-      : swap_chain_impl(renderer, params), hwnd_(nullptr), mod_dxgi_(nullptr), mod_d3d11_(nullptr),
-        gi_factory_(nullptr), d3d_device_(nullptr), d3d_imm_ctx_(nullptr), swap_chain_(nullptr),
-        back_buffer_rtv_(nullptr), buftex_(nullptr), buftex_srv_(nullptr),
-        point_sampler_state_(nullptr), vb_(nullptr), input_layout_(nullptr), vs_(nullptr),
-        ps_(nullptr) {
+  d3d11_swap_chain(renderer_ptr const& renderer, renderer_parameters const& params)
+    : swap_chain_impl(renderer, params)
+    , hwnd_(nullptr)
+    , mod_dxgi_(nullptr)
+    , mod_d3d11_(nullptr)
+    , gi_factory_(nullptr)
+    , d3d_device_(nullptr)
+    , d3d_imm_ctx_(nullptr)
+    , swap_chain_(nullptr)
+    , back_buffer_rtv_(nullptr)
+    , buftex_(nullptr)
+    , buftex_srv_(nullptr)
+    , point_sampler_state_(nullptr)
+    , vb_(nullptr)
+    , input_layout_(nullptr)
+    , vs_(nullptr)
+    , ps_(nullptr) {
     hwnd_ = reinterpret_cast<HWND>(params.native_window);
     initialize();
   }
@@ -157,7 +168,7 @@ public:
           ::GetProcAddress(mod_d3d11_, "D3D11CreateDeviceAndSwapChain"));
     }
 
-    DynamicCreateDXGIFactory1_(IID_IDXGIFactory1, reinterpret_cast<void **>(&gi_factory_));
+    DynamicCreateDXGIFactory1_(IID_IDXGIFactory1, reinterpret_cast<void**>(&gi_factory_));
   }
 
   void present_impl() {
@@ -181,23 +192,34 @@ public:
       sc_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
       UINT create_device_flags = 0;
-#ifdef EFLIB_DEBUG
+#  ifdef EFLIB_DEBUG
       // create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+#  endif
 
-      D3D_FEATURE_LEVEL const feature_levels[] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
-                                                  D3D_FEATURE_LEVEL_10_0, D3D_FEATURE_LEVEL_9_3,
-                                                  D3D_FEATURE_LEVEL_9_2,  D3D_FEATURE_LEVEL_9_1};
+      D3D_FEATURE_LEVEL const feature_levels[] = {D3D_FEATURE_LEVEL_11_0,
+                                                  D3D_FEATURE_LEVEL_10_1,
+                                                  D3D_FEATURE_LEVEL_10_0,
+                                                  D3D_FEATURE_LEVEL_9_3,
+                                                  D3D_FEATURE_LEVEL_9_2,
+                                                  D3D_FEATURE_LEVEL_9_1};
       size_t const num_feature_levels = sizeof(feature_levels) / sizeof(feature_levels[0]);
 
       D3D_FEATURE_LEVEL out_feature_level;
-      DynamicD3D11CreateDeviceAndSwapChain_(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
-                                            create_device_flags, feature_levels, num_feature_levels,
-                                            D3D11_SDK_VERSION, &sc_desc, &swap_chain_, &d3d_device_,
-                                            &out_feature_level, &d3d_imm_ctx_);
+      DynamicD3D11CreateDeviceAndSwapChain_(nullptr,
+                                            D3D_DRIVER_TYPE_HARDWARE,
+                                            nullptr,
+                                            create_device_flags,
+                                            feature_levels,
+                                            num_feature_levels,
+                                            D3D11_SDK_VERSION,
+                                            &sc_desc,
+                                            &swap_chain_,
+                                            &d3d_device_,
+                                            &out_feature_level,
+                                            &d3d_imm_ctx_);
 
-      ID3D11Texture2D *back_buffer;
-      swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<void **>(&back_buffer));
+      ID3D11Texture2D* back_buffer;
+      swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<void**>(&back_buffer));
 
       d3d_device_->CreateRenderTargetView(back_buffer, nullptr, &back_buffer_rtv_);
       back_buffer->Release();
@@ -239,43 +261,83 @@ public:
       UINT offsets[] = {0};
       d3d_imm_ctx_->IASetVertexBuffers(0, 1, &vb_, strides, offsets);
 
-      ID3D10Blob *vs_code = nullptr;
-      ID3D10Blob *err_msg = nullptr;
+      ID3D10Blob* vs_code = nullptr;
+      ID3D10Blob* err_msg = nullptr;
 
-#if WINVER >= 0x0602
-      D3DCompile(vs_data, sizeof(vs_data), nullptr, nullptr, nullptr, "VSMain", "vs_4_0", 0, 0,
-                 &vs_code, &err_msg);
-#else
-      D3DX11CompileFromMemory(vs_data, sizeof(vs_data), nullptr, nullptr, nullptr, "VSMain",
-                              "vs_4_0", 0, 0, nullptr, &vs_code, &err_msg, nullptr);
-#endif
+#  if WINVER >= 0x0602
+      D3DCompile(vs_data,
+                 sizeof(vs_data),
+                 nullptr,
+                 nullptr,
+                 nullptr,
+                 "VSMain",
+                 "vs_4_0",
+                 0,
+                 0,
+                 &vs_code,
+                 &err_msg);
+#  else
+      D3DX11CompileFromMemory(vs_data,
+                              sizeof(vs_data),
+                              nullptr,
+                              nullptr,
+                              nullptr,
+                              "VSMain",
+                              "vs_4_0",
+                              0,
+                              0,
+                              nullptr,
+                              &vs_code,
+                              &err_msg,
+                              nullptr);
+#  endif
 
       if (err_msg) {
         std::cerr << err_msg->GetBufferPointer() << std::endl;
       }
 
-      d3d_device_->CreateVertexShader(vs_code->GetBufferPointer(), vs_code->GetBufferSize(),
-                                      nullptr, &vs_);
+      d3d_device_->CreateVertexShader(
+          vs_code->GetBufferPointer(), vs_code->GetBufferSize(), nullptr, &vs_);
 
       d3d_imm_ctx_->VSSetShader(vs_, nullptr, 0);
 
-      ID3D10Blob *ps_code = nullptr;
+      ID3D10Blob* ps_code = nullptr;
       err_msg = nullptr;
 
-#if WINVER >= 0x0602
-      D3DCompile(ps_data, sizeof(ps_data), nullptr, nullptr, nullptr, "PSMain", "ps_4_0", 0, 0,
-                 &ps_code, &err_msg);
-#else
-      D3DX11CompileFromMemory(ps_data, sizeof(ps_data), nullptr, nullptr, nullptr, "PSMain",
-                              "ps_4_0", 0, 0, nullptr, &ps_code, &err_msg, nullptr);
-#endif
+#  if WINVER >= 0x0602
+      D3DCompile(ps_data,
+                 sizeof(ps_data),
+                 nullptr,
+                 nullptr,
+                 nullptr,
+                 "PSMain",
+                 "ps_4_0",
+                 0,
+                 0,
+                 &ps_code,
+                 &err_msg);
+#  else
+      D3DX11CompileFromMemory(ps_data,
+                              sizeof(ps_data),
+                              nullptr,
+                              nullptr,
+                              nullptr,
+                              "PSMain",
+                              "ps_4_0",
+                              0,
+                              0,
+                              nullptr,
+                              &ps_code,
+                              &err_msg,
+                              nullptr);
+#  endif
 
       if (err_msg) {
         std::cerr << err_msg->GetBufferPointer() << std::endl;
       }
 
-      d3d_device_->CreatePixelShader(ps_code->GetBufferPointer(), ps_code->GetBufferSize(), nullptr,
-                                     &ps_);
+      d3d_device_->CreatePixelShader(
+          ps_code->GetBufferPointer(), ps_code->GetBufferSize(), nullptr, &ps_);
       ps_code->Release();
 
       d3d_imm_ctx_->PSSetShader(ps_, nullptr, 0);
@@ -288,8 +350,10 @@ public:
       elems[0].AlignedByteOffset = 0;
       elems[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
       elems[0].InstanceDataStepRate = 0;
-      d3d_device_->CreateInputLayout(&elems[0], sizeof(elems) / sizeof(elems[0]),
-                                     vs_code->GetBufferPointer(), vs_code->GetBufferSize(),
+      d3d_device_->CreateInputLayout(&elems[0],
+                                     sizeof(elems) / sizeof(elems[0]),
+                                     vs_code->GetBufferPointer(),
+                                     vs_code->GetBufferSize(),
                                      &input_layout_);
       vs_code->Release();
 
@@ -346,11 +410,13 @@ public:
     renderer_->map(mapped, resolved_surface_, map_read);
 
     for (size_t y = 0; y < resolved_surface_->height(); ++y) {
-      byte *dst_line = static_cast<byte *>(d3d_mapped.pData) + d3d_mapped.RowPitch * y;
-      byte *src_line = static_cast<byte *>(mapped.data) + mapped.row_pitch * y;
+      byte* dst_line = static_cast<byte*>(d3d_mapped.pData) + d3d_mapped.RowPitch * y;
+      byte* src_line = static_cast<byte*>(mapped.data) + mapped.row_pitch * y;
       pixel_format_convertor::convert_array(pixel_format_color_bgra8,
-                                            resolved_surface_->get_pixel_format(), dst_line,
-                                            src_line, static_cast<int>(resolved_surface_->width()));
+                                            resolved_surface_->get_pixel_format(),
+                                            dst_line,
+                                            src_line,
+                                            static_cast<int>(resolved_surface_->width()));
     }
 
     renderer_->unmap();
@@ -362,12 +428,20 @@ public:
   }
 
 private:
-  typedef HRESULT(WINAPI *CreateDXGIFactory1Func)(REFIID riid, void **ppFactory);
-  typedef HRESULT(WINAPI *D3D11CreateDeviceAndSwapChainFunc)(
-      IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Software, UINT Flags,
-      D3D_FEATURE_LEVEL const *pFeatureLevels, UINT FeatureLevels, UINT SDKVersion,
-      DXGI_SWAP_CHAIN_DESC *pSwapChainDesc, IDXGISwapChain **ppSwapChain, ID3D11Device **ppDevice,
-      D3D_FEATURE_LEVEL *pFeatureLevel, ID3D11DeviceContext **ppImmediateContext);
+  typedef HRESULT(WINAPI* CreateDXGIFactory1Func)(REFIID riid, void** ppFactory);
+  typedef HRESULT(WINAPI* D3D11CreateDeviceAndSwapChainFunc)(
+      IDXGIAdapter* pAdapter,
+      D3D_DRIVER_TYPE DriverType,
+      HMODULE Software,
+      UINT Flags,
+      D3D_FEATURE_LEVEL const* pFeatureLevels,
+      UINT FeatureLevels,
+      UINT SDKVersion,
+      DXGI_SWAP_CHAIN_DESC* pSwapChainDesc,
+      IDXGISwapChain** ppSwapChain,
+      ID3D11Device** ppDevice,
+      D3D_FEATURE_LEVEL* pFeatureLevel,
+      ID3D11DeviceContext** ppImmediateContext);
 
   CreateDXGIFactory1Func DynamicCreateDXGIFactory1_;
   D3D11CreateDeviceAndSwapChainFunc DynamicD3D11CreateDeviceAndSwapChain_;
@@ -376,22 +450,22 @@ private:
   HMODULE mod_dxgi_;
   HMODULE mod_d3d11_;
 
-  IDXGIFactory *gi_factory_;
-  ID3D11Device *d3d_device_;
-  ID3D11DeviceContext *d3d_imm_ctx_;
-  IDXGISwapChain *swap_chain_;
-  ID3D11RenderTargetView *back_buffer_rtv_;
-  ID3D11Texture2D *buftex_;
-  ID3D11ShaderResourceView *buftex_srv_;
-  ID3D11SamplerState *point_sampler_state_;
-  ID3D11Buffer *vb_;
-  ID3D11InputLayout *input_layout_;
-  ID3D11VertexShader *vs_;
-  ID3D11PixelShader *ps_;
+  IDXGIFactory* gi_factory_;
+  ID3D11Device* d3d_device_;
+  ID3D11DeviceContext* d3d_imm_ctx_;
+  IDXGISwapChain* swap_chain_;
+  ID3D11RenderTargetView* back_buffer_rtv_;
+  ID3D11Texture2D* buftex_;
+  ID3D11ShaderResourceView* buftex_srv_;
+  ID3D11SamplerState* point_sampler_state_;
+  ID3D11Buffer* vb_;
+  ID3D11InputLayout* input_layout_;
+  ID3D11VertexShader* vs_;
+  ID3D11PixelShader* ps_;
 };
 
-swap_chain_ptr create_d3d11_swap_chain(renderer_ptr const &renderer,
-                                       renderer_parameters const *params) {
+swap_chain_ptr create_d3d11_swap_chain(renderer_ptr const& renderer,
+                                       renderer_parameters const* params) {
   if (!params) {
     return swap_chain_ptr();
   }
@@ -399,6 +473,6 @@ swap_chain_ptr create_d3d11_swap_chain(renderer_ptr const &renderer,
   return std::make_shared<d3d11_swap_chain>(renderer, *params);
 }
 
-}
+}  // namespace salvia::ext
 
 #endif

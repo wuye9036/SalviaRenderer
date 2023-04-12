@@ -14,8 +14,10 @@ namespace salvia::ext::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
 EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
 
-skin_mesh_ptr create_mesh_from_collada(salvia::core::renderer *render, std::string const &file_name);
-mesh_ptr create_morph_mesh_from_collada(salvia::core::renderer *render, std::string const &src,
-                                        std::string const &dst);
+skin_mesh_ptr create_mesh_from_collada(salvia::core::renderer* render,
+                                       std::string const& file_name);
+mesh_ptr create_morph_mesh_from_collada(salvia::core::renderer* render,
+                                        std::string const& src,
+                                        std::string const& dst);
 
-} // namespace salvia::ext::resource
+}  // namespace salvia::ext::resource

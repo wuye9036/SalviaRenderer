@@ -7,12 +7,12 @@
 namespace salvia::shader {
 struct shader_profile;
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
-}
+}  // namespace salvia::shader
 
 namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
-}
+}  // namespace salvia::resource
 namespace salvia::core {
 class stream_assembler;
 struct renderer_parameters;
@@ -26,8 +26,8 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 
 class host {
 public:
-  virtual void initialize(render_stages const *stages) = 0;
-  virtual void update(render_state const *state) = 0;
+  virtual void initialize(render_stages const* stages) = 0;
+  virtual void update(render_state const* state) = 0;
 
   // virtual void update_target_params	(renderer_parameters const& rp, buffer_ptr const& target) =
   // 0;
@@ -39,4 +39,4 @@ public:
   virtual ~host() {}
 };
 
-} // namespace salvia::core
+}  // namespace salvia::core

@@ -15,13 +15,13 @@ namespace salvia::resource {
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
-}
+}  // namespace salvia::resource
 
 namespace salvia::shader {
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 struct vs_input_op;
 struct vs_output_op;
-}
+}  // namespace salvia::shader
 
 namespace salvia::core {
 EFLIB_DECLARE_CLASS_SHARED_PTR(counter);
@@ -33,7 +33,6 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(stream_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(async_object);
-
 
 enum class command_id {
   draw,
@@ -73,7 +72,7 @@ struct render_state {
   shader::shader_cbuffer vx_cbuffer;
   shader::shader_cbuffer px_cbuffer;
 
-  shader::vs_input_op *vsi_ops;
+  shader::vs_input_op* vsi_ops;
 
   pixel_shader_unit_ptr ps_proto;
 
@@ -94,6 +93,6 @@ struct render_state {
   color_rgba32f clear_color;
 };
 
-void copy_using_state(render_state *dest, render_state const *src);
+void copy_using_state(render_state* dest, render_state const* src);
 
-} // namespace salvia::core
+}  // namespace salvia::core

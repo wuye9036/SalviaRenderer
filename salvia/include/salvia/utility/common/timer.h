@@ -15,7 +15,7 @@ public:
   timer();
   void restart();
   [[nodiscard]] double elapsed() const;
-  static time_point current_time() ;
+  static time_point current_time();
 
 private:
   clock_type::time_point start_time_;
@@ -24,7 +24,7 @@ private:
 class SALVIA_UTILITY_API fps_counter {
 public:
   explicit fps_counter(float interval);
-  bool on_frame(float &fps);
+  bool on_frame(float& fps);
 
 private:
   timer timer_;
@@ -33,4 +33,4 @@ private:
   float interval_;
 };
 
-}
+}  // namespace salvia::utility

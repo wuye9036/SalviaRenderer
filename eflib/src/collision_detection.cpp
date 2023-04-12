@@ -21,7 +21,7 @@ bool plane_box_overlap(const vec4& normal, const vec4& vert, const vec4& maxbox)
   float v;
   vec4 vmin, vmax;
   for (q = 0; q < 3; q++) {
-    v = vert[q];  // -NJMP-
+    v = vert[q];                 // -NJMP-
     if (normal[q] > 0.0f) {
       vmin[q] = -maxbox[q] - v;  // -NJMP-
       vmax[q] = maxbox[q] - v;   // -NJMP-
@@ -34,7 +34,7 @@ bool plane_box_overlap(const vec4& normal, const vec4& vert, const vec4& maxbox)
   if (dot_prod3(normal.xyz(), vmin.xyz()) > 0.0f)
     return false;  // -NJMP-
   if (dot_prod3(normal.xyz(), vmax.xyz()) >= 0.0f)
-    return true;  // -NJMP-
+    return true;   // -NJMP-
   return false;
 }
 
@@ -207,6 +207,6 @@ bool is_tri_cube_overlap(const AABB_3D& box, const vec4& tv0, const vec4& tv1, c
   if (!plane_box_overlap(normal, v0, boxhalfsize))
     return false;  // -NJMP-
 
-  return true; /* box and triangle overlaps */
+  return true;     /* box and triangle overlaps */
 }
 }  // namespace eflib
