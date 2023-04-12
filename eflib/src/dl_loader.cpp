@@ -1,14 +1,14 @@
 #include <eflib/platform/dl_loader.h>
 
 #ifdef EFLIB_WINDOWS
-#if !defined NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+#  if !defined NOMINMAX
+#    define NOMINMAX
+#  endif
+#  include <windows.h>
 #endif
 
 #if defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 
 using std::shared_ptr;
@@ -19,7 +19,7 @@ namespace eflib {
 
 class win_dl : public dynamic_lib {
 public:
-  win_dl(std::string const &name) {
+  win_dl(std::string const& name) {
     mod = ::LoadLibraryA(name.c_str());
     void (*loaded_hook)() = nullptr;
     dynamic_lib::get_function(loaded_hook, "_eflib_dynlib_loaded");
@@ -39,10 +39,10 @@ public:
     mod = (HMODULE)0;
   }
 
-  virtual void *get_function(std::string const &name) const {
+  virtual void* get_function(std::string const& name) const {
     if (!mod)
       return nullptr;
-    return (void *)(::GetProcAddress(mod, name.c_str()));
+    return (void*)(::GetProcAddress(mod, name.c_str()));
   }
 
   virtual bool available() const { return mod != nullptr; }
@@ -52,7 +52,7 @@ public:
 #elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
 class linux_dl : public dynamic_lib {
 public:
-  explicit linux_dl(std::string const &name) {
+  explicit linux_dl(std::string const& name) {
     mod = ::dlopen(name.c_str(), RTLD_NOW);
     void (*loaded_hook)() = nullptr;
     dynamic_lib::get_function(loaded_hook, "_eflib_dynlib_loaded");
@@ -76,26 +76,26 @@ public:
     mod = nullptr;
   }
 
-  [[nodiscard]] void *get_function(std::string const &name) const override {
+  [[nodiscard]] void* get_function(std::string const& name) const override {
     if (!mod)
       return nullptr;
-    return (void *)(dlsym(mod, name.c_str()));
+    return (void*)(dlsym(mod, name.c_str()));
   }
 
   [[nodiscard]] bool available() const override { return mod != nullptr; }
 
-  void *mod;
+  void* mod;
 };
 #endif
 
-shared_ptr<dynamic_lib> dynamic_lib::load(std::string const &name) {
+shared_ptr<dynamic_lib> dynamic_lib::load(std::string const& name) {
 #if defined(EFLIB_WINDOWS)
-  win_dl *dynlib = new win_dl(name);
+  win_dl* dynlib = new win_dl(name);
 #elif defined(EFLIB_LINUX) || defined(EFLIB_MACOS)
-  auto *dynlib = new linux_dl(name);
+  auto* dynlib = new linux_dl(name);
 #else
-#error "Platform is not supported."
+#  error "Platform is not supported."
 #endif
   return shared_ptr<dynamic_lib>(dynlib);
 }
-} // namespace eflib
+}  // namespace eflib

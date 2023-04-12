@@ -6,7 +6,7 @@
 #include <iostream>
 
 #if !defined(EFLIB_WINDOWS)
-#define _snprintf snprintf
+#  define _snprintf snprintf
 #endif
 
 using std::cout;
@@ -17,9 +17,11 @@ using std::vector;
 namespace chrono = std::chrono;
 
 namespace eflib {
-profiling_item::profiling_item(profiling_item *parent) : tag(0), parent(parent), duration_(0.0) {}
+profiling_item::profiling_item(profiling_item* parent) : tag(0), parent(parent), duration_(0.0) {
+}
 
-profiling_item::~profiling_item() {}
+profiling_item::~profiling_item() {
+}
 
 void profiling_item::start(profiling_item::clock::time_point start_time) {
   start_time_ = start_time;
@@ -30,7 +32,9 @@ void profiling_item::end(profiling_item::clock::time_point end_time) {
   profiling_item::duration_ += chrono::duration_cast<dseconds>(end_time - start_time_).count();
 }
 
-double profiling_item::duration() const { return duration_; }
+double profiling_item::duration() const {
+  return duration_;
+}
 
 double profiling_item::children_duration() const {
   double ret = 0.0;
@@ -40,9 +44,11 @@ double profiling_item::children_duration() const {
   return ret;
 }
 
-double profiling_item::exclusive_duration() const { return duration() - children_duration(); }
+double profiling_item::exclusive_duration() const {
+  return duration() - children_duration();
+}
 
-bool profiling_item::try_merge(profiling_item *rhs) {
+bool profiling_item::try_merge(profiling_item* rhs) {
   assert(parent == rhs->parent);
   assert(this != rhs);
   if (name == rhs->name && tag == rhs->tag) {
@@ -53,9 +59,10 @@ bool profiling_item::try_merge(profiling_item *rhs) {
   return false;
 }
 
-profiler::profiler() : root_{nullptr}, current_{nullptr} {}
+profiler::profiler() : root_{nullptr}, current_{nullptr} {
+}
 
-void profiler::start(string const &name, size_t tag) {
+void profiler::start(string const& name, size_t tag) {
   if (!current_) {
     current_ = &root_;
   } else {
@@ -68,22 +75,22 @@ void profiler::start(string const &name, size_t tag) {
   current_->start(profiling_item::clock::now());
 }
 
-void profiler::end(string const &name) {
+void profiler::end(string const& name) {
   EFLIB_UNREF_DECLARATOR(name);
   assert(name == current_->name);
   current_->end(profiling_item::clock::now());
   current_ = current_->parent;
 }
 
-void merge_children(profiling_item *parent) {
+void merge_children(profiling_item* parent) {
   // Merge children items of parent.
   size_t unique_count = parent->children.size();
   for (size_t i = 0; i < unique_count; ++i) {
-    profiling_item *processed_item = parent->children[i].get();
+    profiling_item* processed_item = parent->children[i].get();
 
     size_t i_processing = i + 1;
     while (i_processing < unique_count) {
-      profiling_item *processing_item = parent->children[i_processing].get();
+      profiling_item* processing_item = parent->children[i_processing].get();
       if (processed_item->try_merge(processing_item)) {
         std::swap(parent->children[i_processing], parent->children.back());
         parent->children.pop_back();
@@ -94,20 +101,29 @@ void merge_children(profiling_item *parent) {
     }
   }
 
-  for (auto &child : parent->children) {
+  for (auto& child : parent->children) {
     merge_children(child.get());
   }
 }
 
-void profiler::merge_items() { merge_children(&root_); }
+void profiler::merge_items() {
+  merge_children(&root_);
+}
 
-profiling_item const *profiler::root() const noexcept { return &root_; }
+profiling_item const* profiler::root() const noexcept {
+  return &root_;
+}
 
-profiling_item const *profiler::current() const noexcept { return current_; }
+profiling_item const* profiler::current() const noexcept {
+  return current_;
+}
 
 template <typename FuncT>
-void visit_profiling_items(profiling_item const *item, size_t level, size_t max_level,
-                           FuncT const &fn, bool root_first = true) {
+void visit_profiling_items(profiling_item const* item,
+                           size_t level,
+                           size_t max_level,
+                           FuncT const& fn,
+                           bool root_first = true) {
   assert(level < 40);
 
   if (level > max_level) {
@@ -127,7 +143,7 @@ void visit_profiling_items(profiling_item const *item, size_t level, size_t max_
   }
 }
 
-void print_profiling_item(profiling_item const *item, size_t level) {
+void print_profiling_item(profiling_item const* item, size_t level) {
   // Print item.
   // 80 char width,
   // Name,  Inclusive ms Exclusive Seconds, Inclusive Percentage.
@@ -187,7 +203,7 @@ void print_profiling_item(profiling_item const *item, size_t level) {
   cout << line << endl;
 }
 
-void print_profiler(profiler const *prof, size_t max_level) {
+void print_profiler(profiler const* prof, size_t max_level) {
   cout << " --- Profiling Result BEG --- " << endl;
   cout << "                      Name                            Secs(I)   Secs(E)    %  " << endl;
   visit_profiling_items(prof->root(), 0, max_level, print_profiling_item);
@@ -196,11 +212,11 @@ void print_profiler(profiler const *prof, size_t max_level) {
 
 using boost::property_tree::ptree;
 
-ptree make_ptree(profiler const *prof, size_t max_level) {
+ptree make_ptree(profiler const* prof, size_t max_level) {
   ptree root;
-  vector<ptree *> walk_stack(max_level + 1, nullptr);
+  vector<ptree*> walk_stack(max_level + 1, nullptr);
   walk_stack[0] = &root;
-  auto ptree_gen = [&walk_stack](profiling_item const *item, size_t level) {
+  auto ptree_gen = [&walk_stack](profiling_item const* item, size_t level) {
     ptree current;
     current.put("I_duration", item->duration());
     current.put("E_duration", item->exclusive_duration());
@@ -212,7 +228,7 @@ ptree make_ptree(profiler const *prof, size_t max_level) {
   return ptree(std::move(root));
 }
 
-profiling_scope::profiling_scope(profiler *prof, std::string const &name, size_t tag) {
+profiling_scope::profiling_scope(profiler* prof, std::string const& name, size_t tag) {
   this->prof = prof;
   this->name = name;
   prof->start(name, tag);
@@ -226,4 +242,4 @@ profiling_scope::~profiling_scope() {
 
   prof->end(name);
 }
-} // namespace eflib
+}  // namespace eflib

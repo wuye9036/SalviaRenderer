@@ -29,4 +29,4 @@ using uint4 = vector_<uint32_t, 4>;
 typedef vector_<float, 4> float4;
 #endif
 
-} // namespace eflib
+}  // namespace eflib

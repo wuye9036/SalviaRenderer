@@ -11,23 +11,27 @@
 #include <type_traits>
 
 namespace eflib {
-template <typename ScalarT, int Size> struct vector_;
+template <typename ScalarT, int Size>
+struct vector_;
 
-template <typename ScalarT, int Size> struct vector_data {
+template <typename ScalarT, int Size>
+struct vector_data {
   ScalarT data_[Size];
 
-  vector_<ScalarT, Size> *derived_this() { return static_cast<vector_<ScalarT, Size> *>(this); }
+  vector_<ScalarT, Size>* derived_this() { return static_cast<vector_<ScalarT, Size>*>(this); }
 
-  vector_<ScalarT, Size> const *derived_this() const {
-    return static_cast<vector_<ScalarT, Size> const *>(this);
+  vector_<ScalarT, Size> const* derived_this() const {
+    return static_cast<vector_<ScalarT, Size> const*>(this);
   }
 
-  template <typename IndexT> ScalarT const &operator[](IndexT index) const {
+  template <typename IndexT>
+  ScalarT const& operator[](IndexT index) const {
     EF_ASSERT(index < Size, "Out of bound.");
     return data_[index];
   }
 
-  template <typename IndexT> ScalarT &operator[](IndexT index) {
+  template <typename IndexT>
+  ScalarT& operator[](IndexT index) {
     EF_ASSERT(index < Size, "Out of bound.");
     return data_[index];
   }
@@ -36,7 +40,7 @@ template <typename ScalarT, int Size> struct vector_data {
   static unsigned int const vector_size = Size;
 
   //
-  vector_<ScalarT, Size> &set(vector_<ScalarT, Size> const &v) {
+  vector_<ScalarT, Size>& set(vector_<ScalarT, Size> const& v) {
     if (&v == this)
       return *this;
     for (int index = 0; index < Size; ++index) {
@@ -54,48 +58,48 @@ template <typename ScalarT, int Size> struct vector_data {
     return ret;
   }
 
-  vector_<ScalarT, Size> &operator*=(vector_<ScalarT, Size> const &v) {
+  vector_<ScalarT, Size>& operator*=(vector_<ScalarT, Size> const& v) {
     for (int index = 0; index < Size; ++index) {
       data_[index] *= v[index];
     }
     return *derived_this();
   }
 
-  vector_<ScalarT, Size> &operator*=(float s) {
+  vector_<ScalarT, Size>& operator*=(float s) {
     for (int index = 0; index < Size; ++index) {
       data_[index] *= s;
     }
     return *derived_this();
   }
 
-  vector_<ScalarT, Size> &operator/=(float s) {
+  vector_<ScalarT, Size>& operator/=(float s) {
     float invs = 1 / s;
     (*this) *= invs;
     return *derived_this();
   }
 
-  vector_<ScalarT, Size> &operator+=(vector_<ScalarT, Size> const &v) {
+  vector_<ScalarT, Size>& operator+=(vector_<ScalarT, Size> const& v) {
     for (int index = 0; index < Size; ++index) {
       data_[index] += v[index];
     }
     return *derived_this();
   }
 
-  vector_<ScalarT, Size> &operator+=(float s) {
+  vector_<ScalarT, Size>& operator+=(float s) {
     for (int index = 0; index < Size; ++index) {
       data_[index] += s;
     }
     return *this;
   }
 
-  vector_<ScalarT, Size> &operator-=(vector_<ScalarT, Size> const &v) {
+  vector_<ScalarT, Size>& operator-=(vector_<ScalarT, Size> const& v) {
     for (int index = 0; index < Size; ++index) {
       data_[index] -= v[index];
     }
     return *derived_this();
   }
 
-  vector_<ScalarT, Size> &operator-=(float s) {
+  vector_<ScalarT, Size>& operator-=(float s) {
     for (int index = 0; index < Size; ++index) {
       data_[index] -= s;
     }
@@ -125,42 +129,53 @@ template <typename ScalarT, int Size> struct vector_data {
   }
 };
 
-template <typename ScalarT, int i> struct vector_swizzle;
+template <typename ScalarT, int i>
+struct vector_swizzle;
 
-template <typename ScalarT> struct vector_swizzle<ScalarT, 0> {};
+template <typename ScalarT>
+struct vector_swizzle<ScalarT, 0> {};
 
-template <typename ScalarT> struct vector_swizzle<ScalarT, 1> {
-  ScalarT const &x() const;
+template <typename ScalarT>
+struct vector_swizzle<ScalarT, 1> {
+  ScalarT const& x() const;
   vector_<ScalarT, 2> xx() const;
   vector_<ScalarT, 3> xxx() const;
   vector_<ScalarT, 4> xxxx() const;
 };
 
-template <typename ScalarT> struct vector_swizzle<ScalarT, 2> {
+template <typename ScalarT>
+struct vector_swizzle<ScalarT, 2> {
   SWIZZLE_DECL_FOR_VEC2();
   WRITE_MASK_FOR_VEC2();
 };
 
-template <typename ScalarT> struct vector_swizzle<ScalarT, 3> {
+template <typename ScalarT>
+struct vector_swizzle<ScalarT, 3> {
   SWIZZLE_DECL_FOR_VEC3();
   WRITE_MASK_FOR_VEC3();
 };
 
-template <typename ScalarT> struct vector_swizzle<ScalarT, 4> {
+template <typename ScalarT>
+struct vector_swizzle<ScalarT, 4> {
   SWIZZLE_DECL_FOR_VEC4();
   WRITE_MASK_FOR_VEC4();
 };
 
-template <typename ScalarT, int Size> struct vector_ {};
+template <typename ScalarT, int Size>
+struct vector_ {};
 
 template <typename ScalarT>
-struct vector_<ScalarT, 1> : public vector_swizzle<ScalarT, 1>, public vector_data<ScalarT, 1> {
+struct vector_<ScalarT, 1>
+  : public vector_swizzle<ScalarT, 1>
+  , public vector_data<ScalarT, 1> {
   vector_() {}
   explicit vector_<ScalarT, 1>(ScalarT v) { this->data_[0] = v; }
 };
 
 template <typename ScalarT>
-struct vector_<ScalarT, 2> : public vector_swizzle<ScalarT, 2>, public vector_data<ScalarT, 2> {
+struct vector_<ScalarT, 2>
+  : public vector_swizzle<ScalarT, 2>
+  , public vector_data<ScalarT, 2> {
   vector_() {}
   explicit vector_<ScalarT, 2>(ScalarT v0, ScalarT v1) {
     this->data_[0] = v0;
@@ -169,7 +184,9 @@ struct vector_<ScalarT, 2> : public vector_swizzle<ScalarT, 2>, public vector_da
 };
 
 template <typename ScalarT>
-struct vector_<ScalarT, 3> : public vector_swizzle<ScalarT, 3>, public vector_data<ScalarT, 3> {
+struct vector_<ScalarT, 3>
+  : public vector_swizzle<ScalarT, 3>
+  , public vector_data<ScalarT, 3> {
   vector_() {}
   explicit vector_<ScalarT, 3>(ScalarT v0, ScalarT v1, ScalarT v2) {
     this->data_[0] = v0;
@@ -179,16 +196,20 @@ struct vector_<ScalarT, 3> : public vector_swizzle<ScalarT, 3>, public vector_da
 };
 
 template <typename ScalarT>
-struct vector_<ScalarT, 4> : public vector_swizzle<ScalarT, 4>, public vector_data<ScalarT, 4> {
+struct vector_<ScalarT, 4>
+  : public vector_swizzle<ScalarT, 4>
+  , public vector_data<ScalarT, 4> {
   vector_() {}
-  explicit vector_<ScalarT, 4>(ScalarT v0, ScalarT v1 = ScalarT(0), ScalarT v2 = ScalarT(0),
+  explicit vector_<ScalarT, 4>(ScalarT v0,
+                               ScalarT v1 = ScalarT(0),
+                               ScalarT v2 = ScalarT(0),
                                ScalarT v3 = ScalarT(0)) {
     this->data_[0] = v0;
     this->data_[1] = v1;
     this->data_[2] = v2;
     this->data_[3] = v3;
   }
-  explicit vector_<ScalarT, 4>(vector_<ScalarT, 3> const &v, ScalarT s = ScalarT(0)) {
+  explicit vector_<ScalarT, 4>(vector_<ScalarT, 3> const& v, ScalarT s = ScalarT(0)) {
     this->data_[0] = v[0];
     this->data_[1] = v[1];
     this->data_[2] = v[2];
@@ -210,17 +231,18 @@ struct vector_<ScalarT, 4> : public vector_swizzle<ScalarT, 4>, public vector_da
   static constexpr vector_<ScalarT, 4> gen_vector(ScalarT x, ScalarT y, ScalarT z) noexcept;
 };
 
-template <typename ScalarT> constexpr vector_<ScalarT, 4> vector_<ScalarT, 4>::zero() noexcept {
+template <typename ScalarT>
+constexpr vector_<ScalarT, 4> vector_<ScalarT, 4>::zero() noexcept {
   return vector_<ScalarT, 4>(0, 0, 0, 0);
 }
 template <typename ScalarT>
-constexpr vector_<ScalarT, 4> vector_<ScalarT, 4>::gen_coord(ScalarT x, ScalarT y,
-                                                             ScalarT z) noexcept {
+constexpr vector_<ScalarT, 4>
+vector_<ScalarT, 4>::gen_coord(ScalarT x, ScalarT y, ScalarT z) noexcept {
   return vector_<ScalarT, 4>(x, y, z, 1);
 }
 template <typename ScalarT>
-constexpr vector_<ScalarT, 4> vector_<ScalarT, 4>::gen_vector(ScalarT x, ScalarT y,
-                                                              ScalarT z) noexcept {
+constexpr vector_<ScalarT, 4>
+vector_<ScalarT, 4>::gen_vector(ScalarT x, ScalarT y, ScalarT z) noexcept {
   return vector_<ScalarT, 4>(x, y, z, 0);
 }
 
@@ -229,8 +251,8 @@ SWIZZLE_IMPL_FOR_VEC3();
 SWIZZLE_IMPL_FOR_VEC4();
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator+(vector_<ScalarT, Size> const &lhs,
-                                        vector_<ScalarT, Size> const &rhs) {
+inline vector_<ScalarT, Size> operator+(vector_<ScalarT, Size> const& lhs,
+                                        vector_<ScalarT, Size> const& rhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] + rhs[i];
@@ -239,8 +261,8 @@ inline vector_<ScalarT, Size> operator+(vector_<ScalarT, Size> const &lhs,
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator-(vector_<ScalarT, Size> const &lhs,
-                                        vector_<ScalarT, Size> const &rhs) {
+inline vector_<ScalarT, Size> operator-(vector_<ScalarT, Size> const& lhs,
+                                        vector_<ScalarT, Size> const& rhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] - rhs[i];
@@ -249,7 +271,7 @@ inline vector_<ScalarT, Size> operator-(vector_<ScalarT, Size> const &lhs,
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator+(vector_<ScalarT, Size> const &lhs, float s) {
+inline vector_<ScalarT, Size> operator+(vector_<ScalarT, Size> const& lhs, float s) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] + s;
@@ -258,12 +280,12 @@ inline vector_<ScalarT, Size> operator+(vector_<ScalarT, Size> const &lhs, float
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator+(float s, vector_<ScalarT, Size> const &lhs) {
+inline vector_<ScalarT, Size> operator+(float s, vector_<ScalarT, Size> const& lhs) {
   return lhs + s;
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator-(vector_<ScalarT, Size> const &lhs, float s) {
+inline vector_<ScalarT, Size> operator-(vector_<ScalarT, Size> const& lhs, float s) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] - s;
@@ -272,7 +294,7 @@ inline vector_<ScalarT, Size> operator-(vector_<ScalarT, Size> const &lhs, float
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator-(float s, vector_<ScalarT, Size> const &lhs) {
+inline vector_<ScalarT, Size> operator-(float s, vector_<ScalarT, Size> const& lhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = s - lhs[i];
@@ -281,8 +303,8 @@ inline vector_<ScalarT, Size> operator-(float s, vector_<ScalarT, Size> const &l
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator*(vector_<ScalarT, Size> const &lhs,
-                                        vector_<ScalarT, Size> const &rhs) {
+inline vector_<ScalarT, Size> operator*(vector_<ScalarT, Size> const& lhs,
+                                        vector_<ScalarT, Size> const& rhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] * rhs[i];
@@ -291,8 +313,8 @@ inline vector_<ScalarT, Size> operator*(vector_<ScalarT, Size> const &lhs,
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator/(vector_<ScalarT, Size> const &lhs,
-                                        vector_<ScalarT, Size> const &rhs) {
+inline vector_<ScalarT, Size> operator/(vector_<ScalarT, Size> const& lhs,
+                                        vector_<ScalarT, Size> const& rhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] / rhs[i];
@@ -301,7 +323,7 @@ inline vector_<ScalarT, Size> operator/(vector_<ScalarT, Size> const &lhs,
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator*(vector_<ScalarT, Size> const &lhs, float s) {
+inline vector_<ScalarT, Size> operator*(vector_<ScalarT, Size> const& lhs, float s) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] * s;
@@ -310,12 +332,12 @@ inline vector_<ScalarT, Size> operator*(vector_<ScalarT, Size> const &lhs, float
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator*(float s, vector_<ScalarT, Size> const &lhs) {
+inline vector_<ScalarT, Size> operator*(float s, vector_<ScalarT, Size> const& lhs) {
   return lhs * s;
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator/(vector_<ScalarT, Size> const &lhs, float s) {
+inline vector_<ScalarT, Size> operator/(vector_<ScalarT, Size> const& lhs, float s) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = lhs[i] / s;
@@ -324,7 +346,7 @@ inline vector_<ScalarT, Size> operator/(vector_<ScalarT, Size> const &lhs, float
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> operator/(float s, vector_<ScalarT, Size> const &lhs) {
+inline vector_<ScalarT, Size> operator/(float s, vector_<ScalarT, Size> const& lhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = s / lhs[i];
@@ -333,8 +355,8 @@ inline vector_<ScalarT, Size> operator/(float s, vector_<ScalarT, Size> const &l
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> max_ps(vector_<ScalarT, Size> const &lhs,
-                                     vector_<ScalarT, Size> const &rhs) {
+inline vector_<ScalarT, Size> max_ps(vector_<ScalarT, Size> const& lhs,
+                                     vector_<ScalarT, Size> const& rhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = std::max(lhs[i], rhs[i]);
@@ -343,12 +365,12 @@ inline vector_<ScalarT, Size> max_ps(vector_<ScalarT, Size> const &lhs,
 }
 
 template <typename ScalarT, int Size>
-inline vector_<ScalarT, Size> min_ps(vector_<ScalarT, Size> const &lhs,
-                                     vector_<ScalarT, Size> const &rhs) {
+inline vector_<ScalarT, Size> min_ps(vector_<ScalarT, Size> const& lhs,
+                                     vector_<ScalarT, Size> const& rhs) {
   vector_<ScalarT, Size> ret;
   for (int i = 0; i < Size; ++i) {
     ret[i] = std::min(lhs[i], rhs[i]);
   }
   return ret;
 }
-} // namespace eflib
+}  // namespace eflib

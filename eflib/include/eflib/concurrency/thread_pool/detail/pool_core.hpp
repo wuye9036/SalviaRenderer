@@ -37,25 +37,34 @@ using namespace std;
  */
 template <typename Task,
 
-          template <typename> class SchedulingPolicy, template <typename> class SizePolicy,
-          template <typename> class SizePolicyController, template <typename> class ShutdownPolicy>
+          template <typename>
+          class SchedulingPolicy,
+          template <typename>
+          class SizePolicy,
+          template <typename>
+          class SizePolicyController,
+          template <typename>
+          class ShutdownPolicy>
 class pool_core
-    : public std::enable_shared_from_this<
-          pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController, ShutdownPolicy>> {
-
-public:                                               // Type definitions
-  typedef Task task_type;                             //!< Indicates the task's type.
-  typedef SchedulingPolicy<task_type> scheduler_type; //!< Indicates the scheduler's type.
-  typedef pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController,
+  : public std::enable_shared_from_this<
+        pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController, ShutdownPolicy>> {
+public:                                                // Type definitions
+  typedef Task task_type;                              //!< Indicates the task's type.
+  typedef SchedulingPolicy<task_type> scheduler_type;  //!< Indicates the scheduler's type.
+  typedef pool_core<Task,
+                    SchedulingPolicy,
+                    SizePolicy,
+                    SizePolicyController,
                     ShutdownPolicy>
-      pool_type;                                  //!< Indicates the thread pool's type.
-  typedef SizePolicy<pool_type> size_policy_type; //!< Indicates the sizer's type.
+      pool_type;                                   //!< Indicates the thread pool's type.
+  typedef SizePolicy<pool_type> size_policy_type;  //!< Indicates the sizer's type.
   // typedef typename size_policy_type::size_controller size_controller_type;
 
   typedef SizePolicyController<pool_type> size_controller_type;
 
   //    typedef SizePolicy<pool_type>::size_controller size_controller_type;
-  typedef ShutdownPolicy<pool_type> shutdown_policy_type; //!< Indicates the shutdown policy's type.
+  typedef ShutdownPolicy<pool_type>
+      shutdown_policy_type;  //!< Indicates the shutdown policy's type.
 
   typedef worker_thread<pool_type> worker_type;
 
@@ -65,11 +74,11 @@ public:                                               // Type definitions
   // The task function's result type is required to be void.
   static_assert(is_void<typename invoke_result<task_type()>::type>::value);
 
-private: // Friends
+private:  // Friends
   friend class worker_thread<pool_type>;
 
-#if defined(__SUNPRO_CC) &&                                                                        \
-    (__SUNPRO_CC <= 0x580) // Tested with CC: Sun C++ 5.8 Patch 121018-08 2006/12/06
+#if defined(__SUNPRO_CC) && \
+    (__SUNPRO_CC <= 0x580)  // Tested with CC: Sun C++ 5.8 Patch 121018-08 2006/12/06
   friend class SizePolicy;
   friend class ShutdownPolicy;
 #else
@@ -77,39 +86,41 @@ private: // Friends
   friend class ShutdownPolicy<pool_type>;
 #endif
 
-private: // The following members may be accessed by _multiple_ threads at the same time:
+private:  // The following members may be accessed by _multiple_ threads at the same time:
   std::atomic<size_t> m_worker_count;
   std::atomic<size_t> m_target_worker_count;
   std::atomic<size_t> m_active_worker_count;
 
-private: // The following members are accessed only by _one_ thread at the same time:
+private:  // The following members are accessed only by _one_ thread at the same time:
   scheduler_type m_scheduler;
-  unique_ptr<size_policy_type> m_size_policy; // is never null
+  unique_ptr<size_policy_type> m_size_policy;  // is never null
 
-  bool m_terminate_all_workers; // Indicates if termination of all workers was triggered.
+  bool m_terminate_all_workers;  // Indicates if termination of all workers was triggered.
   std::vector<shared_ptr<worker_type>>
-      m_terminated_workers; // List of workers which are terminated but not fully destructed.
+      m_terminated_workers;  // List of workers which are terminated but not fully destructed.
 
-private: // The following members are implemented thread-safe:
+private:  // The following members are implemented thread-safe:
   mutable recursive_mutex m_monitor;
   mutable condition_variable_any
-      m_worker_idle_or_terminated_event; // A worker is idle or was terminated.
+      m_worker_idle_or_terminated_event;  // A worker is idle or was terminated.
   mutable condition_variable_any
-      m_task_or_terminate_workers_event; // Task is available OR total worker count should be
-                                         // reduced.
+      m_task_or_terminate_workers_event;  // Task is available OR total worker count should be
+                                          // reduced.
 
 public:
   /// Constructor.
   pool_core()
-      : m_worker_count(0), m_target_worker_count(0), m_active_worker_count(0),
-        m_terminate_all_workers(false) {
-    pool_type volatile &self_ref = *this;
+    : m_worker_count(0)
+    , m_target_worker_count(0)
+    , m_active_worker_count(0)
+    , m_terminate_all_workers(false) {
+    pool_type volatile& self_ref = *this;
     m_size_policy.reset(new size_policy_type(self_ref));
 
     m_scheduler.clear();
   }
 
-  pool_core(pool_core const &) = delete;
+  pool_core(pool_core const&) = delete;
 
   /// Destructor.
   ~pool_core() {}
@@ -134,7 +145,7 @@ public:
    * \param task The task function object. It should not throw execeptions.
    * \return true, if the task could be scheduled and false otherwise.
    */
-  bool schedule(task_type const &task) volatile {
+  bool schedule(task_type const& task) volatile {
     locking_ptr<pool_type, recursive_mutex> lockedThis(*this, m_monitor);
 
     if (lockedThis->m_scheduler.push(task)) {
@@ -179,7 +190,7 @@ public:
    * \param task_threshold The maximum number of tasks in pool and scheduler.
    */
   void wait(size_t const task_threshold = 0) const volatile {
-    const pool_type *self = const_cast<const pool_type *>(this);
+    const pool_type* self = const_cast<const pool_type*>(this);
     unique_lock<recursive_mutex> lock(self->m_monitor);
 
     if (0 == task_threshold) {
@@ -201,9 +212,9 @@ public:
    * \return true if the task sum is equal or less than the threshold, false otherwise.
    */
   template <typename Rep, typename Period>
-  bool wait(std::chrono::duration<Rep, Period> const &timestamp,
+  bool wait(std::chrono::duration<Rep, Period> const& timestamp,
             size_t const task_threshold = 0) const volatile {
-    const pool_type *self = const_cast<const pool_type *>(this);
+    const pool_type* self = const_cast<const pool_type*>(this);
     scoped_lock<recursive_mutex> lock(self->m_monitor);
 
     if (0 == task_threshold) {
@@ -223,7 +234,7 @@ public:
 
 private:
   void terminate_all_workers(bool const wait) volatile {
-    pool_type *self = const_cast<pool_type *>(this);
+    pool_type* self = const_cast<pool_type*>(this);
     unique_lock<recursive_mutex> lock(self->m_monitor);
 
     self->m_terminate_all_workers = true;
@@ -238,7 +249,8 @@ private:
 
       for (typename std::vector<shared_ptr<worker_type>>::iterator it =
                self->m_terminated_workers.begin();
-           it != self->m_terminated_workers.end(); ++it) {
+           it != self->m_terminated_workers.end();
+           ++it) {
         (*it)->join();
       }
       self->m_terminated_workers.clear();
@@ -259,16 +271,16 @@ private:
       return false;
     }
 
-    if (m_worker_count <= m_target_worker_count) { // increase worker count
+    if (m_worker_count <= m_target_worker_count) {  // increase worker count
       while (m_worker_count < m_target_worker_count) {
         worker_thread<pool_type>::create_and_attach(lockedThis->shared_from_this());
         m_worker_count++;
         m_active_worker_count++;
         return true;
       }
-    } else { // decrease worker count
+    } else {  // decrease worker count
       lockedThis->m_task_or_terminate_workers_event
-          .notify_all(); // TODO: Optimize number of notified workers
+          .notify_all();  // TODO: Optimize number of notified workers
     }
 
     return true;
@@ -303,20 +315,20 @@ private:
   bool execute_task() volatile {
     std::function<void()> task;
 
-    { // fetch task
-      pool_type *lockedThis = const_cast<pool_type *>(this);
+    {  // fetch task
+      pool_type* lockedThis = const_cast<pool_type*>(this);
       unique_lock<recursive_mutex> lock(lockedThis->m_monitor);
 
       // decrease number of threads if necessary
       if (m_worker_count > m_target_worker_count) {
-        return false; // terminate worker
+        return false;  // terminate worker
       }
 
       // wait for tasks
       while (lockedThis->m_scheduler.empty()) {
         // decrease number of workers if necessary
         if (m_worker_count > m_target_worker_count) {
-          return false; // terminate worker
+          return false;  // terminate worker
         } else {
           m_active_worker_count--;
           lockedThis->m_worker_idle_or_terminated_event.notify_all();
@@ -339,6 +351,6 @@ private:
   }
 };
 
-} // namespace detail
-} // namespace threadpool
-} // namespace eflib
+}  // namespace detail
+}  // namespace threadpool
+}  // namespace eflib

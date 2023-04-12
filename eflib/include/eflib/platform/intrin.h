@@ -4,7 +4,7 @@
 #include <eflib/platform/stdint.h>
 
 #if !defined(SIMDE_ENABLE_NATIVE_ALIASES)
-#define SIMDE_ENABLE_NATIVE_ALIASES 1
+#  define SIMDE_ENABLE_NATIVE_ALIASES 1
 #endif
 
 // NOMINMAX guard due to simde included windows.h.
@@ -14,18 +14,18 @@
 #include <simde/x86/sse2.h>
 
 #if defined(EFLIB_MSVC)
-inline uint8_t _xmm_bsr(uint32_t *index, uint32_t mask) {
-  return _BitScanReverse((unsigned long *)index, mask);
+inline uint8_t _xmm_bsr(uint32_t* index, uint32_t mask) {
+  return _BitScanReverse((unsigned long*)index, mask);
 }
 
-inline uint8_t _xmm_bsf(uint32_t *index, uint32_t mask) {
-  return _BitScanForward((unsigned long *)index, mask);
+inline uint8_t _xmm_bsf(uint32_t* index, uint32_t mask) {
+  return _BitScanForward((unsigned long*)index, mask);
 }
 
-inline uint8_t _xmm_bsr(uint32_t *index, uint64_t mask) {
-#if defined(EFLIB_CPU_X64)
-  return _BitScanReverse64((unsigned long *)index, mask);
-#else
+inline uint8_t _xmm_bsr(uint32_t* index, uint64_t mask) {
+#  if defined(EFLIB_CPU_X64)
+  return _BitScanReverse64((unsigned long*)index, mask);
+#  else
   if (mask == 0)
     return 0;
   uint64_t indicator = 1;
@@ -35,13 +35,13 @@ inline uint8_t _xmm_bsr(uint32_t *index, uint64_t mask) {
     indicator <<= 1;
   }
   return 1;
-#endif
+#  endif
 }
 
-inline uint8_t _xmm_bsf(uint32_t *index, uint64_t mask) {
-#if defined(EFLIB_CPU_X64)
-  return _BitScanForward64((unsigned long *)index, mask);
-#else
+inline uint8_t _xmm_bsf(uint32_t* index, uint64_t mask) {
+#  if defined(EFLIB_CPU_X64)
+  return _BitScanForward64((unsigned long*)index, mask);
+#  else
   if (mask == 0)
     return 0;
   uint64_t indicator = 1;
@@ -51,10 +51,10 @@ inline uint8_t _xmm_bsf(uint32_t *index, uint64_t mask) {
     indicator <<= 1;
   }
   return 1;
-#endif
+#  endif
 }
 #elif defined(EFLIB_GCC) || defined(EFLIB_CLANG)
-inline uint8_t _xmm_bsr(uint32_t *index, uint32_t mask) {
+inline uint8_t _xmm_bsr(uint32_t* index, uint32_t mask) {
   if (mask == 0) {
     return 0;
   }
@@ -62,7 +62,7 @@ inline uint8_t _xmm_bsr(uint32_t *index, uint32_t mask) {
   return 1;
 }
 
-inline uint8_t _xmm_bsf(uint32_t *index, uint32_t mask) {
+inline uint8_t _xmm_bsf(uint32_t* index, uint32_t mask) {
   if (mask == 0) {
     return 0;
   }
@@ -70,7 +70,7 @@ inline uint8_t _xmm_bsf(uint32_t *index, uint32_t mask) {
   return 1;
 }
 
-inline uint8_t _xmm_bsr(uint32_t *index, uint64_t mask) {
+inline uint8_t _xmm_bsr(uint32_t* index, uint64_t mask) {
   if (mask == 0) {
     return 0;
   }
@@ -78,7 +78,7 @@ inline uint8_t _xmm_bsr(uint32_t *index, uint64_t mask) {
   return 1;
 }
 
-inline uint8_t _xmm_bsf(uint32_t *index, uint64_t mask) {
+inline uint8_t _xmm_bsf(uint32_t* index, uint64_t mask) {
   if (mask == 0) {
     return 0;
   }

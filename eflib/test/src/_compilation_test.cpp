@@ -2,4 +2,6 @@
 
 #include <eflib/concurrency/atomic.h>
 
-TEST(eflib, _compilation) { ; }
+TEST(eflib, _compilation) {
+  ;
+}

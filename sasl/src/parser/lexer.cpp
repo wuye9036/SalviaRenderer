@@ -2,11 +2,11 @@
 
 #include <sasl/common/token.h>
 
-#include <boost/spirit/include/lex.hpp>
-#include <boost/spirit/include/lex_lexertl.hpp>
-
 #include <eflib/diagnostics/assert.h>
 #include <eflib/utility/hash.h>
+
+#include <boost/spirit/include/lex.hpp>
+#include <boost/spirit/include/lex_lexertl.hpp>
 
 #include <unordered_set>
 
@@ -20,8 +20,6 @@ using std::shared_ptr;
 using std::unordered_map;
 using std::unordered_set;
 
-using std::cout;
-using std::endl;
 using std::string;
 using std::vector;
 

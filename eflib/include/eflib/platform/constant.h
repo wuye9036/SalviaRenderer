@@ -14,4 +14,4 @@ static const float precision_limit = 1.0e-15f;
 static const int int_max = std::numeric_limits<int>::max();
 static const float infinite = std::numeric_limits<float>::infinity();
 static const float epsilon = std::numeric_limits<float>::epsilon();
-} // namespace eflib
+}  // namespace eflib

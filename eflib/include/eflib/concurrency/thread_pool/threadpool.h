@@ -14,11 +14,14 @@ namespace eflib {
 class thread_pool {
 public:
   explicit thread_pool(uint32_t thread_count)
-      : terminate_{false}, worker_count_{thread_count}, pending_count_{0} {
+    : terminate_{false}
+    , worker_count_{thread_count}
+    , pending_count_{0} {
     initialize();
   }
 
-  template <typename F> void schedule(F &&job) {
+  template <typename F>
+  void schedule(F&& job) {
     ++pending_count_;
     {
       std::unique_lock<std::mutex> lock(queue_mutex_);
@@ -40,7 +43,7 @@ public:
     }
     queue_cv_.notify_all();
 
-    for (auto &worker : workers_) {
+    for (auto& worker : workers_) {
       worker.join();
     }
 
@@ -96,4 +99,4 @@ private:
 #else
 using thread_pool = threadpool::pool;
 #endif
-} // namespace eflib
+}  // namespace eflib
