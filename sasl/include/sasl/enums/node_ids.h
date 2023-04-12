@@ -53,4 +53,4 @@ enum class node_ids : uint64_t {
   call_expression = UINT64_C(562949953421321)
 };
 
-void register_enum_name(std::function<void(char const *, node_ids)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, node_ids)> const& reg_fn);

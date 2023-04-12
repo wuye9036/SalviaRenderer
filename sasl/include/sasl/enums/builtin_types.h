@@ -42,4 +42,4 @@ enum class builtin_types : uint32_t {
   _integer = UINT32_C(33554432)
 };
 
-void register_enum_name(std::function<void(char const *, builtin_types)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, builtin_types)> const& reg_fn);

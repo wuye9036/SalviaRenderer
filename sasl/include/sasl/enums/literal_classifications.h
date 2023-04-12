@@ -13,4 +13,4 @@ enum class literal_classifications : uint32_t {
   integer = UINT32_C(3)
 };
 
-void register_enum_name(std::function<void(char const *, literal_classifications)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, literal_classifications)> const& reg_fn);

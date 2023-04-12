@@ -20,7 +20,7 @@ std::shared_ptr<NodeT> create_node() {
 
 template <typename NodeT, typename ParamT>
   requires std::is_base_of_v<node, NodeT>
-std::shared_ptr<NodeT> create_node(ParamT &&par) {
+std::shared_ptr<NodeT> create_node(ParamT&& par) {
   return std::make_shared<NodeT>(std::forward<ParamT>(par));
 }
 
@@ -33,4 +33,4 @@ std::shared_ptr<NodeT> create_node(token tok_beg, token tok_end) {
   return ret;
 }
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

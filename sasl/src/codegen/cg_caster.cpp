@@ -49,11 +49,11 @@ class cg_service;
 
 class cg_caster : public caster_t {
 public:
-  cg_caster(get_context_fn get_context, cg_service *cgs) : get_context(get_context), cgs(cgs) {}
+  cg_caster(get_context_fn get_context, cg_service* cgs) : get_context(get_context), cgs(cgs) {}
 
-  void store(node *dest, node *src, multi_value const &v) {
-    node_context *src_ctxt = get_context(src);
-    node_context *dest_ctxt = get_context(dest);
+  void store(node* dest, node* src, multi_value const& v) {
+    node_context* src_ctxt = get_context(src);
+    node_context* dest_ctxt = get_context(dest);
 
     if (e2i(dest->node_class() & node_ids::tynode) != 0) {
       // Overwrite source.
@@ -68,9 +68,9 @@ public:
     }
   }
   // TODO: if dest == src, maybe some bad thing happen ...
-  void int2int(node *dest, node *src) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void int2int(node* dest, node* src) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
 
     assert(src_ctxt != dest_ctxt);
 
@@ -79,7 +79,7 @@ public:
     store(dest, src, casted);
   }
 
-  void int2bool(node *dest, node *src) {
+  void int2bool(node* dest, node* src) {
     if (src == dest) {
       return;
     }
@@ -87,9 +87,9 @@ public:
     store(dest, src, casted);
   }
 
-  void int2float(node *dest, node *src) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void int2float(node* dest, node* src) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
 
     assert(src_ctxt != dest_ctxt);
 
@@ -97,9 +97,9 @@ public:
     store(dest, src, casted);
   }
 
-  void float2int(node *dest, node *src) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void float2int(node* dest, node* src) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
 
     assert(src_ctxt != dest_ctxt);
 
@@ -107,9 +107,9 @@ public:
     store(dest, src, casted);
   }
 
-  void float2float(node *dest, node *src) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void float2float(node* dest, node* src) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
 
     assert(src_ctxt != dest_ctxt);
 
@@ -117,7 +117,7 @@ public:
     cgs->store(dest_ctxt->node_value, casted);
   }
 
-  void float2bool(node *dest, node *src) {
+  void float2bool(node* dest, node* src) {
     if (src == dest) {
       return;
     }
@@ -125,25 +125,25 @@ public:
     store(dest, src, casted);
   }
 
-  void scalar2vec1(node *dest, node *src) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void scalar2vec1(node* dest, node* src) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
     EFLIB_UNREF_DECLARATOR(dest_ctxt);
     assert(src_ctxt != dest_ctxt);
     store(dest, src, cgs->cast_s2v(src_ctxt->node_value.to_rvalue()));
   }
 
-  void vec2scalar(node *dest, node *src) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void vec2scalar(node* dest, node* src) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
     EFLIB_UNREF_DECLARATOR(dest_ctxt);
     assert(src_ctxt != dest_ctxt);
     store(dest, src, cgs->cast_v2s(src_ctxt->node_value.to_rvalue()));
   }
 
-  void shrink_vector(node *dest, node *src, int source_size, int dest_size) {
-    node_context *dest_ctxt = get_context(dest);
-    node_context *src_ctxt = get_context(src);
+  void shrink_vector(node* dest, node* src, int source_size, int dest_size) {
+    node_context* dest_ctxt = get_context(dest);
+    node_context* src_ctxt = get_context(src);
     EFLIB_UNREF_DECLARATOR(src_ctxt);
     EFLIB_UNREF_DECLARATOR(source_size);
     assert(src_ctxt != dest_ctxt);
@@ -156,24 +156,28 @@ public:
 
 private:
   get_context_fn get_context;
-  cg_service *cgs;
+  cg_service* cgs;
 };
 
 // Add casters for scalar, vector, matrix.
-void add_svm_casters(shared_ptr<caster_t> const &caster, caster_t::casts casts, builtin_types src,
-                     builtin_types dst, caster_t::cast_t fn, pety_t *pety) {
+void add_svm_casters(shared_ptr<caster_t> const& caster,
+                     caster_t::casts casts,
+                     builtin_types src,
+                     builtin_types dst,
+                     caster_t::cast_t fn,
+                     pety_t* pety) {
   caster->add_cast_auto_prior(casts, pety->get(src), pety->get(dst), fn);
   for (size_t i = 1; i <= 4; ++i) {
-    caster->add_cast_auto_prior(casts, pety->get(vector_of(src, i)), pety->get(vector_of(dst, i)),
-                                fn);
+    caster->add_cast_auto_prior(
+        casts, pety->get(vector_of(src, i)), pety->get(vector_of(dst, i)), fn);
     for (size_t j = 1; j <= 4; ++j) {
-      caster->add_cast_auto_prior(casts, pety->get(matrix_of(src, i, j)),
-                                  pety->get(matrix_of(dst, i, j)), fn);
+      caster->add_cast_auto_prior(
+          casts, pety->get(matrix_of(src, i, j)), pety->get(matrix_of(dst, i, j)), fn);
     }
   }
 }
 
-void add_builtin_casts(shared_ptr<caster_t> caster, pety_t *pety) {
+void add_builtin_casts(shared_ptr<caster_t> caster, pety_t* pety) {
   using namespace std::placeholders;
 
   typedef caster_t::cast_t cast_t;
@@ -336,24 +340,24 @@ void add_builtin_casts(shared_ptr<caster_t> caster, pety_t *pety) {
   //-------------------------------------------------------------------------
   // Register scalar <====> vector<scalar, 1>.
 
-#define DEFINE_VECTOR_TYPE_IDS(btc)                                                                \
-  tid_t btc##_vts[5] = {-1, -1, -1, -1, -1};                                                       \
-  btc##_vts[1] = pety->get(vector_of(builtin_types::btc, 1));                                      \
-  btc##_vts[2] = pety->get(vector_of(builtin_types::btc, 2));                                      \
-  btc##_vts[3] = pety->get(vector_of(builtin_types::btc, 3));                                      \
+#define DEFINE_VECTOR_TYPE_IDS(btc)                           \
+  tid_t btc##_vts[5] = {-1, -1, -1, -1, -1};                  \
+  btc##_vts[1] = pety->get(vector_of(builtin_types::btc, 1)); \
+  btc##_vts[2] = pety->get(vector_of(builtin_types::btc, 2)); \
+  btc##_vts[3] = pety->get(vector_of(builtin_types::btc, 3)); \
   btc##_vts[4] = pety->get(vector_of(builtin_types::btc, 4));
 
-#define DEFINE_SHRINK_VECTORS(btc)                                                                 \
-  for (int i = 1; i <= 3; ++i) {                                                                   \
-    for (int j = i + 1; j <= 4; ++j) {                                                             \
-      cst->add_cast(caster_t::exp, btc##_vts[j], btc##_vts[i], shrink_vec_pfn[j][i]);              \
-    }                                                                                              \
-  }                                                                                                \
-  cst->add_cast(caster_t::eql, pety->get(builtin_types::btc), btc##_vts[1], scalar2vec1_pfn);      \
+#define DEFINE_SHRINK_VECTORS(btc)                                                            \
+  for (int i = 1; i <= 3; ++i) {                                                              \
+    for (int j = i + 1; j <= 4; ++j) {                                                        \
+      cst->add_cast(caster_t::exp, btc##_vts[j], btc##_vts[i], shrink_vec_pfn[j][i]);         \
+    }                                                                                         \
+  }                                                                                           \
+  cst->add_cast(caster_t::eql, pety->get(builtin_types::btc), btc##_vts[1], scalar2vec1_pfn); \
   cst->add_cast(caster_t::eql, btc##_vts[1], pety->get(builtin_types::btc), vec2scalar_pfn);
 
-#define DEFINE_VECTOR_AND_SHRINK(btc)                                                              \
-  DEFINE_VECTOR_TYPE_IDS(btc);                                                                     \
+#define DEFINE_VECTOR_AND_SHRINK(btc) \
+  DEFINE_VECTOR_TYPE_IDS(btc);        \
   DEFINE_SHRINK_VECTORS(btc);
 
   DEFINE_VECTOR_AND_SHRINK(_boolean);
@@ -371,13 +375,14 @@ void add_builtin_casts(shared_ptr<caster_t> caster, pety_t *pety) {
   DEFINE_VECTOR_AND_SHRINK(_double);
 }
 
-shared_ptr<caster_t> create_cg_caster(get_context_fn const &get_context,
-                                      get_semantic_fn const &get_semantic,
-                                      get_tynode_fn const &get_tynode, cg_service *cgs) {
+shared_ptr<caster_t> create_cg_caster(get_context_fn const& get_context,
+                                      get_semantic_fn const& get_semantic,
+                                      get_tynode_fn const& get_tynode,
+                                      cg_service* cgs) {
   shared_ptr<caster_t> ret = std::make_shared<cg_caster>(get_context, cgs);
   ret->set_function_get_semantic(get_semantic);
   ret->set_function_get_tynode(get_tynode);
   return ret;
 }
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

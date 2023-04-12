@@ -12,9 +12,10 @@
 #include <vector>
 
 namespace eflib {
-template <typename T, int Size> struct vector_;
+template <typename T, int Size>
+struct vector_;
 typedef vector_<float, 4> vec4;
-} // namespace eflib
+}  // namespace eflib
 
 namespace salviar {
 class stream_assembler;
@@ -26,7 +27,7 @@ class input_layout;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
-} // namespace salviar
+}  // namespace salviar
 
 namespace sasl {
 namespace shims {
@@ -34,47 +35,52 @@ struct ia_shim_data;
 EFLIB_DECLARE_CLASS_SHARED_PTR(ia_shim);
 EFLIB_DECLARE_CLASS_SHARED_PTR(interp_shim);
 EFLIB_DECLARE_CLASS_SHARED_PTR(om_shim);
-} // namespace shims
-} // namespace sasl
+}  // namespace shims
+}  // namespace sasl
 
 namespace sasl::host() {
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(host_impl);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log_impl);
 
-typedef void (*ia_shim_func_ptr)(void *output_buffer, shims::ia_shim_data const *data,
+typedef void (*ia_shim_func_ptr)(void* output_buffer,
+                                 shims::ia_shim_data const* data,
                                  size_t i_vert);
 
-typedef void (*shader_func_ptr)(void const *input_stream, void const *input_buffer,
-                                void *output_stream, void *output_buffer);
+typedef void (*shader_func_ptr)(void const* input_stream,
+                                void const* input_buffer,
+                                void* output_stream,
+                                void* output_buffer);
 
-typedef void (*vso2reg_func_ptr)(eflib::vec4 *out_registers, void const *in_data,
-                                 intptr_t const *in_offsets,     // TODO: OPTIMIZED BY JIT
-                                 uint32_t const *in_value_types, // TODO: OPTIMIZED BY JIT
-                                 uint32_t register_count         // TODO: OPTIMIZED BY JIT
+typedef void (*vso2reg_func_ptr)(eflib::vec4* out_registers,
+                                 void const* in_data,
+                                 intptr_t const* in_offsets,      // TODO: OPTIMIZED BY JIT
+                                 uint32_t const* in_value_types,  // TODO: OPTIMIZED BY JIT
+                                 uint32_t register_count          // TODO: OPTIMIZED BY JIT
 );
 
-typedef void (*interp_func_ptr)(eflib::vec4 *out_registers, eflib::vec4 const *in_registers,
-                                uint32_t const *interp_modifiers, // TODO: OPTIMIZED BY JIT
-                                uint32_t register_count           // TODO: OPTIMIZED BY JIT
+typedef void (*interp_func_ptr)(eflib::vec4* out_registers,
+                                eflib::vec4 const* in_registers,
+                                uint32_t const* interp_modifiers,  // TODO: OPTIMIZED BY JIT
+                                uint32_t register_count            // TODO: OPTIMIZED BY JIT
 );
 
-typedef void (*reg2psi_func_ptr)(void const *out_data,
-                                 intptr_t *out_offsets,     // TODO: OPTIMIZED BY JIT
-                                 uint32_t *out_value_types, // TODO: OPTIMIZED BY JIT
-                                 eflib::vec4 const *in_registers,
-                                 uint32_t register_count // TODO: OPTIMIZED BY JIT
+typedef void (*reg2psi_func_ptr)(void const* out_data,
+                                 intptr_t* out_offsets,      // TODO: OPTIMIZED BY JIT
+                                 uint32_t* out_value_types,  // TODO: OPTIMIZED BY JIT
+                                 eflib::vec4 const* in_registers,
+                                 uint32_t register_count     // TODO: OPTIMIZED BY JIT
 );
 
 class host_impl : public salviar::host {
 public:
   host_impl();
 
-  void initialize(salviar::render_stages const *stages);
+  void initialize(salviar::render_stages const* stages);
 
-  void update(salviar::render_state const *state);
-  void update_target_params(salvia::core::renderer_parameters const &rp,
-                            salvia::resource::buffer_ptr const &target);
+  void update(salviar::render_state const* state);
+  void update_target_params(salvia::core::renderer_parameters const& rp,
+                            salvia::resource::buffer_ptr const& target);
 
   salviar::vx_shader_unit_ptr get_vx_shader_unit() const;
   salviar::px_shader_unit_ptr get_px_shader_unit() const;
@@ -83,15 +89,15 @@ public:
 
 private:
   // Data used by Shim and Shader
-  salviar::stream_assembler *sa_;
-  salviar::input_layout *input_layout_;
+  salviar::stream_assembler* sa_;
+  salviar::input_layout* input_layout_;
 
   shims::om_shim_ptr om_shim_;
   shims::interp_shim_ptr interp_shim_;
   shims::ia_shim_ptr ia_shim_;
 
-  salviar::shader_object *px_shader_;
-  salviar::shader_object *vx_shader_;
+  salviar::shader_object* px_shader_;
+  salviar::shader_object* vx_shader_;
 
   // Cached data
   std::vector<char> vx_cbuffer_;
@@ -112,31 +118,33 @@ private:
   std::vector<uint32_t> interp_modifiers_;
 
   shader_func_ptr vx_shader_func_;
-  salviar::stream_desc const *stream_descs_;
+  salviar::stream_desc const* stream_descs_;
 
-  bool vx_update_constant(std::string_view, void const *value, size_t sz);
-  bool vx_update_constant_pointer(std::string_view, void const *value);
-  bool vx_update_sampler(std::string_view, salviar::sampler_ptr const &samp);
+  bool vx_update_constant(std::string_view, void const* value, size_t sz);
+  bool vx_update_constant_pointer(std::string_view, void const* value);
+  bool vx_update_sampler(std::string_view, salviar::sampler_ptr const& samp);
 
   void update_stream_descs();
   void update_ia_shim_func();
   void update_interp_funcs();
 };
 
-} // namespace sasl::host()
+}  // namespace sasl::host()
 
 extern "C" {
-SASL_HOST_API void salvia_create_host(salviar::host_ptr &out);
+SASL_HOST_API void salvia_create_host(salviar::host_ptr& out);
 SASL_HOST_API void
-salvia_compile_shader(salviar::shader_object_ptr &out_shader_object,
-                      salviar::shader_log_ptr &out_logs, std::string const &code,
-                      salviar::shader_profile const &profile,
-                      std::vector<salviar::external_function_desc> const &external_funcs);
+salvia_compile_shader(salviar::shader_object_ptr& out_shader_object,
+                      salviar::shader_log_ptr& out_logs,
+                      std::string const& code,
+                      salviar::shader_profile const& profile,
+                      std::vector<salviar::external_function_desc> const& external_funcs);
 SASL_HOST_API void
-salvia_compile_shader_file(salviar::shader_object_ptr &out_shader_object,
-                           salviar::shader_log_ptr &out_logs, std::string const &code,
-                           salviar::shader_profile const &profile,
-                           std::vector<salviar::external_function_desc> const &external_funcs);
+salvia_compile_shader_file(salviar::shader_object_ptr& out_shader_object,
+                           salviar::shader_log_ptr& out_logs,
+                           std::string const& code,
+                           salviar::shader_profile const& profile,
+                           std::vector<salviar::external_function_desc> const& external_funcs);
 }
 
 #endif

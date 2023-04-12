@@ -40,16 +40,20 @@ using std::shared_ptr;
 
 using std::vector;
 
-#define is_node_class(handle_of_node, typecode)                                                    \
+#define is_node_class(handle_of_node, typecode) \
   ((handle_of_node)->node_class() == node_ids::typecode)
 
 //////////////////////////////////////////////////////////////////////////
 //
 #define SASL_VISITOR_TYPE_NAME cg_general
 
-cg_general::cg_general() { service_ = new cgs_sisd(); }
+cg_general::cg_general() {
+  service_ = new cgs_sisd();
+}
 
-SASL_SPECIFIC_VISIT_DEF(before_decls_visit, program) { parent_class::before_decls_visit(v, data); }
+SASL_SPECIFIC_VISIT_DEF(before_decls_visit, program) {
+  parent_class::before_decls_visit(v, data);
+}
 
 SASL_VISIT_DEF_UNIMPL(expression_list);
 
@@ -83,6 +87,8 @@ SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression) {
   node_ctxt(v, true)->node_value = ret_value.to_rvalue();
 }
 
-module_vmcode_impl *cg_general::mod_ptr() { return vmcode_.get(); }
+module_vmcode_impl* cg_general::mod_ptr() {
+  return vmcode_.get();
+}
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

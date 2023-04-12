@@ -18,4 +18,4 @@ void instantiate() {
   create_node<parameter>(token::make_empty(), token::make_empty());
 }
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

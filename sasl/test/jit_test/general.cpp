@@ -33,7 +33,9 @@ float v4_get_float(__m128 v, int i) {
   return f[i];
 }
 
-void v4_set_float(__m128 &v, int i, float f) { v.m128_f32[i] = f; }
+void v4_set_float(__m128& v, int i, float f) {
+  v.m128_f32[i] = f;
+}
 
 uint32_t naive_reversebits(uint32_t v) {
   uint32_t ret = 0;
@@ -44,11 +46,15 @@ uint32_t naive_reversebits(uint32_t v) {
 }
 
 vec4 lit(float n_dot_l, float n_dot_h, float m) {
-  return vec4(1.0f, std::max(n_dot_l, 0.0f),
-              (n_dot_l < 0.0f) || (n_dot_h < 0.0f) ? 0.0f : (n_dot_h * m), 1.0f);
+  return vec4(1.0f,
+              std::max(n_dot_l, 0.0f),
+              (n_dot_l < 0.0f) || (n_dot_h < 0.0f) ? 0.0f : (n_dot_h * m),
+              1.0f);
 }
 
-vec3 faceforward(vec3 n, vec3 i, vec3 ng) { return -n * eflib::sign(eflib::dot_prod3(i, ng)); }
+vec3 faceforward(vec3 n, vec3 i, vec3 ng) {
+  return -n * eflib::sign(eflib::dot_prod3(i, ng));
+}
 BOOST_AUTO_TEST_SUITE(jit)
 
 BOOST_AUTO_TEST_CASE(detect_cpu_features) {
@@ -84,7 +90,9 @@ BOOST_AUTO_TEST_CASE(detect_cpu_features) {
 }
 
 #if ALL_TESTS_ENABLED
-BOOST_FIXTURE_TEST_CASE(empty_test, jit_fixture) { init_g("repo/empty.ss"); }
+BOOST_FIXTURE_TEST_CASE(empty_test, jit_fixture) {
+  init_g("repo/empty.ss");
+}
 #endif
 
 #if ALL_TESTS_ENABLED
@@ -151,10 +159,10 @@ static_assert(sizeof(float2x3) == sizeof(float) * 2 * 3);
 BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
   init_g("repo/intrinsics.ss");
 
-#if ALL_TESTS_ENABLED
-  JIT_FUNCTION(float(vec3 *, vec3 *), test_dot_f3);
-  JIT_FUNCTION(vec4(mat44 *, vec4 *), test_mul_m44v4);
-  JIT_FUNCTION(vec4(mat44 *), test_fetch_m44v4);
+#  if ALL_TESTS_ENABLED
+  JIT_FUNCTION(float(vec3*, vec3*), test_dot_f3);
+  JIT_FUNCTION(vec4(mat44*, vec4*), test_mul_m44v4);
+  JIT_FUNCTION(vec4(mat44*), test_fetch_m44v4);
   JIT_FUNCTION(float(float), test_abs_f);
   JIT_FUNCTION(int(int), test_abs_i);
   JIT_FUNCTION(float(float), test_exp);
@@ -285,7 +293,7 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
     mat.data_[0][3] = 1.0f;
 
     for (int i = 0; i < 16; ++i) {
-      ((float *)(&mat))[i] = static_cast<float>(i);
+      ((float*)(&mat))[i] = static_cast<float>(i);
     }
     mat44 tmpMat;
     mat_mul(mat, mat_rotX(tmpMat, 0.2f), mat);
@@ -343,8 +351,8 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
     BOOST_CHECK_CLOSE(expf(x), test_exp(x), RELATIVE_TORLERANCE_NORMAL);
   }
   {
-    float arr[] = {17.7f, 66.3f,  0.92f,  -88.7f, 8.6f,  -0.22f,
-                   17.1f, -64.4f, 199.8f, 0.1f,   -0.1f, 99.73f};
+    float arr[] = {
+        17.7f, 66.3f, 0.92f, -88.7f, 8.6f, -0.22f, 17.1f, -64.4f, 199.8f, 0.1f, -0.1f, 99.73f};
 
     float ref_v[12] = {0};
 
@@ -354,15 +362,15 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
       }
     }
 
-    float3x4 &m34(reinterpret_cast<float3x4 &>(arr));
+    float3x4& m34(reinterpret_cast<float3x4&>(arr));
 
     float3x4 ret = test_exp_m34(m34);
 
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
         // Fix for NAN and INF
-        if (*(int *)(&ref_v[i * 4 + j]) == *(int *)(&ret.data_[i][j])) {
-          BOOST_CHECK_BITWISE_EQUAL(*(int *)(&ref_v[i * 4 + j]), *(int *)(&ret.data_[i][j]));
+        if (*(int*)(&ref_v[i * 4 + j]) == *(int*)(&ret.data_[i][j])) {
+          BOOST_CHECK_BITWISE_EQUAL(*(int*)(&ref_v[i * 4 + j]), *(int*)(&ret.data_[i][j]));
         } else {
           BOOST_CHECK_CLOSE(ref_v[i * 4 + j], ret.data_[i][j], RELATIVE_TORLERANCE_NORMAL);
         }
@@ -460,8 +468,8 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
                         {-0.3f, -76.9f, 93.3f, 0.22f},
                         {44.1f, 0.027f, 19.9f, -33.5f}};
 
-    float3x4 &lhs(reinterpret_cast<float3x4 &>(arr0));
-    float3x4 &rhs(reinterpret_cast<float3x4 &>(arr1));
+    float3x4& lhs(reinterpret_cast<float3x4&>(arr0));
+    float3x4& rhs(reinterpret_cast<float3x4&>(arr1));
 
     float3x4 ret_exp2 = test_exp2_m34(lhs);
     float3x4 ret_sin = test_sin_m34(lhs);
@@ -487,7 +495,6 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
 
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
-
         union {
           float f;
           uint32_t u;
@@ -606,22 +613,22 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
         }
       }
     }
-    float2x3 ret0 =
-        test_clamp_m23(reinterpret_cast<float2x3 &>(m), reinterpret_cast<float2x3 &>(min_m),
-                       reinterpret_cast<float2x3 &>(max_m));
+    float2x3 ret0 = test_clamp_m23(reinterpret_cast<float2x3&>(m),
+                                   reinterpret_cast<float2x3&>(min_m),
+                                   reinterpret_cast<float2x3&>(max_m));
     float2x3 ret1 =
-        test_min_m23(reinterpret_cast<float2x3 &>(m), reinterpret_cast<float2x3 &>(max_m));
+        test_min_m23(reinterpret_cast<float2x3&>(m), reinterpret_cast<float2x3&>(max_m));
     float2x3 ret2 =
-        test_max_m23(reinterpret_cast<float2x3 &>(m), reinterpret_cast<float2x3 &>(max_m));
-    float2x3 ret3 = test_saturate_m23(reinterpret_cast<float2x3 &>(m));
-    float2x3 ret4 =
-        test_mad_m23(reinterpret_cast<float2x3 &>(max_m), reinterpret_cast<float2x3 &>(min_m),
-                     reinterpret_cast<float2x3 &>(m));
+        test_max_m23(reinterpret_cast<float2x3&>(m), reinterpret_cast<float2x3&>(max_m));
+    float2x3 ret3 = test_saturate_m23(reinterpret_cast<float2x3&>(m));
+    float2x3 ret4 = test_mad_m23(reinterpret_cast<float2x3&>(max_m),
+                                 reinterpret_cast<float2x3&>(min_m),
+                                 reinterpret_cast<float2x3&>(m));
     float2x3 ret5 =
-        test_step_m23(reinterpret_cast<float2x3 &>(min_m), reinterpret_cast<float2x3 &>(m));
-    float2x3 ret6 =
-        test_smoothstep_m23(reinterpret_cast<float2x3 &>(min_m),
-                            reinterpret_cast<float2x3 &>(max_m), reinterpret_cast<float2x3 &>(m));
+        test_step_m23(reinterpret_cast<float2x3&>(min_m), reinterpret_cast<float2x3&>(m));
+    float2x3 ret6 = test_smoothstep_m23(reinterpret_cast<float2x3&>(min_m),
+                                        reinterpret_cast<float2x3&>(max_m),
+                                        reinterpret_cast<float2x3&>(m));
 
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 3; ++j) {
@@ -695,10 +702,10 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
         {-886.8f, numeric_limits<float>::infinity(), numeric_limits<float>::signaling_NaN()},
         {-numeric_limits<float>::infinity(), -0.0f, numeric_limits<float>::max()}};
 
-    bool3x3 ret_inf = test_isinf_m33(reinterpret_cast<float3x3 &>(v));
-    bool3x3 ret_nan = test_isnan_m33(reinterpret_cast<float3x3 &>(v));
-    bool3x3 ret_fin = test_isfinite_m33(reinterpret_cast<float3x3 &>(v));
-    int3x3 ret_sgn = test_sign_m33(reinterpret_cast<float3x3 &>(v));
+    bool3x3 ret_inf = test_isinf_m33(reinterpret_cast<float3x3&>(v));
+    bool3x3 ret_nan = test_isnan_m33(reinterpret_cast<float3x3&>(v));
+    bool3x3 ret_fin = test_isfinite_m33(reinterpret_cast<float3x3&>(v));
+    int3x3 ret_sgn = test_sign_m33(reinterpret_cast<float3x3&>(v));
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 3; ++j) {
         BOOST_CHECK_EQUAL(boost::math::isnan(v[i][j]), ret_nan.data_[i][j] != 0);
@@ -729,7 +736,7 @@ BOOST_FIXTURE_TEST_CASE(intrinsics, jit_fixture) {
     BOOST_CHECK_CLOSE(ret1[1], 0.05f, RELATIVE_TORLERANCE_NORMAL * fabsf(v1[1]) / 0.05f);
     BOOST_CHECK_CLOSE(ret1[2], 0.8f, RELATIVE_TORLERANCE_NORMAL * fabsf(v1[2]) / 0.8f);
   }
-#endif
+#  endif
 }
 
 #endif
@@ -781,10 +788,10 @@ BOOST_FIXTURE_TEST_CASE(intrinsics_vs, jit_fixture) {
   memcpy(&bin.light, &light, sizeof(float) * 3);
   memcpy(&bin.wvpMat[0], &mat, sizeof(float) * 16);
 
-  jit_function<void(intrinsics_vs_sin *, intrinsics_vs_bin *, void *, intrinsics_vs_bout *)> fn;
+  jit_function<void(intrinsics_vs_sin*, intrinsics_vs_bin*, void*, intrinsics_vs_bout*)> fn;
   function(fn, "fn");
   BOOST_REQUIRE(fn);
-  fn(&sin, &bin, (void *)nullptr, &bout);
+  fn(&sin, &bin, (void*)nullptr, &bout);
 
   vec4 out_pos;
   eflib::transform(out_pos, mat, pos);
@@ -809,15 +816,15 @@ struct tex2d_vs_bout {
 };
 
 struct tex2d_vs_sin {
-  vec4 *position;
+  vec4* position;
 };
 
 struct tex2d_vs_bin {
   static int ph;
-  void *s;
+  void* s;
 };
 
-void tex2Dlod_vs(vec4 *out, void *s, vec4 *in) {
+void tex2Dlod_vs(vec4* out, void* s, vec4* in) {
   BOOST_CHECK_EQUAL(in->data_[0], 3.0f);
   BOOST_CHECK_EQUAL(in->data_[1], 4.5f);
   BOOST_CHECK_EQUAL(in->data_[2], 2.6f);
@@ -835,7 +842,7 @@ int tex2d_vs_bin::ph = 335;
 BOOST_FIXTURE_TEST_CASE(tex_vs, jit_fixture) {
   init_vs("repo/tex.svs");
 
-  set_raw_function((void *)&tex2Dlod_vs, "sasl.vs.tex2d.lod");
+  set_raw_function((void*)&tex2Dlod_vs, "sasl.vs.tex2d.lod");
 
   vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
 
@@ -850,9 +857,9 @@ BOOST_FIXTURE_TEST_CASE(tex_vs, jit_fixture) {
 
   tex2d_vs_bout bout;
 
-  JIT_FUNCTION(void(tex2d_vs_sin *, tex2d_vs_bin *, void *, tex2d_vs_bout *), fn);
+  JIT_FUNCTION(void(tex2d_vs_sin*, tex2d_vs_bin*, void*, tex2d_vs_bout*), fn);
 
-  fn(&sin, &bin, (void *)nullptr, &bout);
+  fn(&sin, &bin, (void*)nullptr, &bout);
 
   vec4 out_pos(9.3f, 8.7f, -29.6f, 0.0f);
 
@@ -912,7 +919,9 @@ BOOST_FIXTURE_TEST_CASE(branches, jit_fixture) {
 
 #if ALL_TESTS_ENABLED
 
-bool test_short_ref(int i, int j, int k) { return (i == 0 || j == 0) && k != 0; }
+bool test_short_ref(int i, int j, int k) {
+  return (i == 0 || j == 0) && k != 0;
+}
 
 BOOST_FIXTURE_TEST_CASE(bool_test, jit_fixture) {
   init_g("repo/bool.ss");
@@ -990,13 +999,13 @@ BOOST_FIXTURE_TEST_CASE(bool_test, jit_fixture) {
         // i > j || i > k && i <= j+k;
 
         ref_v[i][j] = array0[i][j] > array1[i][j] ||
-                      array0[i][j] > array2[i][j] && array0[i][j] < (array1[i][j] + array2[i][j]);
+            array0[i][j] > array2[i][j] && array0[i][j] < (array1[i][j] + array2[i][j]);
       }
     }
 
-    float3x4 &m0(reinterpret_cast<float3x4 &>(array0));
-    float3x4 &m1(reinterpret_cast<float3x4 &>(array1));
-    float3x4 &m2(reinterpret_cast<float3x4 &>(array2));
+    float3x4& m0(reinterpret_cast<float3x4&>(array0));
+    float3x4& m1(reinterpret_cast<float3x4&>(array1));
+    float3x4& m2(reinterpret_cast<float3x4&>(array2));
 
     bool3x4 ret = test_mbool(m0, m1, m2);
 
@@ -1044,7 +1053,7 @@ BOOST_FIXTURE_TEST_CASE(unary_operators_test, jit_fixture) {
   {
     int x[3] = {0, 227, -876};
     int y = 5;
-    int4 ret = test_neg_i(reinterpret_cast<int3 &>(x), y);
+    int4 ret = test_neg_i(reinterpret_cast<int3&>(x), y);
     BOOST_CHECK_EQUAL(ret[0], -x[0]);
     BOOST_CHECK_EQUAL(ret[1], -x[1]);
     BOOST_CHECK_EQUAL(ret[2], -x[2]);
@@ -1055,7 +1064,7 @@ BOOST_FIXTURE_TEST_CASE(unary_operators_test, jit_fixture) {
     float arr[3][4] = {{17.7f, 66.3f, 0.92f, -88.7f},
                        {8.6f, -0.22f, 17.1f, -64.4f},
                        {199.8f, 0.1f, -0.1f, 99.73f}};
-    float3x4 ret = test_neg_f(reinterpret_cast<float3x4 &>(arr));
+    float3x4 ret = test_neg_f(reinterpret_cast<float3x4&>(arr));
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
         BOOST_CHECK_CLOSE(-arr[i][j], ret.data_[i][j], RELATIVE_TORLERANCE_NORMAL);
@@ -1068,7 +1077,7 @@ BOOST_FIXTURE_TEST_CASE(unary_operators_test, jit_fixture) {
         {0, 1, 0},
         {0, 1, 1},
     };
-    bool2x3 ret = test_not(reinterpret_cast<bool2x3 &>(arr));
+    bool2x3 ret = test_not(reinterpret_cast<bool2x3&>(arr));
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 3; ++j) {
         BOOST_CHECK_EQUAL(arr[i][j] == 0, ret.data_[i][j] == 1);
@@ -1078,7 +1087,7 @@ BOOST_FIXTURE_TEST_CASE(unary_operators_test, jit_fixture) {
 
   {
     uint32_t arr[2][3] = {{786, 0, 33769097}, {0xFFFFFFFF, 3899927, 67}};
-    uint2x3 ret = test_bit_not(reinterpret_cast<uint2x3 &>(arr));
+    uint2x3 ret = test_bit_not(reinterpret_cast<uint2x3&>(arr));
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 3; ++j) {
         BOOST_CHECK_EQUAL(~arr[i][j], ret.data_[i][j]);
@@ -1164,9 +1173,9 @@ BOOST_FIXTURE_TEST_CASE(cast_tests, jit_fixture) {
     vec3 v3(-98.765f, 0.00765f, 198760000000.0f);
     vec2 v2(998.65f, -0.000287f);
 
-    int2 to_i_ref_v = reinterpret_cast<int2 &>(u2) + reinterpret_cast<int2 &>(v2);
-    uint3 to_u_ref_v = reinterpret_cast<uint3 &>(v3) + reinterpret_cast<uint3 &>(i3);
-    float to_f_ref_v = reinterpret_cast<float &>(u2[0]) + reinterpret_cast<float &>(i3[0]);
+    int2 to_i_ref_v = reinterpret_cast<int2&>(u2) + reinterpret_cast<int2&>(v2);
+    uint3 to_u_ref_v = reinterpret_cast<uint3&>(v3) + reinterpret_cast<uint3&>(i3);
+    float to_f_ref_v = reinterpret_cast<float&>(u2[0]) + reinterpret_cast<float&>(i3[0]);
 
     int2 to_i_ret_v = test_bitcast_to_i(v2, u2);
     uint3 to_u_ret_v = test_bitcast_to_u(v3, i3);
@@ -1178,7 +1187,7 @@ BOOST_FIXTURE_TEST_CASE(cast_tests, jit_fixture) {
     BOOST_CHECK_BITWISE_EQUAL(to_u_ref_v[0], to_u_ret_v[0]);
     BOOST_CHECK_BITWISE_EQUAL(to_u_ref_v[1], to_u_ret_v[1]);
 
-    BOOST_CHECK_BITWISE_EQUAL(*(uint32_t *)(&to_f_ref_v), *(uint32_t *)(&to_f_ret_v));
+    BOOST_CHECK_BITWISE_EQUAL(*(uint32_t*)(&to_f_ref_v), *(uint32_t*)(&to_f_ret_v));
   }
 
   {
@@ -1187,7 +1196,7 @@ BOOST_FIXTURE_TEST_CASE(cast_tests, jit_fixture) {
     float farr[2][3] = {{17.7f, 0.92f, -88.7f}, {8.6f, -0.22f, -64.4f}};
 
     int2x3 ret =
-        test_bitcast_to_mi(reinterpret_cast<float2x3 &>(farr), reinterpret_cast<uint2x3 &>(uarr));
+        test_bitcast_to_mi(reinterpret_cast<float2x3&>(farr), reinterpret_cast<uint2x3&>(uarr));
 
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 3; ++j) {
@@ -1210,7 +1219,7 @@ BOOST_FIXTURE_TEST_CASE(cast_tests, jit_fixture) {
   {
     int m23[2][3] = {{17, -82999738, -89287}, {0, 97532589, 9870}};
 
-    float2x3 ret0 = test_mat_i2f(reinterpret_cast<int2x3 &>(m23));
+    float2x3 ret0 = test_mat_i2f(reinterpret_cast<int2x3&>(m23));
     int2x3 ret1 = test_explicit_cast_f2i(ret0);
     uint2x3 ret2 = test_explicit_cast_f2u(ret0);
 
@@ -1229,7 +1238,7 @@ BOOST_FIXTURE_TEST_CASE(cast_tests, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(scalar_tests, jit_fixture) {
   init_ps("repo/scalar.sps");
 
-  jit_function<void(void *, void *, void *, void *)> ps_main;
+  jit_function<void(void*, void*, void*, void*)> ps_main;
   function(ps_main, "ps_main");
 }
 #endif
@@ -1238,15 +1247,15 @@ BOOST_FIXTURE_TEST_CASE(scalar_tests, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(ps_arith_tests, jit_fixture) {
   init_ps("repo/arithmetic.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
-  float *src[16] = {nullptr};
-  float *dst[16] = {nullptr};
-  float *src_data =
-      (float *)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT);
-  float *dst_data =
-      (float *)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT);
+  float* src[16] = {nullptr};
+  float* dst[16] = {nullptr};
+  float* src_data =
+      (float*)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT);
+  float* dst_data =
+      (float*)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT);
   float dest_ref[PACKAGE_ELEMENT_COUNT];
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
@@ -1259,7 +1268,7 @@ BOOST_FIXTURE_TEST_CASE(ps_arith_tests, jit_fixture) {
     dest_ref[i] += (src_data[i] * 5.0f);
   }
 
-  fn(src, (void *)nullptr, dst, (void *)nullptr);
+  fn(src, (void*)nullptr, dst, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(dest_ref[i], *dst[i], 0.000012f);
@@ -1300,19 +1309,19 @@ BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(ps_swz_and_wm, jit_fixture) {
   init_ps("repo/swizzle_and_wm.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
-  vec4 *src[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  vec4 *dst[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  vec4 *src_data =
-      (vec4 *)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT);
-  vec4 *dst_data =
-      (vec4 *)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT);
+  vec4* src[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  vec4* dst[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  vec4* src_data =
+      (vec4*)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT);
+  vec4* dst_data =
+      (vec4*)eflib::aligned_malloc(PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT);
   vec4 dest_ref[PACKAGE_ELEMENT_COUNT];
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i) {
-    ((float *)src_data)[i] = (i + 3.77f) * (0.76f * i);
+    ((float*)src_data)[i] = (i + 3.77f) * (0.76f * i);
   }
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
@@ -1321,7 +1330,7 @@ BOOST_FIXTURE_TEST_CASE(ps_swz_and_wm, jit_fixture) {
     dest_ref[i].yzx(src_data[i].xyz() + src_data[i].wxy());
   }
 
-  fn(src, (void *)nullptr, dst, (void *)nullptr);
+  fn(src, (void*)nullptr, dst, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(dest_ref[i][0], dst_data[i][0], RELATIVE_TORLERANCE_NORMAL);
@@ -1336,19 +1345,21 @@ BOOST_FIXTURE_TEST_CASE(ps_swz_and_wm, jit_fixture) {
 
 #if ALL_TESTS_ENABLED
 
-__m128 to_mm(vec4 const &v) {
+__m128 to_mm(vec4 const& v) {
   __m128 tmp;
-  *(vec4 *)(&tmp) = v;
+  *(vec4*)(&tmp) = v;
   return tmp;
 }
 
-__m128 to_mm(vec3 const &v) {
+__m128 to_mm(vec3 const& v) {
   __m128 tmp;
-  *(vec4 *)(&tmp) = vec4(v, 0.0f);
+  *(vec4*)(&tmp) = vec4(v, 0.0f);
   return tmp;
 }
 
-vec4 to_vec4(__m128 const &v) { return *reinterpret_cast<vec4 const *>(&v); }
+vec4 to_vec4(__m128 const& v) {
+  return *reinterpret_cast<vec4 const*>(&v);
+}
 
 struct intrinsic_ps_in {
   vec3 in0;
@@ -1363,11 +1374,11 @@ struct intrinsic_ps_out {
 BOOST_FIXTURE_TEST_CASE(ps_intrinsics, jit_fixture) {
   init_ps("repo/intrinsics.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
-  intrinsic_ps_in *in[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  intrinsic_ps_out *out[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  intrinsic_ps_in* in[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  intrinsic_ps_out* out[PACKAGE_ELEMENT_COUNT] = {nullptr};
 
   intrinsic_ps_in in_data[PACKAGE_ELEMENT_COUNT];
   intrinsic_ps_out out_data[PACKAGE_ELEMENT_COUNT];
@@ -1403,7 +1414,7 @@ BOOST_FIXTURE_TEST_CASE(ps_intrinsics, jit_fixture) {
     dest_ref[i].out1[1] = sqrt(in_data[i].in0[0]);
   }
 
-  fn((void *)in, (void *)nullptr, (void *)out, (void *)nullptr);
+  fn((void*)in, (void*)nullptr, (void*)out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_data[i].out0[0], dest_ref[i].out0[0], RELATIVE_TORLERANCE_NORMAL);
@@ -1420,7 +1431,7 @@ BOOST_FIXTURE_TEST_CASE(ps_intrinsics, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(ps_branches, jit_fixture) {
   init_ps("repo/branches.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
   BOOST_REQUIRE(fn);
@@ -1436,8 +1447,8 @@ BOOST_FIXTURE_TEST_CASE(ps_branches, jit_fixture) {
 
   ps_in in_data[PACKAGE_ELEMENT_COUNT];
   ps_out out_data[PACKAGE_ELEMENT_COUNT];
-  ps_in *in[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  ps_out *out[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  ps_in* in[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  ps_out* out[PACKAGE_ELEMENT_COUNT] = {nullptr};
 
   vec2 ref_out[PACKAGE_ELEMENT_COUNT];
 
@@ -1476,7 +1487,7 @@ BOOST_FIXTURE_TEST_CASE(ps_branches, jit_fixture) {
     }
   }
 
-  fn((void *)in, (void *)nullptr, (void *)out, (void *)nullptr);
+  fn((void*)in, (void*)nullptr, (void*)out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_data[i].out[0], ref_out[i][0], RELATIVE_TORLERANCE_NORMAL);
@@ -1487,7 +1498,8 @@ BOOST_FIXTURE_TEST_CASE(ps_branches, jit_fixture) {
 
 #if ALL_TESTS_ENABLED
 
-template <typename T, typename MemberPtr> void get_ddx(T *out, T const *in, MemberPtr ptr) {
+template <typename T, typename MemberPtr>
+void get_ddx(T* out, T const* in, MemberPtr ptr) {
   int const LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
 
   for (int col = 0; col < PACKAGE_LINE_ELEMENT_COUNT; col += 2) {
@@ -1498,7 +1510,8 @@ template <typename T, typename MemberPtr> void get_ddx(T *out, T const *in, Memb
   }
 }
 
-template <typename T, typename MemberPtr> void get_ddy(T *out, T const *in, MemberPtr ptr) {
+template <typename T, typename MemberPtr>
+void get_ddy(T* out, T const* in, MemberPtr ptr) {
   int const LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
 
   for (int row = 0; row < LINES; row += 2) {
@@ -1513,7 +1526,7 @@ template <typename T, typename MemberPtr> void get_ddy(T *out, T const *in, Memb
 BOOST_FIXTURE_TEST_CASE(ddx_ddy, jit_fixture) {
   init_ps("repo/ddx_ddy.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
   BOOST_REQUIRE(fn);
@@ -1527,8 +1540,8 @@ BOOST_FIXTURE_TEST_CASE(ddx_ddy, jit_fixture) {
 
   ps_in_out in_data[PACKAGE_ELEMENT_COUNT];
   ps_in_out out_data[PACKAGE_ELEMENT_COUNT];
-  ps_in_out *in[PACKAGE_ELEMENT_COUNT];
-  ps_in_out *out[PACKAGE_ELEMENT_COUNT];
+  ps_in_out* in[PACKAGE_ELEMENT_COUNT];
+  ps_in_out* out[PACKAGE_ELEMENT_COUNT];
 
   ps_in_out ddx_out[PACKAGE_ELEMENT_COUNT];
   ps_in_out ddy_out[PACKAGE_ELEMENT_COUNT];
@@ -1571,7 +1584,7 @@ BOOST_FIXTURE_TEST_CASE(ddx_ddy, jit_fixture) {
     ref_out[i].v3 = ddx_out[i].v3.xwzy() + ddy_out[i].v3.yzxw();
   }
 
-  fn((void *)in, (void *)nullptr, (void *)out, (void *)nullptr);
+  fn((void*)in, (void*)nullptr, (void*)out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_data[i].v0, ref_out[i].v0, RELATIVE_TORLERANCE_NORMAL);
@@ -1595,7 +1608,7 @@ struct sampler_t {
   uintptr_t ss, tex;
 };
 
-void tex2Dlod_ps(vec4 *ret, uint32_t /*mask*/, sampler_t *s, vec4 *t) {
+void tex2Dlod_ps(vec4* ret, uint32_t /*mask*/, sampler_t* s, vec4* t) {
   BOOST_CHECK_EQUAL(s->ss, 0xF3DE89C);
   BOOST_CHECK_EQUAL(s->tex, 0xB785D3A);
   *ret = t->zyxw() + t->wxzy();
@@ -1604,15 +1617,15 @@ void tex2Dlod_ps(vec4 *ret, uint32_t /*mask*/, sampler_t *s, vec4 *t) {
 BOOST_FIXTURE_TEST_CASE(tex_ps, jit_fixture) {
   init_ps("repo/tex.sps");
 
-  set_raw_function((void *)&tex2Dlod_ps, "sasl.ps.tex2d.lod");
+  set_raw_function((void*)&tex2Dlod_ps, "sasl.ps.tex2d.lod");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
   BOOST_REQUIRE(fn);
 
-  vec4 *in[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  vec4 *out[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  vec4* in[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  vec4* out[PACKAGE_ELEMENT_COUNT] = {nullptr};
 
   vec4 in_data[PACKAGE_ELEMENT_COUNT];
   vec4 out_data[PACKAGE_ELEMENT_COUNT];
@@ -1621,7 +1634,7 @@ BOOST_FIXTURE_TEST_CASE(tex_ps, jit_fixture) {
 
   srand(0);
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i) {
-    ((float *)in_data)[i] = rand() / 177.8f;
+    ((float*)in_data)[i] = rand() / 177.8f;
   }
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
@@ -1634,8 +1647,8 @@ BOOST_FIXTURE_TEST_CASE(tex_ps, jit_fixture) {
   smpr.ss = 0xF3DE89C;
   smpr.tex = 0xB785D3A;
 
-  sampler_t *psmpr = &smpr;
-  fn(in, (void *)&psmpr, out, (void *)nullptr);
+  sampler_t* psmpr = &smpr;
+  fn(in, (void*)&psmpr, out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_ref[i][0], out_data[i][0], RELATIVE_TORLERANCE_NORMAL);
@@ -1651,7 +1664,7 @@ BOOST_FIXTURE_TEST_CASE(tex_ps, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(ps_for_loop, jit_fixture) {
   init_ps("repo/for_loop.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
   BOOST_REQUIRE(fn);
@@ -1659,8 +1672,8 @@ BOOST_FIXTURE_TEST_CASE(ps_for_loop, jit_fixture) {
   float in_data[PACKAGE_ELEMENT_COUNT];
   float out_data[PACKAGE_ELEMENT_COUNT];
 
-  float *in[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  float *out[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  float* in[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  float* out[PACKAGE_ELEMENT_COUNT] = {nullptr};
   float ref_out[PACKAGE_ELEMENT_COUNT];
 
   srand(0);
@@ -1681,7 +1694,7 @@ BOOST_FIXTURE_TEST_CASE(ps_for_loop, jit_fixture) {
     ref_out[i] = x;
   }
 
-  fn((void *)in, (void *)nullptr, (void *)out, (void *)nullptr);
+  fn((void*)in, (void*)nullptr, (void*)out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_data[i], ref_out[i], 0.00001f);
@@ -1695,7 +1708,7 @@ BOOST_FIXTURE_TEST_CASE(ps_for_loop, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(ps_while, jit_fixture) {
   init_ps("repo/while.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
   BOOST_REQUIRE(fn);
@@ -1703,8 +1716,8 @@ BOOST_FIXTURE_TEST_CASE(ps_while, jit_fixture) {
   float in_data[PACKAGE_ELEMENT_COUNT];
   float out_data[PACKAGE_ELEMENT_COUNT];
 
-  float *in[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  float *out[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  float* in[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  float* out[PACKAGE_ELEMENT_COUNT] = {nullptr};
   float ref_out[PACKAGE_ELEMENT_COUNT];
 
   srand(0);
@@ -1725,7 +1738,7 @@ BOOST_FIXTURE_TEST_CASE(ps_while, jit_fixture) {
     ref_out[i] = x;
   }
 
-  fn((void *)in, (void *)nullptr, (void *)out, (void *)nullptr);
+  fn((void*)in, (void*)nullptr, (void*)out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_data[i], ref_out[i], RELATIVE_TORLERANCE_NORMAL);
@@ -1740,7 +1753,7 @@ BOOST_FIXTURE_TEST_CASE(ps_while, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(ps_do_while, jit_fixture) {
   init_ps("repo/do_while.sps");
 
-  jit_function<void(void *, void *, void *, void *)> fn;
+  jit_function<void(void*, void*, void*, void*)> fn;
   function(fn, "fn");
 
   BOOST_REQUIRE(fn);
@@ -1748,8 +1761,8 @@ BOOST_FIXTURE_TEST_CASE(ps_do_while, jit_fixture) {
   float in_data[PACKAGE_ELEMENT_COUNT];
   float out_data[PACKAGE_ELEMENT_COUNT];
 
-  float *in[PACKAGE_ELEMENT_COUNT] = {nullptr};
-  float *out[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  float* in[PACKAGE_ELEMENT_COUNT] = {nullptr};
+  float* out[PACKAGE_ELEMENT_COUNT] = {nullptr};
   float ref_out[PACKAGE_ELEMENT_COUNT];
 
   srand(0);
@@ -1770,7 +1783,7 @@ BOOST_FIXTURE_TEST_CASE(ps_do_while, jit_fixture) {
     ref_out[i] = x;
   }
 
-  fn((void *)in, (void *)nullptr, (void *)out, (void *)nullptr);
+  fn((void*)in, (void*)nullptr, (void*)out, (void*)nullptr);
 
   for (size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i) {
     BOOST_CHECK_CLOSE(out_data[i], ref_out[i], RELATIVE_TORLERANCE_NORMAL);
@@ -1867,7 +1880,7 @@ BOOST_FIXTURE_TEST_CASE(arith_ops, jit_fixture) {
 
   vec4 ret_f = test_float_arith(vf);
   int3 ret_i = test_int_arith(vi);
-  int3 ret_zi = test_int_arith(zi); // A special test for div and mod by zero.
+  int3 ret_zi = test_int_arith(zi);  // A special test for div and mod by zero.
 
   BOOST_CHECK_CLOSE(ref_f[0], ret_f[0], RELATIVE_TORLERANCE_NORMAL);
   BOOST_CHECK_CLOSE(ref_f[1], ret_f[1], RELATIVE_TORLERANCE_NORMAL);
@@ -1896,8 +1909,8 @@ BOOST_FIXTURE_TEST_CASE(arith_ops, jit_fixture) {
       }
     }
 
-    float3x4 &lhs(reinterpret_cast<float3x4 &>(arr0));
-    float3x4 &rhs(reinterpret_cast<float3x4 &>(arr1));
+    float3x4& lhs(reinterpret_cast<float3x4&>(arr0));
+    float3x4& rhs(reinterpret_cast<float3x4&>(arr1));
     float3x4 ret = test_mat_arith(lhs, rhs);
 
     for (int i = 0; i < 3; ++i) {
@@ -1909,7 +1922,7 @@ BOOST_FIXTURE_TEST_CASE(arith_ops, jit_fixture) {
 
   {
     int arr[3] = {7, 0, -3};
-    int3 &x = (reinterpret_cast<int3 &>(arr));
+    int3& x = (reinterpret_cast<int3&>(arr));
     int y = 876;
 
     int3 ret = test_vec_scalar_arith(x, y);
@@ -1924,14 +1937,14 @@ BOOST_FIXTURE_TEST_CASE(arith_ops, jit_fixture) {
                        {8.6f, -0.22f, 17.1f, -64.4f},
                        {199.8f, 0.1f, -0.0f, 99.73f}};
 
-    float3x4 &x(reinterpret_cast<float3x4 &>(arr));
+    float3x4& x(reinterpret_cast<float3x4&>(arr));
     float y = -0.33f;
 
     float3x4 ret = test_mat_scalar_arith(x, y);
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
         float ref_v = 7.0f - y / (arr[i][j] * 0.5f) + 3.3f;
-        if (*(int *)(&ref_v) != *(int *)(&ret.data_[i][j])) {
+        if (*(int*)(&ref_v) != *(int*)(&ret.data_[i][j])) {
           BOOST_CHECK_CLOSE(ret.data_[i][j], ref_v, RELATIVE_TORLERANCE_NORMAL);
         }
       }
@@ -1986,8 +1999,8 @@ BOOST_FIXTURE_TEST_CASE(assigns, jit_fixture) {
 
   int32_t rhs_arr[2][3] = {{0, 87927877, -9728}, {788, -3899927, 67}};
 
-  int2x3 lhs(reinterpret_cast<int2x3 &>(lhs_arr));
-  int2x3 rhs(reinterpret_cast<int2x3 &>(rhs_arr));
+  int2x3 lhs(reinterpret_cast<int2x3&>(lhs_arr));
+  int2x3 rhs(reinterpret_cast<int2x3&>(rhs_arr));
 
   int scalar_ret = test_scalar_arith_assign(-1, 788);
   BOOST_CHECK_EQUAL(scalar_ret, do_arith_assign(-1, 788));
@@ -2013,7 +2026,7 @@ BOOST_FIXTURE_TEST_CASE(array_and_index, jit_fixture) {
   {
     float arr[3][4] = {
         {0.0f, 1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f, 7.0f}, {8.0f, 9.0f, 10.0f, 11.0f}};
-    float3x4 &m34 = reinterpret_cast<float3x4 &>(arr);
+    float3x4& m34 = reinterpret_cast<float3x4&>(arr);
     vec4 ret = test_mat_index(m34);
     float ref_v[4] = {4.0f, 6.0f, 8.0f, 10.0f};
     for (int i = 0; i < 4; ++i) {
@@ -2024,7 +2037,7 @@ BOOST_FIXTURE_TEST_CASE(array_and_index, jit_fixture) {
   {
     float arr[3][4] = {
         {0.0f, 1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f, 7.0f}, {8.0f, 9.0f, 10.0f, 11.0f}};
-    float3x4 &m34 = reinterpret_cast<float3x4 &>(arr);
+    float3x4& m34 = reinterpret_cast<float3x4&>(arr);
     float ret = test_vec_index(m34);
     for (int i = 0; i < 4; ++i) {
       BOOST_CHECK_CLOSE(ret, 15.0f, RELATIVE_TORLERANCE_NORMAL);
@@ -2041,23 +2054,23 @@ struct EFLIB_ALIGN(16) array_vertex_data {
 };
 
 struct array_vs_sin {
-  vec4 *pos;
-  int4 *ids;
+  vec4* pos;
+  int4* ids;
 };
 
 struct array_vs_bin {
   int size;
-  mat44 *mat_arr;
+  mat44* mat_arr;
 };
 
 struct array_vs_bout {
   vec4 pos;
 };
 
-vec4 my_transform(mat44 &m, vec4 &v) {
+vec4 my_transform(mat44& m, vec4& v) {
   vec4 ret(0.0f, 0.0f, 0.0f, 0.0f);
 
-#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64)
+#  if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64)
   __m128 col;
   __m128 v4f;
   for (int i = 0; i < 4; ++i) {
@@ -2069,9 +2082,9 @@ vec4 my_transform(mat44 &m, vec4 &v) {
       ret[i] += v4_get_float(elem_v4f, j);
     }
   }
-#else
+#  else
   eflib::transform(ret, m, v);
-#endif
+#  endif
 
   return ret;
 }
@@ -2080,7 +2093,7 @@ BOOST_FIXTURE_TEST_CASE(array_test, jit_fixture) {
   constexpr int MAT_ARRAY_SIZE = 50;
 
   init_vs("repo/array.svs");
-  JIT_FUNCTION(void(array_vs_sin *, array_vs_bin *, void *, array_vs_bout *), fn);
+  JIT_FUNCTION(void(array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn);
 
   srand(887);
 
@@ -2135,11 +2148,11 @@ BOOST_FIXTURE_TEST_CASE(array_test, jit_fixture) {
 BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture) {
   init_vs("repo/input_assigned.svs");
 
-  JIT_FUNCTION(void(vec4 **, float *, void *, vec4 *), fn);
+  JIT_FUNCTION(void(vec4**, float*, void*, vec4*), fn);
 
   vec4 pos(0.3f, -0.6f, 2.2f, 8.0f);
   vec4 out;
-  vec4 *sin = &pos;
+  vec4* sin = &pos;
   float x = 9.7f;
 
   float new_x = x;
@@ -2149,7 +2162,7 @@ BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture) {
   vec4 new_out = new_pos;
   new_out[0] += 0.5f;
 
-  fn(&sin, &x, (void *)nullptr, &out);
+  fn(&sin, &x, (void*)nullptr, &out);
 
   BOOST_CHECK_EQUAL(pos[0], 0.3f);
   BOOST_CHECK_EQUAL(pos[1], -0.6f);

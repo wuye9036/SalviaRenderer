@@ -23,7 +23,7 @@ struct code_span {
   code_pos begin, end;
 };
 
-constexpr code_span merge(code_span const &s0, code_span const &s1) {
+constexpr code_span merge(code_span const& s0, code_span const& s1) {
   return code_span{.begin = std::min(s0.begin, s1.begin), .end = std::max(s0.end, s1.end)};
 }
 
@@ -34,9 +34,10 @@ constexpr code_span inline_code_span(size_t line, size_t col_beg, size_t col_end
 namespace token_storage_policy {
 struct shared {};
 struct unique {};
-} // namespace token_storage_policy
+}  // namespace token_storage_policy
 
-template <typename StoragePolicy> class [[nodiscard]] token_base {
+template <typename StoragePolicy>
+class [[nodiscard]] token_base {
 private:
   static constexpr bool is_shared_storage =
       std::is_same_v<StoragePolicy, token_storage_policy::shared>;
@@ -49,12 +50,14 @@ private:
     bool end_of_file = false;
   };
 
-  using data_ptr = std::conditional_t<is_shared_storage, boost::local_shared_ptr<token_data>,
+  using data_ptr = std::conditional_t<is_shared_storage,
+                                      boost::local_shared_ptr<token_data>,
                                       std::unique_ptr<token_data>>;
 
   data_ptr data_;
 
-  template <typename... Args> static data_ptr make_data(Args &&...args) {
+  template <typename... Args>
+  static data_ptr make_data(Args&&... args) {
     if constexpr (is_shared_storage) {
       return boost::make_local_shared<token_data>(std::forward<Args>(args)...);
     } else {
@@ -63,7 +66,7 @@ private:
   }
 
   template <typename SP, typename = std::enable_if_t<is_shared_storage>>
-  token_base &assign(token_base<SP> const &rhs) noexcept {
+  token_base& assign(token_base<SP> const& rhs) noexcept {
     data_ = rhs.data_;
     return *this;
   }
@@ -72,11 +75,11 @@ public:
   EF_CONSTEXPR23 token_base() {}
 
   // Move constructs applied on shared and unique
-  EF_CONSTEXPR23 token_base(token_base &&rhs) noexcept = default;
-  EF_CONSTEXPR23 token_base &operator=(token_base &&rhs) noexcept = default;
+  EF_CONSTEXPR23 token_base(token_base&& rhs) noexcept = default;
+  EF_CONSTEXPR23 token_base& operator=(token_base&& rhs) noexcept = default;
 
-  EF_CONSTEXPR23 token_base(token_base const &rhs) noexcept { assign(rhs); }
-  EF_CONSTEXPR23 token_base &operator=(token_base const &rhs) noexcept { return assign(rhs); }
+  EF_CONSTEXPR23 token_base(token_base const& rhs) noexcept { assign(rhs); }
+  EF_CONSTEXPR23 token_base& operator=(token_base const& rhs) noexcept { return assign(rhs); }
 
   EF_CONSTEXPR23 token_base clone() const {
     auto ret = token_base(make_data(*data_));
@@ -89,8 +92,12 @@ public:
   EF_CONSTEXPR23 static token_base make(std::string_view lit) {
     return make(0, lit, 0, 0, std::string_view{});
   }
-  EF_CONSTEXPR23 static token_base make(size_t id, std::string_view lit, size_t line, size_t col,
-                                        std::string_view fname, bool end_of_file = false) {
+  EF_CONSTEXPR23 static token_base make(size_t id,
+                                        std::string_view lit,
+                                        size_t line,
+                                        size_t col,
+                                        std::string_view fname,
+                                        bool end_of_file = false) {
     auto span = inline_code_span(line, col, col);
     size_t cur_line = line;
     size_t cur_col = col;
@@ -131,4 +138,4 @@ using unique_token = token_base<token_storage_policy::unique>;
 using shared_token = token_base<token_storage_policy::shared>;
 using token = shared_token;
 
-} // namespace sasl::common
+}  // namespace sasl::common

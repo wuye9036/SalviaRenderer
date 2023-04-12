@@ -35,7 +35,7 @@ using namespace sasl::enums;
 
 namespace sasl::codegen {
 
-bool compare_layout(pair<sv_layout *, Type *> const &lhs, pair<sv_layout *, Type *> const &rhs) {
+bool compare_layout(pair<sv_layout*, Type*> const& lhs, pair<sv_layout*, Type*> const& rhs) {
   return lhs.first->size < rhs.first->size;
 }
 
@@ -45,18 +45,20 @@ bool compare_layout(pair<sv_layout *, Type *> const &lhs, pair<sv_layout *, Type
 /// Will be arranged to
 ///   struct { byte b; ushort us; int i; float f; };
 /// It will minimize the structure size.
-void sort_struct_members(vector<sv_layout *> &sorted_layouts, vector<Type *> &sorted_tys,
-                         vector<sv_layout *> const &layouts, vector<Type *> const &tys,
-                         DataLayout const *dataLayout) {
+void sort_struct_members(vector<sv_layout*>& sorted_layouts,
+                         vector<Type*>& sorted_tys,
+                         vector<sv_layout*> const& layouts,
+                         vector<Type*> const& tys,
+                         DataLayout const* dataLayout) {
   size_t layouts_count = layouts.size();
   vector<size_t> elems_size;
   elems_size.reserve(layouts_count);
 
-  vector<pair<sv_layout *, Type *>> layout_ty_pairs;
+  vector<pair<sv_layout*, Type*>> layout_ty_pairs;
   layout_ty_pairs.reserve(layouts_count);
 
   auto layout_it = layouts.begin();
-  for (Type *ty : tys) {
+  for (Type* ty : tys) {
     size_t sz = (size_t)dataLayout->getTypeStoreSize(ty);
     (*layout_it)->size = sz;
     layout_ty_pairs.emplace_back(*layout_it, ty);
@@ -68,23 +70,23 @@ void sort_struct_members(vector<sv_layout *> &sorted_layouts, vector<Type *> &so
   sorted_layouts.clear();
   sorted_tys.clear();
 
-  for (auto const &layout_ty_pair : layout_ty_pairs) {
+  for (auto const& layout_ty_pair : layout_ty_pairs) {
     sorted_layouts.push_back(layout_ty_pair.first);
     sorted_tys.push_back(layout_ty_pair.second);
   }
 }
 
-Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_service *cg) {
-  vector<sv_layout *> svls = abii->layouts(su);
-  vector<Type *> sem_tys;
+Type* generate_parameter_type(reflection_impl const* abii, sv_usage su, cg_service* cg) {
+  vector<sv_layout*> svls = abii->layouts(su);
+  vector<Type*> sem_tys;
   vector<builtin_types> tycodes;
 
-  auto const &dataLayout = cg->module()->getDataLayout();
+  auto const& dataLayout = cg->module()->getDataLayout();
 
-  for (sv_layout *svl : svls) {
+  for (sv_layout* svl : svls) {
     builtin_types value_bt = sasl::enums::to_builtin_types(svl->value_type);
     tycodes.push_back(value_bt);
-    Type *value_vm_ty = cg->type_(value_bt, abis::c);
+    Type* value_vm_ty = cg->type_(value_bt, abis::c);
 
     // The stream of vertex shader is composed by pointer, like this
     // struct stream { float4* position; float3* normal; };
@@ -103,28 +105,18 @@ Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_servi
     sort_struct_members(svls, sem_tys, svls, sem_tys, &dataLayout);
   }
 
-  char const *param_struct_name = nullptr;
+  char const* param_struct_name = nullptr;
   switch (su) {
-  case su_stream_in:
-    param_struct_name = ".s.stri";
-    break;
-  case su_buffer_in:
-    param_struct_name = ".s.bufi";
-    break;
-  case su_stream_out:
-    param_struct_name = ".s.stro";
-    break;
-  case su_buffer_out:
-    param_struct_name = ".s.bufo";
-    break;
-  default:
-    ef_unreachable("Unrecognized SV usage.");
-    break;
+  case su_stream_in: param_struct_name = ".s.stri"; break;
+  case su_buffer_in: param_struct_name = ".s.bufi"; break;
+  case su_stream_out: param_struct_name = ".s.stro"; break;
+  case su_buffer_out: param_struct_name = ".s.bufo"; break;
+  default: ef_unreachable("Unrecognized SV usage."); break;
   }
   assert(param_struct_name);
 
   // If tys is empty, placeholder (int8) will be inserted
-  StructType *param_struct = nullptr;
+  StructType* param_struct = nullptr;
   if (sem_tys.empty()) {
     param_struct = StructType::create(param_struct_name, Type::getInt8Ty(cg->context()));
   } else {
@@ -132,7 +124,7 @@ Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_servi
   }
 
   // Update Layout physical information.
-  StructLayout const *struct_layout = dataLayout.getStructLayout(param_struct);
+  StructLayout const* struct_layout = dataLayout.getStructLayout(param_struct);
 
   size_t next_offset = 0;
   for (size_t i_elem = 0; i_elem < svls.size(); ++i_elem) {
@@ -143,7 +135,7 @@ Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_servi
       next_offset = (size_t)struct_layout->getElementOffset(static_cast<unsigned>(next_i_elem));
     } else {
       next_offset = (size_t)struct_layout->getSizeInBytes();
-      const_cast<reflection_impl *>(abii)->update_size(next_offset, su);
+      const_cast<reflection_impl*>(abii)->update_size(next_offset, su);
     }
 
     svls[i_elem]->offset = offset;
@@ -154,9 +146,9 @@ Type *generate_parameter_type(reflection_impl const *abii, sv_usage su, cg_servi
   return param_struct;
 }
 
-vector<Type *> generate_vs_entry_param_type(reflection_impl const *abii, cg_service *cg) {
+vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, cg_service* cg) {
   assert(cg->parallel_factor() == 1);
-  vector<Type *> ret(sv_usage_count, nullptr);
+  vector<Type*> ret(sv_usage_count, nullptr);
 
   ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in, cg);
   ret[su_buffer_out] = generate_parameter_type(abii, su_buffer_out, cg);
@@ -170,9 +162,9 @@ vector<Type *> generate_vs_entry_param_type(reflection_impl const *abii, cg_serv
   return {ret.begin() + 1, ret.end()};
 }
 
-vector<Type *> generate_ps_entry_param_type(reflection_impl const *abii, cg_service *cg) {
+vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, cg_service* cg) {
   assert(cg->parallel_factor() > 1);
-  vector<Type *> ret(sv_usage_count, nullptr);
+  vector<Type*> ret(sv_usage_count, nullptr);
 
   ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in, cg);
   ret[su_buffer_out] = generate_parameter_type(abii, su_buffer_out, cg);
@@ -194,4 +186,4 @@ vector<Type *> generate_ps_entry_param_type(reflection_impl const *abii, cg_serv
   return {ret.begin() + 1, ret.end()};
 }
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

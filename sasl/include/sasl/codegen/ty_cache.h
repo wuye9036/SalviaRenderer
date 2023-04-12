@@ -19,7 +19,7 @@ namespace sasl::codegen {
 using namespace llvm;
 using std::string;
 
-void initialize_cache(LLVMContext &ctxt);
-Type *get_llvm_type(LLVMContext &ctxt, builtin_types bt, abis abi);
+void initialize_cache(LLVMContext& ctxt);
+Type* get_llvm_type(LLVMContext& ctxt, builtin_types bt, abis abi);
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

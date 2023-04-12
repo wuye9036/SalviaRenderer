@@ -10,4 +10,4 @@ void _compile_token() {
   token tok2 = token::make_empty();
   tok2 = tok;
 }
-} // namespace sasl::common
+}  // namespace sasl::common

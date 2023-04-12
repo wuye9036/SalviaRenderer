@@ -29,7 +29,7 @@ using std::stringstream;
 
 namespace sasl::semantic {
 
-char const *scalar_nick_name(builtin_types btcode) {
+char const* scalar_nick_name(builtin_types btcode) {
   if (btcode == builtin_types::_sint8) {
     return "char";
   } else if (btcode == builtin_types::_uint8) {
@@ -62,9 +62,12 @@ char const *scalar_nick_name(builtin_types btcode) {
   }
 }
 
-type_repr::type_repr(shared_ptr<tynode> const &ty) : ty(ty) {}
+type_repr::type_repr(shared_ptr<tynode> const& ty) : ty(ty) {
+}
 
-type_repr::type_repr(sasl::syntax_tree::tynode *ty) { this->ty = ty->as_handle<tynode>(); }
+type_repr::type_repr(sasl::syntax_tree::tynode* ty) {
+  this->ty = ty->as_handle<tynode>();
+}
 
 string type_repr::str() {
   if (str_cache.empty()) {
@@ -75,7 +78,7 @@ string type_repr::str() {
 
       builtin_types bt_code = ty->tycode;
       builtin_types scalar_code = scalar_of(bt_code);
-      char const *scalar_name = scalar_nick_name(scalar_code);
+      char const* scalar_name = scalar_nick_name(scalar_code);
       if (is_matrix(bt_code)) {
         name_stream << scalar_name << vector_count(bt_code) << "x" << vector_size(bt_code);
       } else if (is_vector(bt_code)) {
@@ -108,12 +111,12 @@ string type_repr::str() {
   return str_cache;
 }
 
-args_type_repr &args_type_repr::arg(shared_ptr<tynode> const &arg_ty) {
+args_type_repr& args_type_repr::arg(shared_ptr<tynode> const& arg_ty) {
   arg_tys.push_back(arg_ty);
   return *this;
 }
 
-args_type_repr &args_type_repr::arg(sasl::syntax_tree::node *arg_ty) {
+args_type_repr& args_type_repr::arg(sasl::syntax_tree::node* arg_ty) {
   arg_tys.push_back(arg_ty->as_handle<tynode>());
   return *this;
 }
@@ -138,15 +141,20 @@ string args_type_repr::str() {
   return str_buffer;
 }
 
-args_type_repr::args_type_repr() {}
+args_type_repr::args_type_repr() {
+}
 
-source_position_repr::source_position_repr(shared_ptr<token> const &beg,
-                                           shared_ptr<token> const &end, compiler_compatibility cc)
-    : beg(beg), end(end), cc(cc) {}
+source_position_repr::source_position_repr(shared_ptr<token> const& beg,
+                                           shared_ptr<token> const& end,
+                                           compiler_compatibility cc)
+  : beg(beg)
+  , end(end)
+  , cc(cc) {
+}
 
 std::string source_position_repr::str() {
   ef_unimplemented();
   return std::string();
 }
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

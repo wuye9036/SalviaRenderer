@@ -11,4 +11,4 @@ enum class jump_mode : uint32_t {
   _break = UINT32_C(1)
 };
 
-void register_enum_name(std::function<void(char const *, jump_mode)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, jump_mode)> const& reg_fn);

@@ -11,4 +11,4 @@ enum class storage_mode : uint32_t {
   register_id = UINT32_C(2)
 };
 
-void register_enum_name(std::function<void(char const *, storage_mode)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, storage_mode)> const& reg_fn);

@@ -7,7 +7,7 @@ namespace sasl::parser {
 class lexer;
 class grammars {
 public:
-  grammars(lexer &lxr);
+  grammars(lexer& lxr);
   rule
       /* Program */
       prog,
@@ -49,7 +49,7 @@ public:
       ident, eof;
 
 private:
-  grammars &operator=(grammars const &);
+  grammars& operator=(grammars const&);
   void set_prog();
   void set_decls();
   void set_exprs();
@@ -58,7 +58,7 @@ private:
   void set_stmts();
   void set_terms();
 
-  lexer &lxr;
+  lexer& lxr;
 };
 
-} // namespace sasl::parser
+}  // namespace sasl::parser

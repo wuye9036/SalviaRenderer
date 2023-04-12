@@ -13,22 +13,24 @@ class shader_reflection;
 
 namespace sasl::shims {
 
-typedef void (*vso2reg_func_ptr)(eflib::vec4 *out_registers, void const *in_data,
-                                 intptr_t const *in_offsets,     // TODO: OPTIMIZED BY JIT
-                                 uint32_t const *in_value_types, // TODO: OPTIMIZED BY JIT
-                                 uint32_t register_count         // TODO: OPTIMIZED BY JIT
+typedef void (*vso2reg_func_ptr)(eflib::vec4* out_registers,
+                                 void const* in_data,
+                                 intptr_t const* in_offsets,      // TODO: OPTIMIZED BY JIT
+                                 uint32_t const* in_value_types,  // TODO: OPTIMIZED BY JIT
+                                 uint32_t register_count          // TODO: OPTIMIZED BY JIT
 );
 
-typedef void (*interp_func_ptr)(eflib::vec4 *out_registers, eflib::vec4 const *in_registers,
-                                uint32_t const *interp_modifiers, // TODO: OPTIMIZED BY JIT
-                                uint32_t register_count           // TODO: OPTIMIZED BY JIT
+typedef void (*interp_func_ptr)(eflib::vec4* out_registers,
+                                eflib::vec4 const* in_registers,
+                                uint32_t const* interp_modifiers,  // TODO: OPTIMIZED BY JIT
+                                uint32_t register_count            // TODO: OPTIMIZED BY JIT
 );
 
-typedef void (*reg2psi_func_ptr)(void const *out_data,
-                                 intptr_t *out_offsets,     // TODO: OPTIMIZED BY JIT
-                                 uint32_t *out_value_types, // TODO: OPTIMIZED BY JIT
-                                 eflib::vec4 const *in_registers,
-                                 uint32_t register_count // TODO: OPTIMIZED BY JIT
+typedef void (*reg2psi_func_ptr)(void const* out_data,
+                                 intptr_t* out_offsets,      // TODO: OPTIMIZED BY JIT
+                                 uint32_t* out_value_types,  // TODO: OPTIMIZED BY JIT
+                                 eflib::vec4 const* in_registers,
+                                 uint32_t register_count     // TODO: OPTIMIZED BY JIT
 );
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(interp_shim);
@@ -77,13 +79,16 @@ public:
           if vs_reflection is available and not all fields in ps input
           were provided by vertex shader output.
   */
-  void
-  get_shim_functions(vso2reg_func_ptr *out_vso2reg_fn, interp_func_ptr *out_interp_fn,
-                     reg2psi_func_ptr *out_reg2psi_fn, std::vector<uint32_t> &out_interp_modifiers,
-                     std::vector<intptr_t> &out_vso_offsets, std::vector<uint32_t> &out_vso_types,
-                     std::vector<intptr_t> &out_psi_offsets, std::vector<uint32_t> &out_psi_types,
-                     salvia::shader::shader_reflection const *vs_reflection,
-                     salvia::shader::shader_reflection const *ps_reflection);
+  void get_shim_functions(vso2reg_func_ptr* out_vso2reg_fn,
+                          interp_func_ptr* out_interp_fn,
+                          reg2psi_func_ptr* out_reg2psi_fn,
+                          std::vector<uint32_t>& out_interp_modifiers,
+                          std::vector<intptr_t>& out_vso_offsets,
+                          std::vector<uint32_t>& out_vso_types,
+                          std::vector<intptr_t>& out_psi_offsets,
+                          std::vector<uint32_t>& out_psi_types,
+                          salvia::shader::shader_reflection const* vs_reflection,
+                          salvia::shader::shader_reflection const* ps_reflection);
 };
 
-} // namespace sasl::shims
+}  // namespace sasl::shims

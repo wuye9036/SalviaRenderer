@@ -1,7 +1,7 @@
 
 #include <sasl/enums/literal_classifications.h>
 
-void register_enum_name(std::function<void(char const *, literal_classifications)> const &reg_fn) {
+void register_enum_name(std::function<void(char const*, literal_classifications)> const& reg_fn) {
   reg_fn("real", literal_classifications::real);
   reg_fn("none", literal_classifications::none);
   reg_fn("string", literal_classifications::string);

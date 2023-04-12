@@ -45,4 +45,4 @@ enum class operators : uint32_t {
   assign = UINT32_C(6)
 };
 
-void register_enum_name(std::function<void(char const *, operators)> const &reg_fn);
+void register_enum_name(std::function<void(char const*, operators)> const& reg_fn);

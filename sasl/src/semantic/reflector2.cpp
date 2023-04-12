@@ -68,7 +68,7 @@ private:
 struct reg_handle {
   reg_handle() : rfile(nullptr), v(0) {}
 
-  reg_file *rfile;
+  reg_file* rfile;
   size_t v;
 };
 
@@ -76,14 +76,14 @@ class reg_file {
 public:
   reg_file(reg_categories cat, uint32_t index) : uid_(cat, index), total_reg_count_(0) {}
 
-  reg_name absolute_reg(reg_name const &rname) const {
+  reg_name absolute_reg(reg_name const& rname) const {
     if (rname.rfile.cat == uid_.cat || rname.rfile.cat == reg_categories::offset) {
       return reg_name(uid_, rname.reg_index, rname.elem);
     }
     return reg_name();
   }
 
-  alloc_result alloc_reg(size_t sz, reg_name const &rname) {
+  alloc_result alloc_reg(size_t sz, reg_name const& rname) {
     reg_name reg_end;
     return alloc_reg(reg_end, rname, sz);
   }
@@ -107,7 +107,7 @@ public:
 
   // Correspond register (w/ elem) and semantic value.
   // If variable is cross register boundary, more than one register should be allocated.
-  void assign_semantic(reg_name const &beg, size_t sz, semantic_value const &sv_beg) {
+  void assign_semantic(reg_name const& beg, size_t sz, semantic_value const& sv_beg) {
     reg_sv_[beg] = sv_beg;
     sv_reg_[sv_beg] = beg;
 
@@ -122,7 +122,7 @@ public:
     }
   }
 
-  reg_name find_reg(semantic_value const &sv) const {
+  reg_name find_reg(semantic_value const& sv) const {
     auto iter = sv_reg_.find(sv);
     if (iter == sv_reg_.end()) {
       return reg_name();
@@ -130,12 +130,12 @@ public:
     return iter->second;
   }
 
-  reg_name find_reg(reg_handle const &rh) const { return auto_alloc_regs_[rh.v]; }
+  reg_name find_reg(reg_handle const& rh) const { return auto_alloc_regs_[rh.v]; }
 
   void compute_reg_addr() {
     total_reg_count_ = 0;
-    for (auto &range_addr : used_regs_) {
-      auto &reg_range = range_addr;
+    for (auto& range_addr : used_regs_) {
+      auto& reg_range = range_addr;
       uint32_t reg_count = reg_range.upper() - reg_range.lower();
       reg_addr_.insert(make_pair(reg_range.lower(), total_reg_count_));
       total_reg_count_ += reg_count;
@@ -144,19 +144,19 @@ public:
 
   uint32_t used_reg_count() const { return total_reg_count_; }
 
-  uint32_t reg_addr(reg_name const &rname) const {
+  uint32_t reg_addr(reg_name const& rname) const {
     auto iter = used_elems_.find(rname);
     if (iter == used_elems_.end()) {
       return static_cast<uint32_t>(-1);
     }
     return (reg_addr_.at(iter->lower().reg_index) + (rname.reg_index - iter->lower().reg_index)) *
-               16 +
-           rname.elem * 4;
+        16 +
+        rname.elem * 4;
   }
 
   vector<semantic_value> semantics() const {
     vector<semantic_value> ret;
-    for (auto const &sv_reg : sv_reg_) {
+    for (auto const& sv_reg : sv_reg_) {
       ret.push_back(sv_reg.first);
     }
     return ret;
@@ -174,14 +174,14 @@ private:
   // 1. Automatic allocated registers are always at the tail of register file.
   // 2. The variable is always allocated on new register, even it could be packed into former
   // variable.
-  alloc_result alloc_auto_reg(reg_name &beg, reg_name &end, size_t sz) {
+  alloc_result alloc_auto_reg(reg_name& beg, reg_name& end, size_t sz) {
     beg = first_free_reg();
     return alloc_reg(end, beg, sz);
   }
 
   // Allocated register at specified location
   // NOTE: register cannot be shared with more than one variables.
-  alloc_result alloc_reg(reg_name &end, reg_name const &beg, size_t sz) {
+  alloc_result alloc_reg(reg_name& end, reg_name const& beg, size_t sz) {
     if (beg.elem != 0 && 4 - beg.elem < sz / 4) {
       return alloc_result::out_of_reg_bound;
     }
@@ -204,7 +204,7 @@ private:
   interval_set<reg_name> used_elems_;
   map<uint32_t /*reg index*/, uint32_t /*addr*/> reg_addr_;
 
-  map<node_semantic *, reg_name> var_regs_;
+  map<node_semantic*, reg_name> var_regs_;
   vector<uint32_t /*reg size*/> auto_alloc_sizes_;
   vector<reg_name> auto_alloc_regs_;
 
@@ -215,10 +215,12 @@ private:
 class reflection_impl2 : public shader_reflection2 {
 public:
   // Impl specific members
-  reflection_impl2(module_semantic *mod_sem, symbol *entry)
-      : module_sem_(mod_sem), entry_fn_(entry), entry_fn_name_(entry->mangled_name()) {
+  reflection_impl2(module_semantic* mod_sem, symbol* entry)
+    : module_sem_(mod_sem)
+    , entry_fn_(entry)
+    , entry_fn_name_(entry->mangled_name()) {
     for (size_t i_cat = 0; i_cat < static_cast<uint32_t>(reg_categories::count); ++i_cat) {
-      auto &cat_rfiles = rfiles_[i_cat];
+      auto& cat_rfiles = rfiles_[i_cat];
       rfile_start_addr_[i_cat].resize(REG_CATEGORY_REGFILE_COUNTS[i_cat], 0);
       for (uint32_t i_rf = 0; i_rf < REG_CATEGORY_REGFILE_COUNTS[i_cat]; ++i_rf) {
         cat_rfiles.push_back(reg_file(static_cast<reg_categories>(i_cat), i_rf));
@@ -240,58 +242,55 @@ public:
     return used_reg_count_[static_cast<uint32_t>(cat)];
   }
 
-  reg_name find_reg(reg_categories cat, semantic_value const &sv) const override {
+  reg_name find_reg(reg_categories cat, semantic_value const& sv) const override {
     switch (cat) {
     case reg_categories::uniforms:
       // NOTE:
       //	only GLOBAL uniforms can bind to semantic for now,
       //	Will try: uniform parameters, cbuffer/vars in cbuffer, samplers / textures.
       return rfile(rfile_name::global())->find_reg(sv);
-    case reg_categories::varying:
-      return rfile(rfile_name::varyings())->find_reg(sv);
-    case reg_categories::outputs:
-      return rfile(rfile_name::outputs())->find_reg(sv);
-    default:
-      return reg_name();
+    case reg_categories::varying: return rfile(rfile_name::varyings())->find_reg(sv);
+    case reg_categories::outputs: return rfile(rfile_name::outputs())->find_reg(sv);
+    default: return reg_name();
     }
   }
 
-  size_t reg_addr(reg_name const &rname) const override {
+  size_t reg_addr(reg_name const& rname) const override {
     uint32_t cat = static_cast<uint32_t>(rname.rfile.cat);
     return rfile_start_addr_[cat][rname.rfile.index] +
-           rfiles_[cat][rname.rfile.index].reg_addr(rname);
+        rfiles_[cat][rname.rfile.index].reg_addr(rname);
   }
 
-  reg_file const *rfile(rfile_name rfname) const {
-    auto &cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
+  reg_file const* rfile(rfile_name rfname) const {
+    auto& cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
     return &cat_rfiles[rfname.index];
   }
 
-  reg_file *rfile(rfile_name rfname) {
-    auto &cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
+  reg_file* rfile(rfile_name rfname) {
+    auto& cat_rfiles = rfiles_[static_cast<uint32_t>(rfname.cat)];
     return &cat_rfiles[rfname.index];
   }
 
-  void add_variable_reg(node_semantic const *var, reg_name const &rname) {
+  void add_variable_reg(node_semantic const* var, reg_name const& rname) {
     input_var_regs_.insert(make_pair(var, rname));
   }
 
-  void add_variable_reg(node_semantic const *var, reg_handle const &rhandle) {
+  void add_variable_reg(node_semantic const* var, reg_handle const& rhandle) {
     var_auto_regs_.push_back(make_pair(var, rhandle));
   }
 
-  void assign_semantic(reg_name const &rname, size_t sz, semantic_value const &sv) {
+  void assign_semantic(reg_name const& rname, size_t sz, semantic_value const& sv) {
     rfile(rname.rfile)->assign_semantic(rname, sz, sv);
   }
 
   void update_auto_alloc_regs() {
-    for (auto &cat_rfiles : rfiles_) {
-      for (auto &rfile : cat_rfiles) {
+    for (auto& cat_rfiles : rfiles_) {
+      for (auto& rfile : cat_rfiles) {
         rfile.update_auto_alloc_regs();
       }
     }
 
-    for (auto &var_reg : var_auto_regs_) {
+    for (auto& var_reg : var_auto_regs_) {
       add_variable_reg(var_reg.first, var_reg.second.rfile->find_reg(var_reg.second));
     }
 
@@ -300,14 +299,15 @@ public:
 
   void update_reg_address() {
     for (uint32_t cat = static_cast<uint32_t>(reg_categories::unknown);
-         cat < static_cast<uint32_t>(reg_categories::count); ++cat) {
-      auto &cat_rfiles = rfiles_[cat];
-      auto &cat_rfiles_addr = rfile_start_addr_[cat];
+         cat < static_cast<uint32_t>(reg_categories::count);
+         ++cat) {
+      auto& cat_rfiles = rfiles_[cat];
+      auto& cat_rfiles_addr = rfile_start_addr_[cat];
 
       cat_rfiles_addr.clear();
       uint32_t total = 0;
 
-      for (auto &rfile : cat_rfiles) {
+      for (auto& rfile : cat_rfiles) {
         rfile.compute_reg_addr();
         cat_rfiles_addr.push_back(total);
         total += rfile.used_reg_count();
@@ -319,45 +319,48 @@ public:
 
   reg_name find_reg(reg_handle rhandle) const { return rhandle.rfile->find_reg(rhandle); }
 
-  void module(module_semantic_ptr const &);
-  bool is_module(module_semantic_ptr const &) const;
+  void module(module_semantic_ptr const&);
+  bool is_module(module_semantic_ptr const&) const;
 
-  void entry(symbol *);
-  bool is_entry(symbol *) const;
+  void entry(symbol*);
+  bool is_entry(symbol*) const;
 
 private:
-  module_semantic *module_sem_;
+  module_semantic* module_sem_;
 
-  symbol *entry_fn_;
+  symbol* entry_fn_;
   std::string entry_fn_name_;
 
   vector<reg_file> rfiles_[static_cast<uint32_t>(reg_categories::count)];
   uint32_t used_reg_count_[static_cast<uint32_t>(reg_categories::count)];
   vector<uint32_t> rfile_start_addr_[static_cast<uint32_t>(reg_categories::count)];
 
-  vector<pair<node_semantic const *, reg_handle>> var_auto_regs_;
-  std::unordered_map<node_semantic const *, reg_name> input_var_regs_;
+  vector<pair<node_semantic const*, reg_handle>> var_auto_regs_;
+  std::unordered_map<node_semantic const*, reg_name> input_var_regs_;
 };
 
 class reflector2 {
 public:
-  reflector2(module_semantic *sem, std::string_view entry_name)
-      : sem_(sem), entry_name_(entry_name), current_entry_(nullptr), reflection_(nullptr) {}
+  reflector2(module_semantic* sem, std::string_view entry_name)
+    : sem_(sem)
+    , entry_name_(entry_name)
+    , current_entry_(nullptr)
+    , reflection_(nullptr) {}
 
-  reflector2(module_semantic *sem) : sem_(sem), current_entry_(nullptr), reflection_(nullptr) {}
+  reflector2(module_semantic* sem) : sem_(sem), current_entry_(nullptr), reflection_(nullptr) {}
 
   reflection_impl2_ptr reflect() {
     if (!entry_name_.empty()) {
-      vector<symbol *> overloads = sem_->root_symbol()->find_overloads(entry_name_);
+      vector<symbol*> overloads = sem_->root_symbol()->find_overloads(entry_name_);
       if (overloads.size() != 1) {
         return reflection_impl2_ptr();
       }
       current_entry_ = overloads[0];
       return do_reflect();
     } else {
-      symbol *candidate = nullptr;
+      symbol* candidate = nullptr;
       reflection_impl2_ptr candidate_reflection;
-      for (symbol *fn_sym : sem_->functions()) {
+      for (symbol* fn_sym : sem_->functions()) {
         current_entry_ = fn_sym;
         candidate_reflection = do_reflect();
 
@@ -400,7 +403,7 @@ private:
       //		3. semantic allocation;
 
       // Process parameters
-      for (auto &param : entry_fn->params) {
+      for (auto& param : entry_fn->params) {
         if (!process_entry_inputs(nullptr, param, input_types::param)) {
           // TODO: It an semantic error need to be reported.
           ret.reset();
@@ -409,7 +412,7 @@ private:
       }
 
       // Process global variables.
-      for (symbol *gvar_sym : sem_->global_vars()) {
+      for (symbol* gvar_sym : sem_->global_vars()) {
         auto gvar = gvar_sym->associated_node()->as_handle<declarator>();
         if (!process_entry_inputs(nullptr, gvar, input_types::global)) {
           // TODO: It an semantic error need to be reported.
@@ -441,15 +444,15 @@ private:
   struct variable_info {
     size_t offset;
     size_t size;
-    semantic_value sv; // only available for leaf.
+    semantic_value sv;  // only available for leaf.
 
     reg_name reg;
     reg_handle rhandle;
 
-    variable_info *parent;
-    variable_info *first_child;
-    variable_info *last_child;
-    variable_info *sibling;
+    variable_info* parent;
+    variable_info* first_child;
+    variable_info* last_child;
+    variable_info* sibling;
 
     void initialize() {
       offset = 0;
@@ -460,36 +463,33 @@ private:
 
   enum class input_types { global, param, output };
 
-  bool process_entry_inputs(variable_info *parent_info, // in and out
-                            node_ptr const &v, input_types input_type) {
+  bool process_entry_inputs(variable_info* parent_info,  // in and out
+                            node_ptr const& v,
+                            input_types input_type) {
     bool const is_member = (parent_info != nullptr);
     var_infos_.push_back(variable_info());
-    variable_info *minfo = &var_infos_.back();
+    variable_info* minfo = &var_infos_.back();
     minfo->initialize();
     minfo->parent = parent_info;
 
     assert(reflection_);
-    node_semantic *node_sem = sem_->get_semantic(v.get());
-    tynode *ty = node_sem->ty_proto();
+    node_semantic* node_sem = sem_->get_semantic(v.get());
+    tynode* ty = node_sem->ty_proto();
 
     rfile_name rf_name;
 
     switch (input_type) {
-    case input_types::global:
-      rf_name = rfile_name::global();
-      break;
-    case input_types::output:
-      rf_name = rfile_name::outputs();
-      break;
+    case input_types::global: rf_name = rfile_name::global(); break;
+    case input_types::output: rf_name = rfile_name::outputs(); break;
     case input_types::param:
       rf_name = ty->is_uniform() ? rfile_name::params() : rfile_name::varyings();
       break;
     }
 
-    reg_file *rfile = reflection_->rfile(rf_name);
+    reg_file* rfile = reflection_->rfile(rf_name);
 
     bool use_parent_sv = false;
-    auto const *node_sv = &node_sem->semantic_value_ref();
+    auto const* node_sv = &node_sem->semantic_value_ref();
     auto user_reg = rfile->absolute_reg(node_sem->user_defined_reg());
 
     // Member-special check: for register and semantic overwrite
@@ -536,15 +536,15 @@ private:
     // For structure
     else if (ty->node_class() == node_ids::struct_type) {
       // TODO: statistic total size, and member offset of structure via 'struct_layout'
-      struct_type *struct_ty = dynamic_cast<struct_type *>(ty);
+      struct_type* struct_ty = dynamic_cast<struct_type*>(ty);
       struct_layout layout;
-      for (auto const &decl : struct_ty->decls) {
+      for (auto const& decl : struct_ty->decls) {
         if (decl->node_class() != node_ids::variable_declaration) {
           continue;
         }
 
         auto vardecl = decl->as_handle<variable_declaration>();
-        for (auto const &dclr : vardecl->declarators) {
+        for (auto const& dclr : vardecl->declarators) {
           process_entry_inputs(minfo, dclr, input_type);
           size_t offset = layout.add_member(minfo->last_child->size);
           minfo->last_child->offset = offset;
@@ -588,7 +588,7 @@ private:
   }
 
   void assign_semantics() {
-    for (auto &var_info : var_infos_) {
+    for (auto& var_info : var_infos_) {
       // Broadcast reg from root entry input to its members.
       if (var_info.rhandle.rfile != nullptr) {
         var_info.reg = reflection_->find_reg(var_info.rhandle);
@@ -606,20 +606,20 @@ private:
   }
 
   deque<variable_info> var_infos_;
-  module_semantic *sem_;
+  module_semantic* sem_;
   std::string entry_name_;
-  symbol *current_entry_;
-  reflection_impl2 *reflection_;
+  symbol* current_entry_;
+  reflection_impl2* reflection_;
 };
 
-shader_reflection2_ptr reflect2(module_semantic_ptr const &sem) {
+shader_reflection2_ptr reflect2(module_semantic_ptr const& sem) {
   reflector2 rfl(sem.get());
   return rfl.reflect();
 }
 
-shader_reflection2_ptr reflect2(module_semantic_ptr const &sem, std::string_view entry_name) {
+shader_reflection2_ptr reflect2(module_semantic_ptr const& sem, std::string_view entry_name) {
   reflector2 rfl(sem.get(), entry_name);
   return rfl.reflect();
 }
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

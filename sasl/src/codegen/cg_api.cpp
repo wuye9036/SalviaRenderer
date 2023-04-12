@@ -21,16 +21,16 @@ EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 using sasl::semantic::symbol;
 using std::shared_ptr;
 
-module_vmcode_ptr generate_vmcode(module_semantic_ptr const &sem,
-                                  reflection_impl const *reflection) {
+module_vmcode_ptr generate_vmcode(module_semantic_ptr const& sem,
+                                  reflection_impl const* reflection) {
   module_vmcode_ptr ret;
 
-  symbol *root = sem->root_symbol();
+  symbol* root = sem->root_symbol();
   if (!root) {
     return ret;
   }
 
-  node *assoc_node = root->associated_node();
+  node* assoc_node = root->associated_node();
   if (!assoc_node) {
     return ret;
   }
@@ -62,4 +62,4 @@ module_vmcode_ptr generate_vmcode(module_semantic_ptr const &sem,
   return ret;
 }
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

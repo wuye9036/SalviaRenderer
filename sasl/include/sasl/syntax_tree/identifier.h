@@ -13,4 +13,4 @@ struct identifier : public node_impl<identifier, node, node_ids::identifier> {
   std::string_view name;
 };
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

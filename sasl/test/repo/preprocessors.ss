@@ -1,7 +1,8 @@
 #ifdef SASL_COMPILER_ERROR
-   tHIS IS FUCNKING WORDS.
+tHIS IS FUCNKING WORDS.
 #endif
 
-int main(){
-	return 0;
+    int
+    main() {
+  return 0;
 }

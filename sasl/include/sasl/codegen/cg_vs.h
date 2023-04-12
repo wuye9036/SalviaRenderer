@@ -8,19 +8,19 @@ namespace sasl {
 namespace semantic {
 class caster_t;
 class module_semantic;
-} // namespace semantic
+}  // namespace semantic
 namespace syntax_tree {
 struct expression;
 struct tynode;
 struct node;
-} // namespace syntax_tree
-} // namespace sasl
+}  // namespace syntax_tree
+}  // namespace sasl
 
 namespace llvm {
 class PointerType;
 class StructType;
 class DataLayout;
-} // namespace llvm
+}  // namespace llvm
 
 namespace sasl::codegen {
 
@@ -63,27 +63,29 @@ private:
 
   SASL_SPECIFIC_VISIT_DCL(visit_return, jump_statement) override;
 
-  bool is_entry(llvm::Function *) const;
+  bool is_entry(llvm::Function*) const;
 
-  module_vmcode_impl *mod_ptr();
+  module_vmcode_impl* mod_ptr();
 
-  multi_value layout_to_value(salvia::shader::sv_layout *si, bool copy_from_input);
+  multi_value layout_to_value(salvia::shader::sv_layout* si, bool copy_from_input);
 
   // If ctxt is nullptr, the generated value and type will be cached.
   // Return true if context is fetched from cache.
-  bool layout_to_node_context(node_context *ctxt, salvia::shader::sv_layout *si,
-                              bool store_to_existed_value, bool copy_from_input);
+  bool layout_to_node_context(node_context* ctxt,
+                              salvia::shader::sv_layout* si,
+                              bool store_to_existed_value,
+                              bool copy_from_input);
 
-  void copy_to_result(std::shared_ptr<sasl::syntax_tree::expression> const &);
-  void copy_to_agg_result(node_context *data);
+  void copy_to_result(std::shared_ptr<sasl::syntax_tree::expression> const&);
+  void copy_to_agg_result(node_context* data);
 
-  llvm::Function *entry_fn;
-  sasl::semantic::symbol *entry_sym;
+  llvm::Function* entry_fn;
+  sasl::semantic::symbol* entry_sym;
 
   multi_value param_values[salvia::shader::sv_usage_count];
 
-  typedef std::unordered_map<salvia::shader::semantic_value, node_context *> input_copies_dict;
+  typedef std::unordered_map<salvia::shader::semantic_value, node_context*> input_copies_dict;
   input_copies_dict input_copies_;
 };
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

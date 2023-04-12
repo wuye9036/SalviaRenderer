@@ -44,14 +44,14 @@ caster_t::casts caster_t::try_cast(tid_t dest, tid_t src) {
   return try_cast(prior, dest, src);
 }
 
-caster_t::casts caster_t::try_cast(int &prior, tid_t dest, tid_t src) {
+caster_t::casts caster_t::try_cast(int& prior, tid_t dest, tid_t src) {
   prior = numeric_limits<int>::max();
 
-  cast_info const *caster1 = nullptr;
-  cast_info const *caster2 = nullptr;
+  cast_info const* caster1 = nullptr;
+  cast_info const* caster2 = nullptr;
   tid_t imm = -1;
 
-  cast_info const *major_caster = find_caster(caster1, caster2, imm, dest, src, false);
+  cast_info const* major_caster = find_caster(caster1, caster2, imm, dest, src, false);
   if (major_caster) {
     prior = get<1>(*major_caster);
     return get<0>(*major_caster);
@@ -69,22 +69,22 @@ caster_t::casts caster_t::cast(shared_ptr<node> dest, shared_ptr<node> src) {
   return cast(dest.get(), src.get());
 }
 
-caster_t::casts caster_t::cast(sst::node *dest, sst::node *src) {
+caster_t::casts caster_t::cast(sst::node* dest, sst::node* src) {
   tid_t dst_tid = get_semantic_(dest)->tid();
   tid_t src_tid = get_semantic_(src)->tid();
 
-  cast_info const *caster1 = nullptr;
-  cast_info const *caster2 = nullptr;
+  cast_info const* caster1 = nullptr;
+  cast_info const* caster2 = nullptr;
   tid_t imm = -1;
 
-  cast_info const *major_caster = find_caster(caster1, caster2, imm, dst_tid, src_tid, false);
+  cast_info const* major_caster = find_caster(caster1, caster2, imm, dst_tid, src_tid, false);
 
   if (!major_caster) {
     return nocast;
   }
 
   if (imm != -1) {
-    tynode *tyn = get_tynode_(imm);
+    tynode* tyn = get_tynode_(imm);
     assert(tyn);
     get<4> (*caster1)(tyn, src);
     get<4> (*caster2)(dest, src);
@@ -95,10 +95,11 @@ caster_t::casts caster_t::cast(sst::node *dest, sst::node *src) {
   return get<0>(*major_caster);
 }
 
-caster_t::caster_t() {}
+caster_t::caster_t() {
+}
 
-void caster_t::better_or_worse(tid_t matched, tid_t matching, tid_t src, bool &better,
-                               bool &worse) {
+void caster_t::better_or_worse(
+    tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse) {
   better = false;
   worse = false;
 
@@ -137,9 +138,11 @@ void caster_t::better_or_worse(tid_t matched, tid_t matching, tid_t src, bool &b
   worse = matching_prior > matched_prior;
 }
 
-caster_t::cast_info const *caster_t::find_caster(cast_info const *&first_caster,
-                                                 cast_info const *&second_caster,
-                                                 tid_t &immediate_tid, tid_t dest, tid_t src,
+caster_t::cast_info const* caster_t::find_caster(cast_info const*& first_caster,
+                                                 cast_info const*& second_caster,
+                                                 tid_t& immediate_tid,
+                                                 tid_t dest,
+                                                 tid_t src,
                                                  bool direct_caster_only) {
   immediate_tid = -1;
   first_caster = second_caster = nullptr;
@@ -166,21 +169,21 @@ caster_t::cast_info const *caster_t::find_caster(cast_info const *&first_caster,
     tid_t eql_tid = eqlcasts_it->second;
 
     // SRC --eql-> IMM
-    cast_info const *caster_1st = nullptr;
-    cast_info const *caster_2st = nullptr;
+    cast_info const* caster_1st = nullptr;
+    cast_info const* caster_2st = nullptr;
     tid_t imm_tid = -1;
     find_caster(caster_1st, caster_2st, imm_tid, eql_tid, src, true);
     assert(caster_1st);
-    cast_info const *eql_caster = caster_1st;
+    cast_info const* eql_caster = caster_1st;
 
     // IMM --xxx-> DST
     find_caster(caster_1st, caster_2st, imm_tid, dest, eql_tid, true);
     if (imm_tid != -1) {
       break;
-    } // Only immediate cast once.
+    }  // Only immediate cast once.
     if (caster_1st == nullptr) {
       break;
-    } // No cast
+    }  // No cast
 
     first_caster = eql_caster;
     second_caster = caster_1st;
@@ -199,23 +202,23 @@ caster_t::cast_info const *caster_t::find_caster(cast_info const *&first_caster,
     tid_t eql_tid = eqlcasts_it->second;
 
     // IMM --eql-> DST
-    cast_info const *caster_1st = nullptr;
-    cast_info const *caster_2st = nullptr;
+    cast_info const* caster_1st = nullptr;
+    cast_info const* caster_2st = nullptr;
     tid_t imm_tid = -1;
     find_caster(caster_1st, caster_2st, imm_tid, dest, eql_tid, true);
     if (!caster_1st) {
       return nullptr;
     }
-    cast_info const *eql_caster = caster_1st;
+    cast_info const* eql_caster = caster_1st;
 
     // SRC --xxx-> IMM
     find_caster(caster_1st, caster_2st, imm_tid, eql_tid, src, true);
     if (imm_tid != -1) {
       break;
-    } // Only immediate cast once.
+    }  // Only immediate cast once.
     if (caster_1st == nullptr) {
       break;
-    } // No cast
+    }  // No cast
 
     first_caster = caster_1st;
     second_caster = eql_caster;
@@ -226,8 +229,12 @@ caster_t::cast_info const *caster_t::find_caster(cast_info const *&first_caster,
   return nullptr;
 }
 
-void caster_t::set_function_get_tynode(get_tynode_fn fn) { get_tynode_ = fn; }
+void caster_t::set_function_get_tynode(get_tynode_fn fn) {
+  get_tynode_ = fn;
+}
 
-void caster_t::set_function_get_semantic(get_semantic_fn fn) { get_semantic_ = fn; }
+void caster_t::set_function_get_semantic(get_semantic_fn fn) {
+  get_semantic_ = fn;
+}
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

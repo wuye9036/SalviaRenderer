@@ -1,7 +1,7 @@
 
 #include <sasl/enums/operators.h>
 
-void register_enum_name(std::function<void(char const *, operators)> const &reg_fn) {
+void register_enum_name(std::function<void(char const*, operators)> const& reg_fn) {
   reg_fn("sub_assign", operators::sub_assign);
   reg_fn("less", operators::less);
   reg_fn("bit_and", operators::bit_and);

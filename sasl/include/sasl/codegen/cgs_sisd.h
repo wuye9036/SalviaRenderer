@@ -28,18 +28,19 @@ class ConstantInt;
 class ConstantVector;
 
 class IRBuilderDefaultInserter;
-template <typename T, typename Inserter> class IRBuilder;
+template <typename T, typename Inserter>
+class IRBuilder;
 class ConstantFolder;
 using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
-} // namespace llvm
+}  // namespace llvm
 
 namespace sasl {
 namespace syntax_tree {
 struct node;
 struct tynode;
 struct function_full_def;
-} // namespace syntax_tree
-} // namespace sasl
+}  // namespace syntax_tree
+}  // namespace sasl
 
 namespace sasl::codegen {
 
@@ -53,27 +54,27 @@ public:
   Some simple overload-able operators such as '+' '-' '*' '/'
   will be implemented in 'cgv_*' classes in operator overload form.
   @{ */
-  multi_value emit_cond_expr(multi_value cond, multi_value const &yes, multi_value const &no);
+  multi_value emit_cond_expr(multi_value cond, multi_value const& yes, multi_value const& no);
 
   /// Didn't support swizzle yet.
-  multi_value emit_swizzle(multi_value const &vec, uint32_t mask);
-  multi_value emit_write_mask(multi_value const &vec, uint32_t mask);
+  multi_value emit_swizzle(multi_value const& vec, uint32_t mask);
+  multi_value emit_write_mask(multi_value const& vec, uint32_t mask);
   /** @} */
 
   /// @name Emit type casts
   /// @{
   /// Cast between integer types.
-  multi_value cast_ints(multi_value const &v, cg_type *dest_tyi) override;
+  multi_value cast_ints(multi_value const& v, cg_type* dest_tyi) override;
   /// Cast integer to float.
-  multi_value cast_i2f(multi_value const &v, cg_type *dest_tyi) override;
+  multi_value cast_i2f(multi_value const& v, cg_type* dest_tyi) override;
   /// Cast float to integer.
-  multi_value cast_f2i(multi_value const &v, cg_type *dest_tyi) override;
+  multi_value cast_f2i(multi_value const& v, cg_type* dest_tyi) override;
   /// Cast between float types.
-  multi_value cast_f2f(multi_value const &v, cg_type *dest_tyi) override;
+  multi_value cast_f2f(multi_value const& v, cg_type* dest_tyi) override;
   /// Cast integer to bool
-  multi_value cast_i2b(multi_value const &v) override;
+  multi_value cast_i2b(multi_value const& v) override;
   /// Cast float to bool
-  multi_value cast_f2b(multi_value const &v) override;
+  multi_value cast_f2b(multi_value const& v) override;
   /// @}
 
   /// @name Emit Declarations
@@ -84,27 +85,27 @@ public:
 
   /// @name Intrinsics
   /// @{
-  virtual multi_value emit_ddx(multi_value const &v) override;
-  virtual multi_value emit_ddy(multi_value const &v) override;
+  virtual multi_value emit_ddx(multi_value const& v) override;
+  virtual multi_value emit_ddy(multi_value const& v) override;
   /// @}
 
   /// @name Emit statement
   /// @{
   void emit_return() override;
-  void emit_return(multi_value const &, abis abi) override;
+  void emit_return(multi_value const&, abis abi) override;
   /// @}
 
   /// @name Emit assignment
   /// @{
-  virtual void store(multi_value &lhs, multi_value const &rhs) override;
+  virtual void store(multi_value& lhs, multi_value const& rhs) override;
   /// @}
 
   /// @name Emit values
   /// @{
-  multi_value create_constant_vector(std::integral auto const *vals, size_t length, abis abi);
-  multi_value create_constant_matrix(std::integral auto const *vals, size_t length, abis abi);
+  multi_value create_constant_vector(std::integral auto const* vals, size_t length, abis abi);
+  multi_value create_constant_matrix(std::integral auto const* vals, size_t length, abis abi);
 
-  multi_value create_vector(std::vector<multi_value> const &scalars, abis abi) override;
+  multi_value create_vector(std::vector<multi_value> const& scalars, abis abi) override;
   /// @}
 
   // virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
@@ -113,16 +114,16 @@ public:
   /// @name Utilities
   /// @{
   /// Switch to blocks
-  void switch_to(multi_value const &cond,
-                 std::vector<std::pair<multi_value, insert_point_t>> const &cases,
-                 insert_point_t const &default_branch);
+  void switch_to(multi_value const& cond,
+                 std::vector<std::pair<multi_value, insert_point_t>> const& cases,
+                 insert_point_t const& default_branch);
   /// @}
 
   /// @name Bridges
   /// @{
-  llvm::Value *select_(llvm::Value *cond, llvm::Value *yes, llvm::Value *no);
-  llvm::Value *phi_(llvm::BasicBlock *b0, llvm::Value *v0, llvm::BasicBlock *b1, llvm::Value *v1);
-  llvm::Value *c_vector_(std::integral auto const *vals, size_t length);
+  llvm::Value* select_(llvm::Value* cond, llvm::Value* yes, llvm::Value* no);
+  llvm::Value* phi_(llvm::BasicBlock* b0, llvm::Value* v0, llvm::BasicBlock* b1, llvm::Value* v1);
+  llvm::Value* c_vector_(std::integral auto const* vals, size_t length);
   /// @}
 
   /// @name State
@@ -133,7 +134,7 @@ public:
   bool prefer_scalar_code() const override;
   /// @}
 
-  llvm::Value *current_execution_mask() const override { return nullptr; }
+  llvm::Value* current_execution_mask() const override { return nullptr; }
 };
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

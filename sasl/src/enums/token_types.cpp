@@ -1,7 +1,7 @@
 
 #include <sasl/enums/token_types.h>
 
-void register_enum_name(std::function<void(char const *, token_types)> const &reg_fn) {
+void register_enum_name(std::function<void(char const*, token_types)> const& reg_fn) {
   reg_fn("_comment", token_types::_comment);
   reg_fn("_preprocessor", token_types::_preprocessor);
   reg_fn("_operator", token_types::_operator);

@@ -21,8 +21,8 @@
 #include <eflib/utility/scoped_value.h>
 #include <eflib/utility/unref_declarator.h>
 
-#include <boost/lexical_cast.hpp>
 #include <fmt/format.h>
+#include <boost/lexical_cast.hpp>
 
 #include <cctype>
 #include <memory>
@@ -93,21 +93,21 @@ using std::string;
 using std::string_view;
 using std::vector;
 
-#define FUNCTION_SCOPE(new_fn)                                                                     \
+#define FUNCTION_SCOPE(new_fn) \
   scoped_value<function_def_ptr> __sasl_fn_scope_##__LINE__(current_function, (new_fn));
-#define SYMBOL_SCOPE(new_sym)                                                                      \
-  scoped_value<symbol *> __sasl_sym_scope_##__LINE__(current_symbol, (new_sym));
-#define GLOBAL_FLAG_SCOPE(new_global_flag)                                                         \
+#define SYMBOL_SCOPE(new_sym) \
+  scoped_value<symbol*> __sasl_sym_scope_##__LINE__(current_symbol, (new_sym));
+#define GLOBAL_FLAG_SCOPE(new_global_flag) \
   scoped_value<bool> __sasl_global_flag_scope_##__LINE__(is_global_scope, (new_global_flag));
-#define LABEL_LIST_SCOPE(new_label_list)                                                           \
-  scoped_value<label_list_t *> __sasl_label_list_scope_##__LINE__(label_list, (new_label_list));
-#define VARIABLE_TO_INIT_SCOPE(var_to_init)                                                        \
-  scoped_value<node_ptr> __sasl_var_to_init_scope_##__LINE__(variable_to_initialized,              \
+#define LABEL_LIST_SCOPE(new_label_list) \
+  scoped_value<label_list_t*> __sasl_label_list_scope_##__LINE__(label_list, (new_label_list));
+#define VARIABLE_TO_INIT_SCOPE(var_to_init)                                           \
+  scoped_value<node_ptr> __sasl_var_to_init_scope_##__LINE__(variable_to_initialized, \
                                                              (var_to_init));
-#define MEMBER_COUNTER_SCOPE()                                                                     \
-  ;                                                                                                \
+#define MEMBER_COUNTER_SCOPE() \
+  ;                            \
   scoped_value<int> __sasl_member_counter_scope_##__LINE__(member_counter, 0);
-#define DECLARATION_TID_SCOPE(tid)                                                                 \
+#define DECLARATION_TID_SCOPE(tid) \
   scoped_value<int> __sasl_decl_tid_scope_##__LINE__(declaration_tid, (tid));
 
 semantic_analyser::semantic_analyser() {
@@ -127,10 +127,10 @@ semantic_analyser::semantic_analyser() {
 #define SASL_VISITOR_TYPE_NAME semantic_analyser
 
 template <typename ReturnNodeT, typename NodeT>
-shared_ptr<ReturnNodeT> semantic_analyser::visit_child(shared_ptr<NodeT> const &child,
-                                                       node_semantic **return_sem) {
+shared_ptr<ReturnNodeT> semantic_analyser::visit_child(shared_ptr<NodeT> const& child,
+                                                       node_semantic** return_sem) {
   node_ptr old_generated_node = generated_node;
-  node_semantic *old_semantic = generated_sem;
+  node_semantic* old_semantic = generated_sem;
 
   generated_node.reset();
   generated_sem = nullptr;
@@ -153,12 +153,12 @@ shared_ptr<ReturnNodeT> semantic_analyser::visit_child(shared_ptr<NodeT> const &
 }
 
 template <typename NodeT>
-shared_ptr<NodeT> semantic_analyser::visit_child(shared_ptr<NodeT> const &child,
-                                                 node_semantic **return_sem) {
+shared_ptr<NodeT> semantic_analyser::visit_child(shared_ptr<NodeT> const& child,
+                                                 node_semantic** return_sem) {
   return visit_child<NodeT, NodeT>(child, return_sem);
 }
 
-void semantic_analyser::parse_semantic(token sem_tok, token sem_idx_tok, node_semantic *ssi) {
+void semantic_analyser::parse_semantic(token sem_tok, token sem_idx_tok, node_semantic* ssi) {
   if (!sem_tok.is_valid()) {
     return;
   }
@@ -195,7 +195,7 @@ SASL_VISIT_DEF(unary_expression) {
   shared_ptr<unary_expression> dup_expr = duplicate(v.as_handle())->as_handle<unary_expression>();
   generated_node = dup_expr;
 
-  node_semantic *inner_sem = nullptr;
+  node_semantic* inner_sem = nullptr;
   dup_expr->expr = visit_child(v.expr, &inner_sem);
   assert(inner_sem);
 
@@ -209,11 +209,11 @@ SASL_VISIT_DEF(unary_expression) {
   }
 
   // Verify L-Value and R-Value of operand.
-  parameter_lrvs &operator_lrvs = operator_parameter_lrvs_[v.op];
+  parameter_lrvs& operator_lrvs = operator_parameter_lrvs_[v.op];
   if ((operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) == 0) {
     if ((inner_sem->lr_value() & lvalue_or_rvalue::lvalue) == 0) {
-      diags->report(operator_needs_lvalue, v.token_begin(), v.token_end(),
-                    std::string{v.op_token.lit()});
+      diags->report(
+          operator_needs_lvalue, v.token_begin(), v.token_end(), std::string{v.op_token.lit()});
       return;
     }
   }
@@ -228,8 +228,8 @@ SASL_VISIT_DEF(cast_expression) {
 
   shared_ptr<cast_expression> dup_cexpr = duplicate(v.as_handle())->as_handle<cast_expression>();
 
-  node_semantic *src_tsi = nullptr;
-  node_semantic *casted_tsi = nullptr;
+  node_semantic* src_tsi = nullptr;
+  node_semantic* casted_tsi = nullptr;
 
   dup_cexpr->casted_type = visit_child(v.casted_type, &casted_tsi);
   dup_cexpr->expr = visit_child(v.expr, &src_tsi);
@@ -260,21 +260,21 @@ SASL_VISIT_DEF(binary_expression) {
   generated_node = dup_expr;
 
   // Visit child
-  node_semantic *left_expr_sem = nullptr;
-  node_semantic *right_expr_sem = nullptr;
+  node_semantic* left_expr_sem = nullptr;
+  node_semantic* right_expr_sem = nullptr;
 
   dup_expr->left_expr = visit_child(v.left_expr, &left_expr_sem);
   dup_expr->right_expr = visit_child(v.right_expr, &right_expr_sem);
 
   string_view opname = module_semantic_->pety()->operator_name(v.op);
-  vector<expression *> exprs{dup_expr->left_expr.get(), dup_expr->right_expr.get()};
+  vector<expression*> exprs{dup_expr->left_expr.get(), dup_expr->right_expr.get()};
 
   if (left_expr_sem == nullptr || right_expr_sem == nullptr) {
     return;
   }
 
   // Find overloads
-  vector<symbol *> overloads;
+  vector<symbol*> overloads;
 
   bool is_assign_operation = is_general_assign(v.op);
 
@@ -305,7 +305,7 @@ SASL_VISIT_DEF(binary_expression) {
   assert(right_expr_sem->lr_value() != lvalue_or_rvalue::unknown);
 
   // rvalue we consider that it is always mactched suceeded.
-  parameter_lrvs &operator_lrvs(operator_parameter_lrvs_[v.op]);
+  parameter_lrvs& operator_lrvs(operator_parameter_lrvs_[v.op]);
   if ((operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) == 0) {
     // TODO: Try to report error.
     ef_unimplemented();
@@ -315,8 +315,8 @@ SASL_VISIT_DEF(binary_expression) {
   if ((operator_lrvs.param_lrvs[1] & lvalue_or_rvalue::rvalue) == 0) {
     if (is_assign_operation) {
       if ((right_expr_sem->lr_value() & lvalue_or_rvalue::lvalue) == 0) {
-        diags->report(left_operand_must_be_lvalue, v.token_begin(), v.token_end(),
-                      v.op_token.lit());
+        diags->report(
+            left_operand_must_be_lvalue, v.token_begin(), v.token_end(), v.op_token.lit());
         return;
       }
     } else {
@@ -342,9 +342,9 @@ SASL_VISIT_DEF(cond_expression) {
   shared_ptr<cond_expression> dup_expr = duplicate(v.as_handle())->as_handle<cond_expression>();
   generated_node = dup_expr;
 
-  node_semantic *cond_sem = nullptr;
-  node_semantic *yes_sem = nullptr;
-  node_semantic *no_sem = nullptr;
+  node_semantic* cond_sem = nullptr;
+  node_semantic* yes_sem = nullptr;
+  node_semantic* no_sem = nullptr;
 
   dup_expr->cond_expr = visit_child(v.cond_expr, &cond_sem);
   dup_expr->yes_expr = visit_child(v.yes_expr, &yes_sem);
@@ -360,8 +360,11 @@ SASL_VISIT_DEF(cond_expression) {
   tid_t cond_tid = cond_sem->tid();
 
   if (cond_tid != bool_tid && !caster->try_implicit(cond_sem->tid(), bool_tid)) {
-    diags->report(cannot_convert_type_from, dup_expr->cond_expr->token_begin(),
-                  dup_expr->cond_expr->token_end(), "?", type_repr(cond_sem->ty_proto()).str(),
+    diags->report(cannot_convert_type_from,
+                  dup_expr->cond_expr->token_begin(),
+                  dup_expr->cond_expr->token_end(),
+                  "?",
+                  type_repr(cond_sem->ty_proto()).str(),
                   "bool");
     return;
   }
@@ -377,8 +380,11 @@ SASL_VISIT_DEF(cond_expression) {
   } else if (caster->try_implicit(no_tid, yes_tid)) {
     expr_tid = no_tid;
   } else {
-    diags->report(cannot_convert_type_from, dup_expr->yes_expr->token_begin(),
-                  dup_expr->no_expr->token_end(), ":", type_repr(no_sem->ty_proto()).str(),
+    diags->report(cannot_convert_type_from,
+                  dup_expr->yes_expr->token_begin(),
+                  dup_expr->no_expr->token_end(),
+                  ":",
+                  type_repr(no_sem->ty_proto()).str(),
                   type_repr(yes_sem->ty_proto()).str());
     return;
   }
@@ -409,25 +415,25 @@ SASL_VISIT_DEF(index_expression) {
   generated_node = dup_idxexpr;
   dup_idxexpr->expr = visit_child(v.expr);
 
-  node_semantic *agg_sem = get_node_semantic(dup_idxexpr->expr);
+  node_semantic* agg_sem = get_node_semantic(dup_idxexpr->expr);
   if (!agg_sem) {
     return;
   }
-  tynode *agg_tyn = agg_sem->ty_proto();
+  tynode* agg_tyn = agg_sem->ty_proto();
   builtin_types agg_tycode = agg_tyn->tycode;
   if (!(agg_tyn->is_array() || is_vector(agg_tycode) || is_matrix(agg_tycode))) {
-    diags->report(not_an_acceptable_operator, v.token_begin(), v.token_end(), "[",
-                  type_repr(agg_tyn).str());
+    diags->report(
+        not_an_acceptable_operator, v.token_begin(), v.token_end(), "[", type_repr(agg_tyn).str());
     agg_sem = nullptr;
   }
 
   dup_idxexpr->index_expr = visit_child(v.index_expr);
-  node_semantic *index_sem = get_node_semantic(dup_idxexpr->index_expr);
+  node_semantic* index_sem = get_node_semantic(dup_idxexpr->index_expr);
 
   if (!index_sem) {
     return;
   }
-  tynode *idx_tyn = index_sem->ty_proto();
+  tynode* idx_tyn = index_sem->ty_proto();
   builtin_types idx_tycode = idx_tyn->tycode;
 
   if (!is_integer(idx_tycode)) {
@@ -468,8 +474,8 @@ SASL_VISIT_DEF(call_expression) {
     dup_callexpr->args.push_back(visit_child(arg_expr));
   }
 
-  node_semantic *expr_sem = get_node_semantic(dup_callexpr->expr);
-  node_semantic *fnsi = expr_sem;
+  node_semantic* expr_sem = get_node_semantic(dup_callexpr->expr);
+  node_semantic* fnsi = expr_sem;
 
   if (expr_sem == nullptr) {
     return;
@@ -480,34 +486,40 @@ SASL_VISIT_DEF(call_expression) {
     // Maybe pointer of function.
   } else {
     // Overload
-    vector<expression *> args;
-    for (shared_ptr<expression> const &arg : dup_callexpr->args) {
+    vector<expression*> args;
+    for (shared_ptr<expression> const& arg : dup_callexpr->args) {
       args.push_back(arg.get());
     }
-    vector<symbol *> syms =
+    vector<symbol*> syms =
         fnsi->associated_symbol()->find_overloads(fnsi->function_name(), caster.get(), args);
 
     if (syms.empty()) {
       args_type_repr atr;
       for (size_t i = 0; i < dup_callexpr->args.size(); ++i) {
-        node_semantic *arg_sem = get_node_semantic(dup_callexpr->args[i]);
+        node_semantic* arg_sem = get_node_semantic(dup_callexpr->args[i]);
         if (arg_sem) {
           atr.arg(arg_sem->ty_proto());
         } else {
           atr.arg(shared_ptr<tynode>());
         }
       }
-      diags->report(function_param_unmatched, v.token_begin(), v.token_end(), fnsi->function_name(),
+      diags->report(function_param_unmatched,
+                    v.token_begin(),
+                    v.token_end(),
+                    fnsi->function_name(),
                     atr.str());
     } else if (syms.size() > 1) {
-      diags->report(function_multi_overloads, v.token_begin(), v.token_end(), fnsi->function_name(),
+      diags->report(function_multi_overloads,
+                    v.token_begin(),
+                    v.token_end(),
+                    fnsi->function_name(),
                     syms.size());
     } else {
-      symbol *func_sym = syms[0];
+      symbol* func_sym = syms[0];
       assert(func_sym);
 
       mark_intrin_invoked_recursive(func_sym);
-      node_semantic *func_sem = get_node_semantic(func_sym->associated_node());
+      node_semantic* func_sem = get_node_semantic(func_sym->associated_node());
       generated_sem = create_node_semantic(dup_callexpr);
 
       generated_sem->tid(func_sem->tid());
@@ -518,7 +530,7 @@ SASL_VISIT_DEF(call_expression) {
   }
 }
 
-size_t check_swizzle(builtin_types btc, std::string_view mask, elem_indexes &swizzle_indexes) {
+size_t check_swizzle(builtin_types btc, std::string_view mask, elem_indexes& swizzle_indexes) {
   if (mask.length() > 4) {
     return 0;
   }
@@ -552,29 +564,29 @@ SASL_VISIT_DEF(member_expression) {
 
   dup_expr->expr = visit_child(v.expr);
 
-  node_semantic *agg_sem = get_node_semantic(dup_expr->expr);
+  node_semantic* agg_sem = get_node_semantic(dup_expr->expr);
   if (!agg_sem) {
     diags->report(member_left_must_have_struct, v.member, v.member, v.member.lit(), "<unknown>");
     return;
   }
 
-  tynode *agg_type = agg_sem->ty_proto();
+  tynode* agg_type = agg_sem->ty_proto();
   tid_t mem_typeid = -1;
 
   elem_indexes swizzle_code;
 
   if (agg_type->is_struct()) {
     // Aggregated is struct
-    symbol *struct_sym = get_symbol(agg_type);
-    symbol *mem_sym = struct_sym->find_this(v.member.lit());
+    symbol* struct_sym = get_symbol(agg_type);
+    symbol* mem_sym = struct_sym->find_this(v.member.lit());
 
     if (!mem_sym) {
-      diags->report(not_a_member_of, v.member, v.member, v.member.lit(),
-                    struct_sym->unmangled_name());
+      diags->report(
+          not_a_member_of, v.member, v.member, v.member.lit(), struct_sym->unmangled_name());
     } else {
       shared_ptr<declarator> mem_declr = mem_sym->associated_node()->as_handle<declarator>();
       assert(mem_declr);
-      node_semantic *mem_si = get_node_semantic(mem_declr);
+      node_semantic* mem_si = get_node_semantic(mem_declr);
       mem_typeid = mem_si->tid();
       assert(mem_typeid != -1);
     }
@@ -592,7 +604,10 @@ SASL_VISIT_DEF(member_expression) {
       return;
     }
   } else {
-    diags->report(member_left_must_have_struct, v.member, v.member, v.member.lit(),
+    diags->report(member_left_must_have_struct,
+                  v.member,
+                  v.member,
+                  v.member.lit(),
                   type_repr(agg_type).str());
     return;
   }
@@ -620,12 +635,12 @@ SASL_VISIT_DEF(variable_expression) {
 
   std::string name{v.var_name.lit()};
 
-  symbol *vdecl = current_symbol->find(name);
+  symbol* vdecl = current_symbol->find(name);
   shared_ptr<variable_expression> dup_vexpr =
       duplicate(v.as_handle())->as_handle<variable_expression>();
 
   if (vdecl) {
-    node *node = vdecl->associated_node();
+    node* node = vdecl->associated_node();
     shared_ptr<tynode> ty_node = node->as_handle<tynode>();
     shared_ptr<declarator> decl_node = node->as_handle<declarator>();
     shared_ptr<parameter> param_node = node->as_handle<parameter>();
@@ -667,19 +682,20 @@ SASL_VISIT_DEF(expression_initializer) {
 
   dup_exprinit->init_expr = visit_child(v.init_expr);
 
-  node_semantic *init_expr_sem = get_node_semantic(dup_exprinit->init_expr);
+  node_semantic* init_expr_sem = get_node_semantic(dup_exprinit->init_expr);
   if (!init_expr_sem) {
     return;
   }
 
-  node_semantic *var_tsi = get_node_semantic(variable_to_initialized);
+  node_semantic* var_tsi = get_node_semantic(variable_to_initialized);
   if (!var_tsi || var_tsi->tid() == -1) {
     return;
   }
 
   if (var_tsi->tid() != init_expr_sem->tid()) {
     if (!caster->try_implicit(var_tsi->tid(), init_expr_sem->tid())) {
-      diags->report(cannot_convert_type_from, dup_exprinit->init_expr->token_begin(),
+      diags->report(cannot_convert_type_from,
+                    dup_exprinit->init_expr->token_begin(),
                     dup_exprinit->init_expr->token_end(),
                     type_repr(init_expr_sem->ty_proto()).str(),
                     type_repr(var_tsi->ty_proto()).str());
@@ -710,7 +726,7 @@ SASL_VISIT_DEF(declarator) {
   }
 
   if (declaration_tid != -1) {
-    symbol *nodesym = current_symbol->add_named_child(v.name.lit(), dup_decl.get());
+    symbol* nodesym = current_symbol->add_named_child(v.name.lit(), dup_decl.get());
     parse_semantic(v.semantic, v.semantic_index, generated_sem);
     if (is_global_scope) {
       module_semantic_->global_vars().push_back(nodesym);
@@ -729,7 +745,7 @@ SASL_VISIT_DEF(variable_declaration) {
 
   dup_vdecl->type_info = visit_child(v.type_info);
 
-  node_semantic *decl_sem = get_node_semantic(dup_vdecl->type_info);
+  node_semantic* decl_sem = get_node_semantic(dup_vdecl->type_info);
 
   int decl_tid = decl_sem ? decl_sem->tid() : -1;
 
@@ -754,8 +770,8 @@ SASL_VISIT_DEF(builtin_type) {
 
   // create type information on current symbol.
   // for e.g. create type info onto a variable node.
-  tynode *proto_node = nullptr;
-  node_semantic *proto_sem = nullptr;
+  tynode* proto_node = nullptr;
+  node_semantic* proto_sem = nullptr;
 
   module_semantic_->pety()->get2(v.tycode, &proto_node, &proto_sem);
 
@@ -769,7 +785,7 @@ SASL_VISIT_DEF(array_type) {
   tid_t array_tid = module_semantic_->pety()->get(&v, current_symbol);
   assert(array_tid != -1);
 
-  tynode *proto_tyn = nullptr;
+  tynode* proto_tyn = nullptr;
   module_semantic_->pety()->get2(array_tid, &proto_tyn, &generated_sem);
   array_type_ptr dup_array = proto_tyn->as_handle<array_type>();
   if (!get_node_semantic(dup_array->elem_type)) {
@@ -797,7 +813,7 @@ SASL_VISIT_DEF(struct_type) {
 
   assert(dup_struct_id != -1);
 
-  tynode *tyn = nullptr;
+  tynode* tyn = nullptr;
   module_semantic_->pety()->get2(dup_struct_id, &tyn, &generated_sem);
 
   shared_ptr<struct_type> dup_struct = tyn->as_handle<struct_type>();
@@ -823,7 +839,7 @@ SASL_VISIT_DEF(struct_type) {
     MEMBER_COUNTER_SCOPE();
 
     dup_struct->has_body = true;
-    for (shared_ptr<declaration> const &decl : v.decls) {
+    for (shared_ptr<declaration> const& decl : v.decls) {
       dup_struct->decls.push_back(visit_child(decl));
     }
   }
@@ -845,7 +861,7 @@ SASL_VISIT_DEF(alias_type) {
     return;
   }
 
-  tynode *proto_node = nullptr;
+  tynode* proto_node = nullptr;
   module_semantic_->pety()->get2(dup_struct_id, &proto_node, &generated_sem);
   generated_node = proto_node->as_handle();
 }
@@ -878,12 +894,12 @@ SASL_VISIT_DEF(parameter_full) {
 
   generated_node = dup_par;
 
-  symbol *sym = nullptr;
+  symbol* sym = nullptr;
   if (!v.name.is_valid()) {
     sym = current_symbol->add_named_child(v.name.lit(), dup_par.get());
   }
 
-  node_semantic *par_sem = nullptr;
+  node_semantic* par_sem = nullptr;
   visit_child(v.param_type, &par_sem);
 
   if (v.init) {
@@ -916,9 +932,9 @@ SASL_VISIT_DEF(function_full_def) {
 
   generated_node = def_node;
 
-  node_semantic *result_type_sem = nullptr;
+  node_semantic* result_type_sem = nullptr;
   tid_t fn_tid = -1;
-  symbol *sym = current_symbol->add_function_begin(def_node.get());
+  symbol* sym = current_symbol->add_function_begin(def_node.get());
   {
     SYMBOL_SCOPE(sym);
     FUNCTION_SCOPE(def_node);
@@ -932,7 +948,7 @@ SASL_VISIT_DEF(function_full_def) {
 
     bool successful = true;
     for (size_t i_param = 0; i_param < v.params.size(); ++i_param) {
-      node_semantic *param_sem = nullptr;
+      node_semantic* param_sem = nullptr;
       shared_ptr<parameter> param = visit_child<parameter>(v.params[i_param], &param_sem);
       def_node->params.push_back(param);
 
@@ -984,7 +1000,7 @@ SASL_VISIT_DEF(declaration_statement) {
       duplicate(v.as_handle())->as_handle<declaration_statement>();
 
   dup_declstmt->decls.clear();
-  for (shared_ptr<declaration> const &decl : v.decls) {
+  for (shared_ptr<declaration> const& decl : v.decls) {
     shared_ptr<declaration> dup_decl = visit_child(decl);
     if (dup_decl) {
       dup_declstmt->decls.push_back(dup_decl);
@@ -1003,7 +1019,7 @@ SASL_VISIT_DEF(if_statement) {
   dup_ifstmt->cond = visit_child(v.cond);
 
 #if defined(EFLIB_DEBUG)
-  node_semantic *cond_tsi = get_node_semantic(dup_ifstmt->cond);
+  node_semantic* cond_tsi = get_node_semantic(dup_ifstmt->cond);
   assert(cond_tsi);
   tid_t bool_tid = module_semantic_->pety()->get(builtin_types::_boolean);
   assert(cond_tsi->tid() == bool_tid || caster->try_implicit(bool_tid, cond_tsi->tid()));
@@ -1036,7 +1052,7 @@ SASL_VISIT_DEF(while_statement) {
   dup_while->cond = visit_child(v.cond);
 
 #ifdef EFLIB_DEBUG
-  node_semantic *cond_tsi = get_node_semantic(dup_while->cond);
+  node_semantic* cond_tsi = get_node_semantic(dup_while->cond);
   assert(cond_tsi);
   tid_t bool_tid = module_semantic_->pety()->get(builtin_types::_boolean);
   assert(cond_tsi->tid() == bool_tid || caster->try_implicit(bool_tid, cond_tsi->tid()));
@@ -1058,7 +1074,7 @@ SASL_VISIT_DEF(dowhile_statement) {
   dup_dowhile->cond = visit_child(v.cond);
 
 #if defined(EFLIB_DEBUG)
-  node_semantic *cond_tsi = get_node_semantic(dup_dowhile->cond);
+  node_semantic* cond_tsi = get_node_semantic(dup_dowhile->cond);
   assert(cond_tsi);
   tid_t bool_tid = module_semantic_->pety()->get(builtin_types::_boolean);
   assert(cond_tsi->tid() == bool_tid || caster->try_implicit(bool_tid, cond_tsi->tid()));
@@ -1078,7 +1094,7 @@ SASL_VISIT_DEF(labeled_statement) {
   assert(label_list);
 
   dup_lbl_stmt->labels.clear();
-  for (shared_ptr<label> const &lbl : v.labels) {
+  for (shared_ptr<label> const& lbl : v.labels) {
     shared_ptr<label> dup_lbl = visit_child(lbl);
     if (dup_lbl) {
       dup_lbl_stmt->labels.push_back(dup_lbl);
@@ -1101,14 +1117,16 @@ SASL_VISIT_DEF(case_label) {
     if (v.expr->node_class() != node_ids::constant_expression) {
       diags->report(case_expr_not_constant, v.expr->token_begin(), v.expr->token_end());
     } else {
-      node_semantic *expr_sem = get_node_semantic(dup_case->expr);
+      node_semantic* expr_sem = get_node_semantic(dup_case->expr);
       if (!expr_sem) {
         return;
       }
 
       builtin_types expr_bt = expr_sem->ty_proto()->tycode;
       if (!is_integer(expr_bt) && expr_bt != builtin_types::_boolean) {
-        diags->report(illegal_type_for_case_expr, v.expr->token_begin(), v.expr->token_end(),
+        diags->report(illegal_type_for_case_expr,
+                      v.expr->token_begin(),
+                      v.expr->token_end(),
                       type_repr(expr_sem->ty_proto()).str());
       }
     }
@@ -1131,7 +1149,7 @@ SASL_VISIT_DEF(switch_statement) {
   dup_switch->cond = visit_child(v.cond);
 
 #if defined(EFLIB_DEBUG)
-  node_semantic *cond_tsi = get_node_semantic(dup_switch->cond);
+  node_semantic* cond_tsi = get_node_semantic(dup_switch->cond);
   assert(cond_tsi);
   tid_t int_tid = module_semantic_->pety()->get(builtin_types::_sint32);
   builtin_types cond_bt = cond_tsi->ty_proto()->tycode;
@@ -1187,8 +1205,8 @@ SASL_VISIT_DEF(jump_statement) {
       dup_jump->jump_expr = visit_child(v.jump_expr);
     }
 
-    node_semantic *expr_sem = get_node_semantic(dup_jump->jump_expr);
-    node_semantic *func_sem = get_node_semantic(current_function);
+    node_semantic* expr_sem = get_node_semantic(dup_jump->jump_expr);
+    node_semantic* func_sem = get_node_semantic(current_function);
 
     if (!expr_sem) {
       return;
@@ -1202,9 +1220,12 @@ SASL_VISIT_DEF(jump_statement) {
     }
 
     if (expr_tid != fret_tid && !caster->try_implicit(fret_tid, expr_tid)) {
-      diags->report(cannot_convert_type_from, dup_jump->jump_expr->token_begin(),
-                    dup_jump->jump_expr->token_end(), "return",
-                    type_repr(expr_sem->ty_proto()).str(), type_repr(func_sem->ty_proto()).str());
+      diags->report(cannot_convert_type_from,
+                    dup_jump->jump_expr->token_begin(),
+                    dup_jump->jump_expr->token_end(),
+                    "return",
+                    type_repr(expr_sem->ty_proto()).str(),
+                    type_repr(func_sem->ty_proto()).str());
     }
   }
 }
@@ -1258,25 +1279,30 @@ SASL_VISIT_DEF(program) {
   module_semantic_->set_program(dup_prog);
 }
 
-void semantic_analyser::empty_caster(node * /*lhs*/, node * /*rhs*/) {}
+void semantic_analyser::empty_caster(node* /*lhs*/, node* /*rhs*/) {
+}
 
 // Add casters for scalar, vector, matrix.
-void add_svm_casters(shared_ptr<caster_t> const &caster, caster_t::casts casts, builtin_types src,
-                     builtin_types dst, caster_t::cast_t fn, pety_t *pety) {
+void add_svm_casters(shared_ptr<caster_t> const& caster,
+                     caster_t::casts casts,
+                     builtin_types src,
+                     builtin_types dst,
+                     caster_t::cast_t fn,
+                     pety_t* pety) {
   caster->add_cast_auto_prior(casts, pety->get(src), pety->get(dst), fn);
   for (size_t i = 1; i <= 4; ++i) {
-    caster->add_cast_auto_prior(casts, pety->get(vector_of(src, i)), pety->get(vector_of(dst, i)),
-                                fn);
+    caster->add_cast_auto_prior(
+        casts, pety->get(vector_of(src, i)), pety->get(vector_of(dst, i)), fn);
     for (size_t j = 1; j <= 4; ++j) {
-      caster->add_cast_auto_prior(casts, pety->get(matrix_of(src, i, j)),
-                                  pety->get(matrix_of(dst, i, j)), fn);
+      caster->add_cast_auto_prior(
+          casts, pety->get(matrix_of(src, i, j)), pety->get(matrix_of(dst, i, j)), fn);
     }
   }
 }
 
 void semantic_analyser::initialize_casts() {
   // register default type converter
-  pety_t *pety = module_semantic_->pety();
+  pety_t* pety = module_semantic_->pety();
 
   builtin_types sint8_bt = builtin_types::_sint8;
   builtin_types sint16_bt = builtin_types::_sint16;
@@ -1294,7 +1320,9 @@ void semantic_analyser::initialize_casts() {
   builtin_types bool_bt = builtin_types::_boolean;
 
   // default conversation will do nothing.
-  caster_t::cast_t default_conv = [this](node *n0, node *n1) { empty_caster(n0, n1); };
+  caster_t::cast_t default_conv = [this](node* n0, node* n1) {
+    empty_caster(n0, n1);
+  };
 
   add_svm_casters(caster, caster_t::imp, sint8_bt, sint16_bt, default_conv, pety);
   add_svm_casters(caster, caster_t::imp, sint8_bt, sint32_bt, default_conv, pety);
@@ -1531,16 +1559,18 @@ void semantic_analyser::initialize_operator_parameter_lrvs() {
 struct proto_info {
 public:
   proto_info() {}
-  proto_info(tid_t fn_tid, std::vector<tid_t> const &params_tid)
-      : fn_tid(fn_tid), ret_tid(params_tid[0]), params_count(params_tid.size() - 1) {
+  proto_info(tid_t fn_tid, std::vector<tid_t> const& params_tid)
+    : fn_tid(fn_tid)
+    , ret_tid(params_tid[0])
+    , params_count(params_tid.size() - 1) {
     memset(this->params_tid, -1, sizeof(this->params_tid));
     assert(params_count <= 5);
     memcpy(&(this->params_tid[0]), &params_tid[1], sizeof(tid_t) * params_count);
   }
 
-  proto_info(proto_info const &rhs) { *this = rhs; }
+  proto_info(proto_info const& rhs) { *this = rhs; }
 
-  proto_info &operator=(proto_info const &rhs) {
+  proto_info& operator=(proto_info const& rhs) {
     memcpy(this, &rhs, sizeof(proto_info));
     return *this;
   }
@@ -1557,8 +1587,10 @@ public:
   public:
     friend class proto_cache;
 
-    proto_cache_inserter(pety_t *pety, vector<proto_info> &protos, vector<tid_t> &result_param_tids)
-        : pety_(pety), protos_(protos), result_param_tids_(result_param_tids) {}
+    proto_cache_inserter(pety_t* pety, vector<proto_info>& protos, vector<tid_t>& result_param_tids)
+      : pety_(pety)
+      , protos_(protos)
+      , result_param_tids_(result_param_tids) {}
 
     size_t result(tid_t result_tid) {
       size_t proto_index = protos_.size();
@@ -1569,17 +1601,19 @@ public:
     }
 
   private:
-    proto_cache_inserter(proto_cache_inserter const &rhs)
-        : pety_(rhs.pety_), protos_(rhs.protos_), result_param_tids_(rhs.result_param_tids_) {}
+    proto_cache_inserter(proto_cache_inserter const& rhs)
+      : pety_(rhs.pety_)
+      , protos_(rhs.protos_)
+      , result_param_tids_(rhs.result_param_tids_) {}
 
-    proto_cache_inserter &operator=(proto_cache_inserter const &);
+    proto_cache_inserter& operator=(proto_cache_inserter const&);
 
-    pety_t *pety_;
-    vector<proto_info> &protos_;
-    vector<tid_t> &result_param_tids_;
+    pety_t* pety_;
+    vector<proto_info>& protos_;
+    vector<tid_t>& result_param_tids_;
   };
 
-  proto_cache(pety_t *pety) : pety_(pety) {}
+  proto_cache(pety_t* pety) : pety_(pety) {}
 
   proto_cache_inserter add_proto(tid_t p0_tid) {
     result_param_tids_.resize(2);
@@ -1611,22 +1645,22 @@ public:
     return proto_cache_inserter(pety_, protos_, result_param_tids_);
   }
 
-  proto_cache_inserter add_proto(vector<tid_t> const &param_tids) {
+  proto_cache_inserter add_proto(vector<tid_t> const& param_tids) {
     result_param_tids_.resize(param_tids.size() + 1);
     std::copy(param_tids.begin(), param_tids.end(), result_param_tids_.begin() + 1);
     return proto_cache_inserter(pety_, protos_, result_param_tids_);
   }
 
-  vector<proto_info> const &protos() const { return protos_; }
+  vector<proto_info> const& protos() const { return protos_; }
 
 private:
-  pety_t *pety_;
+  pety_t* pety_;
   vector<proto_info> protos_;
   vector<tid_t> result_param_tids_;
 };
 
 void semantic_analyser::register_builtin_functions2() {
-  pety_t *pety = module_semantic_->pety();
+  pety_t* pety = module_semantic_->pety();
   vector<builtin_types> builtins;
   vector<tid_t> tids;
 
@@ -1748,7 +1782,7 @@ void semantic_analyser::register_builtin_functions2() {
 
   // Register operators
   {
-    vector<operators> const &oplist = list_of_operators();
+    vector<operators> const& oplist = list_of_operators();
     for (size_t i_op = 0; i_op < oplist.size(); ++i_op) {
       operators op = oplist[i_op];
       string_view op_name = module_semantic_->pety()->operator_name(op);
@@ -1864,10 +1898,10 @@ void semantic_analyser::register_builtin_functions2() {
     if (lang == salvia::shader::lang_pixel_shader || lang == salvia::shader::lang_vertex_shader) {
       tex_fns[0] = protos.add_proto(sampler_tid, fvec_tids[4]).result(fvec_tids[4]);
 
-      register_intrinsic2("tex2Dlod", tex_fns, protos.protos(),
-                          lang == salvia::shader::lang_pixel_shader);
-      register_intrinsic2("texCUBElod", tex_fns, protos.protos(),
-                          lang == salvia::shader::lang_pixel_shader);
+      register_intrinsic2(
+          "tex2Dlod", tex_fns, protos.protos(), lang == salvia::shader::lang_pixel_shader);
+      register_intrinsic2(
+          "texCUBElod", tex_fns, protos.protos(), lang == salvia::shader::lang_pixel_shader);
 
       if (lang == salvia::shader::lang_pixel_shader) {
         register_intrinsic2("tex2Dbias", tex_fns, protos.protos(), true);
@@ -1954,7 +1988,7 @@ void semantic_analyser::register_builtin_functions2() {
 
   // Register constructors
   {
-    vector<pair<builtin_types, char const *>> scalar_bts;
+    vector<pair<builtin_types, char const*>> scalar_bts;
     vector<size_t> constructor_protos;
 
     scalar_bts.push_back(make_pair(builtin_types::_boolean, "bool"));
@@ -1970,8 +2004,11 @@ void semantic_analyser::register_builtin_functions2() {
 
     for (size_t i_scalar = 0; i_scalar < scalar_bts.size(); ++i_scalar) {
       builtin_types scalar_bt = scalar_bts[i_scalar].first;
-      tid_t vec_tids[5] = {0, pety->get(scalar_bt), pety->get(vector_of(scalar_bt, 2)),
-                           pety->get(vector_of(scalar_bt, 3)), pety->get(vector_of(scalar_bt, 4))};
+      tid_t vec_tids[5] = {0,
+                           pety->get(scalar_bt),
+                           pety->get(vector_of(scalar_bt, 2)),
+                           pety->get(vector_of(scalar_bt, 3)),
+                           pety->get(vector_of(scalar_bt, 4))};
 
       for (size_t scalar_count = 2; scalar_count <= 4; ++scalar_count) {
         string constructor_name(scalar_bts[i_scalar].second);
@@ -2007,14 +2044,17 @@ void semantic_analyser::register_builtin_functions2() {
   }
 }
 
-void semantic_analyser::register_function2(string_view name, vector<size_t> const &proto_indexes,
-                                           vector<proto_info> const &protos, bool is_intrinsic,
-                                           bool is_partial_exec, bool is_constructor) {
-  pety_t *pety = module_semantic_->pety();
+void semantic_analyser::register_function2(string_view name,
+                                           vector<size_t> const& proto_indexes,
+                                           vector<proto_info> const& protos,
+                                           bool is_intrinsic,
+                                           bool is_partial_exec,
+                                           bool is_constructor) {
+  pety_t* pety = module_semantic_->pety();
   symbol::overload_position overload_pos = current_symbol->get_overload_position(name);
 
   for (size_t i_proto = 0; i_proto < proto_indexes.size(); ++i_proto) {
-    proto_info const &proto = protos[proto_indexes[i_proto]];
+    proto_info const& proto = protos[proto_indexes[i_proto]];
 
     shared_ptr<function_def> fn_def =
         create_node<function_def>(token::uninitialized(), token::uninitialized());
@@ -2028,11 +2068,11 @@ void semantic_analyser::register_function2(string_view name, vector<size_t> cons
       shared_ptr<parameter> param =
           create_node<parameter>(token::uninitialized(), token::uninitialized());
       fn_def->params.push_back(param);
-      node_semantic *param_sem = create_node_semantic(param);
+      node_semantic* param_sem = create_node_semantic(param);
       param_sem->tid(proto.params_tid[i_param]);
     }
 
-    node_semantic *fn_sem = create_node_semantic(fn_def);
+    node_semantic* fn_sem = create_node_semantic(fn_def);
 
     fn_sem->tid(proto.ret_tid);
 
@@ -2041,7 +2081,7 @@ void semantic_analyser::register_function2(string_view name, vector<size_t> cons
     fn_sem->partial_execution(is_partial_exec);
     fn_sem->is_constructor(is_constructor);
 
-    symbol *sym =
+    symbol* sym =
         current_symbol->unchecked_insert_overload(overload_pos, fn_def.get(), proto.fn_tid);
 
     if (is_intrinsic) {
@@ -2051,34 +2091,34 @@ void semantic_analyser::register_function2(string_view name, vector<size_t> cons
 }
 
 void semantic_analyser::register_intrinsic2(string_view name,
-                                            std::vector<size_t> const &proto_indexes,
-                                            std::vector<proto_info> const &protos,
+                                            std::vector<size_t> const& proto_indexes,
+                                            std::vector<proto_info> const& protos,
                                             bool partial_exec) {
   register_function2(name, proto_indexes, protos, true, partial_exec, false);
 }
 
 void semantic_analyser::register_constructor2(string_view name,
-                                              std::vector<size_t> const &proto_indexes,
-                                              std::vector<proto_info> const &protos) {
+                                              std::vector<size_t> const& proto_indexes,
+                                              std::vector<proto_info> const& protos) {
   register_function2(name, proto_indexes, protos, true, false, true);
 }
 
 void semantic_analyser::register_builtin_types() {
-  for (builtin_types const &btc : list_of_builtin_types()) {
+  for (builtin_types const& btc : list_of_builtin_types()) {
     if (module_semantic_->pety()->get(btc) == -1) {
       EF_ASSERT(false, "Register builtin type failed!");
     }
   }
 }
 
-module_semantic_ptr const &semantic_analyser::get_module_semantic() const {
+module_semantic_ptr const& semantic_analyser::get_module_semantic() const {
   return module_semantic_;
 }
 
-void semantic_analyser::mark_intrin_invoked_recursive(symbol *sym) {
-  node_semantic *ssi = get_node_semantic(sym->associated_node());
+void semantic_analyser::mark_intrin_invoked_recursive(symbol* sym) {
+  node_semantic* ssi = get_node_semantic(sym->associated_node());
 
-  assert(ssi); // Function must be analyzed.
+  assert(ssi);  // Function must be analyzed.
 
   if (ssi->is_invoked()) {
     return;
@@ -2087,33 +2127,39 @@ void semantic_analyser::mark_intrin_invoked_recursive(symbol *sym) {
   ssi->is_invoked(true);
 }
 
-diag_chat *semantic_analyser::get_diags() const { return diags.get(); }
+diag_chat* semantic_analyser::get_diags() const {
+  return diags.get();
+}
 
-uint32_t semantic_analyser::language() const { return lang; }
+uint32_t semantic_analyser::language() const {
+  return lang;
+}
 
-void semantic_analyser::language(uint32_t v) { lang = v; }
+void semantic_analyser::language(uint32_t v) {
+  lang = v;
+}
 
-node_semantic *semantic_analyser::get_node_semantic(sasl::syntax_tree::node *v) {
+node_semantic* semantic_analyser::get_node_semantic(sasl::syntax_tree::node* v) {
   return module_semantic_->get_semantic(v);
 }
 
-node_semantic *semantic_analyser::get_node_semantic(sasl::syntax_tree::node_ptr const &v) {
+node_semantic* semantic_analyser::get_node_semantic(sasl::syntax_tree::node_ptr const& v) {
   return module_semantic_->get_semantic(v);
 }
 
-node_semantic *semantic_analyser::create_node_semantic(sasl::syntax_tree::node *v) {
+node_semantic* semantic_analyser::create_node_semantic(sasl::syntax_tree::node* v) {
   return module_semantic_->create_semantic(v);
 }
 
-node_semantic *semantic_analyser::create_node_semantic(sasl::syntax_tree::node_ptr const &v) {
+node_semantic* semantic_analyser::create_node_semantic(sasl::syntax_tree::node_ptr const& v) {
   return module_semantic_->create_semantic(v.get());
 }
 
-node_semantic *semantic_analyser::get_or_create_semantic(sasl::syntax_tree::node *v) {
+node_semantic* semantic_analyser::get_or_create_semantic(sasl::syntax_tree::node* v) {
   return module_semantic_->get_or_create_semantic(v);
 }
 
-node_semantic *semantic_analyser::get_or_create_semantic(sasl::syntax_tree::node_ptr const &v) {
+node_semantic* semantic_analyser::get_or_create_semantic(sasl::syntax_tree::node_ptr const& v) {
   return module_semantic_->get_or_create_semantic(v);
 }
 
@@ -2121,35 +2167,37 @@ std::string semantic_analyser::unique_structure_name() {
   return fmt::format("__unnamed_struct_{:X}", ++random_name_counter);
 }
 
-symbol *semantic_analyser::get_symbol(node *v) { return module_semantic_->get_symbol(v); }
+symbol* semantic_analyser::get_symbol(node* v) {
+  return module_semantic_->get_symbol(v);
+}
 
-symbol *semantic_analyser::get_symbol(node_ptr const &v) {
+symbol* semantic_analyser::get_symbol(node_ptr const& v) {
   return module_semantic_->get_symbol(v.get());
 }
 
-void semantic_analyser::hold_generated_node(node_ptr const &v) {
+void semantic_analyser::hold_generated_node(node_ptr const& v) {
   module_semantic_->hold_generated_node(v);
 }
 
-void semantic_analyser::mark_modified(expression *expr) {
-  node_semantic *sem = get_node_semantic(expr);
+void semantic_analyser::mark_modified(expression* expr) {
+  node_semantic* sem = get_node_semantic(expr);
   assert(sem);
 
   if (expr->node_class() == node_ids::variable_expression) {
-    node *decl = sem->referenced_declarator();
-    symbol *decl_sym = get_symbol(decl);
+    node* decl = sem->referenced_declarator();
+    symbol* decl_sym = get_symbol(decl);
     module_semantic_->modify(decl_sym);
     return;
   }
 
   if (expr->node_class() == node_ids::member_expression) {
-    member_expression *mem_expr = static_cast<member_expression *>(expr);
+    member_expression* mem_expr = static_cast<member_expression*>(expr);
     mark_modified(mem_expr->expr.get());
     return;
   }
 
   if (expr->node_class() == node_ids::binary_expression) {
-    binary_expression *bin_expr = static_cast<binary_expression *>(expr);
+    binary_expression* bin_expr = static_cast<binary_expression*>(expr);
     if (is_general_assign(bin_expr->op)) {
       // Marked as modified when sub expression is evaluated.
       return;
@@ -2165,10 +2213,10 @@ semantic_analyser::parameter_lrvs::parameter_lrvs(lvalue_or_rvalue::id ret_lrv,
                                                   lvalue_or_rvalue::id lrv_p0,
                                                   lvalue_or_rvalue::id lrv_p1,
                                                   lvalue_or_rvalue::id lrv_p2)
-    : ret_lrv(ret_lrv) {
+  : ret_lrv(ret_lrv) {
   param_lrvs[0] = lrv_p0;
   param_lrvs[1] = lrv_p1;
   param_lrvs[2] = lrv_p2;
 }
 
-} // namespace sasl::semantic
+}  // namespace sasl::semantic

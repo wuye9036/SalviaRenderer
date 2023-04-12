@@ -14,7 +14,7 @@
 
 using namespace salvia::core;
 
-void (*compiler_loader::create_compiler)(shared_ptr<compiler> &);
+void (*compiler_loader::create_compiler)(shared_ptr<compiler>&);
 
 BOOST_GLOBAL_FIXTURE(compiler_loader);
 

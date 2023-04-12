@@ -22,7 +22,7 @@
 #include <vector>
 
 #if defined(EFLIB_WINDOWS)
-#include <excpt.h>
+#  include <excpt.h>
 #endif
 
 namespace sasl {
@@ -35,8 +35,8 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(module_vmcode);
 namespace common {
 class diag_chat;
 class diag_item;
-} // namespace common
-} // namespace sasl
+}  // namespace common
+}  // namespace sasl
 
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
@@ -61,23 +61,25 @@ struct compiler_loader {
     lib_->get_function(create_compiler, "sasl_create_compiler");
   }
 
-  static void (*create_compiler)(shared_ptr<compiler> &);
+  static void (*create_compiler)(shared_ptr<compiler>&);
 
 private:
   std::shared_ptr<eflib::dynamic_lib> lib_;
 };
 
-string make_command(string const &file_name, string const &options) {
+string make_command(string const& file_name, string const& options) {
   return (format("--input=\"%s\" %s") % file_name % options).str();
 }
 
-string make_command(string const &inc, string const &sysinc, string const &file_name,
-                    string const &options) {
+string make_command(string const& inc,
+                    string const& sysinc,
+                    string const& file_name,
+                    string const& options) {
   return (format("--input=\"%s\" -I \"%s\" -S \"%s\" %s") % file_name % inc % sysinc % options)
       .str();
 }
 
-bool print_diagnostic(diag_chat *, diag_item *item) {
+bool print_diagnostic(diag_chat*, diag_item* item) {
   switch (item->level()) {
   case diag_levels::diag_levels::error:
   case diag_levels::diag_levels::fatal_error:
@@ -94,21 +96,21 @@ bool print_diagnostic(diag_chat *, diag_item *item) {
 struct abi_test_fixture {
   abi_test_fixture() {}
 
-  void init_g(string const &file_name) { init(file_name, "--lang=g"); }
+  void init_g(string const& file_name) { init(file_name, "--lang=g"); }
 
-  void init_vs(string const &file_name) { init(file_name, "--lang=vs"); }
+  void init_vs(string const& file_name) { init(file_name, "--lang=vs"); }
 
-  void init_ps(string const &file_name) { init(file_name, "--lang=ps"); }
+  void init_ps(string const& file_name) { init(file_name, "--lang=ps"); }
 
-  void add_virtual_file(char const *name, char const *content) {
+  void add_virtual_file(char const* name, char const* content) {
     vfiles.push_back(make_pair(name, content));
   }
 
-  void init(string const &file_name, string const &options) {
+  void init(string const& file_name, string const& options) {
     init_cmd(make_command(file_name, options));
   }
 
-  void init_cmd(string const &cmd) {
+  void init_cmd(string const& cmd) {
     diags = diag_chat::create();
     diags->add_report_raised_handler(print_diagnostic);
     compiler_loader::create_compiler(drv);
@@ -129,7 +131,7 @@ struct abi_test_fixture {
   ~abi_test_fixture() {}
 
   shared_ptr<compiler> drv;
-  symbol *root_sym;
+  symbol* root_sym;
   shared_ptr<diag_chat> diags;
-  vector<pair<char const *, char const *>> vfiles;
+  vector<pair<char const*, char const*>> vfiles;
 };

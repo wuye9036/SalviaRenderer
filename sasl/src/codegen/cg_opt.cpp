@@ -20,14 +20,14 @@ namespace sasl::codegen {
 
 #if TODO
 void optimize(shared_ptr<module_vmcode> code, vector<optimization_options> opt_options) {
-  Module *mod = code->get_vm_module();
+  Module* mod = code->get_vm_module();
 
   FunctionPassManager fpm(mod);
 
   for (optimization_options opt_option : opt_options) {
     switch (opt_option) {
     case opt_verify:
-      for (Function &f : mod->getFunctionList()) {
+      for (Function& f : mod->getFunctionList()) {
         if (!f.empty()) {
           verifyFunction(f, PrintMessageAction);
         }
@@ -41,7 +41,7 @@ void optimize(shared_ptr<module_vmcode> code, vector<optimization_options> opt_o
 
   fpm.doInitialization();
 
-  for (Function &f : mod->getFunctionList()) {
+  for (Function& f : mod->getFunctionList()) {
     if (!f.empty()) {
       fpm.run(f);
     }
@@ -49,4 +49,4 @@ void optimize(shared_ptr<module_vmcode> code, vector<optimization_options> opt_o
 }
 #endif
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

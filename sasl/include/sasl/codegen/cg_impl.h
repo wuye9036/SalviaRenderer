@@ -20,7 +20,7 @@ class module_semantic;
 class reflection_impl;
 class caster_t;
 class symbol;
-} // namespace sasl::semantic
+}  // namespace sasl::semantic
 
 namespace llvm {
 
@@ -30,10 +30,11 @@ class Module;
 class Type;
 
 class IRBuilderDefaultInserter;
-template <typename T, typename Inserter> class IRBuilder;
+template <typename T, typename Inserter>
+class IRBuilder;
 class ConstantFolder;
 using DefaultIRBuilder = IRBuilder<ConstantFolder, IRBuilderDefaultInserter>;
-} // namespace llvm
+}  // namespace llvm
 
 enum class builtin_types : uint32_t;
 
@@ -46,11 +47,11 @@ struct node_context;
 class cg_impl : public sasl::syntax_tree::syntax_tree_visitor {
 public:
   std::shared_ptr<module_vmcode> generated_module() const;
-  bool generate(std::shared_ptr<sasl::semantic::module_semantic> const &msem,
-                sasl::semantic::reflection_impl const *abii);
+  bool generate(std::shared_ptr<sasl::semantic::module_semantic> const& msem,
+                sasl::semantic::reflection_impl const* abii);
 
   // Get context by node.
-  node_context *node_ctxt(sasl::syntax_tree::node const *n, bool create_if_need = false);
+  node_context* node_ctxt(sasl::syntax_tree::node const* n, bool create_if_need = false);
 
 protected:
   cg_impl();
@@ -63,7 +64,7 @@ protected:
   SASL_VISIT_DCL(call_expression);
   SASL_VISIT_DCL(index_expression);
 
-  SASL_VISIT_DCL(declaration){}
+  SASL_VISIT_DCL(declaration) {}
   SASL_VISIT_DCL(parameter_full);
   SASL_VISIT_DCL(function_full_def);
   SASL_VISIT_DCL(parameter);
@@ -106,51 +107,53 @@ protected:
   SASL_SPECIFIC_VISIT_DCL(bin_logic, binary_expression) = 0;
 
   // Easy to visit child with context data.
-  template <typename NodeT> void visit_child(std::shared_ptr<NodeT> const &child);
-  void visit_child(sasl::syntax_tree::node *child);
+  template <typename NodeT>
+  void visit_child(std::shared_ptr<NodeT> const& child);
+  void visit_child(sasl::syntax_tree::node* child);
 
   template <typename NodeT>
-  node_context *node_ctxt(std::shared_ptr<NodeT> const &, bool create_if_need = false);
+  node_context* node_ctxt(std::shared_ptr<NodeT> const&, bool create_if_need = false);
   template <typename NodeT>
-  node_context *
-  node_ctxt(NodeT const &, bool create_if_need = false,
-            typename std::enable_if<!std::is_pointer<NodeT>::value>::type * = nullptr);
+  node_context* node_ctxt(NodeT const&,
+                          bool create_if_need = false,
+                          typename std::enable_if<!std::is_pointer<NodeT>::value>::type* = nullptr);
 
   // Direct access member from module.
-  llvm::DefaultIRBuilder *builder() const;
-  llvm::LLVMContext &context() const;
-  llvm::Module *module() const;
+  llvm::DefaultIRBuilder* builder() const;
+  llvm::LLVMContext& context() const;
+  llvm::Module* module() const;
 
 protected:
-  virtual cg_service *service() const = 0;
+  virtual cg_service* service() const = 0;
   virtual abis local_abi(bool c_compatible) const = 0;
-  sasl::semantic::symbol *find_symbol(std::string_view);
-  cg_function *get_function(std::string const &name) const;
+  sasl::semantic::symbol* find_symbol(std::string_view);
+  cg_function* get_function(std::string const& name) const;
 
   // Store global informations
   std::shared_ptr<sasl::semantic::module_semantic> sem_;
   std::shared_ptr<module_context> ctxt_;
   std::shared_ptr<module_vmcode_impl> vmcode_;
-  sasl::semantic::reflection_impl const *abii;
-  std::shared_ptr<sasl::semantic::caster_t> caster; ///< For type conversation.
+  sasl::semantic::reflection_impl const* abii;
+  std::shared_ptr<sasl::semantic::caster_t> caster;  ///< For type conversation.
 
-  cg_service *service_;
+  cg_service* service_;
 
   // Status
   bool semantic_mode_;
   bool msc_compatible_;
   insert_point_t continue_to_;
   insert_point_t break_to_;
-  cg_type *current_cg_type_; ///< Type information used by declarator.
-  node_context *parent_struct_;
-  llvm::BasicBlock *block_;
-  sasl::semantic::symbol *current_symbol_;          ///< Current symbol scope.
-  sasl::syntax_tree::node *variable_to_initialize_; ///< The variable which will pass in initializer
-                                                    ///< to generate initialization code.
+  cg_type* current_cg_type_;  ///< Type information used by declarator.
+  node_context* parent_struct_;
+  llvm::BasicBlock* block_;
+  sasl::semantic::symbol* current_symbol_;  ///< Current symbol scope.
+  sasl::syntax_tree::node*
+      variable_to_initialize_;              ///< The variable which will pass in initializer
+                                            ///< to generate initialization code.
 
   // For debugging
-  std::unordered_map<operators, char const *> operator_names;
-  std::unordered_map<builtin_types, char const *> bt_names;
+  std::unordered_map<operators, char const*> operator_names;
+  std::unordered_map<builtin_types, char const*> bt_names;
 };
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

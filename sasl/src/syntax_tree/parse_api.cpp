@@ -16,7 +16,7 @@ using std::shared_ptr;
 
 namespace sasl::syntax_tree {
 
-void init_lex(lexer &l) {
+void init_lex(lexer& l) {
   l.add_patterns({{"SPACE", "[ \\t\\v\\f]+"},
                   {"NEWLINE", "((\\r\\n?)|\\n)+"},
                   {"NON_ZERO_DIGIT", "[1-9]"},
@@ -126,79 +126,80 @@ void init_lex(lexer &l) {
        {"any_char", "."},
        {"block_comment_end", "{ASTERISK}{SLASH}"}});
 
-  l.enable_tokens("INITIAL", {// builtin types
-                              {"lit_int"},
-                              {"lit_float"},
-                              {"lit_bool"},
-                              // ( ) { }
-                              {"lparen"},
-                              {"rparen"},
-                              {"lbrace"},
-                              {"rbrace"},
-                              // keywords
-                              {"kw_struct"},
-                              {"kw_typedef"},
-                              {"kw_break"},
-                              {"kw_continue"},
-                              {"kw_case"},
-                              {"kw_default"},
-                              {"kw_return"},
-                              {"kw_switch"},
-                              {"kw_else"},
-                              {"kw_for"},
-                              {"kw_if"},
-                              {"kw_while"},
-                              {"kw_do"},
-                              {"ident"},
-                              // &= |= ^=
-                              {"shift_assign"},
-                              {"band_assign"},
-                              {"bor_assign"},
-                              {"bxor_assign"},
-                              // <= >= == !=
-                              {"less_equal"},
-                              {"equal_to"},
-                              {"not_equal"},
-                              {"greater_equal"},
-                              // += -= *= /= %=
-                              {"add_assign"},
-                              {"sub_assign"},
-                              {"mul_assign"},
-                              {"div_assign"},
-                              {"mod_assign"},
-                              // << >>
-                              {"shift"},
-                              // || &&
-                              {"logic_or"},
-                              {"logic_and"},
-                              // ++ -- ! ~
-                              {"inc_dec"},
-                              {"exclamation"},
-                              {"tilde"},
-                              // + - * / %
-                              {"plus"},
-                              {"minus"},
-                              {"asterisk"},
-                              {"slash"},
-                              {"percent"},
-                              // < > [ ]
-                              {"labracket"},
-                              {"rabracket"},
-                              {"lsbracket"},
-                              {"rsbracket"},
-                              // & | ^
-                              {"vertical"},
-                              {"ampersand"},
-                              {"caret"},
-                              // ?
-                              {"question"},
-                              // , : ;
-                              {"comma"},
-                              {"colon"},
-                              {"semicolon"},
-                              // . =
-                              {"dot"},
-                              {"equal"}});
+  l.enable_tokens("INITIAL",
+                  {// builtin types
+                   {"lit_int"},
+                   {"lit_float"},
+                   {"lit_bool"},
+                   // ( ) { }
+                   {"lparen"},
+                   {"rparen"},
+                   {"lbrace"},
+                   {"rbrace"},
+                   // keywords
+                   {"kw_struct"},
+                   {"kw_typedef"},
+                   {"kw_break"},
+                   {"kw_continue"},
+                   {"kw_case"},
+                   {"kw_default"},
+                   {"kw_return"},
+                   {"kw_switch"},
+                   {"kw_else"},
+                   {"kw_for"},
+                   {"kw_if"},
+                   {"kw_while"},
+                   {"kw_do"},
+                   {"ident"},
+                   // &= |= ^=
+                   {"shift_assign"},
+                   {"band_assign"},
+                   {"bor_assign"},
+                   {"bxor_assign"},
+                   // <= >= == !=
+                   {"less_equal"},
+                   {"equal_to"},
+                   {"not_equal"},
+                   {"greater_equal"},
+                   // += -= *= /= %=
+                   {"add_assign"},
+                   {"sub_assign"},
+                   {"mul_assign"},
+                   {"div_assign"},
+                   {"mod_assign"},
+                   // << >>
+                   {"shift"},
+                   // || &&
+                   {"logic_or"},
+                   {"logic_and"},
+                   // ++ -- ! ~
+                   {"inc_dec"},
+                   {"exclamation"},
+                   {"tilde"},
+                   // + - * / %
+                   {"plus"},
+                   {"minus"},
+                   {"asterisk"},
+                   {"slash"},
+                   {"percent"},
+                   // < > [ ]
+                   {"labracket"},
+                   {"rabracket"},
+                   {"lsbracket"},
+                   {"rsbracket"},
+                   // & | ^
+                   {"vertical"},
+                   {"ampersand"},
+                   {"caret"},
+                   // ?
+                   {"question"},
+                   // , : ;
+                   {"comma"},
+                   {"colon"},
+                   {"semicolon"},
+                   // . =
+                   {"dot"},
+                   {"equal"}});
 
   l.enable_tokens(
       "SKIPPED",
@@ -209,8 +210,8 @@ void init_lex(lexer &l) {
   l.set_init_states({"INITIAL", "SKIPPED"});
 }
 
-shared_ptr<program> parse(std::string const &code_text, shared_ptr<lex_context> ctxt,
-                          diag_chat *diags) {
+shared_ptr<program>
+parse(std::string const& code_text, shared_ptr<lex_context> ctxt, diag_chat* diags) {
   lexer l;
   init_lex(l);
   grammars g(l);
@@ -223,7 +224,7 @@ shared_ptr<program> parse(std::string const &code_text, shared_ptr<lex_context> 
   return shared_ptr<program>();
 }
 
-shared_ptr<program> parse(code_source *src, shared_ptr<lex_context> ctxt, diag_chat *diags) {
+shared_ptr<program> parse(code_source* src, shared_ptr<lex_context> ctxt, diag_chat* diags) {
   lexer l;
   init_lex(l);
   grammars g(l);
@@ -236,4 +237,4 @@ shared_ptr<program> parse(code_source *src, shared_ptr<lex_context> ctxt, diag_c
   return shared_ptr<program>();
 }
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

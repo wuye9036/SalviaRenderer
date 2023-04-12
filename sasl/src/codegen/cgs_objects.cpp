@@ -30,12 +30,14 @@ using namespace eflib::enum_operators;
 
 namespace sasl::codegen {
 
-cg_type::cg_type(tynode *tyn, Type *ty_c, Type *ty_llvm) : tyn(tyn) {
+cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm) : tyn(tyn) {
   tys[static_cast<int>(abis::c)] = ty_c;
   tys[static_cast<int>(abis::llvm)] = ty_llvm;
 }
 
-cg_type::cg_type() : tyn(nullptr) { memset(tys, 0, sizeof(tys)); }
+cg_type::cg_type() : tyn(nullptr) {
+  memset(tys, 0, sizeof(tys));
+}
 
 builtin_types cg_type::hint() const {
   if (!tyn || !tyn->is_builtin()) {
@@ -44,40 +46,72 @@ builtin_types cg_type::hint() const {
   return tyn->tycode;
 }
 
-tynode *cg_type::tyn_ptr() const { return tyn; }
+tynode* cg_type::tyn_ptr() const {
+  return tyn;
+}
 
-llvm::Type *cg_type::ty(abis abi) const { return tys[static_cast<int>(abi)]; }
+llvm::Type* cg_type::ty(abis abi) const {
+  return tys[static_cast<int>(abi)];
+}
 
-void cg_type::vm_type(abis abi, Type *t) { tys[static_cast<int>(abi)] = t; }
+void cg_type::vm_type(abis abi, Type* t) {
+  tys[static_cast<int>(abi)] = t;
+}
 
 multi_value::multi_value(size_t num_value)
-    : val_(num_value, nullptr), ty_(nullptr), builtin_ty_(builtin_types::none), kind_(value_kinds::unknown),
-      abi_(abis::unknown), cg_(nullptr) {}
+  : val_(num_value, nullptr)
+  , ty_(nullptr)
+  , builtin_ty_(builtin_types::none)
+  , kind_(value_kinds::unknown)
+  , abi_(abis::unknown)
+  , cg_(nullptr) {
+}
 
-multi_value::multi_value(cg_type *ty, value_array const &val, value_kinds k, abis abi,
-                         cg_service *cg)
-    : val_(val), ty_(ty), builtin_ty_(builtin_types::none), kind_(k), abi_(abi), cg_(cg) {}
+multi_value::multi_value(
+    cg_type* ty, value_array const& val, value_kinds k, abis abi, cg_service* cg)
+  : val_(val)
+  , ty_(ty)
+  , builtin_ty_(builtin_types::none)
+  , kind_(k)
+  , abi_(abi)
+  , cg_(cg) {
+}
 
-multi_value::multi_value(builtin_types hint, value_array const &val, value_kinds k, abis abi,
-                         cg_service *cg)
-    : val_(val), ty_(nullptr), builtin_ty_(hint), kind_(k), abi_(abi), cg_(cg) {}
+multi_value::multi_value(
+    builtin_types hint, value_array const& val, value_kinds k, abis abi, cg_service* cg)
+  : val_(val)
+  , ty_(nullptr)
+  , builtin_ty_(hint)
+  , kind_(k)
+  , abi_(abi)
+  , cg_(cg) {
+}
 
-multi_value::multi_value(multi_value const &rhs)
-    : elem_indexes_(rhs.elem_indexes_), val_(rhs.val_), ty_(rhs.ty_), builtin_ty_(rhs.builtin_ty_), kind_(rhs.kind_),
-      abi_(rhs.abi_), cg_(rhs.cg_) {
+multi_value::multi_value(multi_value const& rhs)
+  : elem_indexes_(rhs.elem_indexes_)
+  , val_(rhs.val_)
+  , ty_(rhs.ty_)
+  , builtin_ty_(rhs.builtin_ty_)
+  , kind_(rhs.kind_)
+  , abi_(rhs.abi_)
+  , cg_(rhs.cg_) {
   parent(rhs.parent_.get());
   index(rhs.index_.get());
 }
 
-abis multi_value::abi() const { return abi_; }
+abis multi_value::abi() const {
+  return abi_;
+}
 
-multi_value multi_value::swizzle(elem_indexes const & /*swz_code*/) const {
+multi_value multi_value::swizzle(elem_indexes const& /*swz_code*/) const {
   assert(is_vector(hint()));
   ef_unimplemented();
   return {};
 }
 
-value_array multi_value::raw() const { return val_; }
+value_array multi_value::raw() const {
+  return val_;
+}
 
 multi_value multi_value::to_rvalue() const {
   if (ty_) {
@@ -87,39 +121,38 @@ multi_value multi_value::to_rvalue() const {
   }
 }
 
-builtin_types multi_value::hint() const { return ty_ ? ty_->hint() : builtin_ty_; }
+builtin_types multi_value::hint() const {
+  return ty_ ? ty_->hint() : builtin_ty_;
+}
 
-value_array multi_value::load(abis abi) const { return cg_->load(*this, abi); }
+value_array multi_value::load(abis abi) const {
+  return cg_->load(*this, abi);
+}
 
-value_array multi_value::load() const { return cg_->load(*this); }
+value_array multi_value::load() const {
+  return cg_->load(*this);
+}
 
-value_kinds multi_value::kind() const { return kind_; }
+value_kinds multi_value::kind() const {
+  return kind_;
+}
 
 bool multi_value::storable() const {
   switch (kind_) {
-  case value_kinds::reference:
-    return true;
+  case value_kinds::reference: return true;
   case value_kinds::value:
-  case value_kinds::unknown:
-    return false;
-  case value_kinds::elements:
-    return parent()->storable();
-  default:
-    ef_unimplemented();
-    return false;
+  case value_kinds::unknown: return false;
+  case value_kinds::elements: return parent()->storable();
+  default: ef_unimplemented(); return false;
   }
 }
 
 bool multi_value::load_only() const {
   switch (kind_) {
   case value_kinds::reference:
-  case value_kinds::unknown:
-    return false;
-  case value_kinds::value:
-    return true;
-  default:
-    ef_unimplemented();
-    return false;
+  case value_kinds::unknown: return false;
+  case value_kinds::value: return true;
+  default: ef_unimplemented(); return false;
   }
 }
 
@@ -127,20 +160,27 @@ bool multi_value::valid() const {
   return (valid_all(val_) || parent_) && kind_ != value_kinds::unknown && abi_ != abis::unknown;
 }
 
-void multi_value::emplace(value_array const &v, value_kinds k, abis abi) {
+void multi_value::emplace(value_array const& v, value_kinds k, abis abi) {
   val_ = v;
   kind_ = k;
   abi_ = abi;
 }
 
-void multi_value::emplace(multi_value const &v) { emplace(v.raw(), v.kind(), v.abi()); }
+void multi_value::emplace(multi_value const& v) {
+  emplace(v.raw(), v.kind(), v.abi());
+}
 
-value_array multi_value::load_ref() const { return cg_->load_ref(*this); }
+value_array multi_value::load_ref() const {
+  return cg_->load_ref(*this);
+}
 
-bool multi_value::is_mono() const { return val_.size() == 1; }
+bool multi_value::is_mono() const {
+  return val_.size() == 1;
+}
 
-multi_value &multi_value::operator=(multi_value const &rhs) {
-  if (this == &rhs) { return *this;
+multi_value& multi_value::operator=(multi_value const& rhs) {
+  if (this == &rhs) {
+    return *this;
   }
 
   kind_ = rhs.kind_;
@@ -156,24 +196,30 @@ multi_value &multi_value::operator=(multi_value const &rhs) {
   return *this;
 }
 
-multi_value multi_value::slice(multi_value const &vec, elem_indexes const &indexes) {
+multi_value multi_value::slice(multi_value const& vec, elem_indexes const& indexes) {
   builtin_types hint = vec.hint();
   assert(is_vector(hint));
 
-  multi_value ret(scalar_of(hint), value_array(vec.value_count(), nullptr), value_kinds::elements,
-                  vec.abi_, vec.cg_);
+  multi_value ret(scalar_of(hint),
+                  value_array(vec.value_count(), nullptr),
+                  value_kinds::elements,
+                  vec.abi_,
+                  vec.cg_);
   ret.elem_indexes_ = indexes;
   ret.parent(vec);
 
   return ret;
 }
 
-multi_value multi_value::slice(multi_value const &vec, multi_value const &index) {
+multi_value multi_value::slice(multi_value const& vec, multi_value const& index) {
   builtin_types hint = vec.hint();
   assert(is_vector(hint));
 
-  multi_value ret(scalar_of(hint), value_array(vec.value_count(), nullptr), value_kinds::elements,
-                  vec.abi_, vec.cg_);
+  multi_value ret(scalar_of(hint),
+                  value_array(vec.value_count(), nullptr),
+                  value_kinds::elements,
+                  vec.abi_,
+                  vec.cg_);
   ret.index(index);
   ret.parent(vec);
 
@@ -184,51 +230,71 @@ multi_value multi_value::as_ref() const {
   multi_value ret(*this);
 
   switch (ret.kind_) {
-  case value_kinds::value:
-    ret.kind_ = value_kinds::reference;
-    break;
-  case value_kinds::elements:
-    ret.kind_ = value_kinds::elements | value_kinds::reference;
-    break;
-  default:
-    ret.kind_ = value_kinds::unknown;
-    break;
+  case value_kinds::value: ret.kind_ = value_kinds::reference; break;
+  case value_kinds::elements: ret.kind_ = value_kinds::elements | value_kinds::reference; break;
+  default: ret.kind_ = value_kinds::unknown; break;
   }
 
   return ret;
 }
 
-void multi_value::store(multi_value const &v) const {
-  cg_->store(*(const_cast<multi_value *>(this)), v);
+void multi_value::store(multi_value const& v) const {
+  cg_->store(*(const_cast<multi_value*>(this)), v);
 }
 
-void multi_value::index(size_t index) { elem_indexes_ = elem_indexes(static_cast<char>(index)); }
+void multi_value::index(size_t index) {
+  elem_indexes_ = elem_indexes(static_cast<char>(index));
+}
 
-cg_type *multi_value::ty() const { return ty_; }
-void multi_value::ty(cg_type *v) { ty_ = v; }
+cg_type* multi_value::ty() const {
+  return ty_;
+}
+void multi_value::ty(cg_type* v) {
+  ty_ = v;
+}
 
-void multi_value::hint(builtin_types bt) { builtin_ty_ = bt; }
-void multi_value::abi(abis abi) { this->abi_ = abi; }
-elem_indexes multi_value::indexes() const { return elem_indexes_; }
-void multi_value::indexes(elem_indexes const &v) { elem_indexes_ = v; }
+void multi_value::hint(builtin_types bt) {
+  builtin_ty_ = bt;
+}
+void multi_value::abi(abis abi) {
+  this->abi_ = abi;
+}
+elem_indexes multi_value::indexes() const {
+  return elem_indexes_;
+}
+void multi_value::indexes(elem_indexes const& v) {
+  elem_indexes_ = v;
+}
 
-void multi_value::kind(value_kinds vkind) { kind_ = vkind; }
-void multi_value::parent(multi_value const &v) { parent_.reset(new multi_value(v)); }
-void multi_value::parent(multi_value const *v) {
+void multi_value::kind(value_kinds vkind) {
+  kind_ = vkind;
+}
+void multi_value::parent(multi_value const& v) {
+  parent_.reset(new multi_value(v));
+}
+void multi_value::parent(multi_value const* v) {
   if (v) {
     parent(*v);
   }
 }
-multi_value *multi_value::parent() const { return parent_.get(); }
+multi_value* multi_value::parent() const {
+  return parent_.get();
+}
 
-multi_value *multi_value::index() const { return index_.get(); }
-void multi_value::index(multi_value const &v) { index_.reset(new multi_value(v)); }
-void multi_value::index(multi_value const *v) {
+multi_value* multi_value::index() const {
+  return index_.get();
+}
+void multi_value::index(multi_value const& v) {
+  index_.reset(new multi_value(v));
+}
+void multi_value::index(multi_value const* v) {
   if (v)
     index(*v);
 }
 
-size_t multi_value::value_count() const { return val_.size(); }
+size_t multi_value::value_count() const {
+  return val_.size();
+}
 
 // Workaround for llvm issue 12618
 value_array multi_value::load_i1() const {
@@ -237,10 +303,12 @@ value_array multi_value::load_i1() const {
   }
 
   assert(false);
-  return value_array(val_.size(), (Value *)nullptr);
+  return value_array(val_.size(), (Value*)nullptr);
 }
 
-void cg_function::allocation_block(insert_point_t const &ip) { alloc_block = ip; }
+void cg_function::allocation_block(insert_point_t const& ip) {
+  alloc_block = ip;
+}
 
 void cg_function::arg_name(size_t index, std::string_view name) {
   assert(index < fn->arg_size());
@@ -259,7 +327,7 @@ void cg_function::arg_name(size_t index, std::string_view name) {
   arg_it->setName(name);
 }
 
-void cg_function::args_name(vector<string> const &names) {
+void cg_function::args_name(vector<string> const& names) {
   Function::arg_iterator arg_it = fn->arg_begin();
   vector<string>::const_iterator name_it = names.begin();
 
@@ -279,8 +347,8 @@ void cg_function::args_name(vector<string> const &names) {
   }
 }
 
-cg_type *cg_function::result_type() const {
-  node *result_type = fn_def->type->result_type.get();
+cg_type* cg_function::result_type() const {
+  node* result_type = fn_def->type->result_type.get();
   return cg->get_node_context(result_type)->ty;
 }
 
@@ -307,13 +375,13 @@ size_t cg_function::logical_arg_offset() const {
 
 multi_value cg_function::arg(size_t index) const {
   shared_ptr<parameter> par = fn_def->params[index];
-  cg_type *par_ty = cg->get_node_context(par.get())->ty;
+  cg_type* par_ty = cg->get_node_context(par.get())->ty;
 
   auto it = fn->arg_begin();
   std::advance(it, logical_arg_offset() + index);
   abis arg_abi = cg->param_abi(c_compatible);
 
-  Value *physical_arg_value = &(*it);
+  Value* physical_arg_value = &(*it);
   value_array physical_multi_value;
 
   // Dereference array if need.
@@ -341,33 +409,46 @@ multi_value cg_function::execution_mask() const {
   if (return_via_arg()) {
     ++it;
   }
-  return cg->create_value(builtin_types::_uint32, value_array(1, &(*it)), value_kinds::value,
-                          abis::llvm);
+  return cg->create_value(
+      builtin_types::_uint32, value_array(1, &(*it)), value_kinds::value, abis::llvm);
 }
 
 cg_function::cg_function()
-    : fn_def(nullptr), fn(nullptr), c_compatible(false), partial_execution(false), ret_void(true),
-      cg(nullptr) {}
+  : fn_def(nullptr)
+  , fn(nullptr)
+  , c_compatible(false)
+  , partial_execution(false)
+  , ret_void(true)
+  , cg(nullptr) {
+}
 
 bool cg_function::value_arg_as_ref(size_t logical_index) const {
   assert(logical_index < fn_def->params.size());
-  parameter *param = fn_def->params[logical_index].get();
-  node_semantic *param_semantic = cg->get_node_semantic(param);
+  parameter* param = fn_def->params[logical_index].get();
+  node_semantic* param_semantic = cg->get_node_semantic(param);
   builtin_types param_hint = param_semantic->value_builtin_type();
   return c_compatible && !is_scalar(param_hint) && !is_sampler(param_hint);
 }
 
-bool cg_function::return_via_arg() const { return c_compatible && !ret_void; }
+bool cg_function::return_via_arg() const {
+  return c_compatible && !ret_void;
+}
 
-bool cg_function::multi_value_arg_as_ref() const { return c_compatible && multi_value_args(); }
+bool cg_function::multi_value_arg_as_ref() const {
+  return c_compatible && multi_value_args();
+}
 
-bool cg_function::multi_value_args() const { return cg->parallel_factor() > 1; }
+bool cg_function::multi_value_args() const {
+  return cg->parallel_factor() > 1;
+}
 
-abis cg_function::abi() const { return cg->param_abi(c_compatible); }
+abis cg_function::abi() const {
+  return cg->param_abi(c_compatible);
+}
 
 value_array cg_function::return_address() const {
   if (return_via_arg()) {
-    Value *addr_value = &(*fn->arg_begin());
+    Value* addr_value = &(*fn->arg_begin());
     if (multi_value_arg_as_ref()) {
       return cg->extension()->split_array(
           cg->builder().CreateLoad(addr_value->getType(), addr_value));
@@ -378,7 +459,7 @@ value_array cg_function::return_address() const {
   return {cg->parallel_factor(), nullptr};
 }
 
-void cg_function::return_name(std::string const &s) const {
+void cg_function::return_name(std::string const& s) const {
   if (return_via_arg()) {
     fn->arg_begin()->setName(s);
   }
@@ -388,14 +469,19 @@ void cg_function::inline_hint() {
   // fn->addAttribute( 0, llvm::Attribute::InlineHint );
 }
 
-bool cg_function::need_mask() const { return cg->parallel_factor() > 1 && partial_execution; }
-
-insert_point_t::insert_point_t() : block(nullptr) {}
-
-insert_point_t cg_function::allocation_block() const { return alloc_block; }
-
-bool valid_all(value_array const &arr) {
-  return !arr.empty() && std::all_of(arr.begin(), arr.end(), [](auto &v) { return v != nullptr; });
+bool cg_function::need_mask() const {
+  return cg->parallel_factor() > 1 && partial_execution;
 }
 
-} // namespace sasl::codegen
+insert_point_t::insert_point_t() : block(nullptr) {
+}
+
+insert_point_t cg_function::allocation_block() const {
+  return alloc_block;
+}
+
+bool valid_all(value_array const& arr) {
+  return !arr.empty() && std::all_of(arr.begin(), arr.end(), [](auto& v) { return v != nullptr; });
+}
+
+}  // namespace sasl::codegen

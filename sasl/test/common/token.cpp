@@ -44,4 +44,4 @@ TEST(sasl_common, token_sharing) {
   EXPECT_EQ(t0.lit(), t1.lit());
 }
 
-} // namespace test_common
+}  // namespace test_common

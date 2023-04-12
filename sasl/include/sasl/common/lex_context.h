@@ -22,4 +22,4 @@ public:
   virtual ~code_source() = default;
 };
 
-} // namespace sasl::common
+}  // namespace sasl::common

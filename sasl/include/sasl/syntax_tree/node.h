@@ -14,11 +14,11 @@ namespace sasl {
 namespace semantic {
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 EFLIB_DECLARE_CLASS_SHARED_PTR(node_semantic);
-} // namespace semantic
+}  // namespace semantic
 namespace codegen {
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_vmcode);
 }
-} // namespace sasl
+}  // namespace sasl
 
 namespace sasl::syntax_tree {
 
@@ -35,8 +35,10 @@ protected:
 public:
   node() = default;
 
-  template <typename R> friend std::shared_ptr<R> create_node();
-  template <typename R, typename P0> friend std::shared_ptr<R> create_node(P0 &&);
+  template <typename R>
+  friend std::shared_ptr<R> create_node();
+  template <typename R, typename P0>
+  friend std::shared_ptr<R> create_node(P0&&);
   template <typename R>
     requires std::is_base_of_v<node, R>
   friend std::shared_ptr<R> create_node(token, token);
@@ -44,19 +46,20 @@ public:
   friend class swallow_duplicator;
   friend class deep_duplicator;
 
-  node_ptr as_handle() const { return const_cast<node *>(this)->shared_from_this(); }
-  template <typename T> std::shared_ptr<T> as_handle() const {
+  node_ptr as_handle() const { return const_cast<node*>(this)->shared_from_this(); }
+  template <typename T>
+  std::shared_ptr<T> as_handle() const {
     return std::dynamic_pointer_cast<T>(as_handle());
   }
 
-  token const &token_begin() const &noexcept { return tok_beg; }
-  token const &token_end() const &noexcept { return tok_end; }
+  token const& token_begin() const& noexcept { return tok_beg; }
+  token const& token_end() const& noexcept { return tok_end; }
 
-  token &token_begin() &noexcept { return tok_beg; }
-  token &token_end() &noexcept { return tok_end; }
+  token& token_begin() & noexcept { return tok_beg; }
+  token& token_end() & noexcept { return tok_end; }
 
-  token &&token_begin() &&noexcept { return std::move(tok_beg); }
-  token &&token_end() &&noexcept { return std::move(tok_end); }
+  token&& token_begin() && noexcept { return std::move(tok_beg); }
+  token&& token_end() && noexcept { return std::move(tok_end); }
 
   void token_range(token tok_beg, token tok_end) {
     this->tok_beg = std::move(tok_beg);
@@ -65,18 +68,19 @@ public:
 
   virtual node_ids node_class() const noexcept = 0;
 
-  virtual void accept(syntax_tree_visitor *vis, std::any *data) = 0;
+  virtual void accept(syntax_tree_visitor* vis, std::any* data) = 0;
 
 protected:
-  node &operator=(const node &) = delete;
-  node(const node &) = delete;
+  node& operator=(const node&) = delete;
+  node(const node&) = delete;
 };
 
-template <typename DerivedT, typename BaseT, node_ids TypeId> class node_impl : public BaseT {
+template <typename DerivedT, typename BaseT, node_ids TypeId>
+class node_impl : public BaseT {
 public:
   constexpr node_ids node_class() const noexcept override { return TypeId; }
-  virtual void accept(syntax_tree_visitor *vis, std::any *data) override {
-    vis->visit(static_cast<DerivedT &>(*this), data);
+  virtual void accept(syntax_tree_visitor* vis, std::any* data) override {
+    vis->visit(static_cast<DerivedT&>(*this), data);
   }
 };
 
@@ -84,4 +88,4 @@ public:
 // template <typename R, typename P0> std::shared_ptr<R> create_node( P0 );
 // template <typename R, typename P0, typename P1> std::shared_ptr<R> create_node( P0, P1 );
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

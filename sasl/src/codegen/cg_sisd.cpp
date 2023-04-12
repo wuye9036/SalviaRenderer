@@ -49,10 +49,11 @@ using std::weak_ptr;
 
 namespace sasl::codegen {
 
-cg_sisd::~cg_sisd() {}
+cg_sisd::~cg_sisd() {
+}
 
-multi_value cg_sisd::emit_logic_op(operators op, shared_ptr<node> const &left,
-                                   shared_ptr<node> const &right) {
+multi_value
+cg_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, shared_ptr<node> const& right) {
   visit_child(left);
   visit_child(right);
 
@@ -63,8 +64,9 @@ multi_value cg_sisd::emit_logic_op(operators op, shared_ptr<node> const &left,
   }
 }
 
-multi_value cg_sisd::emit_short_cond(shared_ptr<node> const &cond, shared_ptr<node> const &yes,
-                                     shared_ptr<node> const &no) {
+multi_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond,
+                                     shared_ptr<node> const& yes,
+                                     shared_ptr<node> const& no) {
   // NOTE
   //  If 'yes' and 'no' expression are all reference/variable,
   //  and left is as same abi as right, it will return a reference,
@@ -88,8 +90,8 @@ multi_value cg_sisd::emit_short_cond(shared_ptr<node> const &cond, shared_ptr<no
   }
   multi_value no_value = node_ctxt(no, false)->node_value;
   value_array no_ref = (no_value.abi() == yes_value.abi())
-                           ? no_value.load_ref()
-                           : value_array(service()->parallel_factor(), nullptr);
+      ? no_value.load_ref()
+      : value_array(service()->parallel_factor(), nullptr);
   value_array no_v = no_value.load(yes_value.abi());
   insert_point_t no_ip_end = service()->insert_point();
 
@@ -104,11 +106,11 @@ multi_value cg_sisd::emit_short_cond(shared_ptr<node> const &cond, shared_ptr<no
 
   service()->set_insert_point(merge_ip);
   multi_value result_value;
-  Value *merged = service()->phi_(yes_ip_end.block, yes_v[0], no_ip_end.block, no_v[0]);
+  Value* merged = service()->phi_(yes_ip_end.block, yes_v[0], no_ip_end.block, no_v[0]);
   value_kinds vkind =
       (valid_all(yes_ref) && valid_all(no_ref)) ? value_kinds::reference : value_kinds::value;
-  result_value = service()->create_value(yes_value.ty(), yes_value.hint(), value_array(1, merged),
-                                         vkind, yes_value.abi());
+  result_value = service()->create_value(
+      yes_value.ty(), yes_value.hint(), value_array(1, merged), vkind, yes_value.abi());
 
   return result_value;
 }
@@ -118,12 +120,12 @@ SASL_VISIT_DEF(member_expression) {
 
   visit_child(v.expr);
 
-  node_context *agg_ctxt = node_ctxt(v.expr);
+  node_context* agg_ctxt = node_ctxt(v.expr);
   assert(agg_ctxt);
 
   // Aggregated value
-  node_semantic *tisi = sem_->get_semantic(v.expr);
-  node_context *ctxt = node_ctxt(v, true);
+  node_semantic* tisi = sem_->get_semantic(v.expr);
+  node_context* ctxt = node_ctxt(v, true);
 
   if (tisi->ty_proto()->is_builtin()) {
     // Swizzle or write mask
@@ -135,11 +137,11 @@ SASL_VISIT_DEF(member_expression) {
     ctxt->node_value = service()->emit_extract_elem_mask(agg_value, swz_indexes);
   } else {
     // Member
-    symbol *struct_sym = sem_->get_symbol(tisi->ty_proto());
-    symbol *mem_sym = struct_sym->find_this(v.member.lit());
+    symbol* struct_sym = sem_->get_symbol(tisi->ty_proto());
+    symbol* mem_sym = struct_sym->find_this(v.member.lit());
 
     assert(mem_sym);
-    node_context *mem_ctxt = node_ctxt(mem_sym->associated_node(), true);
+    node_context* mem_ctxt = node_ctxt(mem_sym->associated_node(), true);
     ctxt->node_value = mem_ctxt->node_value;
     ctxt->node_value.parent(agg_ctxt->node_value);
     ctxt->node_value.abi(agg_ctxt->node_value.abi());
@@ -158,10 +160,10 @@ SASL_VISIT_DEF(unary_expression) {
 
   multi_value inner_value = node_ctxt(v.expr)->node_value;
 
-  cg_type *one_tyinfo = service()->create_ty(sem_->get_semantic(&v)->ty_proto());
+  cg_type* one_tyinfo = service()->create_ty(sem_->get_semantic(&v)->ty_proto());
   builtin_types hint = inner_value.hint();
 
-  node_context *ctxt = node_ctxt(v, true);
+  node_context* ctxt = node_ctxt(v, true);
 
   if (v.op == operators::negative) {
     multi_value zero_value = service()->null_value(one_tyinfo->hint(), inner_value.abi());
@@ -176,7 +178,6 @@ SASL_VISIT_DEF(unary_expression) {
     ctxt->node_value =
         service()->emit_bitwise_bin_op(operators::bit_xor, all_one_value, inner_value);
   } else {
-
     multi_value one_value =
         service()->create_constant_int(one_tyinfo, builtin_types::none, inner_value.abi(), 1);
 
@@ -380,16 +381,16 @@ SASL_VISIT_DEF(switch_statement) {
 
   // Collect Labeled Statement Position
   vector<pair<multi_value, insert_point_t>> cases;
-  node_semantic *ssi = sem_->get_semantic(&v);
+  node_semantic* ssi = sem_->get_semantic(&v);
   assert(ssi);
 
   insert_point_t default_beg = switch_end;
-  for (weak_ptr<labeled_statement> const &weak_lbl_stmt : ssi->labeled_statements()) {
+  for (weak_ptr<labeled_statement> const& weak_lbl_stmt : ssi->labeled_statements()) {
     shared_ptr<labeled_statement> lbl_stmt = weak_lbl_stmt.lock();
     assert(lbl_stmt);
 
     insert_point_t stmt_ip = node_ctxt(lbl_stmt)->label_position;
-    for (shared_ptr<label> const &lbl : lbl_stmt->labels) {
+    for (shared_ptr<label> const& lbl : lbl_stmt->labels) {
       assert(lbl->node_class() == node_ids::case_label);
       shared_ptr<case_label> case_lbl = lbl->as_handle<case_label>();
       if (case_lbl->expr) {
@@ -418,7 +419,7 @@ SASL_VISIT_DEF(switch_statement) {
 SASL_VISIT_DEF(labeled_statement) {
   EFLIB_UNREF_DECLARATOR(data);
 
-  for (shared_ptr<label> const &lbl : v.labels) {
+  for (shared_ptr<label> const& lbl : v.labels) {
     // Constant expression, no instruction was generated.
     visit_child(lbl);
   }
@@ -517,12 +518,16 @@ SASL_SPECIFIC_VISIT_DEF(visit_break, jump_statement) {
   service()->jump_to(break_to_);
 }
 
-module_vmcode_impl *cg_sisd::mod_ptr() { return vmcode_.get(); }
+module_vmcode_impl* cg_sisd::mod_ptr() {
+  return vmcode_.get();
+}
 
-cgs_sisd *cg_sisd::service() const { return static_cast<cgs_sisd *>(service_); }
+cgs_sisd* cg_sisd::service() const {
+  return static_cast<cgs_sisd*>(service_);
+}
 
 abis cg_sisd::local_abi(bool is_c_compatible) const {
   return is_c_compatible ? abis::c : abis::llvm;
 }
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

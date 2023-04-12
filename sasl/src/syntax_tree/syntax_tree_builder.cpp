@@ -34,50 +34,50 @@ using std::vector;
 
 namespace sasl::syntax_tree {
 
-#define SASL_DYNCAST_ATTRIBUTE(type, dest, src)                                                    \
+#define SASL_DYNCAST_ATTRIBUTE(type, dest, src) \
   shared_ptr<type> dest = dynamic_pointer_cast<type>(src);
 
-#define SASL_SWITCH_RULE(attr)                                                                     \
-  {                                                                                                \
-    intptr_t rule_attr_id = (attr)->rule_id();                                                     \
-    if (rule_attr_id < -1) {                                                                       \
-      EF_ASSERT(rule_attr_id >= -1, "Rule ID must be in [-1, 2^31-1]");                         \
+#define SASL_SWITCH_RULE(attr)                                          \
+  {                                                                     \
+    intptr_t rule_attr_id = (attr)->rule_id();                          \
+    if (rule_attr_id < -1) {                                            \
+      EF_ASSERT(rule_attr_id >= -1, "Rule ID must be in [-1, 2^31-1]"); \
     }
 
 #define SASL_CASE_RULE(rule) else if (rule_attr_id == g.rule.id())
 #define SASL_DEFAULT() else
 #define SASL_END_SWITCH_RULE() }
 
-#define INSERT_INTO_BTCACHE(litname, enum_code)                                                    \
-  {                                                                                                \
-    shared_ptr<builtin_type> bt =                                                                  \
-        create_node<builtin_type>(token::make_empty(), token::make_empty());                       \
-    bt->tycode = builtin_types::enum_code;                                                         \
-    bt_cache.insert(make_pair(std::string(#litname), bt));                                         \
+#define INSERT_INTO_BTCACHE(litname, enum_code)                              \
+  {                                                                          \
+    shared_ptr<builtin_type> bt =                                            \
+        create_node<builtin_type>(token::make_empty(), token::make_empty()); \
+    bt->tycode = builtin_types::enum_code;                                   \
+    bt_cache.insert(make_pair(std::string(#litname), bt));                   \
   }
 
-#define INSERT_VECTOR_INTO_BTCACHE(component_type, dim, enum_code)                                 \
-  {                                                                                                \
-    shared_ptr<builtin_type> bt =                                                                  \
-        create_node<builtin_type>(token::make_empty(), token::make_empty());                       \
-    bt->tycode = vector_of(builtin_types::enum_code, dim);                                         \
-    bt_cache.insert(make_pair(string(#component_type) + char_tbl[dim], bt));                       \
+#define INSERT_VECTOR_INTO_BTCACHE(component_type, dim, enum_code)           \
+  {                                                                          \
+    shared_ptr<builtin_type> bt =                                            \
+        create_node<builtin_type>(token::make_empty(), token::make_empty()); \
+    bt->tycode = vector_of(builtin_types::enum_code, dim);                   \
+    bt_cache.insert(make_pair(string(#component_type) + char_tbl[dim], bt)); \
   }
 
-#define INSERT_MATRIX_INTO_BTCACHE(component_type, vsize, vcnt, enum_code)                         \
-  {                                                                                                \
-    shared_ptr<builtin_type> bt =                                                                  \
-        create_node<builtin_type>(token::make_empty(), token::make_empty());                       \
-    bt->tycode = matrix_of(builtin_types::enum_code, vsize, vcnt);                                 \
-    bt_cache.insert(                                                                               \
-        make_pair(string(#component_type) + char_tbl[vcnt] + "x" + char_tbl[vsize], bt));          \
+#define INSERT_MATRIX_INTO_BTCACHE(component_type, vsize, vcnt, enum_code)                \
+  {                                                                                       \
+    shared_ptr<builtin_type> bt =                                                         \
+        create_node<builtin_type>(token::make_empty(), token::make_empty());              \
+    bt->tycode = matrix_of(builtin_types::enum_code, vsize, vcnt);                        \
+    bt_cache.insert(                                                                      \
+        make_pair(string(#component_type) + char_tbl[vcnt] + "x" + char_tbl[vsize], bt)); \
   }
 
-syntax_tree_builder::syntax_tree_builder(lexer &l, grammars &g) : l(l), g(g) {}
+syntax_tree_builder::syntax_tree_builder(lexer& l, grammars& g) : l(l), g(g) {
+}
 
 void syntax_tree_builder::initialize_bt_cache() {
   if (bt_cache.empty()) {
-
     char const char_tbl[] = {'0', '1', '2', '3', '4'};
 
     INSERT_INTO_BTCACHE(char, _sint8);
@@ -162,7 +162,9 @@ vector<shared_ptr<declaration>> syntax_tree_builder::build_decl(shared_ptr<attri
   }
 
   SASL_SWITCH_RULE(typed_attr->attr)
-  SASL_CASE_RULE(basic_decl) { return build_basic_decl(typed_attr->attr); }
+  SASL_CASE_RULE(basic_decl) {
+    return build_basic_decl(typed_attr->attr);
+  }
   SASL_CASE_RULE(function_full_def) {
     ret.push_back(build_fndef(typed_attr->attr));
     return ret;
@@ -212,8 +214,12 @@ vector<shared_ptr<declaration>> syntax_tree_builder::build_basic_decl(shared_ptr
     ret.push_back(build_struct(typed_decl_attr->attr));
     return ret;
   }
-  SASL_CASE_RULE(typedef_decl) { ef_unimplemented(); }
-  SASL_DEFAULT() { EF_ASSERT(false, "Unknown declaration."); }
+  SASL_CASE_RULE(typedef_decl) {
+    ef_unimplemented();
+  }
+  SASL_DEFAULT() {
+    EF_ASSERT(false, "Unknown declaration.");
+  }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -299,7 +305,9 @@ shared_ptr<struct_type> syntax_tree_builder::build_struct(shared_ptr<attribute> 
   SASL_DYNCAST_ATTRIBUTE(selector_attribute, body_attr, typed_attr->attrs[1]);
 
   SASL_SWITCH_RULE(body_attr->attr)
-  SASL_CASE_RULE(struct_body) { build_struct_body(body_attr->attr, ret); }
+  SASL_CASE_RULE(struct_body) {
+    build_struct_body(body_attr->attr, ret);
+  }
   SASL_CASE_RULE(named_struct_body) {
     SASL_DYNCAST_ATTRIBUTE(queuer_attribute, named_body_attr, body_attr->attr);
     SASL_DYNCAST_ATTRIBUTE(terminal_attribute, name_attr, named_body_attr->attrs[0]);
@@ -321,7 +329,7 @@ void syntax_tree_builder::build_struct_body(shared_ptr<attribute> attr,
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, decls_attr, typed_attr->attrs[1]);
 
   out->has_body = true;
-  for (shared_ptr<attribute> const &decl_attr : decls_attr->attrs) {
+  for (shared_ptr<attribute> const& decl_attr : decls_attr->attrs) {
     vector<shared_ptr<declaration>> decls = build_decl(decl_attr);
     out->decls.insert(out->decls.end(), decls.begin(), decls.end());
   }
@@ -355,7 +363,7 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst(shared_ptr<attrib
   return ret;
 }
 
-operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, token &op_tok) {
+operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, token& op_tok) {
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
 
   assert(tok_attr);
@@ -368,14 +376,10 @@ operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, token
   }
 
   switch (op_chars[0]) {
-  case '+':
-    return op_chars[1] == '+' ? operators::prefix_incr : operators::positive;
-  case '-':
-    return op_chars[1] == '-' ? operators::prefix_decr : operators::negative;
-  case '!':
-    return operators::logic_not;
-  case '~':
-    return operators::bit_not;
+  case '+': return op_chars[1] == '+' ? operators::prefix_incr : operators::positive;
+  case '-': return op_chars[1] == '-' ? operators::prefix_decr : operators::negative;
+  case '!': return operators::logic_not;
+  case '~': return operators::bit_not;
   }
 
   string assertion("Unsupported operator: ");
@@ -385,13 +389,13 @@ operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, token
   return operators::none;
 }
 
-operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr, token &op_tok) {
+operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr, token& op_tok) {
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
   op_tok = tok_attr->tok;
   switch (op_tok.lit()[0]) {
-  case '+': // ++
+  case '+':  // ++
     return operators::postfix_incr;
-  case '-': // --
+  case '-':  // --
     return operators::postfix_decr;
   }
 
@@ -413,7 +417,6 @@ operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr, toke
  *    c    b
  * */
 shared_ptr<expression> syntax_tree_builder::build_assignexpr(shared_ptr<attribute> attr) {
-
   // Make expression list and operators list.
   vector<shared_ptr<expression>> exprs;
   vector<operators> ops;
@@ -432,7 +435,7 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr(shared_ptr<attribut
   // Build tree
   shared_ptr<expression> root;
 
-  for (auto const &expr : boost::adaptors::reverse(exprs)) {
+  for (auto const& expr : boost::adaptors::reverse(exprs)) {
     if (!root) {
       root = expr;
     } else {
@@ -452,14 +455,13 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr(shared_ptr<attribut
 }
 
 shared_ptr<expression> syntax_tree_builder::build_lcomb_expr(shared_ptr<attribute> attr) {
-
   SASL_DYNCAST_ATTRIBUTE(queuer_attribute, typed_attr, attr);
   shared_ptr<expression> lexpr = dispatch_lcomb_expr(typed_attr->attrs[0]);
 
   shared_ptr<binary_expression> binexpr;
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, follows, typed_attr->attrs[1]);
   for (shared_ptr<attribute> follow_pair : follows->attrs) {
-    assert(dynamic_cast<queuer_attribute *>(follow_pair.get()) != nullptr);
+    assert(dynamic_cast<queuer_attribute*>(follow_pair.get()) != nullptr);
     binexpr =
         create_node<binary_expression>(lexpr->token_begin(), follow_pair->child(1)->token_end());
     binexpr->left_expr = lexpr;
@@ -476,18 +478,42 @@ shared_ptr<expression> syntax_tree_builder::build_lcomb_expr(shared_ptr<attribut
 shared_ptr<expression> syntax_tree_builder::dispatch_lcomb_expr(shared_ptr<attribute> attr) {
   shared_ptr<expression> ret;
   SASL_SWITCH_RULE(attr)
-  SASL_CASE_RULE(lorexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(landexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(borexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(bxorexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(bandexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(eqlexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(relexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(shfexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(addexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(mulexpr) { return build_lcomb_expr(attr); }
-  SASL_CASE_RULE(castexpr) { return build_castexpr(attr); }
-  SASL_DEFAULT() { EF_ASSERT(false, "Wrong rule was invoked!"); }
+  SASL_CASE_RULE(lorexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(landexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(borexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(bxorexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(bandexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(eqlexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(relexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(shfexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(addexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(mulexpr) {
+    return build_lcomb_expr(attr);
+  }
+  SASL_CASE_RULE(castexpr) {
+    return build_castexpr(attr);
+  }
+  SASL_DEFAULT() {
+    EF_ASSERT(false, "Wrong rule was invoked!");
+  }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -496,16 +522,21 @@ shared_ptr<expression> syntax_tree_builder::dispatch_lcomb_expr(shared_ptr<attri
 shared_ptr<expression> syntax_tree_builder::build_rhsexpr(shared_ptr<attribute> attr) {
   SASL_DYNCAST_ATTRIBUTE(selector_attribute, typed_attr, attr);
   SASL_SWITCH_RULE(typed_attr->attr)
-  SASL_CASE_RULE(condexpr) { return build_condexpr(typed_attr->attr); }
-  SASL_CASE_RULE(lorexpr) { return build_lcomb_expr(typed_attr->attr); }
-  SASL_DEFAULT() { EF_ASSERT(false, "The rule is unrecognized."); }
+  SASL_CASE_RULE(condexpr) {
+    return build_condexpr(typed_attr->attr);
+  }
+  SASL_CASE_RULE(lorexpr) {
+    return build_lcomb_expr(typed_attr->attr);
+  }
+  SASL_DEFAULT() {
+    EF_ASSERT(false, "The rule is unrecognized.");
+  }
   SASL_END_SWITCH_RULE();
 
   return {};
 }
 
 shared_ptr<expression> syntax_tree_builder::build_condexpr(shared_ptr<attribute> attr) {
-
   shared_ptr<cond_expression> ret =
       create_node<cond_expression>(attr->token_beg(), attr->token_end());
 
@@ -527,9 +558,15 @@ shared_ptr<expression> syntax_tree_builder::build_condexpr(shared_ptr<attribute>
 shared_ptr<expression> syntax_tree_builder::build_castexpr(shared_ptr<attribute> attr) {
   SASL_DYNCAST_ATTRIBUTE(selector_attribute, typed_attr, attr);
   SASL_SWITCH_RULE(typed_attr->attr)
-  SASL_CASE_RULE(unaryexpr) { return build_unaryexpr(typed_attr->attr); }
-  SASL_CASE_RULE(typecastedexpr) { return build_typecastedexpr(typed_attr->attr); }
-  SASL_DEFAULT() { EF_ASSERT(false, "Error was happened!"); }
+  SASL_CASE_RULE(unaryexpr) {
+    return build_unaryexpr(typed_attr->attr);
+  }
+  SASL_CASE_RULE(typecastedexpr) {
+    return build_typecastedexpr(typed_attr->attr);
+  }
+  SASL_DEFAULT() {
+    EF_ASSERT(false, "Error was happened!");
+  }
   SASL_END_SWITCH_RULE();
 
   return {};
@@ -538,9 +575,15 @@ shared_ptr<expression> syntax_tree_builder::build_castexpr(shared_ptr<attribute>
 shared_ptr<expression> syntax_tree_builder::build_unaryexpr(shared_ptr<attribute> attr) {
   SASL_DYNCAST_ATTRIBUTE(selector_attribute, typed_attr, attr);
   SASL_SWITCH_RULE(typed_attr->attr)
-  SASL_CASE_RULE(unariedexpr) { return build_unariedexpr(typed_attr->attr); }
-  SASL_CASE_RULE(postexpr) { return build_postexpr(typed_attr->attr); }
-  SASL_DEFAULT() { EF_ASSERT(false, "Error was happened!"); }
+  SASL_CASE_RULE(unariedexpr) {
+    return build_unariedexpr(typed_attr->attr);
+  }
+  SASL_CASE_RULE(postexpr) {
+    return build_postexpr(typed_attr->attr);
+  }
+  SASL_DEFAULT() {
+    EF_ASSERT(false, "Error was happened!");
+  }
   SASL_END_SWITCH_RULE();
 
   return {};
@@ -576,9 +619,15 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr(shared_ptr<attribute>
   for (auto const& postfix_attr : postfix_attrs->attrs) {
     shared_ptr<attribute> expr_attr = postfix_attr->child(0);
     SASL_SWITCH_RULE(expr_attr)
-    SASL_CASE_RULE(idxexpr) { ret = build_indexexpr(expr_attr->child(1), ret); }
-    SASL_CASE_RULE(callexpr) { ret = build_callexpr(expr_attr->child(1), ret); }
-    SASL_CASE_RULE(memexpr) { ret = build_memexpr(expr_attr, ret); }
+    SASL_CASE_RULE(idxexpr) {
+      ret = build_indexexpr(expr_attr->child(1), ret);
+    }
+    SASL_CASE_RULE(callexpr) {
+      ret = build_callexpr(expr_attr->child(1), ret);
+    }
+    SASL_CASE_RULE(memexpr) {
+      ret = build_memexpr(expr_attr, ret);
+    }
     SASL_CASE_RULE(opinc) {
       shared_ptr<unary_expression> ret_unary =
           create_node<unary_expression>(ret->token_begin(), expr_attr->token_end());
@@ -638,9 +687,15 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr(shared_ptr<attribute> a
         create_node<constant_expression>(const_attr->tok, const_attr->tok);
     ret->value_tok = const_attr->tok;
     SASL_SWITCH_RULE(const_attr)
-    SASL_CASE_RULE(lit_int) { ret->ctype = literal_classifications::integer; }
-    SASL_CASE_RULE(lit_float) { ret->ctype = literal_classifications::real; }
-    SASL_CASE_RULE(lit_bool) { ret->ctype = literal_classifications::boolean; }
+    SASL_CASE_RULE(lit_int) {
+      ret->ctype = literal_classifications::integer;
+    }
+    SASL_CASE_RULE(lit_float) {
+      ret->ctype = literal_classifications::real;
+    }
+    SASL_CASE_RULE(lit_bool) {
+      ret->ctype = literal_classifications::boolean;
+    }
     SASL_END_SWITCH_RULE();
     return ret;
   }
@@ -651,7 +706,9 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr(shared_ptr<attribute> a
     varexpr->var_name = var_attr->tok;
     return varexpr;
   }
-  SASL_CASE_RULE(parenexpr) { return build_expr(typed_attr->attr->child(1)); }
+  SASL_CASE_RULE(parenexpr) {
+    return build_expr(typed_attr->attr->child(1));
+  }
   SASL_END_SWITCH_RULE();
 
   return shared_ptr<expression>();
@@ -680,8 +737,9 @@ shared_ptr<tynode> syntax_tree_builder::build_typespec(shared_ptr<attribute> att
 }
 
 vector<shared_ptr<declarator>>
-syntax_tree_builder::build_declarators(shared_ptr<attribute> attr, shared_ptr<tynode> tyn,
-                                       vector<shared_ptr<variable_declaration>> &decls) {
+syntax_tree_builder::build_declarators(shared_ptr<attribute> attr,
+                                       shared_ptr<tynode> tyn,
+                                       vector<shared_ptr<variable_declaration>>& decls) {
   SASL_DYNCAST_ATTRIBUTE(queuer_attribute, typed_attr, attr);
 
   vector<shared_ptr<declarator>> ret;
@@ -703,7 +761,6 @@ shared_ptr<tynode> syntax_tree_builder::build_unqualedtype(shared_ptr<attribute>
 
   SASL_SWITCH_RULE(typed_attr->attr)
   SASL_CASE_RULE(ident) {
-
     shared_ptr<builtin_type> bt = get_builtin(typed_attr->attr);
     if (bt) {
       return bt;
@@ -719,7 +776,9 @@ shared_ptr<tynode> syntax_tree_builder::build_unqualedtype(shared_ptr<attribute>
     ef_unimplemented();
     return ret;
   }
-  SASL_DEFAULT() { ef_unimplemented(); }
+  SASL_DEFAULT() {
+    ef_unimplemented();
+  }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -760,7 +819,9 @@ shared_ptr<initializer> syntax_tree_builder::build_init(shared_ptr<attribute> at
     expr_init->init_expr = build_assignexpr(init_body_attr);
     ret = expr_init;
   }
-  SASL_CASE_RULE(nullable_initlist) { ef_unimplemented(); }
+  SASL_CASE_RULE(nullable_initlist) {
+    ef_unimplemented();
+  }
   SASL_END_SWITCH_RULE();
 
   return ret;
@@ -771,22 +832,42 @@ shared_ptr<statement> syntax_tree_builder::build_stmt(shared_ptr<attribute> attr
   SASL_DYNCAST_ATTRIBUTE(selector_attribute, typed_attr, attr);
 
   SASL_SWITCH_RULE(typed_attr->attr)
-  SASL_CASE_RULE(stmt_flowctrl) { return build_flowctrl(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_decl) { return build_stmt_decl(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_expr) { return build_stmt_expr(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_if) { return build_stmt_if(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_compound) { return build_stmt_compound(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_for) { return build_stmt_for(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_while) { return build_stmt_while(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_dowhile) { return build_stmt_dowhile(typed_attr->attr); }
-  SASL_CASE_RULE(stmt_switch) { return build_stmt_switch(typed_attr->attr); }
-  SASL_CASE_RULE(labeled_stmt) { return build_stmt_labeled(typed_attr->attr); }
+  SASL_CASE_RULE(stmt_flowctrl) {
+    return build_flowctrl(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_decl) {
+    return build_stmt_decl(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_expr) {
+    return build_stmt_expr(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_if) {
+    return build_stmt_if(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_compound) {
+    return build_stmt_compound(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_for) {
+    return build_stmt_for(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_while) {
+    return build_stmt_while(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_dowhile) {
+    return build_stmt_dowhile(typed_attr->attr);
+  }
+  SASL_CASE_RULE(stmt_switch) {
+    return build_stmt_switch(typed_attr->attr);
+  }
+  SASL_CASE_RULE(labeled_stmt) {
+    return build_stmt_labeled(typed_attr->attr);
+  }
   SASL_DEFAULT() {
     string err;
     intptr_t rid = typed_attr->attr->rule_id();
     if (rid != -1) {
       err = string("Unprocessed rule: ");
-      err += reinterpret_cast<sasl::parser::rule *>(rid)->name();
+      err += reinterpret_cast<sasl::parser::rule*>(rid)->name();
     }
     EFLIB_ASSERT_UNIMPLEMENTED0(err.c_str());
     return ret;
@@ -816,8 +897,12 @@ shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl(shared_ptr<attrib
   shared_ptr<attribute> stmt_attr = typed_attr->attr;
 
   SASL_SWITCH_RULE(stmt_attr)
-  SASL_CASE_RULE(stmt_break) { ret->code = jump_mode::_break; }
-  SASL_CASE_RULE(stmt_continue) { ret->code = jump_mode::_continue; }
+  SASL_CASE_RULE(stmt_break) {
+    ret->code = jump_mode::_break;
+  }
+  SASL_CASE_RULE(stmt_continue) {
+    ret->code = jump_mode::_continue;
+  }
   SASL_CASE_RULE(stmt_return) {
     ret->code = jump_mode::_return;
     SASL_DYNCAST_ATTRIBUTE(queuer_attribute, ret_expr_attr, stmt_attr);
@@ -1003,9 +1088,10 @@ shared_ptr<tynode> syntax_tree_builder::bind_typequal(shared_ptr<attribute> qual
   return unqual;
 }
 
-void syntax_tree_builder::build_initdecl(shared_ptr<attribute> attr, shared_ptr<tynode> tyn,
-                                         vector<shared_ptr<declarator>> &declarators,
-                                         vector<shared_ptr<variable_declaration>> &declarations) {
+void syntax_tree_builder::build_initdecl(shared_ptr<attribute> attr,
+                                         shared_ptr<tynode> tyn,
+                                         vector<shared_ptr<declarator>>& declarators,
+                                         vector<shared_ptr<variable_declaration>>& declarations) {
   shared_ptr<declarator> decltor = create_node<declarator>(attr->token_beg(), attr->token_end());
 
   SASL_DYNCAST_ATTRIBUTE(queuer_attribute, typed_attr, attr);
@@ -1054,7 +1140,7 @@ void syntax_tree_builder::build_initdecl(shared_ptr<attribute> attr, shared_ptr<
   }
 }
 
-operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr, token &op_tok) {
+operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr, token& op_tok) {
   // Get terminal attribute of operator from attr or direct child of attr.
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
   if (!tok_attr) {
@@ -1070,18 +1156,12 @@ operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr, token &op
   }
 
   switch (op_chars[0]) {
-  case '=':
-    return op_chars[1] == '=' ? operators::equal : operators::assign;
-  case '+':
-    return op_chars[1] == '=' ? operators::add_assign : operators::add;
-  case '-':
-    return op_chars[1] == '=' ? operators::sub_assign : operators::sub;
-  case '*':
-    return op_chars[1] == '=' ? operators::mul_assign : operators::mul;
-  case '/':
-    return op_chars[1] == '=' ? operators::div_assign : operators::div;
-  case '%':
-    return op_chars[1] == '=' ? operators::mod_assign : operators::mod;
+  case '=': return op_chars[1] == '=' ? operators::equal : operators::assign;
+  case '+': return op_chars[1] == '=' ? operators::add_assign : operators::add;
+  case '-': return op_chars[1] == '=' ? operators::sub_assign : operators::sub;
+  case '*': return op_chars[1] == '=' ? operators::mul_assign : operators::mul;
+  case '/': return op_chars[1] == '=' ? operators::div_assign : operators::div;
+  case '%': return op_chars[1] == '=' ? operators::mod_assign : operators::mod;
   case '<':
     if (op_chars[1] == '\0')
       return operators::less;
@@ -1135,8 +1215,9 @@ operators syntax_tree_builder::build_binop(shared_ptr<attribute> attr, token &op
   return operators::none;
 }
 
-void syntax_tree_builder::build_semantic(shared_ptr<attribute> const &attr, token &out_semantic,
-                                         token &out_semantic_index) {
+void syntax_tree_builder::build_semantic(shared_ptr<attribute> const& attr,
+                                         token& out_semantic,
+                                         token& out_semantic_index) {
   SASL_DYNCAST_ATTRIBUTE(sequence_attribute, typed_attr, attr);
   if (!typed_attr->attrs.empty()) {
     SASL_DYNCAST_ATTRIBUTE(queuer_attribute, sem_attr, typed_attr->attrs[0]);
@@ -1144,8 +1225,8 @@ void syntax_tree_builder::build_semantic(shared_ptr<attribute> const &attr, toke
     out_semantic = sem_name_attr->tok;
     SASL_DYNCAST_ATTRIBUTE(sequence_attribute, optional_semindex_attr, sem_attr->attrs[2]);
     if (!optional_semindex_attr->attrs.empty()) {
-      SASL_DYNCAST_ATTRIBUTE(queuer_attribute, parened_semindex_attr,
-                             optional_semindex_attr->attrs[0]);
+      SASL_DYNCAST_ATTRIBUTE(
+          queuer_attribute, parened_semindex_attr, optional_semindex_attr->attrs[0]);
       SASL_DYNCAST_ATTRIBUTE(terminal_attribute, index_attr, parened_semindex_attr->attrs[1]);
       out_semantic_index = index_attr->tok;
     }
@@ -1153,7 +1234,7 @@ void syntax_tree_builder::build_semantic(shared_ptr<attribute> const &attr, toke
 }
 
 shared_ptr<builtin_type>
-syntax_tree_builder::get_builtin(std::shared_ptr<sasl::parser::attribute> const &attr) {
+syntax_tree_builder::get_builtin(std::shared_ptr<sasl::parser::attribute> const& attr) {
   initialize_bt_cache();
   SASL_DYNCAST_ATTRIBUTE(terminal_attribute, term_attr, attr);
   std::string name{term_attr->tok.lit()};
@@ -1165,4 +1246,4 @@ syntax_tree_builder::get_builtin(std::shared_ptr<sasl::parser::attribute> const 
   return ret;
 }
 
-} // namespace sasl::syntax_tree
+}  // namespace sasl::syntax_tree

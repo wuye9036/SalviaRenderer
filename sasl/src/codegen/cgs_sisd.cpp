@@ -14,8 +14,8 @@
 #include <eflib/utility/unref_declarator.h>
 
 #include <llvm/IR/Function.h>
-#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 
 using namespace sasl::enums;
@@ -36,7 +36,8 @@ using std::vector;
 namespace sasl::codegen {
 
 namespace {
-template <typename T> APInt apint(T v) {
+template <typename T>
+APInt apint(T v) {
   return APInt(sizeof(v) << 3, static_cast<uint64_t>(v), std::is_signed<T>::value);
 }
 
@@ -65,7 +66,7 @@ uint32_t indexes_to_mask(char indexes[4]) {
   return indexes_to_mask(indexes);
 }
 
-[[maybe_unused]] void dbg_print_blocks(Function *fn) {
+[[maybe_unused]] void dbg_print_blocks(Function* fn) {
 #if defined(EFLIB_DEBUG)
   /*printf( "Function: 0x%X\n", fn );
   for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin(); it !=
@@ -76,12 +77,12 @@ uint32_t indexes_to_mask(char indexes[4]) {
   (void)fn;
 #endif
 }
-} // namespace
+}  // namespace
 
-cgs_sisd::cgs_sisd() : cg_service(1) {}
+cgs_sisd::cgs_sisd() : cg_service(1) {
+}
 
-void cgs_sisd::store(multi_value &lhs, multi_value const &rhs) {
-
+void cgs_sisd::store(multi_value& lhs, multi_value const& rhs) {
   assert(parallel_factor_ == 1);
 
   value_array src(parallel_factor_, nullptr);
@@ -94,7 +95,7 @@ void cgs_sisd::store(multi_value &lhs, multi_value const &rhs) {
     address = lhs.raw();
   } else if (kind == value_kinds::elements) {
     elem_indexes indexes;
-    multi_value const *root = nullptr;
+    multi_value const* root = nullptr;
     bool is_swizzle = merge_swizzle(root, indexes, lhs);
 
     if (is_swizzle && is_vector(root->hint())) {
@@ -119,14 +120,14 @@ void cgs_sisd::store(multi_value &lhs, multi_value const &rhs) {
   ext_->store(src, address);
 }
 
-multi_value cgs_sisd::cast_ints(multi_value const &v, cg_type *dest_tyi) {
+multi_value cgs_sisd::cast_ints(multi_value const& v, cg_type* dest_tyi) {
   builtin_types hint_src = v.hint();
   builtin_types hint_dst = dest_tyi->hint();
 
   builtin_types scalar_hint_src = scalar_of(hint_src);
 
-  Type *dest_ty = dest_tyi->ty(v.abi());
-  Type *elem_ty = type_(scalar_of(hint_dst), abis::llvm);
+  Type* dest_ty = dest_tyi->ty(v.abi());
+  Type* elem_ty = type_(scalar_of(hint_dst), abis::llvm);
 
   cast_ops::id op = is_signed(scalar_hint_src) ? cast_ops::i2i_signed : cast_ops::i2i_unsigned;
   unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
@@ -135,15 +136,15 @@ multi_value cgs_sisd::cast_ints(multi_value const &v, cg_type *dest_tyi) {
   return create_value(dest_tyi, builtin_types::none, val, value_kinds::value, v.abi());
 }
 
-multi_value cgs_sisd::cast_i2f(multi_value const &v, cg_type *dest_tyi) {
+multi_value cgs_sisd::cast_i2f(multi_value const& v, cg_type* dest_tyi) {
   builtin_types hint_i = v.hint();
   builtin_types hint_f = dest_tyi->hint();
 
   builtin_types scalar_hint_i = scalar_of(hint_i);
   EFLIB_UNREF_DECLARATOR(scalar_hint_i);
 
-  Type *dest_ty = dest_tyi->ty(v.abi());
-  Type *elem_ty = type_(scalar_of(hint_f), abis::llvm);
+  Type* dest_ty = dest_tyi->ty(v.abi());
+  Type* elem_ty = type_(scalar_of(hint_f), abis::llvm);
 
   cast_ops::id op = is_signed(hint_i) ? cast_ops::i2f : cast_ops::u2f;
   unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
@@ -153,15 +154,15 @@ multi_value cgs_sisd::cast_i2f(multi_value const &v, cg_type *dest_tyi) {
   return create_value(dest_tyi, builtin_types::none, val, value_kinds::value, v.abi());
 }
 
-multi_value cgs_sisd::cast_f2i(multi_value const &v, cg_type *dest_tyi) {
+multi_value cgs_sisd::cast_f2i(multi_value const& v, cg_type* dest_tyi) {
   builtin_types hint_i = dest_tyi->hint();
   builtin_types hint_f = v.hint();
   EFLIB_UNREF_DECLARATOR(hint_f);
 
   builtin_types scalar_hint_i = scalar_of(hint_i);
 
-  Type *dest_ty = dest_tyi->ty(v.abi());
-  Type *elem_ty = type_(scalar_hint_i, abis::llvm);
+  Type* dest_ty = dest_tyi->ty(v.abi());
+  Type* elem_ty = type_(scalar_hint_i, abis::llvm);
 
   cast_ops::id op = is_signed(hint_i) ? cast_ops::f2i : cast_ops::f2u;
   unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
@@ -171,7 +172,7 @@ multi_value cgs_sisd::cast_f2i(multi_value const &v, cg_type *dest_tyi) {
   return create_value(dest_tyi, builtin_types::none, val, value_kinds::value, v.abi());
 }
 
-multi_value cgs_sisd::cast_f2f(multi_value const &v, cg_type *dest_tyi) {
+multi_value cgs_sisd::cast_f2f(multi_value const& v, cg_type* dest_tyi) {
   EFLIB_UNREF_DECLARATOR(v);
   EFLIB_UNREF_DECLARATOR(dest_tyi);
 
@@ -179,7 +180,7 @@ multi_value cgs_sisd::cast_f2f(multi_value const &v, cg_type *dest_tyi) {
   return multi_value();
 }
 
-multi_value cgs_sisd::create_vector(std::vector<multi_value> const &scalars, abis abi) {
+multi_value cgs_sisd::create_vector(std::vector<multi_value> const& scalars, abis abi) {
   builtin_types scalar_hint = scalars[0].hint();
   builtin_types hint = vector_of(scalar_hint, scalars.size());
 
@@ -190,9 +191,11 @@ multi_value cgs_sisd::create_vector(std::vector<multi_value> const &scalars, abi
   return ret;
 }
 
-void cgs_sisd::emit_return() { builder().CreateRetVoid(); }
+void cgs_sisd::emit_return() {
+  builder().CreateRetVoid();
+}
 
-void cgs_sisd::emit_return(multi_value const &ret_v, abis abi) {
+void cgs_sisd::emit_return(multi_value const& ret_v, abis abi) {
   if (abi == abis::unknown) {
     abi = fn().abi();
   }
@@ -201,7 +204,7 @@ void cgs_sisd::emit_return(multi_value const &ret_v, abis abi) {
     ext_->store(ret_v.load(abi), fn().return_address());
     builder().CreateRetVoid();
   } else {
-    Value *ret_value = nullptr;
+    Value* ret_value = nullptr;
     if (fn().multi_value_args()) {
       ret_value = ext_->get_array(ret_v.load(abi));
     } else {
@@ -211,15 +214,19 @@ void cgs_sisd::emit_return(multi_value const &ret_v, abis abi) {
   }
 }
 
-Value *cgs_sisd::select_(Value *cond, Value *yes, Value *no) {
+Value* cgs_sisd::select_(Value* cond, Value* yes, Value* no) {
   return builder().CreateSelect(cond, yes, no);
 }
 
-bool cgs_sisd::prefer_externals() const { return false; }
+bool cgs_sisd::prefer_externals() const {
+  return false;
+}
 
-bool cgs_sisd::prefer_scalar_code() const { return false; }
+bool cgs_sisd::prefer_scalar_code() const {
+  return false;
+}
 
-multi_value cgs_sisd::emit_swizzle(multi_value const &lhs, uint32_t mask) {
+multi_value cgs_sisd::emit_swizzle(multi_value const& lhs, uint32_t mask) {
   EFLIB_UNREF_DECLARATOR(lhs);
   EFLIB_UNREF_DECLARATOR(mask);
 
@@ -227,7 +234,7 @@ multi_value cgs_sisd::emit_swizzle(multi_value const &lhs, uint32_t mask) {
   return multi_value();
 }
 
-multi_value cgs_sisd::emit_write_mask(multi_value const &vec, uint32_t mask) {
+multi_value cgs_sisd::emit_write_mask(multi_value const& vec, uint32_t mask) {
   ef_unimplemented();
   EFLIB_UNREF_DECLARATOR(vec);
   EFLIB_UNREF_DECLARATOR(mask);
@@ -235,12 +242,12 @@ multi_value cgs_sisd::emit_write_mask(multi_value const &vec, uint32_t mask) {
   return multi_value();
 }
 
-void cgs_sisd::switch_to(multi_value const &cond,
-                         std::vector<std::pair<multi_value, insert_point_t>> const &cases,
-                         insert_point_t const &default_branch) {
+void cgs_sisd::switch_to(multi_value const& cond,
+                         std::vector<std::pair<multi_value, insert_point_t>> const& cases,
+                         insert_point_t const& default_branch) {
   assert(parallel_factor_ == 1);
-  Value *v = cond.load()[0];
-  SwitchInst *inst =
+  Value* v = cond.load()[0];
+  SwitchInst* inst =
       builder().CreateSwitch(v, default_branch.block, static_cast<unsigned>(cases.size()));
   for (size_t i_case = 0; i_case < cases.size(); ++i_case) {
     inst->addCase(llvm::cast<ConstantInt>(cases[i_case].first.load()[0]),
@@ -248,33 +255,33 @@ void cgs_sisd::switch_to(multi_value const &cond,
   }
 }
 
-multi_value cgs_sisd::cast_i2b(multi_value const &v) {
+multi_value cgs_sisd::cast_i2b(multi_value const& v) {
   assert(is_integer(v.hint()));
   return emit_cmp_ne(v, null_value(v.hint(), v.abi()));
 }
 
-multi_value cgs_sisd::cast_f2b(multi_value const &v) {
+multi_value cgs_sisd::cast_f2b(multi_value const& v) {
   assert(is_real(v.hint()));
   return emit_cmp_ne(v, null_value(v.hint(), v.abi()));
 }
 
-multi_value cgs_sisd::emit_ddx(multi_value const &v) {
+multi_value cgs_sisd::emit_ddx(multi_value const& v) {
   // It is not available in SISD mode.
   ef_unimplemented();
   return v;
 }
 
-multi_value cgs_sisd::emit_ddy(multi_value const &v) {
+multi_value cgs_sisd::emit_ddy(multi_value const& v) {
   // It is not available in SISD mode.
   ef_unimplemented();
   return v;
 }
 
-Value *cgs_sisd::phi_(BasicBlock *b0, Value *v0, BasicBlock *b1, Value *v1) {
-  PHINode *phi = builder().CreatePHI(v0->getType(), 2);
+Value* cgs_sisd::phi_(BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1) {
+  PHINode* phi = builder().CreatePHI(v0->getType(), 2);
   phi->addIncoming(v0, b0);
   phi->addIncoming(v1, b1);
   return phi;
 }
 
-} // namespace sasl::codegen
+}  // namespace sasl::codegen

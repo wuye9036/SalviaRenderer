@@ -37,8 +37,10 @@ TEST(sasl_parser, terminal_parser) {
   EXPECT_EQ(r.rng.end(), tokens.end());
 
   bool is_terminal_attribute =
-      std::visit<bool>(eflib::composition::overload{[](terminal_attribute &) { return true; },
-                                                    [](auto &&) { return false; }},
+      std::visit<bool>(eflib::composition::overload{[](terminal_attribute&) { return true; },
+                                                    [](auto&&) {
+                                                      return false;
+                                                    }},
                        r.attr);
   EXPECT_TRUE(is_terminal_attribute);
 }

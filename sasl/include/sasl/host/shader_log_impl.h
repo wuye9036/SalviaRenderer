@@ -18,13 +18,13 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log_impl);
 class shader_log_impl : public salviar::shader_log {
 public:
   virtual size_t count() const;
-  virtual std::string const &log_string(size_t index) const;
-  virtual void append(std::string const &);
+  virtual std::string const& log_string(size_t index) const;
+  virtual void append(std::string const&);
 
 private:
   std::vector<std::string> logs_;
 };
 
-} // namespace sasl::host()
+}  // namespace sasl::host()
 
 #endif
