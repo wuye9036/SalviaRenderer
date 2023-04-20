@@ -688,13 +688,13 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr(shared_ptr<attribute> a
     ret->value_tok = const_attr->tok;
     SASL_SWITCH_RULE(const_attr)
     SASL_CASE_RULE(lit_int) {
-      ret->ctype = literal_classifications::integer;
+      ret->ctype = literal_types::integer;
     }
     SASL_CASE_RULE(lit_float) {
-      ret->ctype = literal_classifications::real;
+      ret->ctype = literal_types::real;
     }
     SASL_CASE_RULE(lit_bool) {
-      ret->ctype = literal_classifications::boolean;
+      ret->ctype = literal_types::boolean;
     }
     SASL_END_SWITCH_RULE();
     return ret;
@@ -898,13 +898,13 @@ shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl(shared_ptr<attrib
 
   SASL_SWITCH_RULE(stmt_attr)
   SASL_CASE_RULE(stmt_break) {
-    ret->code = jump_mode::_break;
+    ret->code = jump_mode::e_break;
   }
   SASL_CASE_RULE(stmt_continue) {
-    ret->code = jump_mode::_continue;
+    ret->code = jump_mode::e_continue;
   }
   SASL_CASE_RULE(stmt_return) {
-    ret->code = jump_mode::_return;
+    ret->code = jump_mode::e_return;
     SASL_DYNCAST_ATTRIBUTE(queuer_attribute, ret_expr_attr, stmt_attr);
     SASL_DYNCAST_ATTRIBUTE(sequence_attribute, optional_expr_attr, ret_expr_attr->attrs[1]);
     if (!optional_expr_attr->attrs.empty()) {

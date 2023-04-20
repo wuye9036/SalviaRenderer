@@ -297,11 +297,11 @@ node_semantic::~node_semantic() {
   }
 }
 
-void node_semantic::const_value(string const& lit, literal_classifications lit_class) {
+void node_semantic::const_value(string const& lit, literal_types lit_class) {
   string_ref nosuffix_litstr;
   builtin_types value_btc(builtin_types::none);
 
-  if (lit_class == literal_classifications::integer) {
+  if (lit_class == literal_types::integer) {
     bool is_unsigned(false);
     bool is_long(false);
     nosuffix_litstr = split_integer_literal_suffix(lit, is_unsigned, is_long);
@@ -312,18 +312,18 @@ void node_semantic::const_value(string const& lit, literal_classifications lit_c
       signed_constant_ = boost::lexical_cast<int64_t>(nosuffix_litstr);
       value_btc = is_long ? builtin_types::_sint64 : builtin_types::_sint32;
     }
-  } else if (lit_class == literal_classifications::real) {
+  } else if (lit_class == literal_types::real) {
     bool is_single(false);
     nosuffix_litstr = split_real_literal_suffix(lit, is_single);
     double_constant_ = boost::lexical_cast<double>(nosuffix_litstr);
     value_btc = is_single ? builtin_types::_float : builtin_types::_double;
-  } else if (lit_class == literal_classifications::boolean) {
+  } else if (lit_class == literal_types::boolean) {
     signed_constant_ = (lit == "true" ? 1 : 0);
     value_btc = builtin_types::_boolean;
-  } else if (lit_class == literal_classifications::character) {
+  } else if (lit_class == literal_types::character) {
     signed_constant_ = lit[0];
     value_btc = builtin_types::_sint8;
-  } else if (lit_class == literal_classifications::string) {
+  } else if (lit_class == literal_types::string) {
     const_value(lit);
     value_btc = builtin_types::none;
   }

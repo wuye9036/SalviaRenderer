@@ -8,7 +8,7 @@
 #include <salvia/shader/constants.h>
 #include <salvia/shader/reflection.h>
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/literal_classifications.h>
+#include <sasl/enums/literal_types.h>
 #include <sasl/semantic/elem_indexes.h>
 
 #include <memory>
@@ -165,7 +165,7 @@ public:
   void ty_proto(sasl::syntax_tree::tynode* ty, symbol* scope);
 
   // Constant
-  void const_value(std::string const& lit, literal_classifications lit_class);
+  void const_value(std::string const& lit, literal_types lit_class);
   void const_value(int64_t v) { signed_constant_ = v; }
   void const_value(uint64_t v) { unsigned_constant_ = v; }
   void const_value(std::string const& v);

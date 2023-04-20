@@ -545,11 +545,11 @@ SASL_VISIT_DEF(jump_statement) {
     visit_child(v.jump_expr);
   }
 
-  if (v.code == jump_mode::_return) {
+  if (v.code == jump_mode::e_return) {
     visit_return(v, nullptr);
-  } else if (v.code == jump_mode::_continue) {
+  } else if (v.code == jump_mode::e_continue) {
     visit_continue(v, nullptr);
-  } else if (v.code == jump_mode::_break) {
+  } else if (v.code == jump_mode::e_break) {
     visit_break(v, nullptr);
   }
 

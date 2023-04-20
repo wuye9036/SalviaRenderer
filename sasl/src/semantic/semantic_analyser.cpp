@@ -1200,7 +1200,7 @@ SASL_VISIT_DEF(jump_statement) {
   shared_ptr<jump_statement> dup_jump = duplicate(v.as_handle())->as_handle<jump_statement>();
   generated_node = dup_jump;
 
-  if (v.code == jump_mode::_return) {
+  if (v.code == jump_mode::e_return) {
     if (v.jump_expr) {
       dup_jump->jump_expr = visit_child(v.jump_expr);
     }
