@@ -8,17 +8,17 @@ struct bit_range {
 
   [[nodiscard]] constexpr bool empty() const { return begin == end; }
 
-  template <std::integral T>
+  template <std::unsigned_integral T>
   constexpr T value_mask() {
     return (T{1} << (end - begin)) - 1;
   };
 
-  template <std::integral T>
+  template <std::unsigned_integral T>
   constexpr T mask() {
     return value_mask<T>() << begin;
   }
 
-  template <std::integral T>
+  template <std::unsigned_integral T>
   constexpr T value(T value) {
     return (value & value_mask<T>()) << begin;
   }
@@ -40,17 +40,17 @@ constexpr bit_range mid(bit_range const& rng, uint32_t begin, uint32_t end) {
   return {rng.begin + begin, rng.end - end};
 }
 
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T bits_value_mask(bit_range const& rng) {
   return (T{1} << (rng.end - rng.begin)) - 1;
 }
 
-template <std::integral T>
+template <std::unsigned_integral T>
 constexpr T bits_mask(bit_range const& rng) {
   return ((T{1} << (rng.end - rng.begin)) - 1) << rng.begin;
 }
 
-template <std::integral T, typename... Args>
+template <std::unsigned_integral T, typename... Args>
 constexpr T bits_value(bit_range b_rng, T value, Args&&... args) {
   if constexpr (sizeof...(args) == 0)
     return b_rng.value<T>(value);
@@ -99,7 +99,7 @@ struct bits_layout : bits_layout_trait {
     return bit_range{0, 0};
   }
 
-  template <typename Tag2, std::integral T, typename... Args>
+  template <typename Tag2, std::unsigned_integral T, typename... Args>
   [[nodiscard]] constexpr uint32_t value(Tag2 t, T v, Args... args) const noexcept {
     if constexpr (sizeof...(Args) == 0)
       return (*this)[t].value(v);
@@ -174,31 +174,12 @@ TEST(NewEnums, NewEnums) {
     static_assert(bits_mask<uint32_t>(t00_bits) == 0xFF);
     static_assert(bits_mask<uint32_t>(layout_ssu[t01]) == 0xFF00);
 
-    constexpr auto t10_v = 0b1011;
+    constexpr auto t10_v = 0b1011U;
     static_assert(bits_value(t10_bits, t10_v) == (t10_v << 16));
     static_assert(bits_value(t10_bits, 1U) == (1U << 16));
     static_assert(bits_mask<uint32_t>(t10_bits) == ((1U << 26) - (1U << 16)));
   }
 }
-
-// template <size_t size>
-// struct uint_of {
-//   static consteval auto gen_value_() {
-//     if constexpr (size == 1) {
-//       return std::uint8_t{size};
-//     } else if constexpr (size == 2) {
-//       return std::uint16_t{size};
-//     } else if constexpr (size == 4) {
-//       return std::uint32_t{size};
-//     } else if constexpr (size == 8) {
-//       return std::uint64_t{size};
-//     } else {
-//       return;
-//     }
-//   }
-//
-//   using type = decltype(gen_value_());
-// };
 
 namespace builtin_types_detail {
 
@@ -216,28 +197,32 @@ constexpr auto layout_ = b_struct<none>(
 
 static_assert(layout_.width == 32);
 
-constexpr int c_void = 1, c_sampler = 2, c_booleans = 3, c_integers = 4, c_floats = 5;
+constexpr uint32_t c_void = 1, c_sampler = 2, c_booleans = 3, c_integers = 4, c_floats = 5;
+
+constexpr auto e_value(auto... args) {
+  return layout_.value(args...);
+}
 
 enum class builtin_types : uint32_t {
   none = 0,
 
-  sint64 = layout_.value(bytes_log2, 3, sign, 1, type_class, c_integers),
-  sint32 = layout_.value(bytes_log2, 2, sign, 1, type_class, c_integers),
-  sint16 = layout_.value(bytes_log2, 1, sign, 1, type_class, c_integers),
-  sint8 = layout_.value(bytes_log2, 0, sign, 1, type_class, c_integers),
+  int64 = e_value(bytes_log2, 3U, sign, 1U, type_class, c_integers),
+  int32 = e_value(bytes_log2, 2U, sign, 1U, type_class, c_integers),
+  int16 = e_value(bytes_log2, 1U, sign, 1U, type_class, c_integers),
+  int8 = e_value(bytes_log2, 0U, sign, 1U, type_class, c_integers),
 
-  uint64 = layout_.value(bytes_log2, 3, sign, 0, type_class, c_integers),
-  uint32 = layout_.value(bytes_log2, 2, sign, 0, type_class, c_integers),
-  uint16 = layout_.value(bytes_log2, 1, sign, 0, type_class, c_integers),
-  uint8 = layout_.value(bytes_log2, 0, sign, 0, type_class, c_integers),
+  uint64 = e_value(bytes_log2, 3U, sign, 0U, type_class, c_integers),
+  uint32 = e_value(bytes_log2, 2U, sign, 0U, type_class, c_integers),
+  uint16 = e_value(bytes_log2, 1U, sign, 0U, type_class, c_integers),
+  uint8 = e_value(bytes_log2, 0U, sign, 0U, type_class, c_integers),
 
-  float16 = layout_.value(bytes_log2, 1, sign, 1, type_class, c_floats),
-  float32 = layout_.value(bytes_log2, 2, sign, 1, type_class, c_floats),
-  float64 = layout_.value(bytes_log2, 3, sign, 1, type_class, c_floats),
+  float16 = e_value(bytes_log2, 1U, sign, 1U, type_class, c_floats),
+  float32 = e_value(bytes_log2, 2U, sign, 1U, type_class, c_floats),
+  float64 = e_value(bytes_log2, 3U, sign, 1U, type_class, c_floats),
 
-  boolean = layout_.value(type_class, c_booleans),
-  sampler = layout_.value(type_class, c_sampler),
-  void_   = layout_.value(type_class, c_void)
+  e_bool = e_value(type_class, c_booleans),
+  sampler = e_value(type_class, c_sampler),
+  e_void = e_value(type_class, c_void)
 };
 }  // namespace builtin_types_detail
 
