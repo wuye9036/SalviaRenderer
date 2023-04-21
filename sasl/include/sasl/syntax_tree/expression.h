@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sasl/enums/literal_classifications.h>
+#include <sasl/enums/literal_types.h>
 #include <sasl/enums/operators.h>
 #include <sasl/syntax_tree/node.h>
 #include <sasl/syntax_tree/syntax_tree_fwd.h>
@@ -34,7 +34,7 @@ struct expression : public node_impl<expression, node, node_ids::expression> {};
 struct constant_expression
   : public node_impl<constant_expression, expression, node_ids::constant_expression> {
   token value_tok;
-  literal_classifications ctype;
+  literal_types ctype;
 };
 
 struct variable_expression

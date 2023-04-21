@@ -173,25 +173,83 @@ const std::vector<builtin_types>& list_of_builtin_types();
 //////////////////////////////////////////////////////////////////////////
 // operators
 // types
-bool is_arithmetic(const operators&);
-bool is_relationship(const operators&);
-bool is_bit(const operators&);
-bool is_shift(const operators&);
-bool is_bool_arith(const operators&);
+constexpr bool is_arithmetic(const operators& op) {
+  return op == operators::add || op == operators::sub || op == operators::mul ||
+      op == operators::div || op == operators::mod;
+}
 
-// operand count
-bool is_prefix(const operators&);
-bool is_postfix(const operators&);
-bool is_unary_arith(const operators&);
+constexpr bool is_relationship(const operators& op) {
+  return op == operators::greater || op == operators::greater_equal || op == operators::equal ||
+      op == operators::less || op == operators::less_equal || op == operators::not_equal;
+}
 
-// is assign?
-bool is_arith_assign(const operators&);
-bool is_bit_assign(const operators&);
-bool is_shift_assign(const operators&);
-bool is_assign(const operators&);
-bool is_general_assign(const operators&);
+constexpr bool is_bit(const operators& op) {
+  return op == operators::bit_and || op == operators::bit_or || op == operators::bit_xor;
+}
 
-const std::vector<operators>& list_of_operators();
+constexpr bool is_shift(const operators& op) {
+  return op == operators::left_shift || op == operators::right_shift;
+}
+
+constexpr bool is_bool_arith(const operators& op) {
+  return op == operators::logic_and || op == operators::logic_or;
+}
+
+constexpr bool is_prefix(const operators& op) {
+  return op == operators::prefix_decr || op == operators::prefix_incr;
+}
+
+constexpr bool is_postfix(const operators& op) {
+  return op == operators::postfix_decr || op == operators::postfix_incr;
+}
+
+constexpr bool is_unary_arith(const operators& op) {
+  return op == operators::positive || op == operators::negative;
+}
+
+constexpr bool is_arith_assign(const operators& op) {
+  return op == operators::add_assign || op == operators::sub_assign ||
+      op == operators::mul_assign || op == operators::div_assign || op == operators::mod_assign;
+}
+
+constexpr bool is_bit_assign(const operators& op) {
+  return op == operators::bit_and_assign || op == operators::bit_or_assign ||
+      op == operators::bit_xor_assign;
+}
+
+constexpr bool is_shift_assign(const operators& op) {
+  return op == operators::lshift_assign || op == operators::rshift_assign;
+}
+
+constexpr bool is_assign(const operators& op) {
+  return op == operators::assign;
+}
+
+constexpr bool is_general_assign(operators const& op) {
+  return is_assign(op) || is_arith_assign(op) || is_bit_assign(op) || is_shift_assign(op);
+}
+
+template <typename T>
+inline constexpr T all_operators() {
+  return T{operators::add,           operators::sub,
+           operators::mul,           operators::div,
+           operators::mod,           operators::greater,
+           operators::greater_equal, operators::equal,
+           operators::less,          operators::less_equal,
+           operators::not_equal,     operators::bit_and,
+           operators::bit_or,        operators::bit_xor,
+           operators::left_shift,    operators::right_shift,
+           operators::logic_and,     operators::logic_or,
+           operators::prefix_decr,   operators::prefix_incr,
+           operators::postfix_decr,  operators::postfix_incr,
+           operators::positive,      operators::negative,
+           operators::add_assign,    operators::sub_assign,
+           operators::mul_assign,    operators::div_assign,
+           operators::mod_assign,    operators::bit_and_assign,
+           operators::bit_or_assign, operators::bit_xor_assign,
+           operators::lshift_assign, operators::rshift_assign,
+           operators::assign};
+}
 
 constexpr bool is_standard(builtin_types btc) noexcept {
   if (btc == builtin_types::_sint32 || btc == builtin_types::_uint32 ||
