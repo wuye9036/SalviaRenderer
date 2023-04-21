@@ -227,3 +227,43 @@ enum class builtin_types : uint32_t {
 }  // namespace builtin_types_detail
 
 using builtin_types_detail::builtin_types;
+
+#if 0
+template <size_t... VecIs, size_t... MatrixIs>
+constexpr listing_builtin_types_impl;
+
+template <typename... List>
+struct cross_prod {
+  template <typename Fn, typename... List2>
+  struct apply {
+    using type = std::tuple_cat<Fn<List, List2>>...;
+  };
+
+  template <typename Fn, typename List2>
+  struct apply {
+    using type = std::tuple_cat<Fn<List, List2>>...;
+  };
+};
+template <typename T>
+constexpr auto listing_builtin_types() {
+  std::initializer_list<builtin_types> scalars = {builtin_types::none,
+           builtin_types::int64,
+           builtin_types::int32,
+           builtin_types::int16,
+           builtin_types::int8,
+           builtin_types::uint64,
+           builtin_types::uint32,
+           builtin_types::uint16,
+           builtin_types::uint8,
+           builtin_types::float16,
+           builtin_types::float32,
+           builtin_types::float64,
+           builtin_types::e_bool,
+           builtin_types::sampler,
+           builtin_types::e_void};
+
+    std::initializer_list<builtin_types> vectors = {builtin_types::none};
+
+    return T{scalars + vectors};
+}
+#endif

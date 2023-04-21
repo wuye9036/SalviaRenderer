@@ -47,61 +47,7 @@ const std::vector<builtin_types>& list_of_builtin_types() {
   return btc_list;
 }
 
-bool is_arithmetic(const operators& op) {
-  return op == operators::add || op == operators::sub || op == operators::mul ||
-      op == operators::div || op == operators::mod;
-}
 
-bool is_relationship(const operators& op) {
-  return op == operators::greater || op == operators::greater_equal || op == operators::equal ||
-      op == operators::less || op == operators::less_equal || op == operators::not_equal;
-}
-
-bool is_bit(const operators& op) {
-  return op == operators::bit_and || op == operators::bit_or || op == operators::bit_xor;
-}
-
-bool is_shift(const operators& op) {
-  return op == operators::left_shift || op == operators::right_shift;
-}
-
-bool is_bool_arith(const operators& op) {
-  return op == operators::logic_and || op == operators::logic_or;
-}
-
-bool is_prefix(const operators& op) {
-  return op == operators::prefix_decr || op == operators::prefix_incr;
-}
-
-bool is_postfix(const operators& op) {
-  return op == operators::postfix_decr || op == operators::postfix_incr;
-}
-
-bool is_unary_arith(const operators& op) {
-  return op == operators::positive || op == operators::negative;
-}
-
-bool is_arith_assign(const operators& op) {
-  return op == operators::add_assign || op == operators::sub_assign ||
-      op == operators::mul_assign || op == operators::div_assign || op == operators::mod_assign;
-}
-
-bool is_bit_assign(const operators& op) {
-  return op == operators::bit_and_assign || op == operators::bit_or_assign ||
-      op == operators::bit_xor_assign;
-}
-
-bool is_shift_assign(const operators& op) {
-  return op == operators::lshift_assign || op == operators::rshift_assign;
-}
-
-bool is_assign(const operators& op) {
-  return op == operators::assign;
-}
-
-bool is_general_assign(operators const& op) {
-  return is_assign(op) || is_arith_assign(op) || is_bit_assign(op) || is_shift_assign(op);
-}
 
 std::mutex mtx_oplist_init;
 std::vector<operators> op_list;
