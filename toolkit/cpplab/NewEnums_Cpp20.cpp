@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <tuple>
 
 struct bit_range {
   uint32_t begin{0};
@@ -228,42 +229,121 @@ enum class builtin_types : uint32_t {
 
 using builtin_types_detail::builtin_types;
 
-#if 0
-template <size_t... VecIs, size_t... MatrixIs>
-constexpr listing_builtin_types_impl;
+template <auto... args>
+struct constants_to_tuple {
+  using type = std::tuple<std::integral_constant<decltype(args), args>...>;
+};
 
-template <typename... List>
-struct cross_prod {
-  template <typename Fn, typename... List2>
-  struct apply {
-    using type = std::tuple_cat<Fn<List, List2>>...;
-  };
+template <typename ContainerT, typename ArgsTuple>
+ContainerT tuple_to_container(ArgsTuple&& args_tuple) {
+  return std::apply([](auto&&... args) { return ContainerT{args...}; }, ((ArgsTuple&&)args_tuple));
+}
 
-  template <typename Fn, typename List2>
+template <typename A, typename TupleB, typename TemplateFn>
+struct sv_mul {};
+
+template <typename A, typename... TupleBArgs, typename TemplateFn>
+struct sv_mul<A, std::tuple<TupleBArgs...>, TemplateFn> {
+  using type = std::tuple<typename TemplateFn::template apply<A, TupleBArgs>::type...>;
+};
+
+struct combine_enum {
+  static constexpr auto combine_value(auto a, auto b) {
+    if constexpr (std::is_enum_v<decltype(a)>) {
+      return static_cast<decltype(a)>(
+          static_cast<std::underlying_type_t<decltype(a)>>(a) |
+          static_cast<std::underlying_type_t<decltype(a)>>(b));
+    } else {
+      return a | b;
+    }
+  }
+
+  template <typename A, typename B>
   struct apply {
-    using type = std::tuple_cat<Fn<List, List2>>...;
+    using type = std::integral_constant<typename A::value_type, combine_value(A::value, B::value)>;
   };
 };
-template <typename T>
-constexpr auto listing_builtin_types() {
-  std::initializer_list<builtin_types> scalars = {builtin_types::none,
-           builtin_types::int64,
-           builtin_types::int32,
-           builtin_types::int16,
-           builtin_types::int8,
-           builtin_types::uint64,
-           builtin_types::uint32,
-           builtin_types::uint16,
-           builtin_types::uint8,
-           builtin_types::float16,
-           builtin_types::float32,
-           builtin_types::float64,
-           builtin_types::e_bool,
-           builtin_types::sampler,
-           builtin_types::e_void};
 
-    std::initializer_list<builtin_types> vectors = {builtin_types::none};
+template <typename TupleA, typename TupleB>
+struct prod {};
 
-    return T{scalars + vectors};
+template <typename... TupleAArgs, typename TupleB>
+struct prod<std::tuple<TupleAArgs...>, TupleB> {
+  using type = decltype(std::tuple_cat(
+      std::declval<typename sv_mul<TupleAArgs, TupleB, combine_enum>::type>()...));
+};
+
+template <typename ScalarTuple, typename IndexSequence>
+struct make_vector_types {};
+
+template <typename ScalarTuple, size_t... Is>
+struct make_vector_types<ScalarTuple, std::index_sequence<Is...>> {
+  static constexpr auto vector_part(size_t I) {
+    return static_cast<builtin_types>(builtin_types_detail::e_value(
+        builtin_types_detail::dim0, I, builtin_types_detail::dim_count, 1U));
+  }
+
+  using type =
+      typename prod<ScalarTuple, typename constants_to_tuple<vector_part(Is)...>::type>::type;
+};
+
+template <typename ScalarTuple, typename IndexSequence0, typename IndexSequence1>
+struct make_matrix_types {};
+
+template <typename ScalarTuple, size_t... I0s, size_t... I1s>
+struct make_matrix_types<ScalarTuple, std::index_sequence<I0s...>, std::index_sequence<I1s...>> {
+  static constexpr auto dim0s(size_t I) {
+    return static_cast<builtin_types>(builtin_types_detail::e_value(
+        builtin_types_detail::dim0, I, builtin_types_detail::dim_count, 2U));
+  }
+
+  static constexpr auto dim1s(size_t I) {
+    return static_cast<builtin_types>(builtin_types_detail::e_value(
+        builtin_types_detail::dim1, I));
+  }
+
+  using dim0_types = typename prod<
+      ScalarTuple,
+      typename constants_to_tuple<dim0s(I0s)...>::type>::type;
+
+  using type = typename prod<
+      dim0_types,
+      typename constants_to_tuple<dim1s(I1s)...>::type>::type;
+};
+
+template <typename ContainerT>
+ContainerT listing_builtin_types() {
+  using scalar_types = constants_to_tuple<
+      builtin_types::int64,
+      builtin_types::int32,
+      builtin_types::int16,
+      builtin_types::int8,
+      builtin_types::uint64,
+      builtin_types::uint32,
+      builtin_types::uint16,
+      builtin_types::uint8,
+      builtin_types::float16,
+      builtin_types::float32,
+      builtin_types::float64,
+      builtin_types::e_bool>::type;
+
+  using Seq4 = std::make_index_sequence<4>;
+
+  using vector_types = make_vector_types<scalar_types, Seq4>::type;
+
+  using matrix_types = typename make_matrix_types<scalar_types, Seq4, Seq4>::type;
+
+  using combined_tuple = decltype(std::tuple_cat(std::declval<scalar_types>(),
+                                                std::declval<vector_types>(),
+                                                std::declval<matrix_types>()));
+
+  return std::apply([](auto... args) {
+    return ContainerT{decltype(args)::value...};
+  }, combined_tuple{});
 }
-#endif
+
+TEST(NewEnums, BuiltinTypes) {
+  auto types = listing_builtin_types<std::vector<builtin_types>>();
+  constexpr auto scalar_count = 12;
+  EXPECT_EQ(types.size(), 12 * (16+4+1));
+}
